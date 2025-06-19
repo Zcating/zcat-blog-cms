@@ -4,10 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:backend": "pnpm run -C packages/backend start:dev",
+    "dev:frontend": "pnpm run -C packages/frontend dev",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "build:backend": "pnpm run -C packages/backend build",
+    "build:frontend": "pnpm run -C packages/frontend build",
+    "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.12.1",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
