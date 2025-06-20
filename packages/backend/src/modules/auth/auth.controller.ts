@@ -1,9 +1,16 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
+
 import { AuthService } from './auth.service';
 
 type LoginDto = {
   username: string;
   password: string;
+};
+
+type RegisterDto = {
+  username: string;
+  password: string;
+  email: string;
 };
 
 @Controller('auth')
@@ -20,5 +27,10 @@ export class AuthController {
       return { message: 'Invalid credentials' };
     }
     return this.authService.login(user);
+  }
+
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 }
