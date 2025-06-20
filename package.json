@@ -9,13 +9,20 @@
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
     "build:backend": "pnpm run -C packages/backend build",
     "build:frontend": "pnpm run -C packages/frontend build",
-    "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\""
+    "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\"",
+    "migration:create": "pnpm run -C packages/backend migration:create",
+    "migration:run": "pnpm run -C packages/backend migration:run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "eslint-import-resolver-typescript": "^4.4.3",
+    "eslint-plugin-import": "^2.31.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
   }
 }
