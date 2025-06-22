@@ -1,0 +1,1 @@
+create DATABASE zcat_blog_cms;
