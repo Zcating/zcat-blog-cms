@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AuthModule } from '@backend/modules';
+import { AuthModule, CmsModule } from '@backend/modules';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -38,6 +38,7 @@ import { AppService } from './app.service';
       }),
     }),
     AuthModule,
+    CmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

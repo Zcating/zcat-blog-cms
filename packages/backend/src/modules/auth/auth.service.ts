@@ -4,8 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { User } from '@backend/table';
 
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { createResult } from '@backend/model';
 
 @Injectable()
 export class AuthService {
@@ -14,19 +15,39 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  validateUser(username: string, pass: string) {
-    return this.userRepository.findOne({
-      where: { username, password: pass },
+  async validateUser(username: string, pass: string) {
+    const user = await this.userRepository.findOne({
+      where: { username },
     });
+    if (!user) {
+      return null;
+    }
+    const hashPassword = await bcrypt.hash(pass, user.salt);
+    if (user.password !== hashPassword) {
+      return null;
+    }
+    return user;
   }
 
-  login(user: User) {
-    return {
-      access_token: this.jwtService.sign({
-        username: user.username,
-        userId: user.id,
-      }),
-    };
+  async login(loginDto: { username: string; password: string }) {
+    const user = await this.validateUser(loginDto.username, loginDto.password);
+    if (!user) {
+      return createResult({
+        code: 'ERR0002',
+        message: '用户名或密码错误',
+      });
+    }
+
+    return createResult({
+      code: '0000',
+      message: '登录成功',
+      data: {
+        accessToken: this.jwtService.sign({
+          username: user.username,
+          sub: user.id,
+        }),
+      },
+    });
   }
 
   async register(registerDto: {
@@ -34,12 +55,19 @@ export class AuthService {
     password: string;
     email: string;
   }) {
+    // console.log(bcrypt);
+    // return {
+    //   accessToken: '',
+    // };
     // 检查用户名是否已存在
     const existingUser = await this.userRepository.findOneBy({
       username: registerDto.username,
     });
     if (existingUser) {
-      throw new Error('Username already exists');
+      return createResult({
+        code: 'ERR0001',
+        message: '用户已存在',
+      });
     }
 
     // 密码加密
@@ -47,19 +75,25 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(registerDto.password, salt);
 
     // 创建新用户
-    const newUser = new User();
-    newUser.username = registerDto.username;
-    newUser.password = hashedPassword;
-    newUser.email = registerDto.email;
-
-    const createdUser = this.userRepository.create(newUser);
+    const createdUser = this.userRepository.create({
+      username: registerDto.username,
+      password: hashedPassword,
+      email: registerDto.email,
+      salt,
+    });
+    // 提交操作
+    const savedUser = await this.userRepository.save(createdUser);
 
     // 返回JWT令牌
-    return {
-      access_token: this.jwtService.sign({
-        username: createdUser.username,
-        sub: createdUser.id,
-      }),
-    };
+    return createResult({
+      code: '0000',
+      message: '注册成功',
+      data: {
+        accessToken: this.jwtService.sign({
+          username: savedUser.username,
+          sub: savedUser.id,
+        }),
+      },
+    });
   }
 }

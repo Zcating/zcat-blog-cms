@@ -20,6 +20,12 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Column({
+    type: 'varchar',
+    length: 64,
+  })
+  salt: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

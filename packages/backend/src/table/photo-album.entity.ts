@@ -7,6 +7,7 @@ import {
   OneToMany,
   OneToOne,
   JoinColumn,
+  JoinTable,
 } from 'typeorm';
 
 import { Photo } from './photo.entity';
@@ -24,7 +25,17 @@ export class PhotoAlbum {
   cover: Photo;
 
   @OneToMany(() => Photo, (photo) => photo.album)
-  @JoinColumn()
+  @JoinTable({
+    name: 'photo_album_and_photos',
+    joinColumn: {
+      name: 'photoAlbumId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'photoId',
+      referencedColumnName: 'id',
+    },
+  })
   photos: Photo[];
 
   @CreateDateColumn()

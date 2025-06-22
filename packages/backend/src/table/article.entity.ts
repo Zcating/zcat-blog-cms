@@ -7,6 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 
 import { ArticleTag } from './article-tag.entity';
@@ -26,11 +28,22 @@ export class Article {
   @Column()
   contentUrl: string;
 
-  @ManyToOne(() => UserInfo)
+  @ManyToOne(() => UserInfo, (userInfo) => userInfo.articles)
   createByUser: UserInfo;
 
-  @OneToMany(() => ArticleTag, (articleTag) => articleTag.articles)
-  @JoinColumn()
+  @ManyToMany(() => ArticleTag, (articleTag) => articleTag.articles)
+  @JoinTable({
+    // 此关系的联结表的表名
+    name: 'article_and_article_tags',
+    joinColumn: {
+      name: 'articleId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'articleTagId',
+      referencedColumnName: 'id',
+    },
+  })
   tags: ArticleTag[];
 
   @CreateDateColumn()

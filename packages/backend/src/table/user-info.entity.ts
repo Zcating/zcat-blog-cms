@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { User } from './user.entity';
+import { Article } from './article.entity';
 
 @Entity()
 export class UserInfo {
@@ -33,6 +35,9 @@ export class UserInfo {
 
   @Column({ type: 'text', nullable: true })
   aboutMe?: string;
+
+  @OneToMany(() => Article, (article) => article.createByUser)
+  articles: Article[];
 
   @CreateDateColumn()
   createdAt: Date;
