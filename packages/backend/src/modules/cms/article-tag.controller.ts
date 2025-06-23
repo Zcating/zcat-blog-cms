@@ -16,7 +16,7 @@ import { ArticleTag } from '../../table/article-tag.entity';
 
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-@Controller('cms/article-tags')
+@Controller('api/cms/article-tags')
 @UseGuards(JwtAuthGuard)
 export class ArticleTagController {
   constructor(

@@ -16,7 +16,7 @@ import { Photo } from '../../table/photo.entity';
 
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-@Controller('cms/photos')
+@Controller('api/cms/photos')
 @UseGuards(JwtAuthGuard)
 export class PhotoController {
   constructor(

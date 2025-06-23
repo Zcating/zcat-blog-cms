@@ -4,9 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule, CmsModule } from '@backend/modules';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
 @Module({
   imports: [
     // 配置模块 - 必须放在最前面
@@ -40,7 +37,5 @@ import { AppService } from './app.service';
     AuthModule,
     CmsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

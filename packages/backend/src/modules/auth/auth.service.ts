@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { createResult } from '@backend/model';
 import { User } from '@backend/table';
 
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
-import { createResult } from '@backend/model';
 
 @Injectable()
 export class AuthService {
