@@ -1,48 +1,49 @@
-import { useState } from 'react';
-import type { Route } from './+types/guest-home';
+import { useState, type FormEvent } from "react";
+import type { Route } from "./+types/guest-home";
 
-import { AuthApi } from '@api';
+import { AuthApi } from "@api";
+import { useLoadingFn } from "@/components";
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "登录 - Blog CMS" },
-    { name: "description", content: "登录到博客内容管理系统" },
-  ];
+  return [{ title: "登录 - Blog CMS" }, { name: "description", content: "登录到博客内容管理系统" }];
 }
 
-export default function Login() {
+export default function GuestHome() {
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    rememberMe: false
+    username: "",
+    password: "",
+    rememberMe: false,
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      // 这里添加登录逻辑
-      console.log('登录数据:', formData);
-      // 模拟 API 调用
-      const result = await AuthApi.login(formData);
-      console.log('登录结果:', result);
-    } catch (error) {
-      console.error('登录失败:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleSubmit = useLoadingFn(async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await AuthApi.login(formData);
+  });
+
+  const isLoading = handleSubmit.loading;
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+
+  //   try {
+  //     await AuthApi.login(formData);
+  //   } catch (error) {
+  //     console.error("登录失败:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
@@ -61,15 +62,7 @@ export default function Login() {
               <label className="label">
                 <span className="label-text">用户名</span>
               </label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder="请输入用户名"
-                className="input input-bordered w-full"
-                required
-              />
+              <input type="text" name="username" value={formData.username} onChange={handleInputChange} placeholder="请输入用户名" className="input input-bordered w-full" required />
             </div>
 
             {/* 密码输入 */}
@@ -77,45 +70,27 @@ export default function Login() {
               <label className="label">
                 <span className="label-text">密码</span>
               </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="请输入密码"
-                className="input input-bordered w-full"
-                required
-              />
+              <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="请输入密码" className="input input-bordered w-full" required />
             </div>
 
             {/* 记住我和忘记密码 */}
             <div className="form-control">
               <label className="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleInputChange}
-                  className="checkbox checkbox-primary"
-                />
+                <input type="checkbox" name="rememberMe" checked={formData.rememberMe} onChange={handleInputChange} className="checkbox checkbox-primary" />
                 <span className="label-text">记住我</span>
               </label>
             </div>
 
             {/* 登录按钮 */}
             <div className="form-control mt-6">
-              <button
-                type="submit"
-                className={`btn btn-primary w-full ${isLoading ? 'loading' : ''}`}
-                disabled={isLoading}
-              >
+              <button type="submit" className={`btn btn-primary w-full ${isLoading ? "loading" : ""}`} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <span className="loading loading-spinner loading-sm"></span>
                     登录中...
                   </>
                 ) : (
-                  '登录'
+                  "登录"
                 )}
               </button>
             </div>
