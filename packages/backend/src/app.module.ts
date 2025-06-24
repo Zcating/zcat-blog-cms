@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule, CmsModule } from '@backend/modules';
 
-import path from 'path';
+import * as path from 'path';
 
 @Module({
   imports: [
