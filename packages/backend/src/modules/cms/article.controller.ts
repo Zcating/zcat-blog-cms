@@ -17,7 +17,7 @@ import { Repository } from 'typeorm';
 
 import { Article } from '../../table/article.entity';
 
-import { CreateArticleDto, UpdateArticleDto } from './dto';
+import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('文章管理')
@@ -31,12 +31,19 @@ export class ArticleController {
 
   @Get()
   @ApiOperation({ summary: '获取所有文章' })
-  @ApiResponse({ status: 200, description: '成功获取文章列表' })
-  async findAll(): Promise<ResultData<Article[]>> {
+  @ApiResponse({
+    status: 200,
+    description: '成功获取文章列表',
+    type: [ReturnArticleDto],
+  })
+  async findAll(): Promise<ResultData<ReturnArticleDto[]>> {
     return createResult({
       code: '0000',
       message: '成功',
-      data: await this.articleRepository.find(),
+      data: await this.articleRepository.find({
+        select: ['id', 'title', 'excerpt', 'createdAt', 'updatedAt'],
+        relations: ['createByUser', 'tags'],
+      }),
     });
   }
 
