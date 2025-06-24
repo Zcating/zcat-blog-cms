@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ArticleTagController } from './article-tag.controller';
-import { ArticleController } from './article.controller';
-import { PhotoAlbumController } from './photo-album.controller';
-import { PhotoController } from './photo.controller';
 import {
   Article,
   ArticleTag,
@@ -13,9 +10,11 @@ import {
   User,
   UserInfo,
 } from '@backend/table';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { PassportModule } from '@nestjs/passport';
+
+import { ArticleTagController } from './article-tag.controller';
+import { ArticleController } from './article.controller';
+import { PhotoAlbumController } from './photo-album.controller';
+import { PhotoController } from './photo.controller';
 
 //
 @Module({

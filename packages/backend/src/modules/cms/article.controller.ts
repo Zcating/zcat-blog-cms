@@ -8,14 +8,19 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
+
+import { createResult, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
 import { Article } from '../../table/article.entity';
 
+import { CreateArticleDto, UpdateArticleDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+@ApiTags('文章管理')
 @Controller('api/cms/articles')
 @UseGuards(JwtAuthGuard)
 export class ArticleController {
@@ -25,31 +30,79 @@ export class ArticleController {
   ) {}
 
   @Get()
-  async findAll(): Promise<Article[]> {
-    return this.articleRepository.find();
+  @ApiOperation({ summary: '获取所有文章' })
+  @ApiResponse({ status: 200, description: '成功获取文章列表' })
+  async findAll(): Promise<ResultData<Article[]>> {
+    return createResult({
+      code: '0000',
+      message: '成功',
+      data: await this.articleRepository.find(),
+    });
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Article | null> {
-    return this.articleRepository.findOne({ where: { id: parseInt(id) } });
+  @ApiOperation({ summary: '根据ID获取文章' })
+  @ApiParam({ name: 'id', description: '文章ID' })
+  @ApiResponse({ status: 200, description: '成功获取文章详情' })
+  async findOne(@Param('id') id: string): Promise<ResultData<Article | null>> {
+    return createResult({
+      code: '0000',
+      message: '成功',
+      data: await this.articleRepository.findOne({
+        where: { id: parseInt(id) },
+      }),
+    });
   }
 
   @Post()
-  async create(@Body() article: Article): Promise<Article> {
-    return this.articleRepository.save(article);
+  @ApiOperation({ summary: '创建文章' })
+  @ApiResponse({ status: 201, description: '文章创建成功' })
+  async create(
+    @Body() createArticleDto: CreateArticleDto,
+  ): Promise<ResultData<Article>> {
+    return createResult({
+      code: '0000',
+      message: '成功',
+      data: await this.articleRepository.save(createArticleDto),
+    });
   }
 
   @Put(':id')
+  @ApiOperation({ summary: '更新文章' })
+  @ApiParam({ name: 'id', description: '文章ID' })
+  @ApiResponse({ status: 200, description: '文章更新成功' })
   async update(
     @Param('id') id: string,
-    @Body() article: Article,
-  ): Promise<Article | null> {
-    await this.articleRepository.update(id, article);
-    return this.articleRepository.findOne({ where: { id: parseInt(id) } });
+    @Body() updateArticleDto: UpdateArticleDto,
+  ): Promise<ResultData<void>> {
+    const result = await this.articleRepository.update(id, updateArticleDto);
+    if (result.affected === 0) {
+      return createResult({
+        code: 'ERR0003',
+        message: '更新失败',
+      });
+    }
+    return createResult({
+      code: '0000',
+      message: '成功',
+    });
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.articleRepository.delete(id);
+  @ApiOperation({ summary: '删除文章' })
+  @ApiParam({ name: 'id', description: '文章ID' })
+  @ApiResponse({ status: 200, description: '文章删除成功' })
+  async remove(@Param('id') id: string): Promise<ResultData<void>> {
+    const result = await this.articleRepository.delete(id);
+    if (result.affected === 0) {
+      return createResult({
+        code: 'ERR0003',
+        message: '更新失败',
+      });
+    }
+    return createResult({
+      code: '0000',
+      message: '成功',
+    });
   }
 }

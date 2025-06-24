@@ -5,8 +5,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  JoinColumn,
-  OneToMany,
   JoinTable,
   ManyToMany,
 } from 'typeorm';
@@ -25,8 +23,8 @@ export class Article {
   @Column({ type: 'text' })
   excerpt: string;
 
-  @Column()
-  contentUrl: string;
+  @Column({ type: 'text' })
+  content: string;
 
   @ManyToOne(() => UserInfo, (userInfo) => userInfo.articles)
   createByUser: UserInfo;
