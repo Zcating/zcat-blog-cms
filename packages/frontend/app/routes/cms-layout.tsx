@@ -1,13 +1,13 @@
-import { Outlet } from "react-router";
-import { Navbar, Sidebar } from "@/components";
+import { Outlet } from 'react-router';
+import { Navbar, Sidebar } from '@cms/components';
 
 const menuItems = [
-  { name: "仪表盘", icon: "📊", href: "/dashboard" },
-  { name: "文章管理", icon: "📝", href: "/articles" },
-  { name: "分类管理", icon: "📁", href: "/article-categories" },
-  { name: "相册管理", icon: "🖼️", href: "/albums" },
-  { name: "用户信息", icon: "👥", href: "/user-info" },
-  { name: "系统设置", icon: "⚙️", href: "/settings" },
+  { name: '仪表盘', icon: '📊', href: '/dashboard' },
+  { name: '文章管理', icon: '📝', href: '/articles' },
+  { name: '分类管理', icon: '📁', href: '/article-categories' },
+  { name: '相册管理', icon: '🖼️', href: '/albums' },
+  { name: '用户信息', icon: '👥', href: '/user-info' },
+  { name: '系统设置', icon: '⚙️', href: '/settings' },
 ];
 
 export default function CMSLayout() {

@@ -1,5 +1,5 @@
-import { ArticlesApi } from "@/api";
-import type { Route } from "./+types/dashboard";
+import { ArticlesApi } from '@cms/api';
+import type { Route } from './+types/dashboard';
 
 export async function clientLoader() {
   return {

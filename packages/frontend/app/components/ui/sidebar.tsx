@@ -1,3 +1,5 @@
+import { cn } from "../utils";
+
 export interface SiderBarItem {
   name: string;
   icon: string;
@@ -11,7 +13,7 @@ interface SiderbarProps {
 
 export function Sidebar(props: SiderbarProps) {
   return (
-    <nav className={props.className}>
+    <nav className={cn("shadow-sm", props.className)}>
       <ul className="menu p-4 w-full">
         {props.items.map((item, index) => (
           <li key={index}>

@@ -1,4 +1,4 @@
-import { HttpClient } from "../http-client";
+import { HttpClient } from '../http-client';
 
 export namespace ArticlesApi {
   export interface ArticleTag {
@@ -33,23 +33,28 @@ export namespace ArticlesApi {
   export interface UpdateArticleParams {
     title?: string;
     excerpt?: string;
-    contentUrl?: string;
+    content?: string;
   }
 
   // Article API functions
   export async function getArticles(): Promise<Article[]> {
-    return await HttpClient.get("cms/articles");
+    return await HttpClient.get('cms/articles');
   }
 
   export async function getArticle(id: number): Promise<Article> {
     return await HttpClient.get(`cms/articles/${id}`);
   }
 
-  export async function createArticle(params: CreateArticleParams): Promise<Article> {
-    return await HttpClient.post("cms/articles", params);
+  export async function createArticle(
+    params: CreateArticleParams,
+  ): Promise<Article> {
+    return await HttpClient.post('cms/articles', params);
   }
 
-  export async function updateArticle(id: number, params: UpdateArticleParams): Promise<Article> {
+  export async function updateArticle(
+    id: number,
+    params: UpdateArticleParams,
+  ): Promise<Article> {
     return await HttpClient.put(`cms/articles/${id}`, params);
   }
 

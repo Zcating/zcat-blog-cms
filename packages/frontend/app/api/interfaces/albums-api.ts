@@ -12,14 +12,25 @@ export namespace AlbumsApi {
   export interface PhotoAlbum {
     id?: number;
     name: string;
+    description?: string;
     cover?: Photo;
-    photos?: Photo[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }
+
+  export interface PhotoAlbumDetail {
+    id?: number;
+    name: string;
+    description?: string;
+    cover?: Photo;
+    photos: Photo[];
     createdAt?: Date;
     updatedAt?: Date;
   }
 
   export interface CreatePhotoAlbumParams {
     name: string;
+    description: string;
   }
 
   export interface UpdatePhotoAlbumParams {
@@ -31,15 +42,20 @@ export namespace AlbumsApi {
     return await HttpClient.get('cms/photo-albums');
   }
 
-  export async function getPhotoAlbum(id: number): Promise<PhotoAlbum> {
+  export async function getPhotoAlbum(id: number): Promise<PhotoAlbumDetail> {
     return await HttpClient.get(`cms/photo-albums/${id}`);
   }
 
-  export async function createPhotoAlbum(params: CreatePhotoAlbumParams): Promise<PhotoAlbum> {
+  export async function createPhotoAlbum(
+    params: CreatePhotoAlbumParams,
+  ): Promise<PhotoAlbum> {
     return await HttpClient.post('cms/photo-albums', params);
   }
 
-  export async function updatePhotoAlbum(id: number, params: UpdatePhotoAlbumParams): Promise<PhotoAlbum> {
+  export async function updatePhotoAlbum(
+    id: number,
+    params: UpdatePhotoAlbumParams,
+  ): Promise<PhotoAlbum> {
     return await HttpClient.put(`cms/photo-albums/${id}`, params);
   }
 
