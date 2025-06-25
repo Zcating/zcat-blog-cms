@@ -1,1 +1,3 @@
-export * from "./classnames";
+import './polyfill';
+
+export * from './classnames';

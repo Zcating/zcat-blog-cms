@@ -30,7 +30,7 @@ export namespace AlbumsApi {
 
   export interface CreatePhotoAlbumParams {
     name: string;
-    description: string;
+    description?: string;
   }
 
   export interface UpdatePhotoAlbumParams {

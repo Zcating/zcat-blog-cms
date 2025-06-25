@@ -22,7 +22,7 @@ export default function CMSLayout() {
         <div className="flex flex-1">
           <Sidebar className="w-40 h-full" items={menuItems} />
           <main className="flex-1 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 bottom-0 overflow-scroll">
+            <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto">
               <Outlet />
             </div>
           </main>
