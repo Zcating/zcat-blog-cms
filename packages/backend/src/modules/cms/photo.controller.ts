@@ -7,12 +7,25 @@ import {
   Delete,
   Param,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultData } from '@backend/model';
+import { safeNumber, unique } from '@backend/utils';
 
+import { extname } from 'path';
+
+import { diskStorage } from 'multer';
 import { Repository } from 'typeorm';
 
 import { Photo } from '../../table/photo.entity';
@@ -56,14 +69,66 @@ export class PhotoController {
 
   @Post()
   @ApiOperation({ summary: '创建照片' })
-  @ApiResponse({ status: 201, description: '照片创建成功' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: '照片创建成功' })
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './dist/uploads/photos',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = unique();
+          const ext = extname(file.originalname);
+          callback(null, `image${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('只支持图片文件格式'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 5MB
+      },
+    }),
+  )
   async create(
-    @Body() createPhotoDto: CreatePhotoDto,
+    @UploadedFile() image: Express.Multer.File,
+    @Body('name') name: string,
+    @Body('albumId') albumId: string,
   ): Promise<ResultData<Photo>> {
+    console.log('Received image:', image);
+    console.log('Received name:', name);
+    console.log('Received albumId:', typeof albumId);
+    // 如果有文件上传，使用文件信息
+    if (!image) {
+      // 如果没有文件上传，返回错误
+      return createResult({
+        code: 'ERR0004',
+        message: '请选择要上传的文件',
+      });
+    }
+
+    const safeAlbumId = safeNumber(albumId);
+
+    if (safeAlbumId === 0) {
+      return createResult({
+        code: 'ERR0005',
+        message: '请选择要上传的相册',
+      });
+    }
+
+    const photoData: CreatePhotoDto = {
+      name: name || image.originalname,
+      url: `/dist/uploads/photos/${image.filename}`,
+      albumId: safeAlbumId,
+    };
+
+    const savedPhoto = await this.photoRepository.save(photoData);
     return createResult({
       code: '0000',
-      message: '成功',
-      data: await this.photoRepository.save(createPhotoDto),
+      message: '照片创建成功',
+      data: savedPhoto,
     });
   }
 
