@@ -11,7 +11,8 @@ export namespace PhotosApi {
 
   export interface CreatePhotoParams {
     name: string;
-    url: string;
+    image: Blob;
+    albumId: number;
   }
 
   export interface UpdatePhotoParams {

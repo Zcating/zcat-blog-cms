@@ -19,7 +19,7 @@ export namespace AlbumsApi {
   }
 
   export interface PhotoAlbumDetail {
-    id?: number;
+    id: number;
     name: string;
     description?: string;
     cover?: Photo;

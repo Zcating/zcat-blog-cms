@@ -3,6 +3,7 @@ import type { Route } from './+types/guest-home';
 
 import { AuthApi } from '@cms/api';
 import { useLoadingFn } from '@cms/components';
+import { useNavigate } from 'react-router';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -28,27 +29,16 @@ export default function GuestHome() {
     }));
   };
 
+  const navigate = useNavigate();
   const handleSubmit = useLoadingFn(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       await AuthApi.login(formData);
+      navigate('/dashboard');
     },
   );
 
   const isLoading = handleSubmit.loading;
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-
-  //   try {
-  //     await AuthApi.login(formData);
-  //   } catch (error) {
-  //     console.error("登录失败:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
