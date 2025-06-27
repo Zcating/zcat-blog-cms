@@ -120,7 +120,7 @@ export class PhotoController {
 
     const photoData: CreatePhotoDto = {
       name: name || image.originalname,
-      url: `/dist/uploads/photos/${image.filename}`,
+      url: `/uploads/photos/${image.filename}`,
       albumId: safeAlbumId,
     };
 
