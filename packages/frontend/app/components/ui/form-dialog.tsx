@@ -2,14 +2,14 @@ import { Modal } from './modal';
 
 export namespace FormDialog {
   type FormComponentType<T> = React.FC<{
-    defaultValue: T;
+    initialValues: T;
     onSubmit: (data: T) => void;
     onCancel: () => void;
   }>;
 
   interface FormDialogProps<T> {
     title: string;
-    defaultValue: T;
+    initialValues: T;
   }
 
   export type FormDialog<T> = (props: FormDialogProps<T>) => Promise<T | null>;
@@ -34,7 +34,7 @@ export namespace FormDialog {
         title: props.title,
         content: (
           <FormComponent
-            defaultValue={props.defaultValue}
+            initialValues={props.initialValues}
             onSubmit={submit}
             onCancel={close}
           />

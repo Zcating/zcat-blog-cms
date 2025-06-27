@@ -11,8 +11,8 @@ export namespace PhotosApi {
 
   export interface CreatePhotoParams {
     name: string;
-    image: Blob;
     albumId: number;
+    image: Blob;
   }
 
   export interface UpdatePhotoParams {
@@ -30,10 +30,18 @@ export namespace PhotosApi {
   }
 
   export async function createPhoto(params: CreatePhotoParams): Promise<Photo> {
-    return await HttpClient.post('cms/photos', params);
+    const formData = new FormData();
+    formData.append('name', params.name);
+    formData.append('image', params.image);
+    formData.append('albumId', params.albumId.toString());
+
+    return await HttpClient.post('cms/photos', formData);
   }
 
-  export async function updatePhoto(id: number, params: UpdatePhotoParams): Promise<Photo> {
+  export async function updatePhoto(
+    id: number,
+    params: UpdatePhotoParams,
+  ): Promise<Photo> {
     return await HttpClient.put(`cms/photos/${id}`, params);
   }
 

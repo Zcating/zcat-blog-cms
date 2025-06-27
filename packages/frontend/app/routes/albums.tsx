@@ -25,7 +25,7 @@ export default function Albums(props: Route.ComponentProps) {
   const handleCreateClick = async () => {
     const data = await showAlbumDialog({
       title: '新增相册',
-      defaultValue: {
+      initialValues: {
         name: '默认相册',
         description: '',
       },
@@ -103,13 +103,13 @@ function AlbumItem(props: AlbumItemProps) {
 }
 
 interface AlbumCreationFormProps {
-  defaultValue: AlbumsApi.PhotoAlbum;
+  initialValues: AlbumsApi.PhotoAlbum;
   onSubmit: (data: AlbumsApi.PhotoAlbum) => void;
   onCancel: () => void;
 }
 function AlbumCreationForm(props: AlbumCreationFormProps) {
   const { register, handleSubmit } = useForm<AlbumsApi.PhotoAlbum>({
-    defaultValues: props.defaultValue,
+    defaultValues: props.initialValues,
   });
 
   const onSubmit: SubmitHandler<AlbumsApi.PhotoAlbum> = (data) => {

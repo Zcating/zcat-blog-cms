@@ -39,11 +39,18 @@ export namespace AlbumsApi {
 
   // PhotoAlbum API functions
   export async function getPhotoAlbums(): Promise<PhotoAlbum[]> {
-    return await HttpClient.get('cms/photo-albums');
+    return await HttpClient.get<PhotoAlbum[]>('cms/photo-albums');
   }
 
   export async function getPhotoAlbum(id: number): Promise<PhotoAlbumDetail> {
-    return await HttpClient.get(`cms/photo-albums/${id}`);
+    const detail = await HttpClient.get<PhotoAlbumDetail>(
+      `cms/photo-albums/${id}`,
+    );
+    detail.photos = detail.photos.map((item) => {
+      item.url = `/static/${item.url}`;
+      return item;
+    });
+    return detail;
   }
 
   export async function createPhotoAlbum(

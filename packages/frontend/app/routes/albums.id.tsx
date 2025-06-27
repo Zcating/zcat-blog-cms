@@ -1,8 +1,8 @@
-import { Grid } from '@cms/components';
+import { FormDialog, Grid, ImageUpload } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import { AlbumImageCard } from '@cms/modules';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -22,27 +22,39 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function AlbumsId(props: Route.ComponentProps) {
   const { album } = props.loaderData;
   const addPhoto = async () => {
+    const params = await showPhotoDialog({
+      title: '添加照片',
+      initialValues: {
+        name: '新照片',
+        albumId: album.id,
+        image: null,
+      },
+    });
+
+    if (!params || !params.image) {
+      return;
+    }
+
     await PhotosApi.createPhoto({
-      albumId: album.id,
-      name: '新照片',
-      // image: ""
+      name: params.name,
+      albumId: params.albumId,
+      image: params.image,
     });
   };
   return (
-    <div>
-      <h1>相册详情</h1>
-      <button className="btn btn-primary" onClick={addPhoto}>
-        添加照片
-      </button>
-      <div>
-        <h2>{album.name}</h2>
+    <div className="space-y-10 p-3">
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold">相册名称：{album.name}</h1>
         <p>{album.description}</p>
-        <Grid
-          items={album.photos}
-          cols={3}
-          renderItem={(item) => <AlbumPhotoItem item={item} />}
-        />
+        <button className="btn btn-primary" onClick={addPhoto}>
+          添加照片
+        </button>
       </div>
+      <Grid
+        items={album.photos}
+        cols={3}
+        renderItem={(item) => <AlbumPhotoItem item={item} />}
+      />
     </div>
   );
 }
@@ -61,38 +73,48 @@ function AlbumPhotoItem(props: AlbumPhotoItemProps) {
   );
 }
 
+interface CreatePhotoValues {
+  name: string;
+  albumId: number;
+  image: File | null;
+}
+
 interface PhotoCreationFormProps {
-  defaultValue: PhotosApi.CreatePhotoParams;
-  onSubmit: (data: PhotosApi.CreatePhotoParams) => void;
+  initialValues: CreatePhotoValues;
+  onSubmit: (data: CreatePhotoValues) => void;
   onCancel: () => void;
 }
-function PhotoCreationForm(props: PhotoCreationFormProps) {
-  const { register, handleSubmit } = useForm<PhotosApi.CreatePhotoParams>({
-    defaultValues: props.defaultValue,
+/**
+ * 照片创建表单
+ * @param {PhotoCreationFormProps} props
+ * @returns {React.ReactElement}
+ */
+function PhotoCreationForm(props: PhotoCreationFormProps): React.ReactElement {
+  const { register, handleSubmit, setValue } = useForm<CreatePhotoValues>({
+    defaultValues: props.initialValues,
   });
-
-  const onSubmit: SubmitHandler<PhotosApi.CreatePhotoParams> = (data) => {
-    props.onSubmit(data);
-  };
-
   return (
-    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+    <form className="space-y-5" onSubmit={handleSubmit(props.onSubmit)}>
       <label className="floating-label">
         <span className="label-text">相册名称</span>
         <input
           className="input input-bordered w-full"
           type="text"
-          placeholder="请输入相册名称"
+          placeholder="请输入相片名称"
           {...register('name')}
         />
       </label>
       <label className="floating-label">
-        <span className="label-text">相册描述</span>
-        <textarea
-          className="textarea w-full"
-          placeholder="请输入相册描述"
-          {...register('image')}
-        />
+        <span className="label-text">上传图片</span>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Pick a file</legend>
+          <input
+            type="file"
+            className="file-input"
+            onChange={(e) => setValue('image', e.target.files?.[0] ?? null)}
+          />
+          <label className="label">Max size 2MB</label>
+        </fieldset>
       </label>
 
       <div className="flex gap-3">
@@ -106,3 +128,5 @@ function PhotoCreationForm(props: PhotoCreationFormProps) {
     </form>
   );
 }
+
+const showPhotoDialog = FormDialog.create<CreatePhotoValues>(PhotoCreationForm);
