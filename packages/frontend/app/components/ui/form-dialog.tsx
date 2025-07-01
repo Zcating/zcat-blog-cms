@@ -31,13 +31,15 @@ export namespace FormDialog {
       };
 
       await Modal.show({
-        title: props.title,
         content: (
-          <FormComponent
-            initialValues={props.initialValues}
-            onSubmit={submit}
-            onCancel={close}
-          />
+          <div>
+            <h3 className="font-bold text-lg">{props.title}</h3>
+            <FormComponent
+              initialValues={props.initialValues}
+              onSubmit={submit}
+              onCancel={close}
+            />
+          </div>
         ),
       });
 

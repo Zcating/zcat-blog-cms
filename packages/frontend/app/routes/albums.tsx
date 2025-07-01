@@ -6,6 +6,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import type { Route } from './+types/albums';
 import React from 'react';
+import { Toast } from '@cms/components/ui/toast';
 
 export async function clientLoader() {
   return {
@@ -23,18 +24,22 @@ export default function Albums(props: Route.ComponentProps) {
   const navigate = useNavigate();
 
   const handleCreateClick = async () => {
-    const data = await showAlbumDialog({
-      title: '新增相册',
-      initialValues: {
-        name: '默认相册',
-        description: '',
-      },
+    Toast.show({
+      message: '创建成功',
+      type: 'success',
     });
-    if (!data) {
-      return;
-    }
-    const result = await AlbumsApi.createPhotoAlbum(data);
-    setAlbums([...albums, result]);
+    // const data = await showAlbumDialog({
+    //   title: '新增相册',
+    //   initialValues: {
+    //     name: '默认相册',
+    //     description: '',
+    //   },
+    // });
+    // if (!data) {
+    //   return;
+    // }
+    // const result = await AlbumsApi.createPhotoAlbum(data);
+    // setAlbums([...albums, result]);
   };
 
   const handleCloseDialog = () => {
