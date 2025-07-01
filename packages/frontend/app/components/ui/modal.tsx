@@ -9,25 +9,33 @@ export namespace Modal {
     onClose?: () => void;
     backdropClose?: boolean;
   }
-  let currentModal: HTMLDialogElement | null = null;
+  let currentModal: HTMLDivElement | null = null;
 
   export async function show(props: ModalProps) {
     const portalRoot = document.getElementById('portal-root');
     if (!portalRoot) {
       throw new Error('modal portal root not found');
     }
+
     const backdropClose = props.backdropClose ?? true;
-    const resolvers = Promise.withResolvers<HTMLDialogElement>();
-    const handleRef = (ref: HTMLDialogElement) => {
+    const resolvers = Promise.withResolvers<HTMLDivElement>();
+    const handleRef = (ref: HTMLDivElement) => {
       currentModal = ref;
-      resolvers.resolve(ref);
+      setTimeout(() => {
+        resolvers.resolve(ref);
+      }, 0);
     };
     const handleClose = () => {
       close();
       props.onClose?.();
     };
+
     const modal = createPortal(
-      <dialog className="modal" ref={handleRef} onCancel={handleClose}>
+      <div
+        className="modal scrollbar-auto modal-end"
+        role="dialog"
+        ref={handleRef}
+      >
         <div className="modal-box">
           <h3 className="font-bold text-lg">{props.title}</h3>
           <div className="py-4">{props.content}</div>
@@ -35,23 +43,27 @@ export namespace Modal {
         {backdropClose ? (
           <div className="modal-backdrop" onClick={handleClose}></div>
         ) : null}
-      </dialog>,
+      </div>,
       portalRoot,
       'modal-portal',
     );
 
     UiProviderContext.set({ portal: modal });
 
-    const modalRef = await resolvers.promise;
-    modalRef.showModal();
+    const modalElement = await resolvers.promise;
+
+    modalElement.classList.add('modal-open');
   }
 
   export function close() {
     if (!currentModal) {
       return;
     }
-    currentModal.close();
-    currentModal = null;
-    UiProviderContext.set({ portal: null });
+
+    currentModal.classList.remove('modal-open');
+    currentModal.onanimationend = () => {
+      currentModal = null;
+      UiProviderContext.set({ portal: null });
+    };
   }
 }

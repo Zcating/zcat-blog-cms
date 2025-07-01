@@ -9,11 +9,18 @@
 
 @plugin "daisyui" {
   themes: light --default;
+  /* exclude: rootscrollgutter; */
 }
 
 html,
 body {
+  scrollbar-gutter: unset !important;
+
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
+}
+
+.scrollbar-auto {
+  scrollbar-gutter: auto !important;
 }
