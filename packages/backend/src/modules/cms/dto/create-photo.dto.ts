@@ -13,6 +13,12 @@ export class CreatePhotoDto {
   })
   url: string;
 
+  @ApiProperty({
+    description: '缩略图URL',
+    example: '/uploads/photos/thumbnails/photo-123-thumb.jpg',
+  })
+  thumbnailUrl: string;
+
   @ApiPropertyOptional({
     description: '所属相册ID',
     example: 1,
