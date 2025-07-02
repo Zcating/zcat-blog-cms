@@ -1,32 +1,69 @@
 import type { ButtonHTMLAttributes } from 'react';
 import type React from 'react';
-import { cn } from '../utils';
+import { classnames } from '../utils';
+import { Loading3QuartersOutlined } from '@ant-design/icons';
 
-type ButtonVariant = 'neutral' | 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'error';
-type ButtonSize = 'xs' |'sm' | 'md' | 'lg' | 'xl';
+type ButtonVariant =
+  | 'neutral'
+  | 'primary'
+  | 'secondary'
+  | 'accent'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 type ButtonAppearance = 'outline' | 'dash' | 'soft' | 'ghost' | 'link';
 type ButtonShape = 'square' | 'circle' | 'wide' | 'block';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {  
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   appearance?: ButtonAppearance;
   shape?: ButtonShape;
   disabled?: boolean;
+  loading?: boolean;
   children: React.ReactNode;
 }
 
 export function Button(props: ButtonProps) {
-  const className = cn(
-    'block btn', 
-    variantClassFrom(props.variant),
-    sizeClassFrom(props.size),
-    appearanceClassFrom(props.appearance),
-    shapeClassFrom(props.shape),
-    props.disabled ? 'btn-disabled' : 'btn-active',
-    props.className
+  const {
+    variant,
+    size,
+    shape,
+    appearance,
+    disabled,
+    loading,
+    className,
+    onClick,
+    children,
+    ...restProps
+  } = props;
+  const cls = classnames(
+    'block btn flex',
+    variantClassFrom(variant),
+    sizeClassFrom(size),
+    appearanceClassFrom(appearance),
+    shapeClassFrom(shape),
+    disabled ? 'btn-disabled' : '',
+    loading ? 'gap-2 cursor-not-allowed opacity-70' : '',
+    className,
   );
-  return <button className={className} {...props} />;
+
+  const click = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (loading) {
+      e.preventDefault();
+      return;
+    }
+    onClick?.(e);
+  };
+
+  return (
+    <button className={cls} onClick={click} {...restProps}>
+      {loading ? <Loading3QuartersOutlined spin /> : null}
+      {children}
+    </button>
+  );
 }
 
 function variantClassFrom(variant?: ButtonVariant) {

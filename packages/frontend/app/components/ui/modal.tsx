@@ -1,7 +1,7 @@
 import type React from 'react';
 import { UiProviderContext } from './ui-provider';
 import { createPortal } from 'react-dom';
-import { cn } from '../utils';
+import { classnames } from '../utils';
 
 export namespace Modal {
   let id = 0;
@@ -42,11 +42,17 @@ export namespace Modal {
     const modal = createPortal(
       <div
         key={`modal-${id++}`}
-        className={cn('modal scrollbar-auto', positionClass, props.className)}
+        className={classnames(
+          'modal scrollbar-auto',
+          positionClass,
+          props.className,
+        )}
         role="dialog"
         ref={handleRef}
       >
-        <div className={cn('modal-box', props.contentContainerClassName)}>
+        <div
+          className={classnames('modal-box', props.contentContainerClassName)}
+        >
           {props.content}
         </div>
         {backdropClose ? (

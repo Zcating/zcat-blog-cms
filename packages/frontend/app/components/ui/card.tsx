@@ -1,6 +1,6 @@
 import React from 'react';
-import { cn } from '../utils';
 import { FileImageOutlined } from '@ant-design/icons';
+import { classnames } from '../utils';
 
 type CardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 type CardAppearance = 'border' | 'dash';
@@ -12,7 +12,7 @@ interface CardProps {
 }
 
 export function Card(props: CardProps) {
-  const className = cn(
+  const className = classnames(
     'card bg-base-100 shadow-sm',
     cardSizeFrom(props.size),
     cardAppearanceFrom(props.appearance),
@@ -57,7 +57,7 @@ interface CardTitleProps {
 }
 
 function CardTitle(props: CardTitleProps) {
-  const className = cn('card-title', props.className);
+  const className = classnames('card-title', props.className);
   return <h2 className={className}>{props.children}</h2>;
 }
 
@@ -67,7 +67,7 @@ interface CardBodyProps {
 }
 
 function CardBody(props: CardBodyProps) {
-  const className = cn('card-body', props.className);
+  const className = classnames('card-body', props.className);
   return <div className={className}>{props.children}</div>;
 }
 
@@ -77,7 +77,7 @@ interface CardActionsProps {
 }
 
 function CardActions(props: CardActionsProps) {
-  const className = cn('card-actions justify-end', props.className);
+  const className = classnames('card-actions justify-end', props.className);
   return <div className={className}>{props.children}</div>;
 }
 

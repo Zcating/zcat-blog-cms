@@ -22,8 +22,8 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "css.customData": [
-    ".vscode/tailwind.json"
-  ],
-  "editor.formatOnSave": true
+  "css.customData": [".vscode/tailwind.json"],
+  "editor.formatOnSave": true,
+  "tailwindCSS.classAttributes": ["class", "className"],
+  "tailwindCSS.experimental.classRegex": ["classnames\\(([^)]*)\\)"]
 }

@@ -72,9 +72,9 @@ export default function Albums(props: Route.ComponentProps) {
     <div className="space-y-3 p-3">
       <h1>相册列表</h1>
       <div>
-        <button className="btn btn-primary" onClick={handleCreateClick}>
+        <Button variant="primary" onClick={handleCreateClick}>
           新增相册
-        </button>
+        </Button>
       </div>
 
       <Grid

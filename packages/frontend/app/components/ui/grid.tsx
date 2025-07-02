@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../utils';
+import { classnames } from '../utils';
 interface GridProps<T> {
   columnClassName?: string;
   rowClassName?: string;
@@ -21,26 +21,25 @@ export function Grid<T>(props: GridProps<T>) {
     },
     [cols],
   );
+
+  const columnClassName = classnames(
+    'flex w-full px-4 gap-5',
+    props.columnClassName,
+  );
+
+  const rowClassName = classnames('flex-1', props.rowClassName);
+
   return (
     <div className="flex flex-col gap-5">
       {groups.map((items, index) => (
-        <div
-          key={`col-${index}`}
-          className={cn('flex w-full px-4 gap-5', props.columnClassName)}
-        >
+        <div key={`col-${index}`} className={columnClassName}>
           {items.map((item, index) => (
-            <div
-              key={`row-${index}`}
-              className={cn('flex-1', props.rowClassName)}
-            >
+            <div key={`row-${index}`} className={rowClassName}>
               {props.renderItem(item)}
             </div>
           ))}
           {filling(items).map((item, index) => (
-            <div
-              key={`filling-${index}`}
-              className={cn('flex-1', props.rowClassName)}
-            />
+            <div key={`filling-${index}`} className={rowClassName} />
           ))}
         </div>
       ))}

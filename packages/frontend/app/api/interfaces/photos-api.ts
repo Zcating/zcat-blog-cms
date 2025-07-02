@@ -5,6 +5,7 @@ export namespace PhotosApi {
     id?: number;
     name: string;
     url: string;
+    thumbnailUrl: string;
     createdAt?: Date;
     updatedAt?: Date;
   }

@@ -1,4 +1,4 @@
-import { cn } from "../utils";
+import { classnames } from '../utils';
 
 type RowGap = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10';
 
@@ -8,7 +8,7 @@ interface RowProps {
 }
 
 export function Row(props: RowProps) {
-  const className = cn('flex flex-row', rowGapClassFrom(props.gap));
+  const className = classnames('flex flex-row', rowGapClassFrom(props.gap));
   return <div className={className}>{props.children}</div>;
 }
 
