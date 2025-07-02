@@ -1,3 +1,4 @@
+import { Button, Card } from '@cms/components';
 import React from 'react';
 interface AlbumImageCardProps {
   source: string;
@@ -7,17 +8,19 @@ interface AlbumImageCardProps {
 }
 export function AlbumImageCard(props: AlbumImageCardProps) {
   return (
-    <div
-      className="card bg-base-100 shadow-sm cursor-pointer"
-      onClick={props.onClick}
-    >
+    <Card className="bg-base-100 shadow-sm">
       <figure>
         <img src={props.source} alt={props.title} />
       </figure>
-      <div className="card-body">
-        <h2 className="card-title">{props.title}</h2>
+      <Card.Body>
+        <Card.Title>
+          {props.title}
+        </Card.Title>
         {props.content ? <p>{props.content}</p> : null}
-      </div>
-    </div>
+        <Card.Actions className='flex justify-end'>
+          <Button variant='primary'>查看详情</Button>
+        </Card.Actions>
+      </Card.Body>
+    </Card>
   );
 }

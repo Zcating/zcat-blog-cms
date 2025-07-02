@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Grid, Modal, FormDialog } from '@cms/components';
+import { Grid, Modal, FormDialog, Button, Row } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
 import { AlbumImageCard } from '@cms/modules';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -24,22 +24,23 @@ export default function Albums(props: Route.ComponentProps) {
   const navigate = useNavigate();
 
   const handleCreateClick = async () => {
+    const data = await showAlbumDialog({
+      title: '新增相册',
+      initialValues: {
+        name: '默认相册',
+        description: '',
+      },
+    });
+    if (!data) {
+      return;
+    }
+    const result = await AlbumsApi.createPhotoAlbum(data);
+    setAlbums([...albums, result]);
+
     Toast.show({
       message: '创建成功',
       type: 'success',
     });
-    // const data = await showAlbumDialog({
-    //   title: '新增相册',
-    //   initialValues: {
-    //     name: '默认相册',
-    //     description: '',
-    //   },
-    // });
-    // if (!data) {
-    //   return;
-    // }
-    // const result = await AlbumsApi.createPhotoAlbum(data);
-    // setAlbums([...albums, result]);
   };
 
   const handleCloseDialog = () => {
@@ -96,10 +97,7 @@ function AlbumItem(props: AlbumItemProps) {
   const { item, onClickItem } = props;
   return (
     <AlbumImageCard
-      source={
-        item.cover?.url ??
-        'https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp'
-      }
+      source={item.cover?.url ?? ''}
       title={item.name}
       content={item.description}
       onClick={() => onClickItem(item)}
@@ -141,14 +139,14 @@ function AlbumCreationForm(props: AlbumCreationFormProps) {
         />
       </label>
 
-      <div className="flex gap-3">
-        <button className="block btn btn-primary" type="submit">
+      <Row gap="3">
+        <Button type="submit" variant="primary">
           创建
-        </button>
-        <button className="block btn" type="button" onClick={props.onCancel}>
+        </Button>
+        <Button type="button" onClick={props.onCancel}>
           取消
-        </button>
-      </div>
+        </Button>
+      </Row>
     </form>
   );
 }

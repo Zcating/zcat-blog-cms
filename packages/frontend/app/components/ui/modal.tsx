@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 import { cn } from '../utils';
 
 export namespace Modal {
+  let id = 0;
+
   type ModalPosition = 'top' | 'left' | 'right' | 'bottom' | 'center';
 
   export interface ModalProps {
@@ -39,6 +41,7 @@ export namespace Modal {
 
     const modal = createPortal(
       <div
+        key={`modal-${id++}`}
         className={cn('modal scrollbar-auto', positionClass, props.className)}
         role="dialog"
         ref={handleRef}

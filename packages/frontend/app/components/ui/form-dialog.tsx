@@ -32,7 +32,7 @@ export namespace FormDialog {
 
       await Modal.show({
         content: (
-          <div>
+          <div className='space-y-5'>
             <h3 className="font-bold text-lg">{props.title}</h3>
             <FormComponent
               initialValues={props.initialValues}
