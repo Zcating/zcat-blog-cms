@@ -22,11 +22,11 @@ export function Grid<T>(props: GridProps<T>) {
     [cols],
   );
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {groups.map((items, index) => (
         <div
           key={`col-${index}`}
-          className={cn('flex w-full px-4 gap-3', props.columnClassName)}
+          className={cn('flex w-full px-4 gap-5', props.columnClassName)}
         >
           {items.map((item, index) => (
             <div

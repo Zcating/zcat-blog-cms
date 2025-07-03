@@ -8,17 +8,13 @@ interface AlbumImageCardProps {
 }
 export function AlbumImageCard(props: AlbumImageCardProps) {
   return (
-    <Card className="bg-base-100 shadow-sm">
-      <figure>
-        <img src={props.source} alt={props.title} />
-      </figure>
+    <Card>
+      <Card.Figure src={props.source} alt={props.title} />
       <Card.Body>
-        <Card.Title>
-          {props.title}
-        </Card.Title>
+        <Card.Title>{props.title}</Card.Title>
         {props.content ? <p>{props.content}</p> : null}
-        <Card.Actions className='flex justify-end'>
-          <Button variant='primary'>查看详情</Button>
+        <Card.Actions className="flex justify-end">
+          <Button variant="primary">查看详情</Button>
         </Card.Actions>
       </Card.Body>
     </Card>

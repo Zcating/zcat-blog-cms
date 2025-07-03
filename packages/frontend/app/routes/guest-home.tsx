@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import type { Route } from './+types/guest-home';
 
 import { AuthApi } from '@cms/api';
-import { useLoadingFn } from '@cms/components';
+import { Button, useLoadingFn } from '@cms/components';
 import { useNavigate } from 'react-router';
 
 export function meta({}: Route.MetaArgs) {
@@ -63,13 +63,13 @@ export default function GuestHome() {
                 value={formData.username}
                 onChange={handleInputChange}
                 placeholder="请输入用户名"
-                className="input input-bordered w-full"
+                className="input w-full"
                 required
               />
             </div>
 
             {/* 密码输入 */}
-            <div className="form-control">
+            <div>
               <label className="label">
                 <span className="label-text">密码</span>
               </label>
@@ -79,7 +79,7 @@ export default function GuestHome() {
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="请输入密码"
-                className="input input-bordered w-full"
+                className="input w-full"
                 required
               />
             </div>
@@ -100,22 +100,9 @@ export default function GuestHome() {
 
             {/* 登录按钮 */}
             <div className="form-control mt-6">
-              <button
-                type="submit"
-                className={`btn btn-primary w-full ${
-                  isLoading ? 'loading' : ''
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    登录中...
-                  </>
-                ) : (
-                  '登录'
-                )}
-              </button>
+              <Button variant="primary" shape="block" disabled={isLoading}>
+                {isLoading ? '登录中...' : '登录'}
+              </Button>
             </div>
 
             {/* 忘记密码链接 */}

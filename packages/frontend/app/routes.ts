@@ -14,6 +14,7 @@ export default [
     route('article-categories', 'routes/article-categories.tsx'),
     route('albums', 'routes/albums.tsx'),
     route('albums/:id', 'routes/albums.id.tsx'),
+    route('photos', 'routes/photo.tsx'),
     route('user-info', 'routes/user-info.tsx'),
     route('settings', 'routes/settings.tsx'),
   ]),

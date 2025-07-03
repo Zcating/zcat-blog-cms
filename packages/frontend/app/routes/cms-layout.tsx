@@ -6,6 +6,7 @@ const menuItems = [
   { name: '文章管理', icon: '📝', href: '/articles' },
   { name: '分类管理', icon: '📁', href: '/article-categories' },
   { name: '相册管理', icon: '🖼️', href: '/albums' },
+  { name: '照片管理', icon: '🖼️', href: '/photos' },
   { name: '用户信息', icon: '👥', href: '/user-info' },
   { name: '系统设置', icon: '⚙️', href: '/settings' },
 ];
