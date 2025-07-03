@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule, CmsModule } from '@backend/modules';
 
-import * as path from 'path';
+// import * as path from 'path';
 
 @Module({
   imports: [
@@ -37,10 +36,9 @@ import * as path from 'path';
         migrations: [`${__dirname}/src/migration/*{.ts,.js}`],
       }),
     }),
-    ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', '/uploads/public'),
-      renderPath: 'public',
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: path.join(__dirname, '..', 'uploads/'),
+    // }),
     AuthModule,
     CmsModule,
   ],

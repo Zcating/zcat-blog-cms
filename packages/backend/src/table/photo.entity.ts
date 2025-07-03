@@ -20,6 +20,9 @@ export class Photo {
   @Column()
   url: string;
 
+  @Column()
+  thumbnailUrl: string;
+
   @ManyToOne(() => PhotoAlbum, (album) => album.photos)
   album: PhotoAlbum;
 
