@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { Grid, Modal, FormDialog, Button, Row } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
-import { AlbumImageCard } from '@cms/modules';
+import { AlbumCard } from '@cms/modules';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import type { Route } from './+types/albums';
@@ -96,7 +96,7 @@ interface AlbumItemProps {
 function AlbumItem(props: AlbumItemProps) {
   const { item, onClickItem } = props;
   return (
-    <AlbumImageCard
+    <AlbumCard
       source={item.cover?.url ?? ''}
       title={item.name}
       content={item.description}

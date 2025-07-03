@@ -10,32 +10,58 @@ export async function clientLoader() {
 
 export default function Photos(props: Route.ComponentProps) {
   const { photos } = props.loaderData;
+  const create = async () => {
+    // TODO: show form
+  };
+
+  const edit = (data: PhotosApi.Photo) => {
+    // TODO: show form
+  };
 
   return (
-    <div>
-      <h1>照片列表</h1>
+    <div className="space-y-5 p-3">
+      <h1 className="text-2xl font-bold">照片</h1>
+      <Button variant="primary" onClick={create}>
+        新增
+      </Button>
       <Grid
+        cols={5}
         items={photos}
-        cols={3}
-        renderItem={(item) => <PhotoItem item={item} />}
+        renderItem={(item) => <PhotoItem data={item} onEdit={edit} />}
       />
     </div>
   );
 }
 
-function PhotoItem(props: { item: PhotosApi.Photo }) {
-  const { item } = props;
+interface PhotoItemProps {
+  data: PhotosApi.Photo;
+  onEdit: (data: PhotosApi.Photo) => void;
+}
+function PhotoItem(props: PhotoItemProps) {
+  const srcUrl = `/static/${props.data.url}`;
   return (
     <Card>
-      <figure>
-        <img src={`/static/${item.thumbnailUrl}`} alt={item.name} />
-      </figure>
+      <Card.Figure src={srcUrl} alt={props.data.name} />
       <Card.Body>
-        <Card.Title>{item.name}</Card.Title>
+        <Card.Title>{props.data.name}</Card.Title>
         <Card.Actions>
-          <Button variant="primary">查看详情</Button>
+          <Button onClick={() => props.onEdit(props.data)}>编辑</Button>
         </Card.Actions>
       </Card.Body>
     </Card>
+  );
+}
+
+interface PhotoFormProps {
+  data?: PhotosApi.Photo;
+  onSubmit: (data: PhotosApi.Photo) => void;
+}
+
+export function PhotoForm(props: PhotoFormProps) {
+  return (
+    <form>
+      <input name="name" defaultValue={props.data?.name} />
+      <input name="url" defaultValue={props.data?.url} />
+    </form>
   );
 }

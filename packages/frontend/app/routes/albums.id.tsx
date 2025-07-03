@@ -1,7 +1,7 @@
 import { FormDialog, Grid, ImageUpload } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { AlbumImageCard } from '@cms/modules';
+import { AlbumCard } from '@cms/modules';
 import { useForm } from 'react-hook-form';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -69,7 +69,7 @@ function AlbumPhotoItem(props: AlbumPhotoItemProps) {
     onClickItem?.(item);
   };
   return (
-    <AlbumImageCard source={item.url} title={item.name} onClick={handleClick} />
+    <AlbumCard source={item.url} title={item.name} onClick={handleClick} />
   );
 }
 

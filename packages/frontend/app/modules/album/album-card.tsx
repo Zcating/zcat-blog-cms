@@ -6,7 +6,7 @@ interface AlbumImageCardProps {
   content?: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
-export function AlbumImageCard(props: AlbumImageCardProps) {
+export function AlbumCard(props: AlbumImageCardProps) {
   return (
     <Card>
       <Card.Figure src={props.source} alt={props.title} />

@@ -8,12 +8,11 @@ interface FormProps {
 
 export function Form(props: FormProps) {
   const { children, onSubmit, onCancel } = props;
-  const { register, handleSubmit } = useForm({});
+  const { control, register, handleSubmit } = useForm();
 
   const onSubmitForm: SubmitHandler<any> = (data) => {
     onSubmit(data);
   };
-
   return (
     <form className="space-y-5" onSubmit={handleSubmit(onSubmitForm)}>
       {children}
