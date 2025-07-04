@@ -40,11 +40,11 @@
       "@cms/components/*": [
         "./app/components/*"
       ],
-      "@cms/modules": [
-        "app/core/modules"
+      "@cms/core": [
+        "app/core"
       ],
-      "@cms/modules/*": [
-        "app/core/modules/*"
+      "@cms/core/*": [
+        "app/core/*"
       ],
     },
     "esModuleInterop": true,
