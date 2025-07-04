@@ -41,10 +41,10 @@
         "./app/components/*"
       ],
       "@cms/modules": [
-        "./app/modules"
+        "app/core/modules"
       ],
       "@cms/modules/*": [
-        "./app/modules/*"
+        "app/core/modules/*"
       ],
     },
     "esModuleInterop": true,

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { Route } from './+types/guest-home';
+import type { Route } from './+types/login';
 
 import { AuthApi } from '@cms/api';
 import { Button, useLoadingFn } from '@cms/components';

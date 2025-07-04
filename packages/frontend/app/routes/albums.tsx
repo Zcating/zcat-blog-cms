@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router';
-import { Grid, Modal, FormDialog, Button, Row } from '@cms/components';
+import { Grid, FormDialog, Button, Row } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
-import { AlbumCard } from '@cms/modules';
+import { AlbumImageCard } from '@cms/core';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import type { Route } from './+types/albums';
 import React from 'react';
-import { Toast } from '@cms/components/ui/toast';
 
 export async function clientLoader() {
   return {
@@ -36,11 +35,6 @@ export default function Albums(props: Route.ComponentProps) {
     }
     const result = await AlbumsApi.createPhotoAlbum(data);
     setAlbums([...albums, result]);
-
-    Toast.show({
-      message: '创建成功',
-      type: 'success',
-    });
   };
 
   const handleCloseDialog = () => {
@@ -96,7 +90,7 @@ interface AlbumItemProps {
 function AlbumItem(props: AlbumItemProps) {
   const { item, onClickItem } = props;
   return (
-    <AlbumCard
+    <AlbumImageCard
       source={item.cover?.url ?? ''}
       title={item.name}
       content={item.description}

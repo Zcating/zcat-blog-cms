@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArticlesApi } from '@cms/api';
-import { ArticleEditor, ArticleViewer } from '@cms/modules';
+import { ArticleEditor, ArticleViewer } from '@cms/core/modules';
 import type { Route } from './+types/articles.id';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {

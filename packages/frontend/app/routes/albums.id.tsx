@@ -1,22 +1,26 @@
 import { FormDialog, Grid, ImageUpload } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { AlbumCard } from '@cms/modules';
+import { AlbumImageCard, errorHandler } from '@cms/core';
 import { useForm } from 'react-hook-form';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const id = Number(params.id);
-  if (isNaN(id)) {
-    throw new Error('Not Found');
-  }
-  const album = await AlbumsApi.getPhotoAlbum(id);
-  if (!album) {
-    throw new Error('Not Found');
-  }
+  try {
+    const id = Number(params.id);
+    if (isNaN(id)) {
+      throw new Error('Not Found');
+    }
+    const album = await AlbumsApi.getPhotoAlbum(id);
+    if (!album) {
+      throw new Error('Not Found');
+    }
 
-  return {
-    album,
-  };
+    return {
+      album,
+    };
+  } catch (e) {
+    return errorHandler(e);
+  }
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
@@ -69,7 +73,7 @@ function AlbumPhotoItem(props: AlbumPhotoItemProps) {
     onClickItem?.(item);
   };
   return (
-    <AlbumCard source={item.url} title={item.name} onClick={handleClick} />
+    <AlbumImageCard source={item.url} title={item.name} onClick={handleClick} />
   );
 }
 
