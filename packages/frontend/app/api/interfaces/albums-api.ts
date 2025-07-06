@@ -1,19 +1,12 @@
 import { HttpClient } from '../http-client';
+import type { PhotosApi } from './photos-api';
 
 export namespace AlbumsApi {
-  export interface Photo {
-    id?: number;
-    name: string;
-    url: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }
-
   export interface PhotoAlbum {
     id?: number;
     name: string;
     description?: string;
-    cover?: Photo;
+    cover?: PhotosApi.Photo;
     createdAt?: Date;
     updatedAt?: Date;
   }
@@ -22,8 +15,8 @@ export namespace AlbumsApi {
     id: number;
     name: string;
     description?: string;
-    cover?: Photo;
-    photos: Photo[];
+    cover?: PhotosApi.Photo;
+    photos: PhotosApi.Photo[];
     createdAt?: Date;
     updatedAt?: Date;
   }

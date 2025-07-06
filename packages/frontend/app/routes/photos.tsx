@@ -1,6 +1,7 @@
 import { PhotosApi } from '@cms/api';
 import type { Route } from './+types/photos';
 import { Button, Card, Grid } from '@cms/components';
+import { PhotoCard } from '@cms/core';
 
 export async function clientLoader() {
   return {
@@ -27,28 +28,9 @@ export default function Photos(props: Route.ComponentProps) {
       <Grid
         cols={5}
         items={photos}
-        renderItem={(item) => <PhotoItem data={item} onEdit={edit} />}
+        renderItem={(item) => <PhotoCard data={item} onEdit={edit} />}
       />
     </div>
-  );
-}
-
-interface PhotoItemProps {
-  data: PhotosApi.Photo;
-  onEdit: (data: PhotosApi.Photo) => void;
-}
-function PhotoItem(props: PhotoItemProps) {
-  const srcUrl = `/static/${props.data.url}`;
-  return (
-    <Card>
-      <Card.Figure src={srcUrl} alt={props.data.name} />
-      <Card.Body>
-        <Card.Title>{props.data.name}</Card.Title>
-        <Card.Actions>
-          <Button onClick={() => props.onEdit(props.data)}>编辑</Button>
-        </Card.Actions>
-      </Card.Body>
-    </Card>
   );
 }
 

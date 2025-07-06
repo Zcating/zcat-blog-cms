@@ -1,8 +1,7 @@
 import { Form, FormDialog, Grid, ImageUpload } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { AlbumImageCard, errorHandler } from '@cms/core';
-import { useForm } from 'react-hook-form';
+import { PhotoCard } from '@cms/core';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -42,6 +41,8 @@ export default function AlbumsId(props: Route.ComponentProps) {
       image: params.image,
     });
   };
+
+  const edit = () => {};
   return (
     <div className="space-y-10 p-3">
       <div className="space-y-3">
@@ -53,24 +54,10 @@ export default function AlbumsId(props: Route.ComponentProps) {
       </div>
       <Grid
         items={album.photos}
-        cols={3}
-        renderItem={(item) => <AlbumPhotoItem item={item} />}
+        cols={5}
+        renderItem={(item) => <PhotoCard data={item} onEdit={edit} />}
       />
     </div>
-  );
-}
-
-interface AlbumPhotoItemProps {
-  item: AlbumsApi.Photo;
-  onClickItem?: (item: AlbumsApi.Photo) => void;
-}
-function AlbumPhotoItem(props: AlbumPhotoItemProps) {
-  const { item, onClickItem } = props;
-  const handleClick = () => {
-    onClickItem?.(item);
-  };
-  return (
-    <AlbumImageCard source={item.url} title={item.name} onClick={handleClick} />
   );
 }
 
