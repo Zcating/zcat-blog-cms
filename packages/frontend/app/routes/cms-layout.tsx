@@ -1,5 +1,30 @@
-import { Outlet } from 'react-router';
-import { Navbar, Sidebar } from '@cms/components';
+import { Outlet, redirect, useNavigate, useRouteError } from 'react-router';
+import { isObject, Navbar, Sidebar } from '@cms/components';
+import { isRouteErrorResponse } from 'react-router';
+import React from 'react';
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (isObject(error) && error.message) {
+      navigate('/login');
+    }
+  }, [error, navigate]);
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>
+          {error.status} {error.statusText}
+        </h1>
+        <p>{error.data}</p>
+      </div>
+    );
+  } else {
+    return <h1>未知错误</h1>;
+  }
+}
 
 const menuItems = [
   { name: '仪表盘', icon: '📊', href: '/dashboard' },

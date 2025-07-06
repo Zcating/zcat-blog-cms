@@ -2,6 +2,7 @@ import type { ButtonHTMLAttributes } from 'react';
 import type React from 'react';
 import { classnames } from '../utils';
 import { Loading3QuartersOutlined } from '@ant-design/icons';
+import { tv } from 'tailwind-variants';
 
 type ButtonVariant =
   | 'neutral'
@@ -26,6 +27,51 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
+const buttonClassVariant = tv({
+  base: 'btn',
+  variants: {
+    variant: {
+      neutral: 'btn-neutral',
+      primary: 'btn-primary',
+      secondary: 'btn-secondary',
+      accent: 'btn-accent',
+      info: 'btn-info',
+      success: 'btn-success',
+      warning: 'btn-warning',
+      error: 'btn-error',
+    },
+    size: {
+      xs: 'btn-xs',
+      sm: 'btn-sm',
+      md: 'btn-md',
+      lg: 'btn-lg',
+      xl: 'btn-xl',
+    },
+    appearance: {
+      outline: 'btn-outline',
+      dash: 'btn-dash',
+      soft: 'btn-soft',
+      ghost: 'btn-ghost',
+      link: 'btn-link',
+    },
+    shape: {
+      square: 'btn-square',
+      circle: 'btn-circle',
+      wide: 'btn-wide',
+      block: 'btn-block',
+    },
+    disabled: {
+      true: 'btn-disabled',
+    },
+    loading: {
+      true: 'cursor-not-allowed opacity-70',
+    },
+  },
+  defaultVariants: {
+    variant: 'neutral',
+  },
+});
+
 export function Button(props: ButtonProps) {
   const {
     variant,
@@ -41,12 +87,14 @@ export function Button(props: ButtonProps) {
   } = props;
   const cls = classnames(
     'block btn flex',
-    variantClassFrom(variant),
-    sizeClassFrom(size),
-    appearanceClassFrom(appearance),
-    shapeClassFrom(shape),
-    disabled ? 'btn-disabled' : '',
-    loading ? 'gap-2 cursor-not-allowed opacity-70' : '',
+    buttonClassVariant({
+      variant,
+      size,
+      shape,
+      appearance,
+      disabled,
+      loading,
+    }),
     className,
   );
 
@@ -60,76 +108,8 @@ export function Button(props: ButtonProps) {
 
   return (
     <button className={cls} onClick={click} {...restProps}>
-      {loading ? <Loading3QuartersOutlined spin /> : null}
+      {loading ? <Loading3QuartersOutlined spin className="mr-2" /> : null}
       {children}
     </button>
   );
-}
-
-function variantClassFrom(variant?: ButtonVariant) {
-  switch (variant) {
-    case 'neutral':
-      return 'btn-neutral';
-    case 'primary':
-      return 'btn-primary';
-    case 'secondary':
-      return 'btn-secondary';
-    case 'accent':
-      return 'btn-accent';
-    case 'info':
-      return 'btn-info';
-    case 'success':
-      return 'btn-success';
-    case 'warning':
-      return 'btn-warning';
-    case 'error':
-      return 'btn-error';
-    default:
-      return '';
-  }
-}
-
-function sizeClassFrom(size?: ButtonSize) {
-  switch (size) {
-    case 'sm':
-      return 'btn-sm';
-    case 'md':
-      return 'btn-md';
-    case 'lg':
-      return 'btn-lg';
-    default:
-      return 'btn-md';
-  }
-}
-
-function appearanceClassFrom(appearance?: ButtonAppearance) {
-  switch (appearance) {
-    case 'outline':
-      return 'btn-outline';
-    case 'dash':
-      return 'btn-dash';
-    case 'soft':
-      return 'btn-soft';
-    case 'ghost':
-      return 'btn-ghost';
-    case 'link':
-      return 'btn-link';
-    default:
-      return '';
-  }
-}
-
-function shapeClassFrom(shape?: ButtonShape) {
-  switch (shape) {
-    case 'square':
-      return 'btn-square';
-    case 'circle':
-      return 'btn-circle';
-    case 'wide':
-      return 'btn-wide';
-    case 'block':
-      return 'btn-block';
-    default:
-      return '';
-  }
 }

@@ -4,7 +4,7 @@ interface AlbumImageCardProps {
   source: string;
   title: string;
   content?: string;
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 export function AlbumImageCard(props: AlbumImageCardProps) {
   return (
@@ -14,7 +14,9 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
         <Card.Title>{props.title}</Card.Title>
         {props.content ? <p>{props.content}</p> : null}
         <Card.Actions className="flex justify-end">
-          <Button variant="primary">查看详情</Button>
+          <Button variant="primary" onClick={props.onClick}>
+            查看详情
+          </Button>
         </Card.Actions>
       </Card.Body>
     </Card>

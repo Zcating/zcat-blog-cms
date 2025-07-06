@@ -7,7 +7,6 @@ export * from './image-upload';
 export * from './button';
 export * from './row';
 export * from './card';
-
-
+export * from './form';
 
 export { UiProvider } from './ui-provider';

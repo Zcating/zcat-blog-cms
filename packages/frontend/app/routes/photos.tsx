@@ -1,16 +1,11 @@
 import { PhotosApi } from '@cms/api';
 import type { Route } from './+types/photos';
 import { Button, Card, Grid } from '@cms/components';
-import { errorHandler } from '@cms/core';
 
 export async function clientLoader() {
-  try {
-    return {
-      photos: await PhotosApi.getPhotos(),
-    };
-  } catch (e) {
-    return errorHandler(e);
-  }
+  return {
+    photos: await PhotosApi.getPhotos(),
+  };
 }
 
 export default function Photos(props: Route.ComponentProps) {

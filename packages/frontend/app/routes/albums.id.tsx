@@ -1,26 +1,23 @@
-import { FormDialog, Grid, ImageUpload } from '@cms/components';
+import { Form, FormDialog, Grid, ImageUpload } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import { AlbumImageCard, errorHandler } from '@cms/core';
 import { useForm } from 'react-hook-form';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  try {
-    const id = Number(params.id);
-    if (isNaN(id)) {
-      throw new Error('Not Found');
-    }
-    const album = await AlbumsApi.getPhotoAlbum(id);
-    if (!album) {
-      throw new Error('Not Found');
-    }
-
-    return {
-      album,
-    };
-  } catch (e) {
-    return errorHandler(e);
+  const id = Number(params.id);
+  if (isNaN(id)) {
+    throw new Error('Not Found');
   }
+
+  const album = await AlbumsApi.getPhotoAlbum(id);
+  if (!album) {
+    throw new Error('Not Found');
+  }
+
+  return {
+    album,
+  };
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
@@ -94,33 +91,19 @@ interface PhotoCreationFormProps {
  * @returns {React.ReactElement}
  */
 function PhotoCreationForm(props: PhotoCreationFormProps): React.ReactElement {
-  const { register, handleSubmit, setValue } = useForm<CreatePhotoValues>({
-    defaultValues: props.initialValues,
+  const instance = Form.useForm({
+    initialValues: props.initialValues,
+    onSubmit: props.onSubmit,
   });
-  return (
-    <form className="space-y-5" onSubmit={handleSubmit(props.onSubmit)}>
-      <label className="floating-label">
-        <span className="label-text">相册名称</span>
-        <input
-          className="input input-bordered w-full"
-          type="text"
-          placeholder="请输入相片名称"
-          {...register('name')}
-        />
-      </label>
-      <label className="floating-label">
-        <span className="label-text">上传图片</span>
-        <fieldset className="fieldset">
-          <legend className="fieldset-legend">Pick a file</legend>
-          <input
-            type="file"
-            className="file-input"
-            onChange={(e) => setValue('image', e.target.files?.[0] ?? null)}
-          />
-          <label className="label">Max size 2MB</label>
-        </fieldset>
-      </label>
 
+  return (
+    <Form form={instance}>
+      <Form.Item form={instance} label="照片名称" name="name">
+        <input type="text" />
+      </Form.Item>
+      <Form.Item form={instance} label="上传图片" name="image">
+        <ImageUpload />
+      </Form.Item>
       <div className="flex gap-3">
         <button className="block btn btn-primary" type="submit">
           创建
@@ -129,7 +112,7 @@ function PhotoCreationForm(props: PhotoCreationFormProps): React.ReactElement {
           取消
         </button>
       </div>
-    </form>
+    </Form>
   );
 }
 

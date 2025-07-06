@@ -15,13 +15,15 @@ import {
 
 import useConstant from 'use-constant';
 
-interface FormProps {
+interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   className?: string;
   children: React.ReactNode;
-  form: FormInstance;
+  form: FormInstance<TFieldValues>;
 }
 
-export function Form(props: FormProps) {
+export function Form<TFieldValues extends FieldValues = FieldValues>(
+  props: FormProps<TFieldValues>,
+) {
   const { children, form } = props;
 
   return (
@@ -43,7 +45,9 @@ interface FormItemChildrenProps<
 type FormItemChildren<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = (props: FormItemChildrenProps<TFieldValues, TName>) => React.ReactElement;
+> =
+  | ((props: FormItemChildrenProps<TFieldValues, TName>) => React.ReactElement)
+  | React.ReactElement<any>;
 
 interface FormItemProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -52,7 +56,7 @@ interface FormItemProps<
 > {
   form: FormInstance<TFieldValues, TTransformedValues>;
   name: TName;
-  title: string;
+  label: string;
   children: FormItemChildren<TFieldValues, TName>;
 }
 
@@ -61,16 +65,32 @@ function FormItem<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
 >(props: FormItemProps<TFieldValues, TName, TTransformedValues>) {
-  const { form, name, title, children } = props;
+  const { form, name, label, children } = props;
+
+  const render = React.useMemo(() => {
+    if (typeof children === 'function') {
+      return children;
+    } else if (React.isValidElement(children)) {
+      return (props: FormItemChildrenProps<TFieldValues, TName>) => {
+        return React.cloneElement(children, {
+          ...(children.props as any),
+          ...props.field,
+        });
+      };
+    } else {
+      return () => undefined as any;
+    }
+  }, [children]);
+
   return (
     <Controller
       control={form.control}
       name={name}
       render={(renderProps) => {
         return (
-          <label>
-            <span className="label-text">{title}</span>
-            {children(renderProps)}
+          <label className="input">
+            <span className="label-text">{label}</span>
+            {render(renderProps)}
           </label>
         );
       }}
