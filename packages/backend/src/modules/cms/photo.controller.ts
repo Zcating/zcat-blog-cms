@@ -126,7 +126,9 @@ export class PhotoController {
       name: name,
       url: `/${PhotoController.UPLOAD_PATH}/${baseFilename}`,
       thumbnailUrl: `/${PhotoController.THUMBNAIL_PATH}/${thumbnailFilename}`,
-      albumId: safeAlbumId,
+      album: {
+        id: safeAlbumId,
+      },
     });
 
     return createResult({

@@ -59,7 +59,7 @@ export class PhotoAlbumController {
 
   @Post()
   @ApiOperation({ summary: '创建相册' })
-  @ApiResponse({ status: 201, description: '相册创建成功' })
+  @ApiResponse({ status: 200, description: '相册创建成功' })
   async create(
     @Body() createPhotoAlbumDto: CreatePhotoAlbumDto,
   ): Promise<ResultData<PhotoAlbum>> {
