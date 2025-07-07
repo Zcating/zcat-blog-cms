@@ -1,7 +1,16 @@
-import { Form, FormDialog, Grid, ImageUpload } from '@cms/components';
+import {
+  Button,
+  Form,
+  FormDialog,
+  Grid,
+  ImageUpload,
+  Input,
+} from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import { PhotoCard } from '@cms/core';
+
+import * as z from 'zod/v4';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -42,7 +51,25 @@ export default function AlbumsId(props: Route.ComponentProps) {
     });
   };
 
-  const edit = () => {};
+  const edit = async (photo: PhotosApi.Photo) => {
+    // const params = await showPhotoDialog({
+    //   title: '编辑照片',
+    //   imageUrl: photo.imageUrl,
+    //   initialValues: {
+    //     name: photo.name,
+    //     albumId: album.id,
+    //     image: null,
+    //   },
+    // });
+    // if (!params || !params.image) {
+    //   return;
+    // }
+    // await PhotosApi.createPhoto({
+    //   name: params.name,
+    //   albumId: params.albumId,
+    //   image: params.image,
+    // });
+  };
   return (
     <div className="space-y-10 p-3">
       <div className="space-y-3">
@@ -68,10 +95,12 @@ interface CreatePhotoValues {
 }
 
 interface PhotoCreationFormProps {
+  imageUrl?: string;
   initialValues: CreatePhotoValues;
   onSubmit: (data: CreatePhotoValues) => void;
   onCancel: () => void;
 }
+
 /**
  * 照片创建表单
  * @param {PhotoCreationFormProps} props
@@ -84,20 +113,18 @@ function PhotoCreationForm(props: PhotoCreationFormProps): React.ReactElement {
   });
 
   return (
-    <Form form={instance}>
+    <Form form={instance} className="space-y-5">
       <Form.Item form={instance} label="照片名称" name="name">
-        <input type="text" />
+        <Input />
       </Form.Item>
       <Form.Item form={instance} label="上传图片" name="image">
-        <ImageUpload />
+        <ImageUpload imageUrl={props.imageUrl} />
       </Form.Item>
-      <div className="flex gap-3">
-        <button className="block btn btn-primary" type="submit">
+      <div className="flex gap-3 justify-end">
+        <Button variant="primary" type="submit">
           创建
-        </button>
-        <button className="block btn" type="button" onClick={props.onCancel}>
-          取消
-        </button>
+        </Button>
+        <Button onClick={props.onCancel}>取消</Button>
       </div>
     </Form>
   );

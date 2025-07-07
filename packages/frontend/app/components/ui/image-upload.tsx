@@ -1,5 +1,7 @@
 import { tv } from 'tailwind-variants';
 import { classnames } from '@cms/components/utils';
+import React from 'react';
+import { PlusOutlined } from '@ant-design/icons';
 
 export type ImageUploadVariant =
   | 'neutral'
@@ -44,36 +46,61 @@ const ImageUploadClassVariant = tv({
 
 interface ImageUploadProps {
   className?: string;
-
-  value?: File | null;
-  onChange?: (file: File) => void;
+  variant?: ImageUploadVariant;
+  size?: ImageUploadSize;
+  appearance?: ImageUploadAppearance;
+  imageUrl?: string;
+  value?: Blob | null;
+  onChange?: (blob: Blob) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function ImageUpload(props: ImageUploadProps) {
+  const imageUploadClassNames = classnames(
+    ImageUploadClassVariant({
+      variant: props.variant,
+      size: props.size,
+      appearance: props.appearance,
+    }),
+    props.className,
+  );
+
+  const [imageUrl, setImageUrl] = React.useState<string>(props.imageUrl ?? '');
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
       return;
     }
     props.onChange?.(file);
+    setImageUrl(URL.createObjectURL(file));
   };
 
-  const imageUploadClassNames = classnames(
-    ImageUploadClassVariant({
-      variant: 'neutral',
-      size: 'md',
-      appearance: 'default',
-    }),
-    props.className,
-  );
+  const imageRef = React.useRef<HTMLImageElement>(null);
+
+  // const imageUrl = URL.createObjectURL();
 
   return (
-    <input
-      type="file"
-      className={imageUploadClassNames}
-      onChange={handleChange}
-      onBlur={props.onBlur}
-    />
+    <div className="space-y-2">
+      <input
+        type="file"
+        className={imageUploadClassNames}
+        onChange={handleChange}
+        onBlur={props.onBlur}
+      />
+      {imageUrl ? (
+        <div className="border border-dashed">
+          <img
+            ref={imageRef}
+            src={imageUrl}
+            alt="上传图片"
+            className="aspect-square object-contain w-full"
+          />
+        </div>
+      ) : (
+        <div className="w-full aspect-square flex items-center justify-center border border-dashed">
+          <PlusOutlined />
+        </div>
+      )}
+    </div>
   );
 }

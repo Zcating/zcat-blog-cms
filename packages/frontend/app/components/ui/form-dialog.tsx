@@ -18,6 +18,7 @@ export namespace FormDialog {
     FormComponent: FormComponentType<T>,
   ): FormDialog<T> {
     return async (props: FormDialogProps<T>) => {
+      const { title, initialValues, ...rest } = props;
       const resolvers = Promise.withResolvers<T | null>();
 
       const close = () => {
@@ -32,10 +33,11 @@ export namespace FormDialog {
 
       await Modal.show({
         content: (
-          <div className='space-y-5'>
-            <h3 className="font-bold text-lg">{props.title}</h3>
+          <div className="space-y-5">
+            <h3 className="font-bold text-lg">{title}</h3>
             <FormComponent
-              initialValues={props.initialValues}
+              {...rest}
+              initialValues={initialValues}
               onSubmit={submit}
               onCancel={close}
             />

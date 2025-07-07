@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Controller,
-  type SubmitHandler,
   type Control,
   type FieldValues,
   type FieldPath,
@@ -88,7 +87,7 @@ function FormItem<
       name={name}
       render={(renderProps) => {
         return (
-          <label className="input">
+          <label className="flex gap-4 items-center">
             <span className="label-text">{label}</span>
             {render(renderProps)}
           </label>

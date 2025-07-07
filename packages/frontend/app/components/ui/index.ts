@@ -8,5 +8,6 @@ export * from './button';
 export * from './row';
 export * from './card';
 export * from './form';
+export * from './input';
 
 export { UiProvider } from './ui-provider';

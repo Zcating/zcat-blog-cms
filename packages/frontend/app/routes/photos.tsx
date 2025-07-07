@@ -1,6 +1,6 @@
 import { PhotosApi } from '@cms/api';
 import type { Route } from './+types/photos';
-import { Button, Card, Grid } from '@cms/components';
+import { Button, Card, Form, Grid, Input } from '@cms/components';
 import { PhotoCard } from '@cms/core';
 
 export async function clientLoader() {
@@ -39,11 +39,23 @@ interface PhotoFormProps {
   onSubmit: (data: PhotosApi.Photo) => void;
 }
 
-export function PhotoForm(props: PhotoFormProps) {
-  return (
-    <form>
-      <input name="name" defaultValue={props.data?.name} />
-      <input name="url" defaultValue={props.data?.url} />
-    </form>
-  );
-}
+// export function PhotoForm(props: PhotoFormProps) {
+//   const form = Form.useForm({
+//     initialValues: {
+//       name: '',
+
+//       ...props.data
+//     },
+//     onSubmit: props.onSubmit,
+//   });
+//   return (
+//     <Form form={form}>
+//       <Form.Item form={form} name="name" label="">
+//         <Input />
+//       </Form.Item>
+//       <Form.Item form={form} name="url" label="">
+//         <Input />
+//       </Form.Item>
+//     </Form>
+//   );
+// }
