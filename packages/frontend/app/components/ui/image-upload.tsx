@@ -97,7 +97,7 @@ export function ImageUpload(props: ImageUploadProps) {
           />
         </div>
       ) : (
-        <div className="w-full aspect-square flex items-center justify-center border border-dashed">
+        <div className="w-full aspect-square flex items-center justify-center border border-dashed cursor-pointer">
           <PlusOutlined />
         </div>
       )}

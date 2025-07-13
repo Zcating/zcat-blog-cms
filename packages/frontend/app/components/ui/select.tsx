@@ -15,7 +15,7 @@ type SelectSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
 type SelectAppearance = 'default' | 'ghost';
 
-export interface Option {
+export interface SelectOption {
   label: string;
   value: string;
 }
@@ -26,7 +26,7 @@ export interface SelectProps {
   appearance?: SelectAppearance;
   disabled?: boolean;
   className?: string;
-  options: Option[];
+  options: SelectOption[];
 }
 
 const selectClassVariant = tv({

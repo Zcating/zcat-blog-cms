@@ -6,9 +6,12 @@ interface GridProps<T> {
   cols: number;
   items: T[];
   renderItem: (item: T) => React.ReactNode;
+  renderEmpty?: () => React.ReactNode;
 }
 
 export function Grid<T>(props: GridProps<T>) {
+  const renderEmpty = props.renderEmpty ?? defaultRenderEmpty;
+
   const cols = props.cols ?? 2;
   const groups = useGroups(props.items, cols);
   const filling = React.useCallback(
@@ -31,6 +34,7 @@ export function Grid<T>(props: GridProps<T>) {
 
   return (
     <div className="flex flex-col gap-5">
+      {props.items.length === 0 && renderEmpty()}
       {groups.map((items, index) => (
         <div key={`col-${index}`} className={columnClassName}>
           {items.map((item, index) => (
@@ -57,4 +61,12 @@ function useGroups<T>(items: T[], cols: number) {
   }, [items, cols]);
 
   return groups;
+}
+
+function defaultRenderEmpty() {
+  return (
+    <div className="w-full h-[500px] flex items-center justify-center">
+      <div>暂无数据</div>
+    </div>
+  );
 }

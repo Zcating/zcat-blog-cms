@@ -1,11 +1,13 @@
 import { Modal } from './modal';
 
 export namespace FormDialog {
-  type FormComponentType<T> = React.FC<{
+  export interface FormComponentProps<T> {
     initialValues: T;
     onSubmit: (data: T) => void;
     onCancel: () => void;
-  }>;
+  }
+
+  type FormComponentType<T> = React.FC<FormComponentProps<T>>;
 
   interface FormDialogProps<T> {
     title: string;
