@@ -28,7 +28,6 @@ export default function Article({ loaderData }: Route.ComponentProps) {
   const [article, setArticle] = useState(loaderData.article);
   const [isEditing, setIsEditing] = useState(!article.id);
   const [saving, setSaving] = useState(false);
-  console.log(isEditing);
 
   // 保存文章
   const handleSave = async (updatedArticle: ArticlesApi.Article) => {

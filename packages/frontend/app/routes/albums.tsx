@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { Grid, FormDialog, Button, Row } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
-import { AlbumImageCard } from '@cms/core';
+import { AlbumImageCard, createCheckbox, createInput, createSchemeForm, createTextArea } from '@cms/core';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import type { Route } from './+types/albums';
@@ -99,51 +99,7 @@ function AlbumItem(props: AlbumItemProps) {
   );
 }
 
-interface AlbumCreationFormProps {
-  initialValues: AlbumsApi.PhotoAlbum;
-  onSubmit: (data: AlbumsApi.PhotoAlbum) => void;
-  onCancel: () => void;
-}
-function AlbumCreationForm(props: AlbumCreationFormProps) {
-  const { register, handleSubmit } = useForm<AlbumsApi.PhotoAlbum>({
-    defaultValues: props.initialValues,
-  });
-
-  const onSubmit: SubmitHandler<AlbumsApi.PhotoAlbum> = (data) => {
-    props.onSubmit(data);
-  };
-
-  return (
-    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-      <label className="floating-label">
-        <span className="label-text">相册名称</span>
-        <input
-          className="input input-bordered w-full"
-          type="text"
-          placeholder="请输入相册名称"
-          {...register('name')}
-        />
-      </label>
-      <label className="floating-label">
-        <span className="label-text">相册描述</span>
-        <textarea
-          className="textarea w-full"
-          placeholder="请输入相册描述"
-          {...register('description')}
-        />
-      </label>
-
-      <Row gap="3">
-        <Button type="submit" variant="primary">
-          创建
-        </Button>
-        <Button type="button" onClick={props.onCancel}>
-          取消
-        </Button>
-      </Row>
-    </form>
-  );
-}
-
-const showAlbumDialog =
-  FormDialog.create<AlbumsApi.PhotoAlbum>(AlbumCreationForm);
+const showAlbumDialog = createSchemeForm({
+  name: createInput("相册名称"),
+  description: createTextArea("相册描述"),
+});

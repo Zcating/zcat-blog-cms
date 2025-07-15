@@ -10,5 +10,7 @@ export * from './card';
 export * from './form';
 export * from './input';
 export * from './select';
+export * from './checkbox';
+export * from './textarea';
 
 export { UiProvider } from './ui-provider';

@@ -9,7 +9,7 @@ import {
 } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { PhotoCard } from '@cms/core';
+import { createEmptyNumber, createImageUpload, createInput, createSchemeForm, PhotoCard } from '@cms/core';
 
 import * as z from 'zod/v4';
 
@@ -33,7 +33,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const { album } = props.loaderData;
   const addPhoto = async () => {
     const params = await showPhotoDialog({
-      title: '添加照片',
+      title: '新增照片',
       initialValues: {
         name: '新照片',
         albumId: album.id,
@@ -41,7 +41,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
       },
     });
 
-    if (!params || !params.image) {
+    if (!params || !(params.image instanceof Blob)) {
       return;
     }
 
@@ -64,6 +64,14 @@ export default function AlbumsId(props: Route.ComponentProps) {
   };
 
   const edit = async (photo: PhotosApi.Photo) => {
+    const params = await showPhotoDialog({
+      title: '编辑照片',
+      initialValues: {
+        name: photo.name,
+        albumId: album.id,
+        image: photo.url,
+      },
+    });
     // const params = await showPhotoDialog({
     //   title: '编辑照片',
     //   imageUrl: photo.imageUrl,
@@ -105,46 +113,11 @@ export default function AlbumsId(props: Route.ComponentProps) {
   );
 }
 
-interface CreatePhotoValues {
-  name: string;
-  albumId: number;
-  image: File | null;
-}
 
-interface PhotoCreationFormProps {
-  imageUrl?: string;
-  initialValues: CreatePhotoValues;
-  onSubmit: (data: CreatePhotoValues) => void;
-  onCancel: () => void;
-}
+const showPhotoDialog = createSchemeForm({
+  name: createInput("照片名称"),
+  image: createImageUpload("上传图片"),
+  albumId: createEmptyNumber(),
+});
 
-/**
- * 照片创建表单
- * @param {PhotoCreationFormProps} props
- * @returns {React.ReactElement}
- */
-function PhotoCreationForm(props: PhotoCreationFormProps): React.ReactElement {
-  const instance = Form.useForm({
-    initialValues: props.initialValues,
-    onSubmit: props.onSubmit,
-  });
-
-  return (
-    <Form form={instance} className="space-y-5">
-      <Form.Item form={instance} label="照片名称" name="name">
-        <Input />
-      </Form.Item>
-      <Form.Item form={instance} label="上传图片" name="image">
-        <ImageUpload imageUrl={props.imageUrl} />
-      </Form.Item>
-      <Row gap="3" justify="end">
-        <Button variant="primary" type="submit">
-          创建
-        </Button>
-        <Button onClick={props.onCancel}>取消</Button>
-      </Row>
-    </Form>
-  );
-}
-
-const showPhotoDialog = FormDialog.create<CreatePhotoValues>(PhotoCreationForm);
+// const showPhotoDialog = FormDialog.create<CreatePhotoValues>(PhotoCreationForm);

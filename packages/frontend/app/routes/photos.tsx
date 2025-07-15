@@ -34,28 +34,3 @@ export default function Photos(props: Route.ComponentProps) {
   );
 }
 
-interface PhotoFormProps {
-  data?: PhotosApi.Photo;
-  onSubmit: (data: PhotosApi.Photo) => void;
-}
-
-// export function PhotoForm(props: PhotoFormProps) {
-//   const form = Form.useForm({
-//     initialValues: {
-//       name: '',
-
-//       ...props.data
-//     },
-//     onSubmit: props.onSubmit,
-//   });
-//   return (
-//     <Form form={form}>
-//       <Form.Item form={form} name="name" label="">
-//         <Input />
-//       </Form.Item>
-//       <Form.Item form={form} name="url" label="">
-//         <Input />
-//       </Form.Item>
-//     </Form>
-//   );
-// }

@@ -7,19 +7,19 @@ export namespace FormDialog {
     onCancel: () => void;
   }
 
-  type FormComponentType<T> = React.FC<FormComponentProps<T>>;
+  type TheFormComponentType<T> = React.FC<FormComponentProps<T>>;
 
-  interface FormDialogProps<T> {
+  interface TheFormProps<T> {
     title: string;
     initialValues: T;
   }
 
-  export type FormDialog<T> = (props: FormDialogProps<T>) => Promise<T | null>;
+  export type TheFormOpener<T> = (props: TheFormProps<T>) => Promise<T | null>;
 
   export function create<T>(
-    FormComponent: FormComponentType<T>,
-  ): FormDialog<T> {
-    return async (props: FormDialogProps<T>) => {
+    FormComponent: TheFormComponentType<T>,
+  ): TheFormOpener<T> {
+    return async (props: TheFormProps<T>) => {
       const { title, initialValues, ...rest } = props;
       const resolvers = Promise.withResolvers<T | null>();
 

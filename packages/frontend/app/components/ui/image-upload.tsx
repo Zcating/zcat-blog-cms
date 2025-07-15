@@ -1,5 +1,5 @@
 import { tv } from 'tailwind-variants';
-import { classnames } from '@cms/components/utils';
+import { classnames, isString } from '@cms/components/utils';
 import React from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -49,8 +49,7 @@ interface ImageUploadProps {
   variant?: ImageUploadVariant;
   size?: ImageUploadSize;
   appearance?: ImageUploadAppearance;
-  imageUrl?: string;
-  value?: Blob | null;
+  value?: string | Blob | null;
   onChange?: (blob: Blob) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
@@ -65,7 +64,14 @@ export function ImageUpload(props: ImageUploadProps) {
     props.className,
   );
 
-  const [imageUrl, setImageUrl] = React.useState<string>(props.imageUrl ?? '');
+  const [imageUrl, setImageUrl] = React.useState<string>('');
+  React.useEffect(() => {
+    if (!isString(props.value)) {
+      return;
+    }
+    setImageUrl(props.value);
+  }, [props.value]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
