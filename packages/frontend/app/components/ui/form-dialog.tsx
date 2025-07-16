@@ -3,6 +3,8 @@ import { Modal } from './modal';
 export namespace FormDialog {
   export interface FormComponentProps<T> {
     initialValues: T;
+    confirmText?: string;
+    cancelText?: string;
     onSubmit: (data: T) => void;
     onCancel: () => void;
   }
@@ -11,6 +13,8 @@ export namespace FormDialog {
 
   interface TheFormProps<T> {
     title: string;
+    confirmText?: string;
+    cancelText?: string;
     initialValues: T;
   }
 

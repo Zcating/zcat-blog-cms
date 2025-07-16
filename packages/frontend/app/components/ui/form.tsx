@@ -88,7 +88,7 @@ function FormItem<
       render={(renderProps) => {
         return (
           <label className="flex gap-4 items-center">
-            <span className="label-text">{label}</span>
+            <span className="label-text min-w-20">{label}</span>
             {render(renderProps)}
           </label>
         );

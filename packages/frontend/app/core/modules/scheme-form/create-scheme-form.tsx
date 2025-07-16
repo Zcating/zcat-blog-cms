@@ -19,6 +19,9 @@ import type {
 interface SchemeFormProps<Fields extends FieldsRecord> {
   fields: Fields;
   initialValues: SchemeFieldsData<Fields>;
+  confirmText?: string;
+  cancelText?: string;
+
   onSubmit: (data: SchemeFieldsData<Fields>) => void;
   onCancel: () => void;
 }
@@ -46,41 +49,66 @@ function SchemeForm<Fields extends FieldsRecord>(
         switch (field.type) {
           case 'select':
             return (
-              <Form.Item form={instance} label={field.label} name={key}>
+              <Form.Item
+                form={instance}
+                label={field.label}
+                name={key}
+                key={key}
+              >
                 <Select options={field.options} />
               </Form.Item>
             );
           case 'input':
             return (
-              <Form.Item form={instance} label={field.label} name={key}>
+              <Form.Item
+                form={instance}
+                label={field.label}
+                name={key}
+                key={key}
+              >
                 <Input placeholder={field.placeholder || '请输入'} />
               </Form.Item>
             );
           case 'imageUpload':
             return (
-              <Form.Item form={instance} label={field.label} name={key}>
+              <Form.Item
+                form={instance}
+                label={field.label}
+                name={key}
+                key={key}
+              >
                 <ImageUpload />
               </Form.Item>
             );
           case 'checkbox':
             return (
-              <Form.Item form={instance} label={field.label} name={key}>
+              <Form.Item
+                form={instance}
+                label={field.label}
+                name={key}
+                key={key}
+              >
                 <Checkbox variant="primary" />
               </Form.Item>
             );
           case 'textarea':
             return (
-              <Form.Item form={instance} label={field.label} name={key}>
+              <Form.Item
+                form={instance}
+                label={field.label}
+                name={key}
+                key={key}
+              >
                 <Textarea placeholder={field.placeholder || '请输入'} />
               </Form.Item>
             );
         }
       })}
-      <Row gap="3" justify="end">
-        <Button onClick={props.onCancel}>取消</Button>
+      <Row gap="5" justify="end">
         <Button variant="primary" type="submit">
-          创建
+          {props.confirmText || '创建'}
         </Button>
+        <Button onClick={props.onCancel}>{props.cancelText || '取消'}</Button>
       </Row>
     </Form>
   );
@@ -93,6 +121,8 @@ export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
         {...props}
         fields={fields}
         initialValues={props.initialValues}
+        confirmText={props.confirmText}
+        cancelText={props.cancelText}
         onSubmit={props.onSubmit}
         onCancel={props.onCancel}
       />

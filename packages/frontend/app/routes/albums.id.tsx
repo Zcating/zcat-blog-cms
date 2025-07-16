@@ -9,7 +9,13 @@ import {
 } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { createEmptyNumber, createImageUpload, createInput, createSchemeForm, PhotoCard } from '@cms/core';
+import {
+  createEmptyNumber,
+  createImageUpload,
+  createInput,
+  createSchemeForm,
+  PhotoCard,
+} from '@cms/core';
 
 import * as z from 'zod/v4';
 
@@ -55,6 +61,8 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const selectPhoto = async () => {
     const params = await showPhotoDialog({
       title: '选择照片',
+      confirmText: '选择',
+      cancelText: '取消',
       initialValues: {
         name: '新照片',
         albumId: album.id,
@@ -66,12 +74,15 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const edit = async (photo: PhotosApi.Photo) => {
     const params = await showPhotoDialog({
       title: '编辑照片',
+      confirmText: '确认',
+      cancelText: '取消',
       initialValues: {
         name: photo.name,
         albumId: album.id,
         image: photo.url,
       },
     });
+    console.log(params);
     // const params = await showPhotoDialog({
     //   title: '编辑照片',
     //   imageUrl: photo.imageUrl,
@@ -113,10 +124,9 @@ export default function AlbumsId(props: Route.ComponentProps) {
   );
 }
 
-
 const showPhotoDialog = createSchemeForm({
-  name: createInput("照片名称"),
-  image: createImageUpload("上传图片"),
+  name: createInput('照片名称'),
+  image: createImageUpload('上传图片'),
   albumId: createEmptyNumber(),
 });
 
