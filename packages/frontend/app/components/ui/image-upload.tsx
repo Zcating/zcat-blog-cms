@@ -2,6 +2,7 @@ import { tv } from 'tailwind-variants';
 import { classnames, isString } from '@cms/components/utils';
 import React from 'react';
 import { PlusOutlined } from '@ant-design/icons';
+import { Image } from './image';
 
 export type ImageUploadVariant =
   | 'neutral'
@@ -95,7 +96,7 @@ export function ImageUpload(props: ImageUploadProps) {
       />
       {imageUrl ? (
         <div className="border border-dashed">
-          <img
+          <Image
             ref={imageRef}
             src={imageUrl}
             alt="上传图片"

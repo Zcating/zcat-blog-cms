@@ -9,3 +9,7 @@ export function isString<T extends string = string>(
 ): value is T {
   return typeof value === 'string';
 }
+
+export function isBlob(value: unknown): value is Blob {
+  return value instanceof Blob;
+}

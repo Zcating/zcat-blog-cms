@@ -7,7 +7,7 @@ interface PhotoCardProps {
 }
 
 export function PhotoCard(props: PhotoCardProps) {
-  const srcUrl = `/static/${props.data.thumbnailUrl}`;
+  const srcUrl = props.data.thumbnailUrl;
   return (
     <Card>
       <Card.Figure src={srcUrl} alt={props.data.name} />

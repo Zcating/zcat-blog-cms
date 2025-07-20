@@ -5,7 +5,7 @@ export namespace FormDialog {
     initialValues: T;
     confirmText?: string;
     cancelText?: string;
-    onSubmit: (data: T) => void;
+    onSubmit: (data: T) => Promise<void>;
     onCancel: () => void;
   }
 
@@ -16,28 +16,31 @@ export namespace FormDialog {
     confirmText?: string;
     cancelText?: string;
     initialValues: T;
+    onSubmit: (data: T) => Promise<void>;
   }
 
-  export type TheFormOpener<T> = (props: TheFormProps<T>) => Promise<T | null>;
+  export type TheFormOpener<T> = (props: TheFormProps<T>) => Promise<void>;
 
   export function create<T>(
     FormComponent: TheFormComponentType<T>,
   ): TheFormOpener<T> {
     return async (props: TheFormProps<T>) => {
-      const { title, initialValues, ...rest } = props;
-      const resolvers = Promise.withResolvers<T | null>();
+      const { title, initialValues, onSubmit, ...rest } = props;
+      const resolvers = Promise.withResolvers<void>();
 
       const close = () => {
-        resolvers.resolve(null);
+        resolvers.resolve();
         Modal.close();
       };
 
-      const submit = (data: T) => {
-        resolvers.resolve(data);
+      const submit = async (data: T) => {
+        await onSubmit(data);
+        resolvers.resolve();
         Modal.close();
       };
 
       await Modal.show({
+        backdropClose: false,
         content: (
           <div className="space-y-5">
             <h3 className="font-bold text-lg">{title}</h3>

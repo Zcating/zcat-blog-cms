@@ -1,23 +1,15 @@
-import {
-  Button,
-  Form,
-  FormDialog,
-  Grid,
-  ImageUpload,
-  Input,
-  Row,
-} from '@cms/components';
+import { Button, Grid } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import {
-  createEmptyNumber,
+  createConstNumber,
   createImageUpload,
   createInput,
   createSchemeForm,
   PhotoCard,
+  updateArray,
 } from '@cms/core';
-
-import * as z from 'zod/v4';
+import React from 'react';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -37,70 +29,57 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function AlbumsId(props: Route.ComponentProps) {
   const { album } = props.loaderData;
-  const addPhoto = async () => {
-    const params = await showPhotoDialog({
-      title: '新增照片',
-      initialValues: {
-        name: '新照片',
-        albumId: album.id,
-        image: null,
-      },
-    });
+  const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(album.photos);
+  const addPhoto = useSchemeForm({
+    title: '新增照片',
+    map: () => ({
+      id: 0,
+      name: '',
+      image: null,
+      albumId: album.id,
+    }),
+    async onSubmit(data) {
+      if (!data || !(data.image instanceof Blob)) {
+        return;
+      }
 
-    if (!params || !(params.image instanceof Blob)) {
-      return;
-    }
+      const photo = await PhotosApi.createPhoto({
+        name: data.name,
+        albumId: data.albumId,
+        image: data.image,
+      });
 
-    await PhotosApi.createPhoto({
-      name: params.name,
-      albumId: params.albumId,
-      image: params.image,
-    });
+      setPhotos([photo, ...photos]);
+    },
+  });
+
+  const editPhoto = useSchemeForm({
+    title: '编辑照片',
+    map: (data: PhotosApi.Photo) => ({
+      id: data.id,
+      name: data.name,
+      image: data.url,
+      albumId: data.albumId,
+    }),
+    async onSubmit(data) {
+      const photo = await PhotosApi.updatePhoto({
+        id: data.id,
+        name: data.name,
+        image: data.image,
+        albumId: data.albumId,
+      });
+      if (!photo) {
+        return;
+      }
+
+      setPhotos(updateArray(photos, photo));
+    },
+  });
+
+  const selectPhoto = () => {
+    // selectPhotoDialog.show();
   };
 
-  const selectPhoto = async () => {
-    const params = await showPhotoDialog({
-      title: '选择照片',
-      confirmText: '选择',
-      cancelText: '取消',
-      initialValues: {
-        name: '新照片',
-        albumId: album.id,
-        image: null,
-      },
-    });
-  };
-
-  const edit = async (photo: PhotosApi.Photo) => {
-    const params = await showPhotoDialog({
-      title: '编辑照片',
-      confirmText: '确认',
-      cancelText: '取消',
-      initialValues: {
-        name: photo.name,
-        albumId: album.id,
-        image: photo.url,
-      },
-    });
-    console.log(params);
-    // const params = await showPhotoDialog({
-    //   title: '编辑照片',
-    //   imageUrl: photo.imageUrl,
-    //   initialValues: {
-    //     name: photo.name,
-    //     albumId: album.id,
-    //     image: null,
-    //   },
-    // });
-    // if (!params || !params.image) {
-    //   return;
-    // }
-    // await PhotosApi.createPhoto({
-    //   name: params.name,
-    //   albumId: params.albumId,
-    //   image: params.image,
-    // });
-  };
   return (
     <div className="space-y-10 p-3">
       <div className="space-y-3">
@@ -116,18 +95,17 @@ export default function AlbumsId(props: Route.ComponentProps) {
         </div>
       </div>
       <Grid
-        items={album.photos}
+        items={photos}
         cols={5}
-        renderItem={(item) => <PhotoCard data={item} onEdit={edit} />}
+        renderItem={(item) => <PhotoCard data={item} onEdit={editPhoto} />}
       />
     </div>
   );
 }
 
-const showPhotoDialog = createSchemeForm({
+const useSchemeForm = createSchemeForm({
+  id: createConstNumber(),
   name: createInput('照片名称'),
   image: createImageUpload('上传图片'),
-  albumId: createEmptyNumber(),
+  albumId: createConstNumber(),
 });
-
-// const showPhotoDialog = FormDialog.create<CreatePhotoValues>(PhotoCreationForm);

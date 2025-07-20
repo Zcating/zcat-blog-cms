@@ -1,2 +1,2 @@
-export * from './create-scheme-field';
-export * from './create-scheme-form';
+export * from './scheme-field';
+export * from './scheme-form';

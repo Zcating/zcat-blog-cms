@@ -5,6 +5,7 @@ interface AlbumImageCardProps {
   title: string;
   content?: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onEdit?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 export function AlbumImageCard(props: AlbumImageCardProps) {
   return (
@@ -14,6 +15,9 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
         <Card.Title>{props.title}</Card.Title>
         {props.content ? <p>{props.content}</p> : null}
         <Card.Actions className="flex justify-end">
+          <Button variant="primary" onClick={props.onEdit}>
+            编辑
+          </Button>
           <Button onClick={props.onClick}>查看详情</Button>
         </Card.Actions>
       </Card.Body>

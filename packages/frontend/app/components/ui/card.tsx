@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileImageOutlined } from '@ant-design/icons';
 import { classnames } from '../utils';
+import { Image } from './image';
 
 type CardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 type CardAppearance = 'border' | 'dash';
@@ -40,7 +41,7 @@ function CardFigure(props: CardFigureProps) {
           <FileImageOutlined className="text-3xl" />
         </div>
       ) : (
-        <img
+        <Image
           className="w-full h-full object-contain"
           src={props.src}
           alt={props.alt}

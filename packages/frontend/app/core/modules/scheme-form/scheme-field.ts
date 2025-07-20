@@ -33,10 +33,16 @@ interface CheckboxSchemeField {
   valueType: 'boolean';
 }
 
-interface EmptyNumberField {
+interface ConstantNumberField {
   label: string;
-  type: 'empty';
+  type: 'constant';
   valueType: 'number';
+}
+
+interface ConstantStringField {
+  label: string;
+  type: 'constant';
+  valueType: 'string';
 }
 
 export type SchemeField =
@@ -45,7 +51,8 @@ export type SchemeField =
   | TextAreaSchemeField
   | ImageUploadSchemeField
   | CheckboxSchemeField
-  | EmptyNumberField;
+  | ConstantNumberField
+  | ConstantStringField;
 
 export type FieldsRecord = Record<string, SchemeField>;
 
@@ -53,12 +60,16 @@ interface ValueMap {
   string: string;
   number: number;
   boolean: boolean;
-  file: string | File | null;
+  file: string | Blob | null;
 }
 
 export type SchemeFieldsData<Fields extends FieldsRecord> = {
   [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
 };
+
+// export type SchemeSubmitData<Fields extends FieldsRecord> = {
+//   [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
+// };
 
 export function createSelect(
   label: string,
@@ -112,10 +123,18 @@ export function createCheckbox(label: string): CheckboxSchemeField {
   };
 }
 
-export function createEmptyNumber(): EmptyNumberField {
+export function createConstNumber(): ConstantNumberField {
   return {
     label: '',
-    type: 'empty',
+    type: 'constant',
     valueType: 'number',
+  };
+}
+
+export function createConstString(): ConstantStringField {
+  return {
+    label: '',
+    type: 'constant',
+    valueType: 'string',
   };
 }

@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Put,
   Delete,
   Param,
   UseGuards,
@@ -21,14 +20,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultData } from '@backend/model';
-import { createBaseImage, createThumbnail, safeNumber } from '@backend/utils';
+import { createStandardImage, safeNumber } from '@backend/utils';
 
 import { memoryStorage } from 'multer';
 import { Repository } from 'typeorm';
 
 import { Photo } from '../../table/photo.entity';
 
-import { UpdatePhotoDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('照片管理')
@@ -88,12 +86,17 @@ export class PhotoController {
     }),
   )
   async create(
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image: Express.Multer.File | null,
     @Body('name') name: string,
     @Body('albumId') albumId: string,
   ): Promise<ResultData<Photo>> {
+    const result = await createStandardImage({
+      uploadPath: PhotoController.UPLOAD_PATH,
+      thumbnailPath: PhotoController.THUMBNAIL_PATH,
+      file: image,
+    });
     // 如果有文件上传，使用文件信息
-    if (!image) {
+    if (!result) {
       // 如果没有文件上传，返回错误
       return createResult({
         code: 'ERR0004',
@@ -101,34 +104,13 @@ export class PhotoController {
       });
     }
 
-    const safeAlbumId = safeNumber(albumId);
-
-    if (safeAlbumId === 0) {
-      return createResult({
-        code: 'ERR0005',
-        message: '请选择要上传的相册',
-      });
-    }
-
-    const baseFilename = await createBaseImage(
-      PhotoController.UPLOAD_PATH,
-      image.originalname,
-      image.buffer,
-    );
-
-    const thumbnailFilename = await createThumbnail(
-      PhotoController.THUMBNAIL_PATH,
-      baseFilename,
-      image.buffer,
-    );
+    const safeAlbum = createIdObject(albumId);
 
     const savedPhoto = await this.photoRepository.save({
       name: name,
-      url: `/${PhotoController.UPLOAD_PATH}/${baseFilename}`,
-      thumbnailUrl: `/${PhotoController.THUMBNAIL_PATH}/${thumbnailFilename}`,
-      album: {
-        id: safeAlbumId,
-      },
+      url: result?.baseFilePath,
+      thumbnailUrl: result?.thumbnailFilePath,
+      album: safeAlbum,
     });
 
     return createResult({
@@ -138,24 +120,61 @@ export class PhotoController {
     });
   }
 
-  @Put(':id')
+  @Post('/update')
   @ApiOperation({ summary: '更新照片' })
-  @ApiParam({ name: 'id', description: '照片ID' })
-  @ApiResponse({ status: 200, description: '照片更新成功' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: '照片信息更新成功' })
+  @UseInterceptors(
+    FileInterceptor('image', {
+      dest: PhotoController.UPLOAD_PATH,
+      storage: memoryStorage(),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('只支持图片文件格式'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20MB
+      },
+    }),
+  )
   async update(
-    @Param('id') id: string,
-    @Body() updatePhotoDto: UpdatePhotoDto,
-  ): Promise<ResultData<void>> {
-    const result = await this.photoRepository.update(id, updatePhotoDto);
+    @UploadedFile() image: Express.Multer.File | null,
+    @Body('id') id: string,
+    @Body('name') name: string,
+    @Body('albumId') albumId: string,
+  ): Promise<ResultData<Photo | null>> {
+    const imageUrlResult = await createStandardImage({
+      uploadPath: PhotoController.UPLOAD_PATH,
+      thumbnailPath: PhotoController.THUMBNAIL_PATH,
+      file: image,
+    });
+
+    const safeAlbum = createIdObject(albumId);
+
+    const result = await this.photoRepository.update(id, {
+      name,
+      url: imageUrlResult?.baseFilePath,
+      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
+      album: safeAlbum,
+    });
+
     if (result.affected === 0) {
       return createResult({
         code: 'ERR0003',
         message: '更新失败',
       });
     }
+
+    const photo = await this.photoRepository.findOne({
+      where: { id: parseInt(id) },
+    });
+
     return createResult({
       code: '0000',
       message: '成功',
+      data: photo,
     });
   }
 
@@ -176,4 +195,13 @@ export class PhotoController {
       message: '成功',
     });
   }
+}
+
+function createIdObject(id: string | number) {
+  const safeId = safeNumber(id);
+  return safeId !== 0
+    ? {
+        id: safeId,
+      }
+    : undefined;
 }

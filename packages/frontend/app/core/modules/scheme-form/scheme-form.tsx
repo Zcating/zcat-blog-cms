@@ -8,13 +8,14 @@ import {
   Row,
   Select,
   Textarea,
+  useLoadingFn,
 } from '@cms/components';
 import type { Path } from 'react-hook-form';
 import type {
   FieldsRecord,
   SchemeField,
   SchemeFieldsData,
-} from './create-scheme-field';
+} from './scheme-field';
 
 interface SchemeFormProps<Fields extends FieldsRecord> {
   fields: Fields;
@@ -22,7 +23,7 @@ interface SchemeFormProps<Fields extends FieldsRecord> {
   confirmText?: string;
   cancelText?: string;
 
-  onSubmit: (data: SchemeFieldsData<Fields>) => void;
+  onSubmit: (data: SchemeFieldsData<Fields>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -38,9 +39,12 @@ function SchemeForm<Fields extends FieldsRecord>(
     Path<SchemeFieldsData<Fields>>,
     SchemeField,
   ][];
+
+  const submit = useLoadingFn(props.onSubmit);
+
   const instance = Form.useForm({
     initialValues: props.initialValues,
-    onSubmit: props.onSubmit,
+    onSubmit: submit,
   });
 
   return (
@@ -105,7 +109,7 @@ function SchemeForm<Fields extends FieldsRecord>(
         }
       })}
       <Row gap="5" justify="end">
-        <Button variant="primary" type="submit">
+        <Button variant="primary" type="submit" loading={submit.loading}>
           {props.confirmText || '创建'}
         </Button>
         <Button onClick={props.onCancel}>{props.cancelText || '取消'}</Button>
@@ -114,8 +118,16 @@ function SchemeForm<Fields extends FieldsRecord>(
   );
 }
 
+interface UseSchemeFormParams<U, Fields extends FieldsRecord> {
+  title: string;
+  confirmText?: string;
+  cancelText?: string;
+  map: (data: U) => SchemeFieldsData<Fields>;
+  onSubmit: (data: SchemeFieldsData<Fields>) => Promise<void>;
+}
+
 export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
-  return FormDialog.create<SchemeFieldsData<Fields>>((props) => {
+  const result = FormDialog.create<SchemeFieldsData<Fields>>((props) => {
     return (
       <SchemeForm
         {...props}
@@ -128,4 +140,15 @@ export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
       />
     );
   });
+
+  return function useSchemeForm<U>(params: UseSchemeFormParams<U, Fields>) {
+    return (data: U) =>
+      result({
+        initialValues: params.map(data),
+        title: params.title,
+        confirmText: params.confirmText,
+        cancelText: params.cancelText,
+        onSubmit: params.onSubmit,
+      });
+  };
 }

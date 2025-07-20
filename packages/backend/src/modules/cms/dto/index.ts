@@ -7,3 +7,6 @@ export * from './create-photo.dto';
 export * from './update-photo.dto';
 export * from './create-photo-album.dto';
 export * from './update-photo-album.dto';
+export * from './create-page-statistics.dto';
+export * from './page-statistics-query.dto';
+export * from './create-page-statistics.dto';

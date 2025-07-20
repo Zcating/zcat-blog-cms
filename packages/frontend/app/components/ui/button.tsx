@@ -107,7 +107,7 @@ export function Button(props: ButtonProps) {
   };
 
   return (
-    <button className={cls} onClick={click} {...restProps}>
+    <button className={cls} onClick={click} type="button" {...restProps}>
       {loading ? <Loading3QuartersOutlined spin className="mr-2" /> : null}
       {children}
     </button>
