@@ -3,6 +3,7 @@ import MdEditor from 'react-markdown-editor-lite';
 import MarkdownIt from 'markdown-it';
 import 'react-markdown-editor-lite/lib/index.css';
 import { ArticlesApi } from '@cms/api';
+import { Button, Input, Textarea } from '@cms/components';
 
 // 初始化 markdown 解析器
 const mdParser = new MarkdownIt({
@@ -41,42 +42,27 @@ export function ArticleEditor({
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-800">
-            <input
-              type="text"
+            <Input
               value={article.title}
               onChange={(e) =>
                 setArticle((prev) => ({ ...prev, title: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="请输入文章标题"
             />
           </h1>
           <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-            >
+            <Button onClick={handleSave} disabled={saving} variant="primary">
               {saving ? '保存中...' : '保存'}
-            </button>
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-            >
-              取消
-            </button>
+            </Button>
+            <Button onClick={onCancel}>取消</Button>
           </div>
         </div>
 
         {/* 文章摘要 */}
-        <textarea
+        <Textarea
           value={article.excerpt}
-          onChange={(e) =>
-            setArticle((prev) => ({ ...prev, excerpt: e.target.value }))
-          }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => setArticle((prev) => ({ ...prev, excerpt: e }))}
           placeholder="请输入文章摘要"
-          rows={3}
         />
       </div>
 

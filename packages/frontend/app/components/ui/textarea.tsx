@@ -1,6 +1,14 @@
-import { tv } from "tailwind-variants";
+import { tv } from 'tailwind-variants';
 
-export type TextareaVariant = 'neutral' | 'primary' | 'secondary' | 'accent' | 'info' | 'warning' | 'error' | 'success';
+export type TextareaVariant =
+  | 'neutral'
+  | 'primary'
+  | 'secondary'
+  | 'accent'
+  | 'info'
+  | 'warning'
+  | 'error'
+  | 'success';
 export type TextareaAppearance = 'default' | 'ghost';
 export type TextareaSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
@@ -27,7 +35,7 @@ const textarea = tv({
       success: 'textarea-success',
     },
     appearance: {
-      default: "",
+      default: '',
       ghost: 'textarea-ghost',
     },
     size: {
@@ -40,21 +48,22 @@ const textarea = tv({
   },
   defaultVariants: {
     appearance: 'default',
-    size: 'md',    
-  }
+    size: 'md',
+  },
 });
 
 export function Textarea(props: TextareaProps) {
   return (
-    <textarea 
-      className={textarea({ 
-        variant: props.variant, 
-        appearance: props.appearance, 
-        size: props.size 
-      })} 
-      placeholder={props.placeholder} 
-      value={props.value} 
-      onChange={e => props.onChange?.(e.target.value)} 
+    <textarea
+      className={textarea({
+        variant: props.variant,
+        appearance: props.appearance,
+        size: props.size,
+      })}
+      rows={3}
+      placeholder={props.placeholder}
+      value={props.value}
+      onChange={(e) => props.onChange?.(e.target.value)}
     />
-  )  
+  );
 }
