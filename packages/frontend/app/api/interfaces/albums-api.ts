@@ -51,6 +51,7 @@ export namespace AlbumsApi {
       album.photos = album.photos.map((item) => {
         item.url = `/static/${item.url}`;
         item.thumbnailUrl = `/static/${item.thumbnailUrl}`;
+        item.isCover = item.id === album.cover?.id;
         return item;
       });
     }
@@ -85,5 +86,11 @@ export namespace AlbumsApi {
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
     return await HttpClient.del(`cms/photo-albums/${id}`);
+  }
+
+  export async function updatePhoto(
+    params: PhotosApi.UpdatePhotoParams,
+  ): Promise<PhotosApi.Photo> {
+    return await HttpClient.post(`cms/photo-albums/photo/update`, params);
   }
 }

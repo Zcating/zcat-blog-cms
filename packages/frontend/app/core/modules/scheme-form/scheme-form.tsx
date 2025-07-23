@@ -127,7 +127,7 @@ interface UseSchemeFormParams<U, Fields extends FieldsRecord> {
 }
 
 export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
-  const result = FormDialog.create<SchemeFieldsData<Fields>>((props) => {
+  const showDialog = FormDialog.create<SchemeFieldsData<Fields>>((props) => {
     return (
       <SchemeForm
         {...props}
@@ -143,7 +143,7 @@ export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
 
   return function useSchemeForm<U>(params: UseSchemeFormParams<U, Fields>) {
     return (data: U) =>
-      result({
+      showDialog({
         initialValues: params.map(data),
         title: params.title,
         confirmText: params.confirmText,

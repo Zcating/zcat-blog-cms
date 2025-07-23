@@ -1,4 +1,4 @@
-import { isBlob } from '@cms/components';
+import { isBlob, isBoolean } from '@cms/components';
 import { HttpClient } from '../http-client';
 
 export namespace PhotosApi {
@@ -8,6 +8,7 @@ export namespace PhotosApi {
     url: string;
     albumId: number;
     thumbnailUrl: string;
+    isCover?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }
@@ -23,6 +24,7 @@ export namespace PhotosApi {
     name?: string;
     image?: string | Blob | null;
     albumId?: number;
+    isCover?: boolean;
   }
 
   function transformPhoto(photo: Photo): Photo {
@@ -61,11 +63,14 @@ export namespace PhotosApi {
     if (params.name) {
       formData.append('name', params.name);
     }
-    if (params.image) {
+    if (isBlob(params.image)) {
       formData.append('image', params.image);
     }
     if (params.albumId) {
       formData.append('albumId', params.albumId.toString());
+    }
+    if (isBoolean(params.isCover)) {
+      formData.append('isCover', params.isCover.toString());
     }
 
     return transformPhoto(await HttpClient.post(`cms/photos/update`, formData));

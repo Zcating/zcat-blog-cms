@@ -5,10 +5,14 @@ interface LabelProps {
   children: React.ReactNode;
 }
 export function Label(props: LabelProps) {
+  // TODO: <label> 标签会自动触发 <input> 元素的点击事件，导致 <input> 元素的点击事件被触发两次
+  const click = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
   return (
-    <label className="flex items-center space-x-2">
-      <span className="font-bold">{props.label}</span>
+    <div className="flex gap-4 items-center" onClick={click}>
+      <span className="font-bold min-w-20">{props.label}</span>
       {props.children}
-    </label>
+    </div>
   );
 }

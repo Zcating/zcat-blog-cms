@@ -13,6 +13,7 @@ import {
 } from 'react-hook-form';
 
 import useConstant from 'use-constant';
+import { Label } from './label';
 
 interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   className?: string;
@@ -86,12 +87,7 @@ function FormItem<
       control={form.control}
       name={name}
       render={(renderProps) => {
-        return (
-          <label className="flex gap-4 items-center">
-            <span className="label-text min-w-20">{label}</span>
-            {render(renderProps)}
-          </label>
-        );
+        return <Label label={label}>{render(renderProps)}</Label>;
       }}
     />
   );

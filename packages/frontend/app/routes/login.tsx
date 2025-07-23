@@ -100,7 +100,12 @@ export default function GuestHome() {
 
             {/* 登录按钮 */}
             <div className="form-control mt-6">
-              <Button variant="primary" shape="block" disabled={isLoading}>
+              <Button
+                variant="primary"
+                shape="block"
+                disabled={isLoading}
+                type="submit"
+              >
                 {isLoading ? '登录中...' : '登录'}
               </Button>
             </div>

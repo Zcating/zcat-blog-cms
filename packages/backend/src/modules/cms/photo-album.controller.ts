@@ -7,17 +7,38 @@ import {
   Delete,
   Param,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultData } from '@backend/model';
+import { Photo } from '@backend/table';
+import {
+  createStandardImage,
+  THUMBNAIL_PATH,
+  UPLOAD_PATH,
+} from '@backend/utils';
 
+import { memoryStorage } from 'multer';
 import { Repository } from 'typeorm';
 
 import { PhotoAlbum } from '../../table/photo-album.entity';
 
-import { CreatePhotoAlbumDto, UpdatePhotoAlbumDto } from './dto';
+import {
+  CreatePhotoAlbumDto,
+  UpdateAlbumDto,
+  UpdateAlbumPhotoDto,
+  UpdateAlbumPhotoResultDto,
+} from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('相册管理')
@@ -27,6 +48,8 @@ export class PhotoAlbumController {
   constructor(
     @InjectRepository(PhotoAlbum)
     private photoAlbumRepository: Repository<PhotoAlbum>,
+    @InjectRepository(Photo)
+    private photoRepository: Repository<Photo>,
   ) {}
 
   @Get()
@@ -76,7 +99,7 @@ export class PhotoAlbumController {
   @ApiResponse({ status: 200, description: '相册更新成功' })
   async update(
     @Param('id') id: string,
-    @Body() updatePhotoAlbumDto: UpdatePhotoAlbumDto,
+    @Body() updatePhotoAlbumDto: UpdateAlbumDto,
   ): Promise<ResultData<void>> {
     const result = await this.photoAlbumRepository.update(
       id,
@@ -109,6 +132,90 @@ export class PhotoAlbumController {
     return createResult({
       code: '0000',
       message: '成功',
+    });
+  }
+
+  @Post('/photo/update')
+  @ApiOperation({ summary: '更新照片' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: '照片信息更新成功' })
+  @UseInterceptors(
+    FileInterceptor('image', {
+      dest: UPLOAD_PATH,
+      storage: memoryStorage(),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(new Error('只支持图片文件格式'), false);
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20MB
+      },
+    }),
+  )
+  async updateAlbumPhoto(
+    @UploadedFile() image: Express.Multer.File | null,
+    @Body() body: UpdateAlbumPhotoDto,
+  ): Promise<ResultData<UpdateAlbumPhotoResultDto | null>> {
+    const imageUrlResult = await createStandardImage({
+      uploadPath: UPLOAD_PATH,
+      thumbnailPath: THUMBNAIL_PATH,
+      file: image,
+    });
+
+    const { id, name, albumId, isCover } = body;
+
+    const result = await this.photoRepository.update(id, {
+      name,
+      url: imageUrlResult?.baseFilePath,
+      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
+      album: { id: albumId },
+    });
+
+    if (result.affected === 0) {
+      return createResult({
+        code: 'ERR0003',
+        message: '更新失败',
+      });
+    }
+
+    if (isCover) {
+      const updateResult = await this.photoAlbumRepository.update(albumId, {
+        cover: { id },
+      });
+      if (updateResult.affected === 0) {
+        return createResult({
+          code: 'ERR0003',
+          message: '更新失败',
+        });
+      }
+    }
+
+    const photo = await this.photoRepository.findOne({
+      where: { id: id },
+    });
+
+    if (!photo) {
+      return createResult({
+        code: 'ERR0003',
+        message: '更新失败',
+      });
+    }
+
+    return createResult({
+      code: '0000',
+      message: '成功',
+      data: {
+        id: photo.id,
+        name: photo.name,
+        url: photo.url,
+        thumbnailUrl: photo.thumbnailUrl,
+        createdAt: photo.createdAt,
+        updatedAt: photo.updatedAt,
+        isCover: isCover,
+        albumId: albumId,
+      },
     });
   }
 }

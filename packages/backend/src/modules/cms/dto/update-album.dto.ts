@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UpdatePhotoAlbumDto {
+export class UpdateAlbumDto {
   @ApiPropertyOptional({
     description: '相册名称',
     example: '相册（已更新）',

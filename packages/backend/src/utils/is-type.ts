@@ -13,3 +13,7 @@ export function isObject<T = Record<string, any>>(value: unknown): value is T {
 export function isBlob(value: unknown): value is Blob {
   return value instanceof Blob;
 }
+
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
