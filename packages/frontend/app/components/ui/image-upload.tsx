@@ -33,7 +33,7 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
 
   return (
     <div
-      className="cursor-pointer w-32 h-32 p-1 border border-dashed rounded-sm"
+      className="cursor-pointer w-32 h-32 p-1 border border-dashed rounded-sm flex items-center justify-center"
       onClick={() => fileRef.current?.click()}
     >
       <input
@@ -52,7 +52,7 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
           className="aspect-square"
         />
       ) : (
-        <PlusOutlined />
+        <PlusOutlined className="text-3xl" />
       )}
     </div>
   );

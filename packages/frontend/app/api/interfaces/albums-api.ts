@@ -1,3 +1,4 @@
+import { isBlob, isBoolean } from '@cms/components';
 import { HttpClient } from '../http-client';
 import type { PhotosApi } from './photos-api';
 
@@ -86,11 +87,5 @@ export namespace AlbumsApi {
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
     return await HttpClient.del(`cms/photo-albums/${id}`);
-  }
-
-  export async function updatePhoto(
-    params: PhotosApi.UpdatePhotoParams,
-  ): Promise<PhotosApi.Photo> {
-    return await HttpClient.post(`cms/photo-albums/photo/update`, params);
   }
 }

@@ -6,7 +6,6 @@ export namespace PhotosApi {
     id: number;
     name: string;
     url: string;
-    albumId: number;
     thumbnailUrl: string;
     isCover?: boolean;
     createdAt?: Date;
@@ -16,6 +15,13 @@ export namespace PhotosApi {
   export interface CreatePhotoParams {
     name: string;
     albumId?: number;
+    image: Blob;
+  }
+
+  export interface CreateAlbumPhotoParams {
+    name: string;
+    albumId: number;
+    isCover: boolean;
     image: Blob;
   }
 
@@ -78,5 +84,48 @@ export namespace PhotosApi {
 
   export async function deletePhoto(id: number): Promise<void> {
     return await HttpClient.del(`cms/photos/${id}`);
+  }
+
+  export async function createAlbumPhoto(
+    params: PhotosApi.CreateAlbumPhotoParams,
+  ): Promise<PhotosApi.Photo> {
+    const formData = new FormData();
+    formData.append('name', params.name);
+    formData.append('image', params.image);
+    if (params.albumId) {
+      formData.append('albumId', params.albumId.toString());
+    }
+    if (isBoolean(params.isCover)) {
+      formData.append('isCover', params.isCover.toString());
+    }
+    return transformPhoto(
+      await HttpClient.post('cms/photos/create/with-album', formData),
+    );
+  }
+
+  export async function updateAlbumPhoto(
+    params: PhotosApi.UpdatePhotoParams,
+  ): Promise<PhotosApi.Photo> {
+    const formData = new FormData();
+    formData.append('id', params.id.toString());
+    if (params.name) {
+      formData.append('name', params.name);
+    }
+    if (isBlob(params.image)) {
+      formData.append('image', params.image);
+    }
+    if (params.albumId) {
+      formData.append('albumId', params.albumId.toString());
+    }
+    if (isBoolean(params.isCover)) {
+      formData.append('isCover', params.isCover.toString());
+    }
+
+    const result = await HttpClient.post(
+      `cms/photos/update/with-album`,
+      formData,
+    );
+
+    return transformPhoto(result);
   }
 }

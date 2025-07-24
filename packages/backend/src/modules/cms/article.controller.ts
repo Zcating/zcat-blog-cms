@@ -7,6 +7,7 @@ import {
   Delete,
   Param,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +25,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 @Controller('api/cms/articles')
 @UseGuards(JwtAuthGuard)
 export class ArticleController {
+  private readonly logger = new Logger(ArticleController.name);
+
   constructor(
     @InjectRepository(Article)
     private articleRepository: Repository<Article>,
@@ -37,14 +40,22 @@ export class ArticleController {
     type: [ReturnArticleDto],
   })
   async findAll(): Promise<ResultData<ReturnArticleDto[]>> {
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: await this.articleRepository.find({
+    try {
+      this.logger.log('开始获取所有文章');
+      const articles = await this.articleRepository.find({
         select: ['id', 'title', 'excerpt', 'createdAt', 'updatedAt'],
         relations: ['createByUser', 'tags'],
-      }),
-    });
+      });
+      this.logger.log(`成功获取 ${articles.length} 篇文章`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: articles,
+      });
+    } catch (error) {
+      this.logger.error('获取文章列表失败', error);
+      throw error;
+    }
   }
 
   @Get(':id')
@@ -52,13 +63,21 @@ export class ArticleController {
   @ApiParam({ name: 'id', description: '文章ID' })
   @ApiResponse({ status: 200, description: '成功获取文章详情' })
   async findOne(@Param('id') id: string): Promise<ResultData<Article | null>> {
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: await this.articleRepository.findOne({
+    try {
+      this.logger.log(`开始获取ID为 ${id} 的文章`);
+      const article = await this.articleRepository.findOne({
         where: { id: parseInt(id) },
-      }),
-    });
+      });
+      this.logger.log(`${article ? '成功' : '未找到'}获取ID为 ${id} 的文章`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: article,
+      });
+    } catch (error) {
+      this.logger.error(`获取ID为 ${id} 的文章失败`, error);
+      throw error;
+    }
   }
 
   @Post()
@@ -67,11 +86,21 @@ export class ArticleController {
   async create(
     @Body() createArticleDto: CreateArticleDto,
   ): Promise<ResultData<Article>> {
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: await this.articleRepository.save(createArticleDto),
-    });
+    try {
+      this.logger.log(`开始创建文章: ${createArticleDto.title}`);
+      const article = await this.articleRepository.save(createArticleDto);
+      this.logger.log(
+        `成功创建文章，ID: ${article.id}, 标题: ${article.title}`,
+      );
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: article,
+      });
+    } catch (error) {
+      this.logger.error('创建文章失败', error);
+      throw error;
+    }
   }
 
   @Put(':id')
@@ -82,17 +111,27 @@ export class ArticleController {
     @Param('id') id: string,
     @Body() updateArticleDto: UpdateArticleDto,
   ): Promise<ResultData<void>> {
-    const result = await this.articleRepository.update(id, updateArticleDto);
-    if (result.affected === 0) {
+    try {
+      this.logger.log(
+        `开始更新ID为 ${id} 的文章: ${updateArticleDto.title || '未提供标题'}`,
+      );
+      const result = await this.articleRepository.update(id, updateArticleDto);
+      if (result.affected === 0) {
+        this.logger.warn(`更新ID为 ${id} 的文章失败：未找到记录`);
+        return createResult({
+          code: 'ERR0003',
+          message: '更新失败',
+        });
+      }
+      this.logger.log(`成功更新ID为 ${id} 的文章`);
       return createResult({
-        code: 'ERR0003',
-        message: '更新失败',
+        code: '0000',
+        message: '成功',
       });
+    } catch (error) {
+      this.logger.error(`更新ID为 ${id} 的文章失败`, error);
+      throw error;
     }
-    return createResult({
-      code: '0000',
-      message: '成功',
-    });
   }
 
   @Delete(':id')
@@ -100,16 +139,24 @@ export class ArticleController {
   @ApiParam({ name: 'id', description: '文章ID' })
   @ApiResponse({ status: 200, description: '文章删除成功' })
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
-    const result = await this.articleRepository.delete(id);
-    if (result.affected === 0) {
+    try {
+      this.logger.log(`开始删除ID为 ${id} 的文章`);
+      const result = await this.articleRepository.delete(id);
+      if (result.affected === 0) {
+        this.logger.warn(`删除ID为 ${id} 的文章失败：未找到记录`);
+        return createResult({
+          code: 'ERR0003',
+          message: '删除失败',
+        });
+      }
+      this.logger.log(`成功删除ID为 ${id} 的文章`);
       return createResult({
-        code: 'ERR0003',
-        message: '更新失败',
+        code: '0000',
+        message: '成功',
       });
+    } catch (error) {
+      this.logger.error(`删除ID为 ${id} 的文章失败`, error);
+      throw error;
     }
-    return createResult({
-      code: '0000',
-      message: '成功',
-    });
   }
 }

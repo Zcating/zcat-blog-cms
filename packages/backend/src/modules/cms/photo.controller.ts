@@ -8,8 +8,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ParseIntPipe,
+  Logger,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -20,162 +21,215 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultData } from '@backend/model';
-import { createStandardImage, safeNumber } from '@backend/utils';
+import { ImageInterceptor } from '@backend/utils';
 
-import { memoryStorage } from 'multer';
 import { Repository } from 'typeorm';
 
 import { Photo } from '../../table/photo.entity';
 
+import {
+  CreateAlbumPhotoDto,
+  CreatePhotoDto,
+  UpdateAlbumPhotoDto,
+  UpdateAlbumPhotoResultDto,
+  UpdatePhotoDto,
+} from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { PhotoService } from './services/photo.service';
 
 @ApiTags('照片管理')
 @Controller('api/cms/photos')
 @UseGuards(JwtAuthGuard)
 export class PhotoController {
+  private readonly logger = new Logger(PhotoController.name);
   static readonly UPLOAD_PATH = 'uploads/photos';
   static readonly THUMBNAIL_PATH = 'uploads/photos/thumbnails';
 
   constructor(
     @InjectRepository(Photo)
     private photoRepository: Repository<Photo>,
+    private photoService: PhotoService,
   ) {}
 
   @Get()
   @ApiOperation({ summary: '获取所有照片' })
   @ApiResponse({ status: 200, description: '成功获取照片列表' })
   async findAll(): Promise<ResultData<Photo[]>> {
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: await this.photoRepository.find(),
-    });
+    try {
+      this.logger.log('开始获取所有照片');
+      const photos = await this.photoRepository.find();
+      this.logger.log(`成功获取 ${photos.length} 张照片`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: photos,
+      });
+    } catch (error) {
+      this.logger.error('获取照片列表失败', error);
+      throw error;
+    }
   }
 
   @Get(':id')
   @ApiOperation({ summary: '根据ID获取照片' })
   @ApiParam({ name: 'id', description: '照片ID' })
   @ApiResponse({ status: 200, description: '成功获取照片详情' })
-  async findOne(@Param('id') id: string): Promise<ResultData<Photo | null>> {
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: await this.photoRepository.findOne({
-        where: { id: parseInt(id) },
-      }),
-    });
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResultData<Photo | null>> {
+    try {
+      this.logger.log(`开始获取ID为 ${id} 的照片`);
+      const photo = await this.photoRepository.findOne({
+        where: { id },
+      });
+      this.logger.log(`${photo ? '成功' : '未找到'}获取ID为 ${id} 的照片`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: photo,
+      });
+    } catch (error) {
+      this.logger.error(`获取ID为 ${id} 的照片失败`, error);
+      throw error;
+    }
   }
 
   @Post()
   @ApiOperation({ summary: '创建照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片创建成功' })
-  @UseInterceptors(
-    FileInterceptor('image', {
-      dest: PhotoController.UPLOAD_PATH,
-      storage: memoryStorage(),
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-          return callback(new Error('只支持图片文件格式'), false);
-        }
-        callback(null, true);
-      },
-      limits: {
-        fileSize: 20 * 1024 * 1024, // 20MB
-      },
-    }),
-  )
+  @UseInterceptors(ImageInterceptor('image'))
   async create(
     @UploadedFile() image: Express.Multer.File | null,
-    @Body('name') name: string,
-    @Body('albumId') albumId: string,
+    @Body() body: CreatePhotoDto,
   ): Promise<ResultData<Photo>> {
-    const result = await createStandardImage({
-      uploadPath: PhotoController.UPLOAD_PATH,
-      thumbnailPath: PhotoController.THUMBNAIL_PATH,
-      file: image,
-    });
-    // 如果有文件上传，使用文件信息
-    if (!result) {
-      // 如果没有文件上传，返回错误
+    try {
+      this.logger.log(`开始创建照片: ${body.name || '未提供名称'}`);
+      const photo = await this.photoService.createPhoto(image, body);
+      // 如果有文件上传，使用文件信息
+      if (!photo) {
+        // 如果没有文件上传，返回错误
+        this.logger.warn('创建照片失败：未选择文件');
+        return createResult({
+          code: 'ERR0004',
+          message: '请选择要上传的文件',
+        });
+      }
+
+      this.logger.log(`成功创建照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
-        code: 'ERR0004',
-        message: '请选择要上传的文件',
+        code: '0000',
+        message: '照片创建成功',
+        data: photo,
       });
+    } catch (error) {
+      this.logger.error('创建照片失败', error);
+      throw error;
     }
+  }
 
-    const safeAlbum = createIdObject(albumId);
+  @Post('create/with-album')
+  @ApiOperation({ summary: '创建相册照片' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: '照片创建成功' })
+  @UseInterceptors(ImageInterceptor('image'))
+  async createAlbumPhoto(
+    @UploadedFile() image: Express.Multer.File | null,
+    @Body() body: CreateAlbumPhotoDto,
+  ): Promise<ResultData<Photo>> {
+    try {
+      this.logger.log(`开始创建相册照片: ${body.name || '未提供名称'}`);
+      const photo = await this.photoService.createAlbumPhoto(image, body);
+      // 如果有文件上传，使用文件信息
+      if (!photo) {
+        // 如果没有文件上传，返回错误
+        this.logger.warn('创建相册照片失败：未选择文件');
+        return createResult({
+          code: 'ERR0004',
+          message: '请选择要上传的文件',
+        });
+      }
 
-    const savedPhoto = await this.photoRepository.save({
-      name: name,
-      url: result?.baseFilePath,
-      thumbnailUrl: result?.thumbnailFilePath,
-      album: safeAlbum,
-    });
-
-    return createResult({
-      code: '0000',
-      message: '照片创建成功',
-      data: savedPhoto,
-    });
+      this.logger.log(`成功创建相册照片，ID: ${photo.id}, 名称: ${photo.name}`);
+      return createResult({
+        code: '0000',
+        message: '照片创建成功',
+        data: photo,
+      });
+    } catch (error) {
+      this.logger.error('创建相册照片失败', error);
+      throw error;
+    }
   }
 
   @Post('/update')
   @ApiOperation({ summary: '更新照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片信息更新成功' })
-  @UseInterceptors(
-    FileInterceptor('image', {
-      dest: PhotoController.UPLOAD_PATH,
-      storage: memoryStorage(),
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
-          return callback(new Error('只支持图片文件格式'), false);
-        }
-        callback(null, true);
-      },
-      limits: {
-        fileSize: 20 * 1024 * 1024, // 20MB
-      },
-    }),
-  )
+  @UseInterceptors(ImageInterceptor('image'))
   async update(
     @UploadedFile() image: Express.Multer.File | null,
-    @Body('id') id: string,
-    @Body('name') name: string,
-    @Body('albumId') albumId: string,
+    @Body() body: UpdatePhotoDto,
   ): Promise<ResultData<Photo | null>> {
-    const imageUrlResult = await createStandardImage({
-      uploadPath: PhotoController.UPLOAD_PATH,
-      thumbnailPath: PhotoController.THUMBNAIL_PATH,
-      file: image,
-    });
+    try {
+      this.logger.log(
+        `开始更新照片ID: ${body.id}, 名称: ${body.name || '未提供名称'}`,
+      );
+      const photo = await this.photoService.updatePhoto(image, body);
+      if (!photo) {
+        this.logger.warn(`更新照片失败：未找到ID为 ${body.id} 的照片`);
+        return createResult({
+          code: 'ERR0003',
+          message: '更新失败',
+        });
+      }
 
-    const safeAlbum = createIdObject(albumId);
-
-    const result = await this.photoRepository.update(id, {
-      name,
-      url: imageUrlResult?.baseFilePath,
-      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
-      album: safeAlbum,
-    });
-
-    if (result.affected === 0) {
+      this.logger.log(`成功更新照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
-        code: 'ERR0003',
-        message: '更新失败',
+        code: '0000',
+        message: '成功',
+        data: photo,
       });
+    } catch (error) {
+      this.logger.error('更新照片失败', error);
+      throw error;
     }
+  }
 
-    const photo = await this.photoRepository.findOne({
-      where: { id: parseInt(id) },
-    });
+  @Post('/update/with-album')
+  @ApiOperation({ summary: '更新照片' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: '照片信息更新成功' })
+  @UseInterceptors(ImageInterceptor('image'))
+  async updateAlbumPhoto(
+    @UploadedFile() image: Express.Multer.File | null,
+    @Body() body: UpdateAlbumPhotoDto,
+  ): Promise<ResultData<UpdateAlbumPhotoResultDto | null>> {
+    try {
+      this.logger.log(
+        `开始更新相册照片ID: ${body.id}, 相册ID: ${body.albumId}`,
+      );
+      const result = await this.photoService.updateAlbumPhoto(image, body);
+      if (!result) {
+        this.logger.warn(`更新相册照片失败：未找到ID为 ${body.id} 的照片`);
+        return createResult({
+          code: 'ERR0003',
+          message: '更新失败',
+        });
+      }
 
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: photo,
-    });
+      this.logger.log(
+        `成功更新相册照片，照片ID: ${result.id}, 相册ID: ${result.albumId}`,
+      );
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: result,
+      });
+    } catch (error) {
+      this.logger.error('更新相册照片失败', error);
+      throw error;
+    }
   }
 
   @Delete(':id')
@@ -183,25 +237,24 @@ export class PhotoController {
   @ApiParam({ name: 'id', description: '照片ID' })
   @ApiResponse({ status: 200, description: '照片删除成功' })
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
-    const result = await this.photoRepository.delete(id);
-    if (result.affected === 0) {
-      return createResult({
-        code: 'ERR0003',
-        message: '删除失败',
-      });
-    }
-    return createResult({
-      code: '0000',
-      message: '成功',
-    });
-  }
-}
-
-function createIdObject(id: string | number) {
-  const safeId = safeNumber(id);
-  return safeId !== 0
-    ? {
-        id: safeId,
+    try {
+      this.logger.log(`开始删除ID为 ${id} 的照片`);
+      const result = await this.photoRepository.delete(id);
+      if (result.affected === 0) {
+        this.logger.warn(`删除ID为 ${id} 的照片失败：未找到记录`);
+        return createResult({
+          code: 'ERR0003',
+          message: '删除失败',
+        });
       }
-    : undefined;
+      this.logger.log(`成功删除ID为 ${id} 的照片`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+      });
+    } catch (error) {
+      this.logger.error(`删除ID为 ${id} 的照片失败`, error);
+      throw error;
+    }
+  }
 }

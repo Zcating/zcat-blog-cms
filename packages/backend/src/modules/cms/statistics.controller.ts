@@ -6,6 +6,7 @@ import {
   Query,
   UseGuards,
   Req,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -46,6 +47,8 @@ interface StatisticsChartResult {
 @ApiTags('页面统计管理')
 @Controller('api/cms/statistics')
 export class StatisticsController {
+  private readonly logger = new Logger(StatisticsController.name);
+
   constructor(
     @InjectRepository(PageStatistics)
     private statisticsRepository: Repository<PageStatistics>,
@@ -58,61 +61,73 @@ export class StatisticsController {
     @Body() createStatisticsDto: CreatePageStatisticsDto,
     @Req() request: Request,
   ): Promise<ResultData<void>> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    try {
+      this.logger.log(`开始记录页面访问: ${createStatisticsDto.pagePath}`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    const visitorIp =
-      createStatisticsDto.visitorIp ||
-      request.ip ||
-      request.connection.remoteAddress ||
-      'unknown';
+      const visitorIp =
+        createStatisticsDto.visitorIp ||
+        request.ip ||
+        request.connection.remoteAddress ||
+        'unknown';
 
-    // 查找今天该页面的统计记录
-    let statistics = await this.statisticsRepository.findOne({
-      where: {
-        pagePath: createStatisticsDto.pagePath,
-        visitDate: today,
-      },
-    });
-
-    if (statistics) {
-      // 更新访问次数
-      statistics.visitCount += 1;
-
-      // 检查是否是新的独立访客（简单的IP去重）
-      const existingVisitor = await this.statisticsRepository.findOne({
+      // 查找今天该页面的统计记录
+      let statistics = await this.statisticsRepository.findOne({
         where: {
           pagePath: createStatisticsDto.pagePath,
           visitDate: today,
-          visitorIp: visitorIp,
         },
       });
 
-      if (!existingVisitor) {
-        statistics.uniqueVisitors += 1;
+      if (statistics) {
+        // 更新访问次数
+        statistics.visitCount += 1;
+
+        // 检查是否是新的独立访客（简单的IP去重）
+        const existingVisitor = await this.statisticsRepository.findOne({
+          where: {
+            pagePath: createStatisticsDto.pagePath,
+            visitDate: today,
+            visitorIp: visitorIp,
+          },
+        });
+
+        if (!existingVisitor) {
+          statistics.uniqueVisitors += 1;
+        }
+
+        await this.statisticsRepository.save(statistics);
+        this.logger.log(
+          `更新页面访问记录: ${createStatisticsDto.pagePath}, 访问次数: ${statistics.visitCount}`,
+        );
+      } else {
+        // 创建新的统计记录
+        statistics = this.statisticsRepository.create({
+          pagePath: createStatisticsDto.pagePath,
+          pageTitle: createStatisticsDto.pageTitle,
+          visitCount: 1,
+          uniqueVisitors: 1,
+          visitDate: today,
+          visitorIp: visitorIp,
+          userAgent: createStatisticsDto.userAgent || request.get('User-Agent'),
+          referrer: createStatisticsDto.referrer || request.get('Referer'),
+        });
+
+        await this.statisticsRepository.save(statistics);
+        this.logger.log(
+          `创建新的页面访问记录: ${createStatisticsDto.pagePath}`,
+        );
       }
 
-      await this.statisticsRepository.save(statistics);
-    } else {
-      // 创建新的统计记录
-      statistics = this.statisticsRepository.create({
-        pagePath: createStatisticsDto.pagePath,
-        pageTitle: createStatisticsDto.pageTitle,
-        visitCount: 1,
-        uniqueVisitors: 1,
-        visitDate: today,
-        visitorIp: visitorIp,
-        userAgent: createStatisticsDto.userAgent || request.get('User-Agent'),
-        referrer: createStatisticsDto.referrer || request.get('Referer'),
+      return createResult({
+        code: '0000',
+        message: '访问记录成功',
       });
-
-      await this.statisticsRepository.save(statistics);
+    } catch (error) {
+      this.logger.error('记录页面访问失败', error);
+      throw error;
     }
-
-    return createResult({
-      code: '0000',
-      message: '访问记录成功',
-    });
   }
 
   @Get()
@@ -127,51 +142,58 @@ export class StatisticsController {
       limit: number;
     }>
   > {
-    const { pagePath, startDate, endDate, page = 1, limit = 10 } = query;
+    try {
+      this.logger.log('开始获取页面统计数据');
+      const { pagePath, startDate, endDate, page = 1, limit = 10 } = query;
 
-    const whereConditions: {
-      pagePath?: FindOperator<string>;
-      visitDate?: FindOperator<Date>;
-    } = {};
+      const whereConditions: {
+        pagePath?: FindOperator<string>;
+        visitDate?: FindOperator<Date>;
+      } = {};
 
-    if (pagePath) {
-      whereConditions.pagePath = Like(`%${pagePath}%`);
+      if (pagePath) {
+        whereConditions.pagePath = Like(`%${pagePath}%`);
+      }
+
+      if (startDate && endDate) {
+        whereConditions.visitDate = Between(
+          new Date(startDate),
+          new Date(endDate),
+        );
+      } else if (startDate) {
+        whereConditions.visitDate = Between(new Date(startDate), new Date());
+      } else if (endDate) {
+        whereConditions.visitDate = Between(
+          new Date('1970-01-01'),
+          new Date(endDate),
+        );
+      }
+
+      const [data, total] = await this.statisticsRepository.findAndCount({
+        where: whereConditions,
+        order: {
+          visitDate: 'DESC',
+          visitCount: 'DESC',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      this.logger.log(`成功获取页面统计数据，共 ${total} 条记录`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: {
+          data,
+          total,
+          page,
+          limit,
+        },
+      });
+    } catch (error) {
+      this.logger.error('获取页面统计数据失败', error);
+      throw error;
     }
-
-    if (startDate && endDate) {
-      whereConditions.visitDate = Between(
-        new Date(startDate),
-        new Date(endDate),
-      );
-    } else if (startDate) {
-      whereConditions.visitDate = Between(new Date(startDate), new Date());
-    } else if (endDate) {
-      whereConditions.visitDate = Between(
-        new Date('1970-01-01'),
-        new Date(endDate),
-      );
-    }
-
-    const [data, total] = await this.statisticsRepository.findAndCount({
-      where: whereConditions,
-      order: {
-        visitDate: 'DESC',
-        visitCount: 'DESC',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: {
-        data,
-        total,
-        page,
-        limit,
-      },
-    });
   }
 
   @Get('summary')
@@ -179,71 +201,82 @@ export class StatisticsController {
   @ApiOperation({ summary: '获取统计摘要' })
   @ApiResponse({ status: 200, description: '成功获取统计摘要' })
   async getSummary(): Promise<ResultData<PageStatisticsQueryResult>> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    try {
+      this.logger.log('开始获取统计摘要数据');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    // 总访问量
-    const totalVisitsResult = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('SUM(stats.visitCount)', 'total')
-      .getRawOne<StatisticsResult>();
+      // 总访问量
+      const totalVisitsResult = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('SUM(stats.visitCount)', 'total')
+        .getRawOne<StatisticsResult>();
 
-    // 总独立访客数
-    const totalUniqueVisitorsResult = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('SUM(stats.uniqueVisitors)', 'total')
-      .getRawOne<StatisticsResult>();
+      // 总独立访客数
+      const totalUniqueVisitorsResult = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('SUM(stats.uniqueVisitors)', 'total')
+        .getRawOne<StatisticsResult>();
 
-    // 今日访问量
-    const todayVisitsResult = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('SUM(stats.visitCount)', 'total')
-      .where('stats.visitDate = :today', { today })
-      .getRawOne<StatisticsResult>();
+      // 今日访问量
+      const todayVisitsResult = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('SUM(stats.visitCount)', 'total')
+        .where('stats.visitDate = :today', { today })
+        .getRawOne<StatisticsResult>();
 
-    // 今日独立访客数
-    const todayUniqueVisitorsResult = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('SUM(stats.uniqueVisitors)', 'total')
-      .where('stats.visitDate = :today', { today })
-      .getRawOne<StatisticsResult>();
+      // 今日独立访客数
+      const todayUniqueVisitorsResult = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('SUM(stats.uniqueVisitors)', 'total')
+        .where('stats.visitDate = :today', { today })
+        .getRawOne<StatisticsResult>();
 
-    // 热门页面（最近7天）
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
+      // 热门页面（最近7天）
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const topPages = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('stats.pagePath', 'pagePath')
-      .addSelect('stats.pageTitle', 'pageTitle')
-      .addSelect('SUM(stats.visitCount)', 'visitCount')
-      .where('stats.visitDate >= :sevenDaysAgo', { sevenDaysAgo })
-      .groupBy('stats.pagePath')
-      .addGroupBy('stats.pageTitle')
-      .orderBy('visitCount', 'DESC')
-      .limit(10)
-      .getRawMany<{
-        pagePath: string;
-        pageTitle: string;
-        visitCount: string;
-      }>();
+      const topPages = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('stats.pagePath', 'pagePath')
+        .addSelect('stats.pageTitle', 'pageTitle')
+        .addSelect('SUM(stats.visitCount)', 'visitCount')
+        .where('stats.visitDate >= :sevenDaysAgo', { sevenDaysAgo })
+        .groupBy('stats.pagePath')
+        .addGroupBy('stats.pageTitle')
+        .orderBy('visitCount', 'DESC')
+        .limit(10)
+        .getRawMany<{
+          pagePath: string;
+          pageTitle: string;
+          visitCount: string;
+        }>();
 
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: {
-        totalVisits: parseInt(totalVisitsResult?.total || '0'),
-        totalUniqueVisitors: parseInt(totalUniqueVisitorsResult?.total || '0'),
-        todayVisits: parseInt(todayVisitsResult?.total || '0'),
-        todayUniqueVisitors: parseInt(todayUniqueVisitorsResult?.total || '0'),
-        topPages: topPages.map((page) => ({
-          pagePath: page.pagePath,
-          pageTitle: page.pageTitle || page.pagePath,
-          visitCount: parseInt(page.visitCount),
-        })),
-      },
-    });
+      this.logger.log('成功获取统计摘要数据');
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: {
+          totalVisits: parseInt(totalVisitsResult?.total || '0'),
+          totalUniqueVisitors: parseInt(
+            totalUniqueVisitorsResult?.total || '0',
+          ),
+          todayVisits: parseInt(todayVisitsResult?.total || '0'),
+          todayUniqueVisitors: parseInt(
+            todayUniqueVisitorsResult?.total || '0',
+          ),
+          topPages: topPages.map((page) => ({
+            pagePath: page.pagePath,
+            pageTitle: page.pageTitle || page.pagePath,
+            visitCount: parseInt(page.visitCount),
+          })),
+        },
+      });
+    } catch (error) {
+      this.logger.error('获取统计摘要数据失败', error);
+      throw error;
+    }
   }
 
   @Get('chart-data')
@@ -254,29 +287,36 @@ export class StatisticsController {
   async getChartData(
     @Query('days') days: string = '7',
   ): Promise<ResultData<StatisticsChartResult[]>> {
-    const daysCount = parseInt(days) || 7;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysCount + 1);
-    startDate.setHours(0, 0, 0, 0);
+    try {
+      this.logger.log(`开始获取图表数据，天数: ${days}`);
+      const daysCount = parseInt(days) || 7;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysCount + 1);
+      startDate.setHours(0, 0, 0, 0);
 
-    const chartData = await this.statisticsRepository
-      .createQueryBuilder('stats')
-      .select('stats.visitDate', 'date')
-      .addSelect('SUM(stats.visitCount)', 'visits')
-      .addSelect('SUM(stats.uniqueVisitors)', 'uniqueVisitors')
-      .where('stats.visitDate >= :startDate', { startDate })
-      .groupBy('stats.visitDate')
-      .orderBy('stats.visitDate', 'ASC')
-      .getRawMany<{ date: string; visits: string; uniqueVisitors: string }>();
+      const chartData = await this.statisticsRepository
+        .createQueryBuilder('stats')
+        .select('stats.visitDate', 'date')
+        .addSelect('SUM(stats.visitCount)', 'visits')
+        .addSelect('SUM(stats.uniqueVisitors)', 'uniqueVisitors')
+        .where('stats.visitDate >= :startDate', { startDate })
+        .groupBy('stats.visitDate')
+        .orderBy('stats.visitDate', 'ASC')
+        .getRawMany<{ date: string; visits: string; uniqueVisitors: string }>();
 
-    return createResult({
-      code: '0000',
-      message: '成功',
-      data: chartData.map((item) => ({
-        date: item.date,
-        visits: parseInt(item.visits),
-        uniqueVisitors: parseInt(item.uniqueVisitors),
-      })),
-    });
+      this.logger.log(`成功获取图表数据，共 ${chartData.length} 天的数据`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+        data: chartData.map((item) => ({
+          date: item.date,
+          visits: parseInt(item.visits),
+          uniqueVisitors: parseInt(item.uniqueVisitors),
+        })),
+      });
+    } catch (error) {
+      this.logger.error('获取图表数据失败', error);
+      throw error;
+    }
   }
 }

@@ -20,6 +20,9 @@ export class PhotoAlbum {
   @Column()
   name: string;
 
+  @Column()
+  description: string;
+
   @OneToOne(() => Photo)
   @JoinColumn()
   cover: Photo;

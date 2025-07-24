@@ -2,14 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { IsBoolean, IsNumber, IsString } from 'class-validator';
 
-export class UpdateAlbumPhotoDto {
-  @ApiPropertyOptional({
-    description: '照片ID',
-    example: 1,
-  })
-  @IsNumber()
-  id: number;
-
+export class CreateAlbumPhotoDto {
   @ApiPropertyOptional({
     description: '照片名称',
     example: '美丽的风景（已更新）',
@@ -30,22 +23,4 @@ export class UpdateAlbumPhotoDto {
   })
   @IsNumber()
   albumId: number;
-}
-
-export class UpdateAlbumPhotoResultDto {
-  id: number;
-
-  name: string;
-
-  url: string;
-
-  isCover: boolean = false;
-
-  thumbnailUrl: string;
-
-  albumId: number;
-
-  createdAt: Date;
-
-  updatedAt: Date;
 }

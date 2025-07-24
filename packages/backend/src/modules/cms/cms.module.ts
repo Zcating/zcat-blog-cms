@@ -15,6 +15,7 @@ import { ArticleTagController } from './article-tag.controller';
 import { ArticleController } from './article.controller';
 import { PhotoAlbumController } from './photo-album.controller';
 import { PhotoController } from './photo.controller';
+import { PhotoService } from './services/photo.service';
 
 //
 @Module({
@@ -35,5 +36,6 @@ import { PhotoController } from './photo.controller';
     PhotoController,
     PhotoAlbumController,
   ],
+  providers: [PhotoService],
 })
 export class CmsModule {}

@@ -45,9 +45,10 @@ export default function AlbumsId(props: Route.ComponentProps) {
         return;
       }
 
-      const photo = await PhotosApi.createPhoto({
+      const photo = await PhotosApi.createAlbumPhoto({
         name: data.name,
         albumId: data.albumId,
+        isCover: data.isCover,
         image: data.image,
       });
 
@@ -61,11 +62,11 @@ export default function AlbumsId(props: Route.ComponentProps) {
       id: data.id,
       name: data.name,
       image: data.url,
-      albumId: data.albumId,
+      albumId: album.id,
       isCover: data.isCover || false,
     }),
     async onSubmit(data) {
-      const photo = await AlbumsApi.updatePhoto({
+      const photo = await PhotosApi.updateAlbumPhoto({
         id: data.id,
         name: data.name,
         image: data.image,

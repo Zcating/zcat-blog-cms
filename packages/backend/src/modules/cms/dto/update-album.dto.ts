@@ -8,6 +8,12 @@ export class UpdateAlbumDto {
   name?: string;
 
   @ApiPropertyOptional({
+    description: '相册描述',
+    example: '这是一个更新后的相册描述',
+  })
+  description?: string;
+
+  @ApiPropertyOptional({
     description: '封面照片ID',
     example: 2,
   })
