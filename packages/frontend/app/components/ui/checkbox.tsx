@@ -1,11 +1,17 @@
-import { tv } from "tailwind-variants";
-import { Input } from "./input";
-import { classnames } from "../utils";
+import { tv } from 'tailwind-variants';
 
-type CheckboxVariant = 'primary' | 'secondary' | 'accent' | 'neutral' | 'info' | 'success' | 'warning' | 'error';
+type CheckboxVariant =
+  | 'primary'
+  | 'secondary'
+  | 'accent'
+  | 'neutral'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error';
 
 const checkbox = tv({
-  base: 'checkbox',
+  base: 'checkbox bg-base-100',
   variants: {
     variant: {
       primary: 'checkbox-primary',
@@ -16,9 +22,9 @@ const checkbox = tv({
       success: 'checkbox-success',
       warning: 'checkbox-warning',
       error: 'checkbox-error',
-    }
-  }
-})
+    },
+  },
+});
 
 interface CheckboxProps {
   variant: CheckboxVariant;

@@ -32,6 +32,10 @@ export class PhotoAlbumController {
     private photoAlbumRepository: Repository<PhotoAlbum>,
   ) {}
 
+  /**
+   * 获取所有相册
+   * @returns 相册列表
+   */
   @Get()
   @ApiOperation({ summary: '获取所有相册' })
   @ApiResponse({ status: 200, description: '成功获取相册列表' })
@@ -53,6 +57,11 @@ export class PhotoAlbumController {
     }
   }
 
+  /**
+   * 根据ID获取相册详情
+   * @param id 相册ID
+   * @returns 相册详情
+   */
   @Get(':id')
   @ApiOperation({ summary: '根据ID获取相册' })
   @ApiParam({ name: 'id', description: '相册ID' })
@@ -64,7 +73,7 @@ export class PhotoAlbumController {
       this.logger.log(`开始获取ID为 ${id} 的相册`);
       const album = await this.photoAlbumRepository.findOne({
         where: { id: parseInt(id) },
-        relations: ['photos'],
+        relations: ['cover', 'photos'],
       });
       this.logger.log(`${album ? '成功' : '未找到'}获取ID为 ${id} 的相册`);
       return createResult({

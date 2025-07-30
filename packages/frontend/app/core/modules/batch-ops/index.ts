@@ -1,0 +1,1 @@
+export { useBatchDelete } from './use-batch-delete';

@@ -6,7 +6,6 @@ import {
   createImageUpload,
   createInput,
   createSchemeForm,
-  createCheckbox,
   PhotoCard,
   updateArray,
 } from '@cms/core';
@@ -38,7 +37,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
       name: '',
       image: null,
       albumId: album.id,
-      isCover: false,
     }),
     async onSubmit(data) {
       if (!data || !(data.image instanceof Blob)) {
@@ -48,7 +46,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
       const photo = await PhotosApi.createAlbumPhoto({
         name: data.name,
         albumId: data.albumId,
-        isCover: data.isCover,
         image: data.image,
       });
 
@@ -71,7 +68,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
         name: data.name,
         image: data.image,
         albumId: data.albumId,
-        isCover: data.isCover,
       });
       if (!photo) {
         return;
@@ -113,5 +109,4 @@ const useSchemeForm = createSchemeForm({
   name: createInput('照片名称'),
   image: createImageUpload('上传图片'),
   albumId: createConstNumber(),
-  isCover: createCheckbox('设为封面'),
 });

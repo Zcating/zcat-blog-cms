@@ -21,7 +21,6 @@ export namespace PhotosApi {
   export interface CreateAlbumPhotoParams {
     name: string;
     albumId: number;
-    isCover: boolean;
     image: Blob;
   }
 
@@ -95,9 +94,6 @@ export namespace PhotosApi {
     if (params.albumId) {
       formData.append('albumId', params.albumId.toString());
     }
-    if (isBoolean(params.isCover)) {
-      formData.append('isCover', params.isCover.toString());
-    }
     return transformPhoto(
       await HttpClient.post('cms/photos/create/with-album', formData),
     );
@@ -116,9 +112,6 @@ export namespace PhotosApi {
     }
     if (params.albumId) {
       formData.append('albumId', params.albumId.toString());
-    }
-    if (isBoolean(params.isCover)) {
-      formData.append('isCover', params.isCover.toString());
     }
 
     const result = await HttpClient.post(
