@@ -39,8 +39,8 @@ export namespace PhotosApi {
   }
 
   // Photo API functions
-  export async function getPhotos(): Promise<Photo[]> {
-    const photos = await HttpClient.get<Photo[]>('cms/photos');
+  export async function getPhotos(albumId?: number): Promise<Photo[]> {
+    const photos = await HttpClient.get<Photo[]>('cms/photos', { albumId });
     return photos.map(transformPhoto);
   }
 

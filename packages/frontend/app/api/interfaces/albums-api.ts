@@ -17,7 +17,6 @@ export namespace AlbumsApi {
     name: string;
     description?: string;
     cover?: PhotosApi.Photo;
-    photos: PhotosApi.Photo[];
     createdAt?: Date;
     updatedAt?: Date;
   }
@@ -47,14 +46,6 @@ export namespace AlbumsApi {
     if (album.cover) {
       album.cover.url = `/static/${album.cover?.url}`;
       album.cover.thumbnailUrl = `/static/${album.cover?.thumbnailUrl}`;
-    }
-    if (album.photos) {
-      album.photos = album.photos.map((item) => {
-        item.url = `/static/${item.url}`;
-        item.thumbnailUrl = `/static/${item.thumbnailUrl}`;
-        item.isCover = item.id === album.cover?.id;
-        return item;
-      });
     }
     return album;
   }
@@ -87,5 +78,23 @@ export namespace AlbumsApi {
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
     return await HttpClient.del(`cms/photo-albums/${id}`);
+  }
+
+  export interface SetPhotoAlbumCoverParams {
+    photoId: number;
+    albumId: number;
+  }
+
+  /**
+   * 设置相册封面
+   * @param {SetPhotoAlbumCoverParams} params
+   * @param {string} params.photoId 照片ID
+   * @param {string} params.albumId 相册ID
+   * @returns {Promise<void>}
+   */
+  export async function setPhotoAlbumCover(
+    params: SetPhotoAlbumCoverParams,
+  ): Promise<void> {
+    return await HttpClient.post('cms/photo-albums/cover', params);
   }
 }

@@ -5,7 +5,7 @@ import { Image } from './image';
 
 type CardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 type CardAppearance = 'border' | 'dash';
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   size?: CardSize;
   appearance?: CardAppearance;
@@ -13,14 +13,19 @@ interface CardProps {
 }
 
 export function Card(props: CardProps) {
-  const className = classnames(
+  const { className, size, appearance, children, ...rest } = props;
+  const cls = classnames(
     'card bg-base-100 shadow-sm',
-    cardSizeFrom(props.size),
-    cardAppearanceFrom(props.appearance),
-    props.className,
+    cardSizeFrom(size),
+    cardAppearanceFrom(appearance),
+    className,
   );
 
-  return <div className={className}>{props.children}</div>;
+  return (
+    <div className={cls} {...rest}>
+      {children}
+    </div>
+  );
 }
 
 interface CardFigureProps {

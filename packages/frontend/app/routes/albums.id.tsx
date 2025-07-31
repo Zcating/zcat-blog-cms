@@ -22,14 +22,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw new Error('Not Found');
   }
 
+  const photos = await PhotosApi.getPhotos(id);
+
   return {
     album,
+    albumPhotos: photos,
   };
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
-  const { album } = props.loaderData;
-  const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(album.photos);
+  const { album, albumPhotos } = props.loaderData;
+  const [coverId, setCoverId] = React.useState<number>(album?.cover?.id || 0);
+  const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
   const addPhoto = useSchemeForm({
     title: '新增照片',
     map: () => ({
@@ -77,8 +81,14 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
-  const selectPhoto = () => {
+  const setCover = async (photo: PhotosApi.Photo) => {
     // selectPhotoDialog.show();
+    await AlbumsApi.setPhotoAlbumCover({
+      photoId: photo.id,
+      albumId: album.id,
+    });
+
+    setCoverId(photo.id);
   };
 
   return (
@@ -90,15 +100,27 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="primary" onClick={addPhoto}>
             添加照片
           </Button>
-          <Button variant="neutral" onClick={selectPhoto}>
-            选择照片
-          </Button>
+          {/* <Button variant="neutral" onClick={setCover}>
+            设为封面
+          </Button> */}
         </div>
       </div>
       <Grid
         items={photos}
         cols={5}
-        renderItem={(item) => <PhotoCard data={item} onEdit={editPhoto} />}
+        renderItem={(item) => (
+          <PhotoCard
+            data={item}
+            onEdit={editPhoto}
+            hoverComponent={
+              coverId !== item.id ? (
+                <Button onClick={() => setCover(item)}>设为封面</Button>
+              ) : (
+                <Button variant="error">取消封面</Button>
+              )
+            }
+          />
+        )}
       />
     </div>
   );

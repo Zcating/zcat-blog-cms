@@ -73,7 +73,7 @@ export class PhotoAlbumController {
       this.logger.log(`开始获取ID为 ${id} 的相册`);
       const album = await this.photoAlbumRepository.findOne({
         where: { id: parseInt(id) },
-        relations: ['cover', 'photos'],
+        relations: ['cover'],
       });
       this.logger.log(`${album ? '成功' : '未找到'}获取ID为 ${id} 的相册`);
       return createResult({

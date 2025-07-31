@@ -10,6 +10,7 @@ import {
   UploadedFile,
   ParseIntPipe,
   Logger,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -53,11 +54,19 @@ export class PhotoController {
   @Get()
   @ApiOperation({ summary: '获取所有照片' })
   @ApiResponse({ status: 200, description: '成功获取照片列表' })
-  async findAll(): Promise<ResultData<Photo[]>> {
+  async findAll(
+    @Query('albumId', ParseIntPipe) albumId?: number,
+  ): Promise<ResultData<Photo[]>> {
     try {
       this.logger.log('开始获取所有照片');
-      const photos = await this.photoRepository.find();
+
+      const photos = await this.photoRepository.find({
+        where: albumId ? { album: { id: albumId } } : undefined,
+      });
+      console.log(albumId);
+
       this.logger.log(`成功获取 ${photos.length} 张照片`);
+
       return createResult({
         code: '0000',
         message: '成功',
