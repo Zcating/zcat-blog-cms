@@ -16,10 +16,10 @@ import { createResult, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
-import { PhotoAlbum } from '../../table/photo-album.entity';
-
-import { CreatePhotoAlbumDto, UpdateAlbumDto } from './dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { PhotoAlbum } from '../../../table/photo-album.entity';
+import { CreatePhotoAlbumDto, UpdateAlbumDto } from '../dto';
+import { SetCoverDto } from '../dto/set-cover.dto';
+import { JwtAuthGuard } from '../jwt-auth.guard';
 
 @ApiTags('相册管理')
 @Controller('api/cms/photo-albums')
@@ -164,6 +164,43 @@ export class PhotoAlbumController {
       });
     } catch (error) {
       this.logger.error(`删除ID为 ${id} 的相册失败`, error);
+      throw error;
+    }
+  }
+
+  @Post('cover')
+  @ApiOperation({ summary: '设置相册封面' })
+  @ApiResponse({ status: 200, description: '设置成功' })
+  async setCover(@Body() setCoverDto: SetCoverDto): Promise<ResultData<void>> {
+    try {
+      this.logger.log(`开始设置ID为 ${setCoverDto.albumId} 的相册封面`);
+      const result = await this.photoAlbumRepository.update(
+        setCoverDto.albumId,
+        {
+          cover: {
+            id: setCoverDto.photoId,
+          },
+        },
+      );
+      if (result.affected === 0) {
+        this.logger.warn(
+          `设置ID为 ${setCoverDto.albumId} 的相册封面失败：未找到记录`,
+        );
+        return createResult({
+          code: 'ERR0003',
+          message: '设置失败',
+        });
+      }
+      this.logger.log(`成功设置ID为 ${setCoverDto.albumId} 的相册封面`);
+      return createResult({
+        code: '0000',
+        message: '成功',
+      });
+    } catch (error) {
+      this.logger.error(
+        `设置ID为 ${setCoverDto.albumId} 的相册封面失败`,
+        error,
+      );
       throw error;
     }
   }

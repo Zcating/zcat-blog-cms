@@ -25,17 +25,16 @@ import { ImageInterceptor } from '@backend/utils';
 
 import { Repository } from 'typeorm';
 
-import { Photo } from '../../table/photo.entity';
-
+import { Photo } from '../../../table/photo.entity';
 import {
   CreateAlbumPhotoDto,
   CreatePhotoDto,
   UpdateAlbumPhotoDto,
   UpdateAlbumPhotoResultDto,
   UpdatePhotoDto,
-} from './dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { PhotoService } from './services/photo.service';
+} from '../dto';
+import { JwtAuthGuard } from '../jwt-auth.guard';
+import { PhotoService } from '../services/photo.service';
 
 @ApiTags('照片管理')
 @Controller('api/cms/photos')

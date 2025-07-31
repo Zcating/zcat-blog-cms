@@ -16,10 +16,9 @@ import { createResult, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
-import { Article } from '../../table/article.entity';
-
-import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from './dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { Article } from '../../../table/article.entity';
+import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from '../dto';
+import { JwtAuthGuard } from '../jwt-auth.guard';
 
 @ApiTags('文章管理')
 @Controller('api/cms/articles')

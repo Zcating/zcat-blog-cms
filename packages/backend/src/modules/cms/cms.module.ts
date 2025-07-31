@@ -11,10 +11,10 @@ import {
   UserInfo,
 } from '@backend/table';
 
-import { ArticleTagController } from './article-tag.controller';
-import { ArticleController } from './article.controller';
-import { PhotoAlbumController } from './photo-album.controller';
-import { PhotoController } from './photo.controller';
+import { ArticleTagController } from './controllers/article-tag.controller';
+import { ArticleController } from './controllers/article.controller';
+import { PhotoAlbumController } from './controllers/photo-album.controller';
+import { PhotoController } from './controllers/photo.controller';
 import { PhotoService } from './services/photo.service';
 
 //

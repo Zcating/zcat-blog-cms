@@ -17,8 +17,8 @@ import { PageStatistics } from '@backend/table';
 import { Request } from 'express';
 import { Repository, Between, Like, FindOperator } from 'typeorm';
 
-import { CreatePageStatisticsDto, PageStatisticsQueryDto } from './dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { CreatePageStatisticsDto, PageStatisticsQueryDto } from '../dto';
+import { JwtAuthGuard } from '../jwt-auth.guard';
 
 interface StatisticsResult {
   total: string;
