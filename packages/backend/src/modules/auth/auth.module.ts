@@ -6,8 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from '@backend/table';
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController, AuthService } from './controllers';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
