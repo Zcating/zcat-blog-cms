@@ -115,7 +115,7 @@ export class PhotoAlbumController {
   async update(
     @Param('id') id: string,
     @Body() updatePhotoAlbumDto: UpdateAlbumDto,
-  ): Promise<ResultData<void>> {
+  ): Promise<ResultData<PhotoAlbum | null>> {
     try {
       this.logger.log(
         `开始更新ID为 ${id} 的相册: ${updatePhotoAlbumDto.name || '未提供名称'}`,
@@ -135,6 +135,10 @@ export class PhotoAlbumController {
       return createResult({
         code: '0000',
         message: '成功',
+        data: await this.photoAlbumRepository.findOne({
+          where: { id: parseInt(id) },
+          relations: ['cover'],
+        }),
       });
     } catch (error) {
       this.logger.error(`更新ID为 ${id} 的相册失败`, error);

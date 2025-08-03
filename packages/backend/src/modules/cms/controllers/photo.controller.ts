@@ -55,15 +55,14 @@ export class PhotoController {
   @ApiOperation({ summary: '获取所有照片' })
   @ApiResponse({ status: 200, description: '成功获取照片列表' })
   async findAll(
-    @Query('albumId', ParseIntPipe) albumId?: number,
+    @Query('albumId', new ParseIntPipe({ optional: true })) albumId: number = 0,
   ): Promise<ResultData<Photo[]>> {
     try {
       this.logger.log('开始获取所有照片');
 
       const photos = await this.photoRepository.find({
-        where: albumId ? { album: { id: albumId } } : undefined,
+        where: albumId > 0 ? { album: { id: albumId } } : undefined,
       });
-      console.log(albumId);
 
       this.logger.log(`成功获取 ${photos.length} 张照片`);
 
