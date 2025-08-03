@@ -1,15 +1,13 @@
 import { useNavigate } from 'react-router';
-import { Grid, FormDialog, Button, Row } from '@cms/components';
+import { Grid, Button } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
 import {
   AlbumImageCard,
-  createCheckbox,
   createConstNumber,
   createInput,
   createSchemeForm,
   createTextArea,
 } from '@cms/core';
-import { useForm, type SubmitHandler } from 'react-hook-form';
 
 import type { Route } from './+types/albums';
 import React from 'react';
@@ -46,6 +44,7 @@ export default function Albums(props: Route.ComponentProps) {
 
   const edit = useAlbumForm({
     title: '编辑相册',
+    confirmText: '保存',
     map(item: AlbumsApi.PhotoAlbum) {
       return {
         id: item.id,
