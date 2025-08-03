@@ -25,11 +25,11 @@ interface ImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 
 export const Image = React.forwardRef<HTMLImageElement, ImageProps>(
   function Image(props: ImageProps, ref) {
-    const { src, alt, className, contentMode } = props;
+    const { src, alt, className, contentMode, ...rest } = props;
 
     return (
       <img
-        {...props}
+        {...rest}
         ref={ref}
         src={src}
         alt={alt}

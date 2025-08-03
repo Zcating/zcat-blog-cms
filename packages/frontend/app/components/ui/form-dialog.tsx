@@ -1,3 +1,4 @@
+import { Dialog } from './dialog';
 import { Modal } from './modal';
 
 export namespace FormDialog {
@@ -30,16 +31,16 @@ export namespace FormDialog {
 
       const close = () => {
         resolvers.resolve();
-        Modal.close();
+        Dialog.close();
       };
 
       const submit = async (data: T) => {
         await onSubmit(data);
         resolvers.resolve();
-        Modal.close();
+        Dialog.close();
       };
 
-      await Modal.show({
+      await Dialog.show({
         backdropClose: false,
         content: (
           <div className="space-y-5">

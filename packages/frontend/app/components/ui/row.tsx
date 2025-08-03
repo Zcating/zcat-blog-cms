@@ -7,6 +7,7 @@ interface RowProps {
   children: React.ReactNode;
   gap?: RowGap;
   justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly';
+  align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch';
 }
 
 const rowTv = tv({
@@ -33,17 +34,25 @@ const rowTv = tv({
       around: 'justify-around',
       evenly: 'justify-evenly',
     },
+    align: {
+      start: 'items-start',
+      end: 'items-end',
+      center: 'items-center',
+      baseline: 'items-baseline',
+      stretch: 'items-stretch',
+    },
   },
   defaultVariants: {
     gap: '0',
     justify: 'start',
+    align: 'start',
   },
 });
 
 export function Row(props: RowProps) {
   const className = classnames(
-    'flex flex-row',
-    rowTv({ gap: props.gap, justify: props.justify }),
+    'flex flex-row w-full',
+    rowTv({ gap: props.gap, justify: props.justify, align: props.align }),
   );
   return <div className={className}>{props.children}</div>;
 }

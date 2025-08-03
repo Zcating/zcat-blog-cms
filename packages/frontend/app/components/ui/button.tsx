@@ -5,6 +5,7 @@ import { Loading3QuartersOutlined } from '@ant-design/icons';
 import { tv } from 'tailwind-variants';
 
 type ButtonVariant =
+  | 'default'
   | 'neutral'
   | 'primary'
   | 'secondary'
@@ -31,6 +32,7 @@ const buttonClassVariant = tv({
   base: 'btn',
   variants: {
     variant: {
+      default: '',
       neutral: 'btn-neutral',
       primary: 'btn-primary',
       secondary: 'btn-secondary',
@@ -68,7 +70,7 @@ const buttonClassVariant = tv({
     },
   },
   defaultVariants: {
-    variant: 'neutral',
+    variant: 'default',
   },
 });
 

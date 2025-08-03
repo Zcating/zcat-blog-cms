@@ -4,29 +4,29 @@ import { createPortal } from 'react-dom';
 import { classnames } from '../utils';
 import { tv } from 'tailwind-variants';
 
-export namespace Modal {
+export namespace Dialog {
   let id = 0;
 
-  type ModalPosition = 'top' | 'left' | 'right' | 'bottom' | 'center';
+  type DialogPosition = 'top' | 'left' | 'right' | 'bottom' | 'center';
 
-  export interface ModalProps {
+  export interface DialogProps {
     className?: string;
     contentContainerClassName?: string;
-    children: React.ReactNode;
+    content: React.ReactNode;
     onClose?: () => void;
     backdropClose?: boolean;
-    position?: ModalPosition;
+    position?: DialogPosition;
   }
 
-  const modalTv = tv({
-    base: 'modal scrollbar-auto',
+  const dialogTv = tv({
+    base: 'dialog',
     variants: {
       position: {
-        center: 'modal-center',
-        top: 'modal-top',
-        left: 'modal-left',
-        right: 'modal-right',
-        bottom: 'modal-bottom',
+        center: 'dialog-center',
+        top: 'dialog-top',
+        left: 'dialog-left',
+        right: 'dialog-right',
+        bottom: 'dialog-bottom',
       },
     },
     defaultVariants: {
@@ -36,13 +36,13 @@ export namespace Modal {
 
   let currentModal: HTMLDivElement | null = null;
 
-  export async function open(props: ModalProps) {
+  export async function show(props: DialogProps) {
     const portalRoot = document.getElementById('portal-root');
     if (!portalRoot) {
       throw new Error('modal portal root not found');
     }
 
-    const modalClass = modalTv({ position: props.position });
+    const positionClass = dialogTv({ position: props.position });
     const backdropClose = props.backdropClose ?? true;
     const resolvers = Promise.withResolvers<HTMLDivElement>();
     const handleRef = (ref: HTMLDivElement) => {
@@ -59,17 +59,18 @@ export namespace Modal {
     const modal = createPortal(
       <div
         key={`modal-${id++}`}
-        className={classnames(modalClass, props.className)}
+        className={classnames(
+          'modal scrollbar-auto',
+          positionClass,
+          props.className,
+        )}
         role="dialog"
         ref={handleRef}
       >
         <div
-          className={classnames(
-            'modal-box p-0',
-            props.contentContainerClassName,
-          )}
+          className={classnames('modal-box', props.contentContainerClassName)}
         >
-          {props.children}
+          {props.content}
         </div>
         {backdropClose ? (
           <div className="modal-backdrop" onClick={handleClose}></div>
@@ -81,9 +82,9 @@ export namespace Modal {
 
     UiProviderContext.set({ portal: modal });
 
-    const modalElement = await resolvers.promise;
+    const dialogElement = await resolvers.promise;
 
-    modalElement.classList.add('modal-open');
+    dialogElement.classList.add('modal-open');
   }
 
   export function close() {

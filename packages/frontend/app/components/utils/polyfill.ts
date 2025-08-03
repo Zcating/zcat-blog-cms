@@ -8,6 +8,7 @@ declare global {
   }
   interface PromiseConstructor {
     withResolvers<T, E = unknown>(): PromiseResolver<T, E>;
+    tick(timeout?: number): Promise<void>;
   }
 }
 
@@ -24,4 +25,10 @@ Promise.withResolvers = function withResolvers<T, E = unknown>() {
     resolve: resolve!,
     reject: reject!,
   };
+};
+
+Promise.tick = function tick(timeout = 0) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
 };

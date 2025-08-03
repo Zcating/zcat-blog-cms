@@ -1,4 +1,4 @@
-import { Button, Grid } from '@cms/components';
+import { Button, Grid, Row, useLoadingFn } from '@cms/components';
 import type { Route } from './+types/albums.id';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import {
@@ -10,6 +10,7 @@ import {
   updateArray,
 } from '@cms/core';
 import React from 'react';
+import { FullscreenOutlined } from '@ant-design/icons';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -81,7 +82,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
-  const setCover = async (photo: PhotosApi.Photo) => {
+  const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
     // selectPhotoDialog.show();
     await AlbumsApi.setPhotoAlbumCover({
       photoId: photo.id,
@@ -89,6 +90,19 @@ export default function AlbumsId(props: Route.ComponentProps) {
     });
 
     setCoverId(photo.id);
+  });
+
+  const hoverComponent = (photo: PhotosApi.Photo) => {
+    const isCover = coverId === photo.id;
+    return isCover ? (
+      <Button variant="error" loading={setCover.loading}>
+        取消封面
+      </Button>
+    ) : (
+      <Button onClick={() => setCover(photo)} loading={setCover.loading}>
+        设为封面
+      </Button>
+    );
   };
 
   return (
@@ -112,13 +126,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <PhotoCard
             data={item}
             onEdit={editPhoto}
-            hoverComponent={
-              coverId !== item.id ? (
-                <Button onClick={() => setCover(item)}>设为封面</Button>
-              ) : (
-                <Button variant="error">取消封面</Button>
-              )
-            }
+            hoverComponent={hoverComponent(item)}
           />
         )}
       />
