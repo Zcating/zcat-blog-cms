@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ArticlesApi } from '@cms/api';
 import { ArticleEditor, ArticleViewer } from '@cms/core/modules';
 import type { Route } from './+types/articles.id';
+import { useLoadingFn } from '@cms/components';
+import { useNavigate, useNavigation } from 'react-router';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (params.id === 'create') {
@@ -27,29 +29,23 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function Article({ loaderData }: Route.ComponentProps) {
   const [article, setArticle] = useState(loaderData.article);
   const [isEditing, setIsEditing] = useState(!article.id);
-  const [saving, setSaving] = useState(false);
 
+  const navigate = useNavigate();
   // 保存文章
-  const handleSave = async (updatedArticle: ArticlesApi.Article) => {
-    if (!updatedArticle.id) return;
-
-    setSaving(true);
-    try {
-      await ArticlesApi.updateArticle(updatedArticle.id, {
-        title: updatedArticle.title,
-        excerpt: updatedArticle.excerpt,
-        content: updatedArticle.content,
+  const handleSave = useLoadingFn(async (article: ArticlesApi.Article) => {
+    if (!article.id) {
+      article = await ArticlesApi.createArticle(article);
+    } else {
+      article = await ArticlesApi.updateArticle(article.id, {
+        title: article.title,
+        excerpt: article.excerpt,
+        content: article.content,
       });
-      setArticle(updatedArticle);
-      setIsEditing(false);
-      alert('保存成功！');
-    } catch (error) {
-      console.error('保存失败:', error);
-      alert('保存失败，请重试');
-    } finally {
-      setSaving(false);
     }
-  };
+    setIsEditing(false);
+    setArticle(article);
+    navigate(`/articles/${article.id}`);
+  });
 
   // 取消编辑
   const handleCancel = () => {
@@ -68,7 +64,7 @@ export default function Article({ loaderData }: Route.ComponentProps) {
           article={article}
           onSave={handleSave}
           onCancel={handleCancel}
-          saving={saving}
+          loading={handleSave.loading}
         />
       ) : (
         <ArticleViewer article={article} onEdit={handleEdit} />

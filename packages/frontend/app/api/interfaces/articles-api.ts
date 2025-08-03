@@ -45,9 +45,7 @@ export namespace ArticlesApi {
     return await HttpClient.get(`cms/articles/${id}`);
   }
 
-  export async function createArticle(
-    params: CreateArticleParams,
-  ): Promise<Article> {
+  export async function createArticle(params: Article): Promise<Article> {
     return await HttpClient.post('cms/articles', params);
   }
 
