@@ -1,4 +1,5 @@
 import Cookies from 'js-cookie';
+import { createQueryPath } from './http-utils';
 
 export namespace HttpClient {
   interface ResponseResult {
@@ -42,10 +43,8 @@ export namespace HttpClient {
     path: string,
     body?: Record<string, any>,
   ): Promise<T> {
-    if (body) {
-      path += '?' + new URLSearchParams(body).toString();
-    }
-    const response = await fetch(`/api/${path}`, {
+    const queryPath = createQueryPath(path, body);
+    const response = await fetch(`/api/${queryPath}`, {
       method: 'GET',
       headers: {
         Authorization: Cookies.get('token') || '',
@@ -81,10 +80,8 @@ export namespace HttpClient {
     path: string,
     body?: Record<string, any>,
   ): Promise<any> {
-    if (body) {
-      path += '?' + new URLSearchParams(body).toString();
-    }
-    const response = await fetch(`/api/${path}`, {
+    const queryPath = createQueryPath(path, body);
+    const response = await fetch(`/api/${queryPath}`, {
       method: 'DELETE',
       headers: {
         Authorization: Cookies.get('token') || '',

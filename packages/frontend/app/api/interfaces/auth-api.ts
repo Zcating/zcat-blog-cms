@@ -1,4 +1,4 @@
-import { HttpClient } from "../http-client";
+import { HttpClient } from '../http/http-client';
 
 export namespace AuthApi {
   export interface LoginParams {

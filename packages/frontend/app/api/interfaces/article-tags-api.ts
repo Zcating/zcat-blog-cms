@@ -1,5 +1,5 @@
-import { HttpClient } from "../http-client";
-import dayjs from "dayjs";
+import { HttpClient } from '../http/http-client';
+import dayjs from 'dayjs';
 
 export namespace ArticleTagsApi {
   export interface ArticleTag {
@@ -19,18 +19,23 @@ export namespace ArticleTagsApi {
 
   // ArticleTag API functions
   export async function getArticleTags(): Promise<ArticleTag[]> {
-    return await HttpClient.get("cms/article-tags");
+    return await HttpClient.get('cms/article-tags');
   }
 
   export async function getArticleTag(id: number): Promise<ArticleTag> {
     return await HttpClient.get(`cms/article-tags/${id}`);
   }
 
-  export async function createArticleTag(params: CreateArticleTagParams): Promise<ArticleTag> {
-    return await HttpClient.post("cms/article-tags", params);
+  export async function createArticleTag(
+    params: CreateArticleTagParams,
+  ): Promise<ArticleTag> {
+    return await HttpClient.post('cms/article-tags', params);
   }
 
-  export async function updateArticleTag(id: number, params: UpdateArticleTagParams): Promise<ArticleTag> {
+  export async function updateArticleTag(
+    id: number,
+    params: UpdateArticleTagParams,
+  ): Promise<ArticleTag> {
     return await HttpClient.put(`cms/article-tags/${id}`, params);
   }
 
