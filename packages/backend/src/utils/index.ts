@@ -3,3 +3,4 @@ export * from './is-type';
 export * from './safe-type';
 export * from './image';
 export * from './constant';
+export * from './paginate';

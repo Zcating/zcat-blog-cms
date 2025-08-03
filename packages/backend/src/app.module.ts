@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AuthModule, CmsModule } from '@backend/modules';
+import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
 
 // import * as path from 'path';
 
@@ -41,6 +41,7 @@ import { AuthModule, CmsModule } from '@backend/modules';
     // }),
     AuthModule,
     CmsModule,
+    BlogModule,
   ],
 })
 export class AppModule {}
