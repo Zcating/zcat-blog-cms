@@ -1,24 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { safeNumber } from '@backend/utils';
 
-import { isNumber } from '@backend/utils';
-
-import { IsNumber, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 
 export class PaginateQueryDto {
-  @IsNumber()
   @IsOptional()
-  page = 1;
+  @Transform(({ value }) => safeNumber(value, 1))
+  page: number = 1;
 
-  @IsNumber()
   @IsOptional()
-  pageSize = 10;
-}
-
-@Injectable()
-export class PaginateValidationPipe {
-  transform(value: PaginateQueryDto) {
-    value.page = isNumber(value.page) ? value.page : 1;
-    value.pageSize = isNumber(value.pageSize) ? value.pageSize : 10;
-    return value;
-  }
+  @Transform(({ value }) => safeNumber(value, 10))
+  pageSize: number = 10;
 }

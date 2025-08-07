@@ -1,5 +1,5 @@
 export function safeNumber(value: unknown, defaultValue: number = 0) {
-  const num = Number(value);
+  const num = parseFloat(value as string);
   if (isNaN(num)) {
     return defaultValue;
   }
