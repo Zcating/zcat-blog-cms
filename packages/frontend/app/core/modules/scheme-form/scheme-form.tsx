@@ -1,13 +1,8 @@
 import {
   Button,
-  Checkbox,
   Form,
   FormDialog,
-  ImageUpload,
-  Input,
   Row,
-  Select,
-  Textarea,
   useLoadingFn,
 } from '@cms/components';
 import type { Path } from 'react-hook-form';
@@ -15,10 +10,14 @@ import type {
   FieldsRecord,
   SchemeField,
   SchemeFieldsData,
-} from './scheme-field';
+} from './scheme-field';  
+import zod from 'zod';
+import { SCHEME_COMPONENT_MAP } from './scheme-component-map';
+import type { zodResolver } from '@hookform/resolvers/zod';
 
 interface SchemeFormProps<Fields extends FieldsRecord> {
   fields: Fields;
+  schema?: Parameters<(typeof zodResolver)>[0];
   initialValues: SchemeFieldsData<Fields>;
   confirmText?: string;
   cancelText?: string;
@@ -42,71 +41,35 @@ function SchemeForm<Fields extends FieldsRecord>(
 
   const submit = useLoadingFn(props.onSubmit);
 
-  const instance = Form.useForm({
+  const instance = Form.useForm<SchemeFieldsData<Fields>>({
     initialValues: props.initialValues,
+    schema: props.schema,
     onSubmit: submit,
   });
 
   return (
     <Form form={instance} className="space-y-5">
       {entries.map(([key, field]) => {
-        switch (field.type) {
-          case 'select':
-            return (
-              <Form.Item
-                form={instance}
-                label={field.label}
-                name={key}
-                key={key}
-              >
-                <Select options={field.options} />
-              </Form.Item>
-            );
-          case 'input':
-            return (
-              <Form.Item
-                form={instance}
-                label={field.label}
-                name={key}
-                key={key}
-              >
-                <Input placeholder={field.placeholder || '请输入'} />
-              </Form.Item>
-            );
-          case 'imageUpload':
-            return (
-              <Form.Item
-                form={instance}
-                label={field.label}
-                name={key}
-                key={key}
-              >
-                <ImageUpload />
-              </Form.Item>
-            );
-          case 'checkbox':
-            return (
-              <Form.Item
-                form={instance}
-                label={field.label}
-                name={key}
-                key={key}
-              >
-                <Checkbox variant="primary" />
-              </Form.Item>
-            );
-          case 'textarea':
-            return (
-              <Form.Item
-                form={instance}
-                label={field.label}
-                name={key}
-                key={key}
-              >
-                <Textarea placeholder={field.placeholder || '请输入'} />
-              </Form.Item>
-            );
+        const componentRenderer = SCHEME_COMPONENT_MAP[field.type];
+        if (!componentRenderer) { 
+          return null;
         }
+        
+        const component = componentRenderer(field);
+        if (!component) { 
+          return null;
+        }
+        
+        return (
+          <Form.Item
+            form={instance}
+            label={field.label}
+            name={key}
+            key={key}
+          >
+            {component}
+          </Form.Item>
+        );
       })}
       <Row gap="5" justify="end">
         <Button variant="primary" type="submit" loading={submit.loading}>
@@ -126,12 +89,21 @@ interface UseSchemeFormParams<U, Fields extends FieldsRecord> {
   onSubmit: (data: SchemeFieldsData<Fields>) => Promise<void>;
 }
 
-export function createSchemeForm<Fields extends FieldsRecord>(fields: Fields) {
+interface CreateSchemeFormParams<Fields extends FieldsRecord> {
+  fields: Fields;
+  schema?: Parameters<(typeof zodResolver)>[0];
+}
+
+export function createSchemeForm<Fields extends FieldsRecord>({
+  fields,
+  schema,
+}: CreateSchemeFormParams<Fields>) {
   const showDialog = FormDialog.create<SchemeFieldsData<Fields>>((props) => {
     return (
       <SchemeForm
         {...props}
         fields={fields}
+        schema={schema}
         initialValues={props.initialValues}
         confirmText={props.confirmText}
         cancelText={props.cancelText}

@@ -11,6 +11,20 @@ import {
 
 import type { Route } from './+types/albums';
 import React from 'react';
+import zod from 'zod';
+
+const useAlbumForm = createSchemeForm({
+  fields: {
+    id: createConstNumber(),
+    name: createInput('相册名称'),
+    description: createTextArea('相册描述'),
+  },
+  schema: zod.object({
+    id: zod.number().int(),
+    name: zod.string().min(1, '相册名称不能为空'),
+    description: zod.string(),
+  }),
+});
 
 export async function clientLoader() {
   return {
@@ -53,7 +67,7 @@ export default function Albums(props: Route.ComponentProps) {
       };
     },
     onSubmit: async (data) => {
-      const result = await AlbumsApi.updatePhotoAlbum(data.id, data);
+      const result = await AlbumsApi.updatePhotoAlbum(data);
       setAlbums(albums.map((album) => (album.id === data.id ? result : album)));
     },
   });
@@ -100,9 +114,3 @@ function AlbumItem(props: AlbumItemProps) {
     />
   );
 }
-
-const useAlbumForm = createSchemeForm({
-  id: createConstNumber(),
-  name: createInput('相册名称'),
-  description: createTextArea('相册描述'),
-});

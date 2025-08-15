@@ -33,7 +33,7 @@ interface CheckboxSchemeField {
   valueType: 'boolean';
 }
 
-interface ConstantNumberField {
+export interface ConstantNumberField {
   label: string;
   type: 'constant';
   valueType: 'number';

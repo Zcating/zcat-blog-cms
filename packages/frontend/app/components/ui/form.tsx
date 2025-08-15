@@ -12,6 +12,9 @@ import {
   type UseFormWatch,
 } from 'react-hook-form';
 
+import * as z from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod"
+
 import useConstant from 'use-constant';
 import { Label } from './label';
 
@@ -33,6 +36,9 @@ export function Form<TFieldValues extends FieldValues = FieldValues>(
   );
 }
 
+/**
+ * 
+ */
 interface FormItemChildrenProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -42,6 +48,9 @@ interface FormItemChildrenProps<
   formState: UseFormStateReturn<TFieldValues>;
 }
 
+/**
+ * 
+ */
 type FormItemChildren<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -49,6 +58,9 @@ type FormItemChildren<
   | ((props: FormItemChildrenProps<TFieldValues, TName>) => React.ReactElement)
   | React.ReactElement<any>;
 
+/**
+ * 
+ */
 interface FormItemProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -60,11 +72,19 @@ interface FormItemProps<
   children: FormItemChildren<TFieldValues, TName>;
 }
 
+/**
+ * 
+ * @template TFieldValues 
+ * @template TName 
+ * @template TTransformedValues 
+ * @param {FormItemProps<TFieldValues, TName, TTransformedValues>} props 
+ * @returns {React.ReactElement}
+ */
 function FormItem<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformedValues = TFieldValues,
->(props: FormItemProps<TFieldValues, TName, TTransformedValues>) {
+>(props: FormItemProps<TFieldValues, TName, TTransformedValues>): React.ReactElement {
   const { form, name, label, children } = props;
 
   const render = React.useMemo(() => {
@@ -93,11 +113,18 @@ function FormItem<
   );
 }
 
-interface UseFormProps<TFieldValues extends FieldValues = FieldValues> {
+/**
+ * 
+ */
+interface UseFormProps<TFieldValues extends FieldValues = FieldValues, TTransformedValues extends FieldValues = TFieldValues> {
   initialValues: TFieldValues;
+  schema?: Parameters<(typeof zodResolver)>[0];
   onSubmit: (data: TFieldValues) => void;
 }
 
+/**
+ * 
+ */
 interface FormInstance<
   TFieldValues extends FieldValues = FieldValues,
   TTransformedValues = TFieldValues,
@@ -107,14 +134,21 @@ interface FormInstance<
   watch: UseFormWatch<TFieldValues>;
 }
 
+
+/**
+ * @template TFieldValues 
+ * @param {UseFormProps<TFieldValues>} props 
+ * @returns {FormInstance<TFieldValues, TTransformedValues>}
+ */
 function useForm<
   TFieldValues extends FieldValues = FieldValues,
-  TTransformedValues = TFieldValues,
+  TTransformedValues extends FieldValues = TFieldValues,
 >(
   props: UseFormProps<TFieldValues>,
 ): FormInstance<TFieldValues, TTransformedValues> {
   const formReturn = useReactHookForm<TFieldValues, TTransformedValues>({
     defaultValues: props.initialValues as DefaultValues<TFieldValues>,
+    resolver: props.schema ? zodResolver<TFieldValues, TTransformedValues, TFieldValues>(props.schema as any) : undefined,
   });
 
   const submit = formReturn.handleSubmit(props.onSubmit);

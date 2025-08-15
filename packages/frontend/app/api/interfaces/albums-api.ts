@@ -27,6 +27,7 @@ export namespace AlbumsApi {
   }
 
   export interface UpdatePhotoAlbumParams {
+    id: number;
     name?: string;
   }
 
@@ -70,10 +71,11 @@ export namespace AlbumsApi {
   }
 
   export async function updatePhotoAlbum(
-    id: number,
     params: UpdatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return await HttpClient.put(`cms/photo-albums/${id}`, params);
+    return await HttpClient.put(`cms/photo-albums/${params.id}`, {
+      name: params.name,
+    });
   }
 
   export async function deletePhotoAlbum(id: number): Promise<void> {

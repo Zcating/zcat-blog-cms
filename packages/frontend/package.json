@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "~5.6.1",
+    "@hookform/resolvers": "^5.2.1",
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",
     "@tailwindcss/typography": "^0.5.16",
@@ -26,7 +27,7 @@
     "react-router": "^7.5.3",
     "tailwind-variants": "^1.0.0",
     "use-constant": "^2.0.0",
-    "zod": "^3.25.75"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
