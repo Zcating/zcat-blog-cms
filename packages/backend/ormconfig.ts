@@ -18,8 +18,8 @@ export default new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: [`${__dirname}/dist/src/table/*.entity.{ts, js}`],
+  entities: [`${__dirname}/src/table/*.entity.{ts, js}`],
   // 根据自己的需求定义，migrations
-  migrations: [`${__dirname}/dist/src/migration/*{.ts,.js}`],
+  migrations: [`${__dirname}/src/migration/*{.ts,.js}`],
   synchronize: false,
 });
