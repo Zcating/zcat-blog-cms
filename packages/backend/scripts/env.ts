@@ -28,9 +28,9 @@ async function exists(filePath: string) {
 }
 
 async function main() {
-  const filePath = path.join(__dirname, '..', '.env');
-  const devPath = path.join(__dirname, '..', '.env.development');
-  const prodPath = path.join(__dirname, '..', '.env.production');
+  const filePath = path.join(process.cwd(), '.env');
+  const devPath = path.join(process.cwd(), '.env.development');
+  const prodPath = path.join(process.cwd(), '.env.production');
   if (await exists(devPath)) {
     console.log('.env.development 文件已存在');
     return;
