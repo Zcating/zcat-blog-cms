@@ -6,6 +6,9 @@ import * as path from 'path';
 
 // create .env file
 const envContent = `
+PORT=
+FRONTEND_URL=
+BLOG_URL=
 DB_HOST=localhost
 DB_PORT=3306
 DB_USERNAME=root
