@@ -12,6 +12,7 @@
     "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\"",
     "deploy:backend": "pnpm run build:backend && pnpm run -C packages/backend deploy",
     "deploy:frontend": "pnpm run build:frontend && pnpm run -C packages/frontend deploy",
+    "deploy": "concurrently \"pnpm run deploy:backend\" \"pnpm run deploy:frontend\"",
     "migration:create": "pnpm run -C packages/backend migration:create",
     "migration:run": "pnpm run -C packages/backend migration:run"
   },
