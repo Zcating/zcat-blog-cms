@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
+    "build": "react-router build --mode production",
+    "dev": "react-router dev --mode development",
     "start": "react-router-serve ./build/server/index.js",
     "deploy": "pm2 start pnpm --name \"cms-frontend\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc"
