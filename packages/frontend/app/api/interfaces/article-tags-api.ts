@@ -5,8 +5,8 @@ export namespace ArticleTagsApi {
   export interface ArticleTag {
     id?: number;
     name: string;
-    createdAt?: dayjs.Dayjs;
-    updatedAt?: dayjs.Dayjs;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   export interface CreateArticleTagParams {

@@ -2,6 +2,8 @@ import Cookies from 'js-cookie';
 import { createQueryPath } from './http-utils';
 
 export namespace HttpClient {
+  const API_URL = import.meta.env.API_URL;
+
   interface ResponseResult {
     code: string;
     message: string;
@@ -27,7 +29,7 @@ export namespace HttpClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(`/api/${path}`, {
+    const response = await fetch(`${API_URL}/${path}`, {
       method: 'POST',
       body: bodyData,
       headers: headers,
@@ -44,7 +46,7 @@ export namespace HttpClient {
     body?: Record<string, any>,
   ): Promise<T> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetch(`/api/${queryPath}`, {
+    const response = await fetch(`${API_URL}/${queryPath}`, {
       method: 'GET',
       headers: {
         Authorization: Cookies.get('token') || '',
@@ -61,7 +63,7 @@ export namespace HttpClient {
     path: string,
     body: Record<string, any>,
   ): Promise<any> {
-    const response = await fetch(`/api/${path}`, {
+    const response = await fetch(`${API_URL}/${path}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -81,7 +83,7 @@ export namespace HttpClient {
     body?: Record<string, any>,
   ): Promise<any> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetch(`/api/${queryPath}`, {
+    const response = await fetch(`${API_URL}/${queryPath}`, {
       method: 'DELETE',
       headers: {
         Authorization: Cookies.get('token') || '',

@@ -4,8 +4,8 @@ export namespace ArticlesApi {
   export interface ArticleTag {
     id?: number;
     name: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   export interface Article {
@@ -13,8 +13,8 @@ export namespace ArticlesApi {
     title: string;
     excerpt: string;
     content: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
     tags?: ArticleTag[];
   }
 

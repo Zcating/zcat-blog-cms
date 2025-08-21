@@ -8,8 +8,8 @@ export namespace AlbumsApi {
     name: string;
     description?: string;
     cover?: PhotosApi.Photo;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   export interface PhotoAlbumDetail {
@@ -17,8 +17,8 @@ export namespace AlbumsApi {
     name: string;
     description?: string;
     cover?: PhotosApi.Photo;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   export interface CreatePhotoAlbumParams {
@@ -34,20 +34,20 @@ export namespace AlbumsApi {
   function transformPhotoAlbum<T extends { cover?: PhotosApi.Photo }>(
     album: T,
   ): T {
-    if (album.cover) {
-      album.cover.url = `/static/${album.cover?.url}`;
-      album.cover.thumbnailUrl = `/static/${album.cover?.thumbnailUrl}`;
-    }
+    // if (album.cover) {
+    //   album.cover.url = `/static/${album.cover?.url}`;
+    //   album.cover.thumbnailUrl = `/static/${album.cover?.thumbnailUrl}`;
+    // }
     return album;
   }
 
   function transformPhotoAlbumDetail<
     T extends { cover?: PhotosApi.Photo; photos?: PhotosApi.Photo[] },
   >(album: T): T {
-    if (album.cover) {
-      album.cover.url = `/static/${album.cover?.url}`;
-      album.cover.thumbnailUrl = `/static/${album.cover?.thumbnailUrl}`;
-    }
+    // if (album.cover) {
+    //   album.cover.url = `/static/${album.cover?.url}`;
+    //   album.cover.thumbnailUrl = `/static/${album.cover?.thumbnailUrl}`;
+    // }
     return album;
   }
 

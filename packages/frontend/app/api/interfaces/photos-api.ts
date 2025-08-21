@@ -8,8 +8,8 @@ export namespace PhotosApi {
     url: string;
     thumbnailUrl: string;
     isCover?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   export interface CreatePhotoParams {
@@ -32,21 +32,15 @@ export namespace PhotosApi {
     isCover?: boolean;
   }
 
-  function transformPhoto(photo: Photo): Photo {
-    photo.url = `/static/${photo.url}`;
-    photo.thumbnailUrl = `/static/${photo.thumbnailUrl}`;
-    return photo;
-  }
-
   // Photo API functions
   export async function getPhotos(albumId?: number): Promise<Photo[]> {
     const photos = await HttpClient.get<Photo[]>('cms/photos', { albumId });
-    return photos.map(transformPhoto);
+    return photos;
   }
 
   export async function getPhoto(id: number): Promise<Photo> {
     const photo = await HttpClient.get<Photo>(`cms/photos/${id}`);
-    return transformPhoto(photo);
+    return photo;
   }
 
   export async function createPhoto(params: CreatePhotoParams): Promise<Photo> {
@@ -57,7 +51,7 @@ export namespace PhotosApi {
       formData.append('albumId', params.albumId.toString());
     }
 
-    return transformPhoto(await HttpClient.post('cms/photos', formData));
+    return await HttpClient.post('cms/photos', formData);
   }
 
   export async function updatePhoto(
@@ -78,7 +72,7 @@ export namespace PhotosApi {
       formData.append('isCover', params.isCover.toString());
     }
 
-    return transformPhoto(await HttpClient.post(`cms/photos/update`, formData));
+    return await HttpClient.post(`cms/photos/update`, formData);
   }
 
   export async function deletePhoto(id: number): Promise<void> {
@@ -94,9 +88,7 @@ export namespace PhotosApi {
     if (params.albumId) {
       formData.append('albumId', params.albumId.toString());
     }
-    return transformPhoto(
-      await HttpClient.post('cms/photos/create/with-album', formData),
-    );
+    return await HttpClient.post('cms/photos/create/with-album', formData);
   }
 
   export async function updateAlbumPhoto(
@@ -119,6 +111,6 @@ export namespace PhotosApi {
       formData,
     );
 
-    return transformPhoto(result);
+    return result;
   }
 }
