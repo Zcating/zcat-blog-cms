@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:backend": "pnpm run -C packages/backend start:dev",
+    "dev:backend": "pnpm run -C packages/backend dev",
     "dev:frontend": "pnpm run -C packages/frontend dev",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
     "build:backend": "pnpm run -C packages/backend build",
