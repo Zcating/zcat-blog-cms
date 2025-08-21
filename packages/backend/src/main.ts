@@ -27,6 +27,10 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
+
+  // 配置解析器的最大大小
+  app.useBodyParser('json', { limit: '10mb' });
+
   // 配置静态文件服务
   app.useStaticAssets(join(__dirname, '../..', 'uploads'), {
     prefix: '/uploads/',

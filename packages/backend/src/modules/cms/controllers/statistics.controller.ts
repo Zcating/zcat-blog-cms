@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, ResultData } from '@backend/model';
+import { createResult, ResultCode, ResultData } from '@backend/model';
 import { PageStatistics } from '@backend/table';
 
 import { Request } from 'express';
@@ -121,7 +121,7 @@ export class StatisticsController {
       }
 
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '访问记录成功',
       });
     } catch (error) {
@@ -181,7 +181,7 @@ export class StatisticsController {
 
       this.logger.log(`成功获取页面统计数据，共 ${total} 条记录`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: {
           data,
@@ -255,7 +255,7 @@ export class StatisticsController {
 
       this.logger.log('成功获取统计摘要数据');
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: {
           totalVisits: parseInt(totalVisitsResult?.total || '0'),
@@ -306,7 +306,7 @@ export class StatisticsController {
 
       this.logger.log(`成功获取图表数据，共 ${chartData.length} 天的数据`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: chartData.map((item) => ({
           date: item.date,

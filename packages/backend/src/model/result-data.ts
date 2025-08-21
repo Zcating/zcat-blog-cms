@@ -21,9 +21,26 @@ export interface ResultData<T> {
 }
 
 interface CreateResultParams<T> {
-  code: (typeof CODE_ENUMS)[number];
+  code: ResultCode;
   message: string;
   data?: T;
+}
+
+export const enum ResultCode {
+  // 成功
+  Success = '0000',
+  // 注册验证错误
+  RegisterError = 'ERR0001',
+  // 登录验证错误
+  LoginError = 'ERR0002',
+  // 数据库操作错误
+  DatabaseError = 'ERR0003',
+  // 上传文件错误
+  UploadError = 'ERR0004',
+  // 数据验证错误
+  ValidationError = 'ERR0005',
+  // 其他未知错误
+  UnknownError = 'ERR0006',
 }
 
 export function createResult<T>(params: CreateResultParams<T>): ResultData<T> {

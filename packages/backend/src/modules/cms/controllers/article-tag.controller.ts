@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, ResultData } from '@backend/model';
+import { createResult, ResultCode, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
@@ -40,7 +40,7 @@ export class ArticleTagController {
       const tags = await this.articleTagRepository.find();
       this.logger.log(`成功获取 ${tags.length} 个文章标签`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: tags,
       });
@@ -64,7 +64,7 @@ export class ArticleTagController {
       });
       this.logger.log(`${tag ? '成功' : '未找到'}获取ID为 ${id} 的文章标签`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: tag,
       });
@@ -87,13 +87,16 @@ export class ArticleTagController {
       const tag = await this.articleTagRepository.save(createArticleTagDto);
       this.logger.log(`成功创建文章标签，ID: ${tag.id}`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: tag,
       });
-    } catch (error) {
-      this.logger.error('创建文章标签失败');
-      throw error;
+    } catch (error: any) {
+      this.logger.error('创建文章标签失败', error);
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '创建失败',
+      });
     }
   }
 
@@ -116,18 +119,21 @@ export class ArticleTagController {
       if (result.affected === 0) {
         this.logger.warn(`更新ID为 ${id} 的文章标签失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
       this.logger.log(`成功更新ID为 ${id} 的文章标签`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
       this.logger.error(`更新ID为 ${id} 的文章标签失败`, error);
-      throw error;
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '更新失败',
+      });
     }
   }
 
@@ -142,18 +148,21 @@ export class ArticleTagController {
       if (result.affected === 0) {
         this.logger.warn(`删除ID为 ${id} 的文章标签失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '删除失败',
         });
       }
       this.logger.log(`成功删除ID为 ${id} 的文章标签`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
       this.logger.error(`删除ID为 ${id} 的文章标签失败`, error);
-      throw error;
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '删除失败',
+      });
     }
   }
 }

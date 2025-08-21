@@ -14,10 +14,10 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
       isGlobal: true,
       // 按优先级加载环境文件
       envFilePath: [
+        '.env',
         '.env.local',
         '.env.development',
         '.env.production',
-        '.env',
       ],
     }),
     // 使用环境变量配置数据库

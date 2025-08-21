@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, ResultData } from '@backend/model';
+import { createResult, ResultCode, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
@@ -47,7 +47,7 @@ export class ArticleController {
       });
       this.logger.log(`成功获取 ${articles.length} 篇文章`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: articles,
       });
@@ -69,7 +69,7 @@ export class ArticleController {
       });
       this.logger.log(`${article ? '成功' : '未找到'}获取ID为 ${id} 的文章`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: article,
       });
@@ -92,13 +92,16 @@ export class ArticleController {
         `成功创建文章，ID: ${article.id}, 标题: ${article.title}`,
       );
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: article,
       });
     } catch (error) {
       this.logger.error('创建文章失败', error);
-      throw error;
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '创建失败',
+      });
     }
   }
 
@@ -118,18 +121,21 @@ export class ArticleController {
       if (result.affected === 0) {
         this.logger.warn(`更新ID为 ${id} 的文章失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
       this.logger.log(`成功更新ID为 ${id} 的文章`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
       this.logger.error(`更新ID为 ${id} 的文章失败`, error);
-      throw error;
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '更新失败',
+      });
     }
   }
 
@@ -144,18 +150,21 @@ export class ArticleController {
       if (result.affected === 0) {
         this.logger.warn(`删除ID为 ${id} 的文章失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '删除失败',
         });
       }
       this.logger.log(`成功删除ID为 ${id} 的文章`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
       this.logger.error(`删除ID为 ${id} 的文章失败`, error);
-      throw error;
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '删除失败',
+      });
     }
   }
 }

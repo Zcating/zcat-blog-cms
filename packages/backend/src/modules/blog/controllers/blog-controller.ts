@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, PaginateQueryDto } from '@backend/model';
+import { createResult, PaginateQueryDto, ResultCode } from '@backend/model';
 import { Article, PhotoAlbum } from '@backend/table';
 import { createPaginate } from '@backend/utils';
 
@@ -27,7 +27,7 @@ export class BlogController {
     });
 
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: 'success',
       data: {
         data: articles,
@@ -55,7 +55,7 @@ export class BlogController {
     });
 
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: 'success',
       data: article,
     });
@@ -70,7 +70,7 @@ export class BlogController {
       relations: ['cover'],
     });
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: 'success',
       data: {
         data: albums,
@@ -90,7 +90,7 @@ export class BlogController {
       relations: ['cover', 'photos'],
     });
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: 'success',
       data: album,
     });

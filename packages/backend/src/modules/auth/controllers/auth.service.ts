@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult } from '@backend/model';
+import { createResult, ResultCode } from '@backend/model';
 import { User } from '@backend/table';
 
 import * as bcrypt from 'bcrypt';
@@ -33,13 +33,13 @@ export class AuthService {
     const user = await this.validateUser(loginDto.username, loginDto.password);
     if (!user) {
       return createResult({
-        code: 'ERR0002',
+        code: ResultCode.LoginError,
         message: '用户名或密码错误',
       });
     }
 
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: '登录成功',
       data: {
         accessToken: this.jwtService.sign({
@@ -65,7 +65,7 @@ export class AuthService {
     });
     if (existingUser) {
       return createResult({
-        code: 'ERR0001',
+        code: ResultCode.RegisterError,
         message: '用户已存在',
       });
     }
@@ -86,7 +86,7 @@ export class AuthService {
 
     // 返回JWT令牌
     return createResult({
-      code: '0000',
+      code: ResultCode.Success,
       message: '注册成功',
       data: {
         accessToken: this.jwtService.sign({

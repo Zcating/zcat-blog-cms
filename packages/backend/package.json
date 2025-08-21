@@ -9,7 +9,7 @@
     "postinstall": "ts-node ./scripts/env",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "dev": "nest start",
+    "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
     "start": "node dist/src/main",
     "deploy": "pm2 start pnpm --name \"cms-backend\"  -- run \"start\"",

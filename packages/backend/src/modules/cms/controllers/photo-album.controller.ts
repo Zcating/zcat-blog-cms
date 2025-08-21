@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, ResultData } from '@backend/model';
+import { createResult, ResultCode, ResultData } from '@backend/model';
 
 import { Repository } from 'typeorm';
 
@@ -47,7 +47,7 @@ export class PhotoAlbumController {
       });
       this.logger.log(`成功获取 ${albums.length} 个相册`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: albums,
       });
@@ -77,7 +77,7 @@ export class PhotoAlbumController {
       });
       this.logger.log(`${album ? '成功' : '未找到'}获取ID为 ${id} 的相册`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: album,
       });
@@ -98,7 +98,7 @@ export class PhotoAlbumController {
       const album = await this.photoAlbumRepository.save(createPhotoAlbumDto);
       this.logger.log(`成功创建相册，ID: ${album.id}, 名称: ${album.name}`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: album,
       });
@@ -127,13 +127,13 @@ export class PhotoAlbumController {
       if (result.affected === 0) {
         this.logger.warn(`更新ID为 ${id} 的相册失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
       this.logger.log(`成功更新ID为 ${id} 的相册`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: await this.photoAlbumRepository.findOne({
           where: { id: parseInt(id) },
@@ -157,13 +157,13 @@ export class PhotoAlbumController {
       if (result.affected === 0) {
         this.logger.warn(`删除ID为 ${id} 的相册失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '删除失败',
         });
       }
       this.logger.log(`成功删除ID为 ${id} 的相册`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
@@ -191,13 +191,13 @@ export class PhotoAlbumController {
           `设置ID为 ${setCoverDto.albumId} 的相册封面失败：未找到记录`,
         );
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '设置失败',
         });
       }
       this.logger.log(`成功设置ID为 ${setCoverDto.albumId} 的相册封面`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {

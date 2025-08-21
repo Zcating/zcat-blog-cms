@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { createResult, ResultData } from '@backend/model';
+import { createResult, ResultCode, ResultData } from '@backend/model';
 import { ImageInterceptor } from '@backend/utils';
 
 import { Repository } from 'typeorm';
@@ -67,7 +67,7 @@ export class PhotoController {
       this.logger.log(`成功获取 ${photos.length} 张照片`);
 
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: photos,
       });
@@ -91,7 +91,7 @@ export class PhotoController {
       });
       this.logger.log(`${photo ? '成功' : '未找到'}获取ID为 ${id} 的照片`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: photo,
       });
@@ -118,14 +118,14 @@ export class PhotoController {
         // 如果没有文件上传，返回错误
         this.logger.warn('创建照片失败：未选择文件');
         return createResult({
-          code: 'ERR0004',
+          code: ResultCode.UploadError,
           message: '请选择要上传的文件',
         });
       }
 
       this.logger.log(`成功创建照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '照片创建成功',
         data: photo,
       });
@@ -152,14 +152,14 @@ export class PhotoController {
         // 如果没有文件上传，返回错误
         this.logger.warn('创建相册照片失败：未选择文件');
         return createResult({
-          code: 'ERR0004',
+          code: ResultCode.UploadError,
           message: '请选择要上传的文件',
         });
       }
 
       this.logger.log(`成功创建相册照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '照片创建成功',
         data: photo,
       });
@@ -186,14 +186,14 @@ export class PhotoController {
       if (!photo) {
         this.logger.warn(`更新照片失败：未找到ID为 ${body.id} 的照片`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
 
       this.logger.log(`成功更新照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: photo,
       });
@@ -220,7 +220,7 @@ export class PhotoController {
       if (!result) {
         this.logger.warn(`更新相册照片失败：未找到ID为 ${body.id} 的照片`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
@@ -229,7 +229,7 @@ export class PhotoController {
         `成功更新相册照片，照片ID: ${result.id}, 相册ID: ${result.albumId}`,
       );
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
         data: result,
       });
@@ -250,13 +250,13 @@ export class PhotoController {
       if (result.affected === 0) {
         this.logger.warn(`删除ID为 ${id} 的照片失败：未找到记录`);
         return createResult({
-          code: 'ERR0003',
+          code: ResultCode.DatabaseError,
           message: '删除失败',
         });
       }
       this.logger.log(`成功删除ID为 ${id} 的照片`);
       return createResult({
-        code: '0000',
+        code: ResultCode.Success,
         message: '成功',
       });
     } catch (error) {
