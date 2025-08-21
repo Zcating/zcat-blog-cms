@@ -10,6 +10,8 @@
     "build:backend": "pnpm run -C packages/backend build",
     "build:frontend": "pnpm run -C packages/frontend build",
     "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\"",
+    "start:backend:prod": "pnpm run build:backend && pnpm run -C packages/backend start:prod",
+    "start:frontend:prod": "pnpm run build:frontend && pnpm run -C packages/frontend start",
     "migration:create": "pnpm run -C packages/backend migration:create",
     "migration:run": "pnpm run -C packages/backend migration:run"
   },
