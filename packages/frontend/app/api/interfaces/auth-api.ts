@@ -26,13 +26,13 @@ export namespace AuthApi {
   }
 
   export async function login(params: LoginParams) {
-    const data = await HttpClient.post('/auth/login', params);
+    const data = await HttpClient.post('auth/login', params);
     const token = data.accessToken;
     HttpClient.saveToken(token);
   }
 
   export async function register(params: RegisterParams) {
-    const data = await HttpClient.post('/auth/register', params);
+    const data = await HttpClient.post('auth/register', params);
     const token = data.accessToken;
     HttpClient.saveToken(token);
   }
