@@ -6,7 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "deploy": "pm2 start npm -- start",
+    "deploy": "pm2 start npm -- name \"cms-frontend\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
