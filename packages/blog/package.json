@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build --port 80",
     "dev": "react-router dev --port 5000",
     "start": "react-router-serve ./build/server/index.js",
     "deploy": "pm2 delete zcat-blog && pm2 start pnpm --name \"zcat-blog\"  -- run \"start\"",
