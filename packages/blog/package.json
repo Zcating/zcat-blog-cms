@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build --port 80",
+    "build": "react-router build",
     "dev": "react-router dev --port 5000",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "PORT=80 react-router-serve ./build/server/index.js",
     "deploy": "pm2 delete zcat-blog && pm2 start pnpm --name \"zcat-blog\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
