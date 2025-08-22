@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "pnpm run -C packages/scripts build",
     "dev:backend": "pnpm run -C packages/backend dev",
     "dev:frontend": "pnpm run -C packages/frontend dev",
     "dev:blog": "pnpm run -C packages/blog dev",

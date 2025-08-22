@@ -6,7 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev --port 5000",
     "start": "PORT=80 react-router-serve ./build/server/index.js",
-    "deploy": "pm2 delete zcat-blog && pm2 start pnpm --name \"zcat-blog\"  -- run \"start\"",
+    "deploy": "pm2-deploy pnpm --name \"zcat-blog\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
   },
@@ -41,7 +41,6 @@
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.4",
-    "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -56,6 +55,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.0",
     "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "script": "../scripts"
   }
 }
