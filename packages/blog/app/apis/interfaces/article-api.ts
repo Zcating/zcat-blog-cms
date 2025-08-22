@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { HttpClient } from "../http/http-client";
-import { articles } from "../mock-data/articles-mock";
 
 export namespace ArticleApi {
   export interface Article {
@@ -40,7 +39,5 @@ export namespace ArticleApi {
       createdAt: dayjs(article.createdAt),
       updatedAt: dayjs(article.updatedAt),
     };
-
-    // return articles.find((article) => article.id === id);
   }
 }
