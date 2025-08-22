@@ -32,15 +32,21 @@ export namespace PhotosApi {
     isCover?: boolean;
   }
 
+  function transformPhoto(photo: Photo): Photo {
+    photo.url = `${HttpClient.STATIC_URL}/${photo.url}`;
+    photo.thumbnailUrl = `${HttpClient.STATIC_URL}/${photo.thumbnailUrl}`;
+    return photo;
+  }
+
   // Photo API functions
   export async function getPhotos(albumId?: number): Promise<Photo[]> {
     const photos = await HttpClient.get<Photo[]>('cms/photos', { albumId });
-    return photos;
+    return photos.map(transformPhoto);
   }
 
   export async function getPhoto(id: number): Promise<Photo> {
     const photo = await HttpClient.get<Photo>(`cms/photos/${id}`);
-    return photo;
+    return transformPhoto(photo);
   }
 
   export async function createPhoto(params: CreatePhotoParams): Promise<Photo> {
@@ -51,7 +57,7 @@ export namespace PhotosApi {
       formData.append('albumId', params.albumId.toString());
     }
 
-    return await HttpClient.post('cms/photos', formData);
+    return transformPhoto(await HttpClient.post('cms/photos', formData));
   }
 
   export async function updatePhoto(
@@ -72,7 +78,7 @@ export namespace PhotosApi {
       formData.append('isCover', params.isCover.toString());
     }
 
-    return await HttpClient.post(`cms/photos/update`, formData);
+    return transformPhoto(await HttpClient.post(`cms/photos/update`, formData));
   }
 
   export async function deletePhoto(id: number): Promise<void> {
@@ -88,7 +94,9 @@ export namespace PhotosApi {
     if (params.albumId) {
       formData.append('albumId', params.albumId.toString());
     }
-    return await HttpClient.post('cms/photos/create/with-album', formData);
+    return transformPhoto(
+      await HttpClient.post('cms/photos/create/with-album', formData),
+    );
   }
 
   export async function updateAlbumPhoto(
@@ -111,6 +119,6 @@ export namespace PhotosApi {
       formData,
     );
 
-    return result;
+    return transformPhoto(result);
   }
 }

@@ -1,5 +1,3 @@
-import { photos } from "../mock-data/photos-mock";
-
 import { HttpClient } from "../http/http-client";
 import dayjs from "dayjs";
 export namespace GalleryApi {
@@ -41,7 +39,6 @@ export namespace GalleryApi {
         ...gallery,
         createdAt: dayjs(gallery.createdAt),
         updatedAt: dayjs(gallery.updatedAt),
-        cover: transformPhoto(gallery.cover),
       })),
     };
   }
@@ -59,7 +56,8 @@ export namespace GalleryApi {
 
   export function transformPhoto<T extends Photo | undefined>(photo: T): T {
     if (photo) {
-      photo.url = "/static" + photo.url;
+      photo.url = `${HttpClient.STATIC_URL}/${photo.url}`;
+      photo.thumbnailUrl = `${HttpClient.STATIC_URL}/${photo.thumbnailUrl}`;
     }
     return photo;
   }
