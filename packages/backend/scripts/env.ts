@@ -6,17 +6,16 @@ import * as path from 'path';
 
 // create .env file
 const envContent = `
-PORT=
-FRONTEND_URL=
-BLOG_URL=
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=
-DB_DATABASE=
-DB_SYNCHRONIZE=true
+# 数据库配置
+DATABASE_URL="mysql://username:password@ip:port/db_name?connect_timeout=300"
 
+# JWT配置
 JWT_SECRET=
+JWT_EXPIRES_IN=
+
+# 应用配置
+PORT=
+NODE_ENV=
 `;
 
 // const sql = `CREATE DATABASE IF NOT EXISTS ${DB_DATABASE};`;
