@@ -6,17 +6,16 @@ import {
   Textarea,
 } from '@cms/components';
 
-import type { SchemeField } from "./scheme-field";
+import type { SchemaField } from './schema-field';
 
-
-export const SCHEME_COMPONENT_MAP = {
-  select: (field: SchemeField) => {
+export const SCHEMA_COMPONENT_MAP = {
+  select: (field: SchemaField) => {
     if (field.type === 'select') {
       return <Select options={field.options} />;
     }
     return null;
   },
-  input: (field: SchemeField) => {
+  input: (field: SchemaField) => {
     if (field.type === 'input') {
       return <Input placeholder={field.placeholder || '请输入'} />;
     }
@@ -24,7 +23,7 @@ export const SCHEME_COMPONENT_MAP = {
   },
   imageUpload: () => <ImageUpload />,
   checkbox: () => <Checkbox variant="primary" />,
-  textarea: (field: SchemeField) => {
+  textarea: (field: SchemaField) => {
     if (field.type === 'textarea') {
       return <Textarea placeholder={field.placeholder || '请输入'} />;
     }

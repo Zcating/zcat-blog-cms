@@ -1,22 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultCode } from '@backend/model';
-import { User } from '@backend/table';
+import { PrismaService } from '@backend/prisma.service';
 
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private userRepository: Repository<User>,
+    private prismaService: PrismaService,
     private jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, pass: string) {
-    const user = await this.userRepository.findOne({
+    const user = await this.prismaService.user.findUnique({
       where: { username },
     });
     if (!user) {
@@ -60,8 +58,10 @@ export class AuthService {
     //   accessToken: '',
     // };
     // 检查用户名是否已存在
-    const existingUser = await this.userRepository.findOneBy({
-      username: registerDto.username,
+    const existingUser = await this.prismaService.user.findUnique({
+      where: {
+        username: registerDto.username,
+      },
     });
     if (existingUser) {
       return createResult({
@@ -75,14 +75,14 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(registerDto.password, salt);
 
     // 创建新用户
-    const createdUser = this.userRepository.create({
-      username: registerDto.username,
-      password: hashedPassword,
-      email: registerDto.email,
-      salt,
+    const createdUser = await this.prismaService.user.create({
+      data: {
+        username: registerDto.username,
+        password: hashedPassword,
+        email: registerDto.email,
+        salt,
+      },
     });
-    // 提交操作
-    const savedUser = await this.userRepository.save(createdUser);
 
     // 返回JWT令牌
     return createResult({
@@ -90,8 +90,8 @@ export class AuthService {
       message: '注册成功',
       data: {
         accessToken: this.jwtService.sign({
-          username: savedUser.username,
-          sub: savedUser.id,
+          username: createdUser.username,
+          sub: createdUser.id,
         }),
       },
     });

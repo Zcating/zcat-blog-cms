@@ -1,29 +1,28 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, PaginateQueryDto, ResultCode } from '@backend/model';
-import { Article, PhotoAlbum } from '@backend/table';
+import { PrismaService } from '@backend/prisma.service';
 import { createPaginate } from '@backend/utils';
-
-import { Repository } from 'typeorm';
 
 @ApiTags('文章对外接口')
 @Controller('api/blog')
 export class BlogController {
-  constructor(
-    @InjectRepository(Article)
-    private readonly articleRepository: Repository<Article>,
-    @InjectRepository(PhotoAlbum)
-    private readonly albumRepository: Repository<PhotoAlbum>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   @ApiOperation({ summary: '获取文章列表' })
   @Get('article/list')
   async getArticles(@Query() query: PaginateQueryDto) {
-    const articles = await this.articleRepository.find({
+    const articles = await this.prisma.article.findMany({
       ...createPaginate(query.page, query.pageSize),
-      select: ['id', 'title', 'excerpt', 'createdAt', 'updatedAt', 'tags'],
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        createdAt: true,
+        updatedAt: true,
+        articleAndArticleTags: true,
+      },
     });
 
     return createResult({
@@ -41,17 +40,17 @@ export class BlogController {
   @ApiOperation({ summary: '获取文章详情' })
   @Get('article/:id')
   async getArticleDetail(@Param('id') id: number) {
-    const article = await this.articleRepository.findOne({
+    const article = await this.prisma.article.findUnique({
       where: { id },
-      select: [
-        'id',
-        'title',
-        'excerpt',
-        'content',
-        'createdAt',
-        'updatedAt',
-        'tags',
-      ],
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        articleAndArticleTags: true,
+      },
     });
 
     return createResult({
@@ -64,11 +63,34 @@ export class BlogController {
   @ApiOperation({ summary: '获取文章图片' })
   @Get('gallery')
   async getGallery(@Query() query: PaginateQueryDto) {
-    const albums = await this.albumRepository.find({
+    const albumModels = await this.prisma.photoAlbum.findMany({
       ...createPaginate(query.page, query.pageSize),
-      select: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
-      relations: ['cover'],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        coverId: true,
+      },
     });
+    const photos = await this.prisma.photo.findMany({
+      where: {
+        albumId: {
+          in: albumModels.map((item) => item.id),
+        },
+      },
+    });
+
+    const albums = albumModels.map((item) => ({
+      id: item.id,
+      name: item.name,
+      cover: photos.find((photo) => photo.id === item.coverId),
+      description: item.description,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    }));
+
     return createResult({
       code: ResultCode.Success,
       message: 'success',
@@ -84,15 +106,30 @@ export class BlogController {
   @ApiOperation({ summary: '获取图片详情' })
   @Get('gallery/:id')
   async getGalleryDetail(@Param('id') id: number) {
-    const album = await this.albumRepository.findOne({
+    const album = await this.prisma.photoAlbum.findUnique({
       where: { id },
-      select: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
-      relations: ['cover', 'photos'],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    const photos = await this.prisma.photo.findMany({
+      where: {
+        albumId: id,
+      },
+    });
+
     return createResult({
       code: ResultCode.Success,
       message: 'success',
-      data: album,
+      data: {
+        ...album,
+        photos,
+      },
     });
   }
 }

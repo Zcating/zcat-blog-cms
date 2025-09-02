@@ -1,16 +1,16 @@
-import { Button, Grid, Row, useLoadingFn } from '@cms/components';
+import React from 'react';
 import type { Route } from './+types/albums.id';
+
+import { Button, Grid, useLoadingFn } from '@cms/components';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import {
   createConstNumber,
   createImageUpload,
   createInput,
-  createSchemeForm,
+  createSchemaForm,
   PhotoCard,
   updateArray,
 } from '@cms/core';
-import React from 'react';
-import { FullscreenOutlined } from '@ant-design/icons';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -134,9 +134,11 @@ export default function AlbumsId(props: Route.ComponentProps) {
   );
 }
 
-const useSchemeForm = createSchemeForm({
-  id: createConstNumber(),
-  name: createInput('照片名称'),
-  image: createImageUpload('上传图片'),
-  albumId: createConstNumber(),
+const useSchemeForm = createSchemaForm({
+  fields: {
+    id: createConstNumber(),
+    name: createInput('照片名称'),
+    image: createImageUpload('上传图片'),
+    albumId: createConstNumber(),
+  },
 });

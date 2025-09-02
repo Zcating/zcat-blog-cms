@@ -10,13 +10,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultCode, ResultData } from '@backend/model';
+import { ArticleTag } from '@backend/prisma';
+import { PrismaService } from '@backend/prisma.service';
 
-import { Repository } from 'typeorm';
-
-import { ArticleTag } from '../../../table/article-tag.entity';
 import { CreateArticleTagDto, UpdateArticleTagDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 
@@ -26,10 +24,7 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 export class ArticleTagController {
   private readonly logger = new Logger(ArticleTagController.name);
 
-  constructor(
-    @InjectRepository(ArticleTag)
-    private articleTagRepository: Repository<ArticleTag>,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
   @Get()
   @ApiOperation({ summary: '获取所有文章标签' })
@@ -37,7 +32,7 @@ export class ArticleTagController {
   async findAll(): Promise<ResultData<ArticleTag[]>> {
     try {
       this.logger.log('开始获取所有文章标签');
-      const tags = await this.articleTagRepository.find();
+      const tags = await this.prismaService.articleTag.findMany();
       this.logger.log(`成功获取 ${tags.length} 个文章标签`);
       return createResult({
         code: ResultCode.Success,
@@ -59,7 +54,7 @@ export class ArticleTagController {
   ): Promise<ResultData<ArticleTag | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的文章标签`);
-      const tag = await this.articleTagRepository.findOne({
+      const tag = await this.prismaService.articleTag.findUnique({
         where: { id: parseInt(id) },
       });
       this.logger.log(`${tag ? '成功' : '未找到'}获取ID为 ${id} 的文章标签`);
@@ -84,7 +79,9 @@ export class ArticleTagController {
       this.logger.log(
         `开始创建文章标签: ${JSON.stringify(createArticleTagDto)}`,
       );
-      const tag = await this.articleTagRepository.save(createArticleTagDto);
+      const tag = await this.prismaService.articleTag.create({
+        data: createArticleTagDto,
+      });
       this.logger.log(`成功创建文章标签，ID: ${tag.id}`);
       return createResult({
         code: ResultCode.Success,
@@ -107,31 +104,26 @@ export class ArticleTagController {
   async update(
     @Param('id') id: string,
     @Body() updateArticleTagDto: UpdateArticleTagDto,
-  ): Promise<ResultData<void>> {
+  ): Promise<ResultData<ArticleTag>> {
     try {
       this.logger.log(
         `开始更新ID为 ${id} 的文章标签: ${JSON.stringify(updateArticleTagDto)}`,
       );
-      const result = await this.articleTagRepository.update(
-        id,
-        updateArticleTagDto,
-      );
-      if (result.affected === 0) {
-        this.logger.warn(`更新ID为 ${id} 的文章标签失败：未找到记录`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '更新失败',
-        });
-      }
+      const result = await this.prismaService.articleTag.update({
+        where: { id: parseInt(id) },
+        data: updateArticleTagDto,
+      });
+
       this.logger.log(`成功更新ID为 ${id} 的文章标签`);
       return createResult({
         code: ResultCode.Success,
         message: '成功',
+        data: result,
       });
     } catch (error) {
-      this.logger.error(`更新ID为 ${id} 的文章标签失败`, error);
+      this.logger.error(`更新ID为 ${id} 的文章标签失败：未找到记录`, error);
       return createResult({
-        code: ResultCode.UnknownError,
+        code: ResultCode.DatabaseError,
         message: '更新失败',
       });
     }
@@ -144,15 +136,13 @@ export class ArticleTagController {
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的文章标签`);
-      const result = await this.articleTagRepository.delete(id);
-      if (result.affected === 0) {
-        this.logger.warn(`删除ID为 ${id} 的文章标签失败：未找到记录`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '删除失败',
-        });
-      }
+
+      await this.prismaService.articleTag.delete({
+        where: { id: parseInt(id) },
+      });
+
       this.logger.log(`成功删除ID为 ${id} 的文章标签`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',

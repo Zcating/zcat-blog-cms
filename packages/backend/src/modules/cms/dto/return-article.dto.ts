@@ -1,6 +1,5 @@
+import { ArticleTag, UserInfo } from '@backend/prisma';
 import { ApiProperty } from '@nestjs/swagger';
-
-import { ArticleTag, UserInfo } from '@backend/table';
 
 export class ReturnArticleDto {
   @ApiProperty({ description: '文章ID' })
@@ -18,9 +17,9 @@ export class ReturnArticleDto {
   @ApiProperty({ description: '更新时间' })
   updatedAt: Date;
 
-  @ApiProperty({ description: '创建用户', type: () => UserInfo })
-  createByUser: UserInfo;
+  // @ApiProperty({ description: '创建用户' })
+  // createByUser: UserInfo;
 
-  @ApiProperty({ description: '文章标签', type: [ArticleTag] })
+  @ApiProperty({ description: '文章标签' })
   tags: ArticleTag[];
 }

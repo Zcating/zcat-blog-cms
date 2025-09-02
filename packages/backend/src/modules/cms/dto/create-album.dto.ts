@@ -11,10 +11,16 @@ export class CreatePhotoAlbumDto {
   name: string;
 
   @ApiPropertyOptional({
+    description: '相册描述',
+    example: '这是一个关于旅行的相册',
+  })
+  description: string = '';
+
+  @ApiPropertyOptional({
     description: '封面照片ID',
     example: 1,
   })
-  coverId?: number;
+  coverId: number | null = null;
 
   @ApiPropertyOptional({
     description: '相册中的照片ID数组',

@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 
-import { Photo, PhotoAlbum } from '@backend/table';
+import { Photo } from '@backend/prisma';
+import { PrismaService } from '@backend/prisma.service';
 import { createImageUrls } from '@backend/utils';
-
-import { Repository } from 'typeorm';
 
 import {
   CreateAlbumPhotoDto,
@@ -16,12 +14,7 @@ import {
 
 @Injectable()
 export class PhotoService {
-  constructor(
-    @InjectRepository(PhotoAlbum)
-    private photoAlbumRepository: Repository<PhotoAlbum>,
-    @InjectRepository(Photo)
-    private photoRepository: Repository<Photo>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async createPhoto(
     image: Express.Multer.File | null,
@@ -29,38 +22,32 @@ export class PhotoService {
   ): Promise<Photo | null> {
     const imageUrlResult = await createImageUrls(image);
 
-    const photo = this.photoRepository.create({
-      name: body.name,
-      url: imageUrlResult?.baseFilePath,
-      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
-      album: body.albumId ? { id: body.albumId } : undefined,
+    const photo = this.prisma.photo.create({
+      data: {
+        name: body.name,
+        url: imageUrlResult?.baseFilePath ?? '',
+        thumbnailUrl: imageUrlResult?.thumbnailFilePath ?? '',
+        albumId: body.albumId,
+      },
     });
 
-    return this.photoRepository.save(photo);
+    return photo;
   }
 
   async updatePhoto(image: Express.Multer.File | null, body: UpdatePhotoDto) {
     const imageUrlResult = await createImageUrls(image);
 
-    const result = await this.photoRepository.update(body.id, {
-      name: body.name,
-      url: imageUrlResult?.baseFilePath,
-      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
-      album: body.albumId ? { id: body.albumId } : undefined,
-    });
-
-    if (result.affected === 0) {
-      return null;
-    }
-
-    const photo = await this.photoRepository.findOne({
+    const result = await this.prisma.photo.update({
       where: { id: body.id },
+      data: {
+        name: body.name,
+        url: imageUrlResult?.baseFilePath,
+        thumbnailUrl: imageUrlResult?.thumbnailFilePath,
+        albumId: body.albumId,
+      },
     });
-    if (!photo) {
-      return null;
-    }
 
-    return photo;
+    return result;
   }
 
   /**
@@ -75,20 +62,16 @@ export class PhotoService {
   ): Promise<Photo | null> {
     const imageUrlResult = await createImageUrls(image);
 
-    const photo = this.photoRepository.create({
-      name: body.name,
-      url: imageUrlResult?.baseFilePath,
-      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
-      album: { id: body.albumId },
+    const photo = await this.prisma.photo.create({
+      data: {
+        name: body.name,
+        url: imageUrlResult?.baseFilePath ?? '',
+        thumbnailUrl: imageUrlResult?.thumbnailFilePath ?? '',
+        albumId: body.albumId,
+      },
     });
 
-    if (body.isCover) {
-      await this.photoAlbumRepository.update(body.albumId, {
-        cover: { id: photo.id },
-      });
-    }
-
-    return this.photoRepository.save(photo);
+    return photo;
   }
 
   /**
@@ -104,45 +87,28 @@ export class PhotoService {
     const imageUrlResult = await createImageUrls(image);
 
     if (body.isCover) {
-      const updateResult = await this.photoAlbumRepository.update(
-        body.albumId,
-        {
-          cover: { id: body.id },
+      await this.prisma.photoAlbum.update({
+        where: { id: body.albumId },
+        data: {
+          coverId: body.id,
         },
-      );
-      if (updateResult.affected === 0) {
-        return null;
-      }
+      });
     }
 
-    const result = await this.photoRepository.update(body.id, {
-      name: body.name,
-      url: imageUrlResult?.baseFilePath,
-      thumbnailUrl: imageUrlResult?.thumbnailFilePath,
-      album: { id: body.albumId },
-    });
-
-    if (result.affected === 0) {
-      return null;
-    }
-
-    const photo = await this.photoRepository.findOne({
+    const updatedPhoto = await this.prisma.photo.update({
       where: { id: body.id },
+      data: {
+        name: body.name,
+        url: imageUrlResult?.baseFilePath,
+        thumbnailUrl: imageUrlResult?.thumbnailFilePath,
+        albumId: body.albumId,
+      },
     });
-
-    if (!photo) {
-      return null;
-    }
 
     return {
-      id: photo.id,
-      name: photo.name,
-      url: photo.url,
-      thumbnailUrl: photo.thumbnailUrl,
+      ...updatedPhoto,
       albumId: body.albumId,
       isCover: body.isCover,
-      createdAt: photo.createdAt,
-      updatedAt: photo.updatedAt,
     };
   }
 }

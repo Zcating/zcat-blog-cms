@@ -1,15 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import {
-  Article,
-  ArticleTag,
-  Photo,
-  PhotoAlbum,
-  User,
-  UserInfo,
-} from '@backend/table';
+import { PrismaService } from '@backend/prisma.service';
 
 import { ArticleTagController } from './controllers/article-tag.controller';
 import { ArticleController } from './controllers/article.controller';
@@ -19,23 +11,13 @@ import { PhotoService } from './services/photo.service';
 
 //
 @Module({
-  imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([
-      Article,
-      ArticleTag,
-      Photo,
-      PhotoAlbum,
-      UserInfo,
-      User,
-    ]),
-  ],
+  imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
   controllers: [
     ArticleController,
     ArticleTagController,
     PhotoController,
     PhotoAlbumController,
   ],
-  providers: [PhotoService],
+  providers: [PhotoService, PrismaService],
 })
 export class CmsModule {}

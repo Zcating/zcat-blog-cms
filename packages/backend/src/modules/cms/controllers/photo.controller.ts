@@ -19,14 +19,12 @@ import {
   ApiParam,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultCode, ResultData } from '@backend/model';
+import { Photo } from '@backend/prisma';
+import { PrismaService } from '@backend/prisma.service';
 import { ImageInterceptor } from '@backend/utils';
 
-import { Repository } from 'typeorm';
-
-import { Photo } from '../../../table/photo.entity';
 import {
   CreateAlbumPhotoDto,
   CreatePhotoDto,
@@ -46,8 +44,7 @@ export class PhotoController {
   static readonly THUMBNAIL_PATH = 'uploads/photos/thumbnails';
 
   constructor(
-    @InjectRepository(Photo)
-    private photoRepository: Repository<Photo>,
+    private prisma: PrismaService,
     private photoService: PhotoService,
   ) {}
 
@@ -60,8 +57,10 @@ export class PhotoController {
     try {
       this.logger.log('开始获取所有照片');
 
-      const photos = await this.photoRepository.find({
-        where: albumId > 0 ? { album: { id: albumId } } : undefined,
+      const photos = await this.prisma.photo.findMany({
+        where: {
+          albumId: albumId > 0 ? albumId : undefined,
+        },
       });
 
       this.logger.log(`成功获取 ${photos.length} 张照片`);
@@ -86,7 +85,7 @@ export class PhotoController {
   ): Promise<ResultData<Photo | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的照片`);
-      const photo = await this.photoRepository.findOne({
+      const photo = await this.prisma.photo.findUnique({
         where: { id },
       });
       this.logger.log(`${photo ? '成功' : '未找到'}获取ID为 ${id} 的照片`);
@@ -246,15 +245,13 @@ export class PhotoController {
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的照片`);
-      const result = await this.photoRepository.delete(id);
-      if (result.affected === 0) {
-        this.logger.warn(`删除ID为 ${id} 的照片失败：未找到记录`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '删除失败',
-        });
-      }
+
+      await this.prisma.photo.delete({
+        where: { id: Number(id) },
+      });
+
       this.logger.log(`成功删除ID为 ${id} 的照片`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',

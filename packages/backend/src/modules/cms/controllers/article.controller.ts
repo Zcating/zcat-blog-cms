@@ -10,13 +10,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultCode, ResultData } from '@backend/model';
+import { Article } from '@backend/prisma';
+import { PrismaService } from '@backend/prisma.service';
 
-import { Repository } from 'typeorm';
-
-import { Article } from '../../../table/article.entity';
 import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 
@@ -26,10 +24,7 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 export class ArticleController {
   private readonly logger = new Logger(ArticleController.name);
 
-  constructor(
-    @InjectRepository(Article)
-    private articleRepository: Repository<Article>,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
   @Get()
   @ApiOperation({ summary: '获取所有文章' })
@@ -41,15 +36,42 @@ export class ArticleController {
   async findAll(): Promise<ResultData<ReturnArticleDto[]>> {
     try {
       this.logger.log('开始获取所有文章');
-      const articles = await this.articleRepository.find({
-        select: ['id', 'title', 'excerpt', 'createdAt', 'updatedAt'],
-        relations: ['createByUser', 'tags'],
+
+      const articles = await this.prismaService.article.findMany({
+        select: {
+          id: true,
+          title: true,
+          excerpt: true,
+          createdAt: true,
+          updatedAt: true,
+          createByUserId: true,
+          articleAndArticleTags: {
+            select: {
+              articleTag: {
+                select: {
+                  id: true,
+                  name: true,
+                  createdAt: true,
+                  updatedAt: true,
+                },
+              },
+            },
+          },
+        },
       });
       this.logger.log(`成功获取 ${articles.length} 篇文章`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: articles,
+        data: articles.map((article) => ({
+          id: article.id,
+          title: article.title,
+          excerpt: article.excerpt,
+          createdAt: article.createdAt,
+          updatedAt: article.updatedAt,
+          tags: article.articleAndArticleTags.map((item) => item.articleTag),
+        })),
       });
     } catch (error) {
       this.logger.error('获取文章列表失败', error);
@@ -64,7 +86,7 @@ export class ArticleController {
   async findOne(@Param('id') id: string): Promise<ResultData<Article | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的文章`);
-      const article = await this.articleRepository.findOne({
+      const article = await this.prismaService.article.findUnique({
         where: { id: parseInt(id) },
       });
       this.logger.log(`${article ? '成功' : '未找到'}获取ID为 ${id} 的文章`);
@@ -87,7 +109,11 @@ export class ArticleController {
   ): Promise<ResultData<Article>> {
     try {
       this.logger.log(`开始创建文章: ${createArticleDto.title}`);
-      const article = await this.articleRepository.save(createArticleDto);
+
+      const article = await this.prismaService.article.create({
+        data: createArticleDto,
+      });
+
       this.logger.log(
         `成功创建文章，ID: ${article.id}, 标题: ${article.title}`,
       );
@@ -117,8 +143,11 @@ export class ArticleController {
       this.logger.log(
         `开始更新ID为 ${id} 的文章: ${updateArticleDto.title || '未提供标题'}`,
       );
-      const result = await this.articleRepository.update(id, updateArticleDto);
-      if (result.affected === 0) {
+      const result = await this.prismaService.article.update({
+        where: { id: parseInt(id) },
+        data: updateArticleDto,
+      });
+      if (!result) {
         this.logger.warn(`更新ID为 ${id} 的文章失败：未找到记录`);
         return createResult({
           code: ResultCode.DatabaseError,
@@ -146,8 +175,10 @@ export class ArticleController {
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的文章`);
-      const result = await this.articleRepository.delete(id);
-      if (result.affected === 0) {
+      const result = await this.prismaService.article.delete({
+        where: { id: parseInt(id) },
+      });
+      if (!result) {
         this.logger.warn(`删除ID为 ${id} 的文章失败：未找到记录`);
         return createResult({
           code: ResultCode.DatabaseError,

@@ -1,33 +1,33 @@
 import type { SelectOption } from '@cms/components';
 
-interface SelectSchemeField {
+interface SelectSchemaField {
   label: string;
   options: SelectOption[];
   type: 'select';
   valueType: 'string';
 }
 
-interface InputSchemeField {
+interface InputSchemaField {
   label: string;
   placeholder?: string;
   type: 'input';
   valueType: 'string';
 }
 
-interface TextAreaSchemeField {
+interface TextAreaSchemaField {
   label: string;
   placeholder?: string;
   type: 'textarea';
   valueType: 'string';
 }
 
-interface ImageUploadSchemeField {
+interface ImageUploadSchemaField {
   label: string;
   type: 'imageUpload';
   valueType: 'file';
 }
 
-interface CheckboxSchemeField {
+interface CheckboxSchemaField {
   label: string;
   type: 'checkbox';
   valueType: 'boolean';
@@ -45,16 +45,16 @@ interface ConstantStringField {
   valueType: 'string';
 }
 
-export type SchemeField =
-  | SelectSchemeField
-  | InputSchemeField
-  | TextAreaSchemeField
-  | ImageUploadSchemeField
-  | CheckboxSchemeField
+export type SchemaField =
+  | SelectSchemaField
+  | InputSchemaField
+  | TextAreaSchemaField
+  | ImageUploadSchemaField
+  | CheckboxSchemaField
   | ConstantNumberField
   | ConstantStringField;
 
-export type FieldsRecord = Record<string, SchemeField>;
+export type FieldsRecord = Record<string, SchemaField>;
 
 interface ValueMap {
   string: string;
@@ -63,18 +63,18 @@ interface ValueMap {
   file: string | Blob | null;
 }
 
-export type SchemeFieldsData<Fields extends FieldsRecord> = {
+export type SchemaFieldsData<Fields extends FieldsRecord> = {
   [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
 };
 
-// export type SchemeSubmitData<Fields extends FieldsRecord> = {
+// export type SchemaSubmitData<Fields extends FieldsRecord> = {
 //   [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
 // };
 
 export function createSelect(
   label: string,
   options: SelectOption[],
-): SelectSchemeField {
+): SelectSchemaField {
   return {
     label,
     options,
@@ -86,7 +86,7 @@ export function createSelect(
 export function createInput(
   label: string,
   placeholder?: string,
-): InputSchemeField {
+): InputSchemaField {
   return {
     label,
     placeholder,
@@ -98,7 +98,7 @@ export function createInput(
 export function createTextArea(
   label: string,
   placeholder?: string,
-): TextAreaSchemeField {
+): TextAreaSchemaField {
   return {
     label,
     placeholder,
@@ -107,7 +107,7 @@ export function createTextArea(
   };
 }
 
-export function createImageUpload(label: string): ImageUploadSchemeField {
+export function createImageUpload(label: string): ImageUploadSchemaField {
   return {
     label,
     type: 'imageUpload',
@@ -115,7 +115,7 @@ export function createImageUpload(label: string): ImageUploadSchemeField {
   };
 }
 
-export function createCheckbox(label: string): CheckboxSchemeField {
+export function createCheckbox(label: string): CheckboxSchemaField {
   return {
     label,
     type: 'checkbox',

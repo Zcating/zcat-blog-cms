@@ -5,7 +5,7 @@ import {
   createConstNumber,
   createImageUpload,
   createInput,
-  createSchemeForm,
+  createSchemaForm,
   PhotoCard,
   updateArray,
 } from '@cms/core';
@@ -77,8 +77,10 @@ export default function Photos(props: Route.ComponentProps) {
   );
 }
 
-const useSchemeForm = createSchemeForm({
-  id: createConstNumber(),
-  name: createInput('名称'),
-  image: createImageUpload('图片'),
+const useSchemeForm = createSchemaForm({
+  fields: {
+    id: createConstNumber(),
+    name: createInput('名称'),
+    image: createImageUpload('图片'),
+  },
 });

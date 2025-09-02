@@ -1,28 +1,23 @@
-import {
-  Button,
-  Form,
-  FormDialog,
-  Row,
-  useLoadingFn,
-} from '@cms/components';
+import { Button, Form, FormDialog, Row, useLoadingFn } from '@cms/components';
 import type { Path } from 'react-hook-form';
 import type {
   FieldsRecord,
-  SchemeField,
-  SchemeFieldsData,
-} from './scheme-field';  
-import zod from 'zod';
-import { SCHEME_COMPONENT_MAP } from './scheme-component-map';
+  SchemaField,
+  SchemaFieldsData,
+} from './schema-field';
+// import zod from 'zod';
+import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
+
 import type { zodResolver } from '@hookform/resolvers/zod';
 
-interface SchemeFormProps<Fields extends FieldsRecord> {
+interface SchemaFormProps<Fields extends FieldsRecord> {
   fields: Fields;
-  schema?: Parameters<(typeof zodResolver)>[0];
-  initialValues: SchemeFieldsData<Fields>;
+  schema?: Parameters<typeof zodResolver>[0];
+  initialValues: SchemaFieldsData<Fields>;
   confirmText?: string;
   cancelText?: string;
 
-  onSubmit: (data: SchemeFieldsData<Fields>) => Promise<void>;
+  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -31,17 +26,17 @@ interface SchemeFormProps<Fields extends FieldsRecord> {
  * @param {PhotoCreationFormProps} props
  * @returns {React.ReactElement}
  */
-function SchemeForm<Fields extends FieldsRecord>(
-  props: SchemeFormProps<Fields>,
+function SchemaForm<Fields extends FieldsRecord>(
+  props: SchemaFormProps<Fields>,
 ): React.ReactElement {
   const entries = Object.entries(props.fields) as [
-    Path<SchemeFieldsData<Fields>>,
-    SchemeField,
+    Path<SchemaFieldsData<Fields>>,
+    SchemaField,
   ][];
 
   const submit = useLoadingFn(props.onSubmit);
 
-  const instance = Form.useForm<SchemeFieldsData<Fields>>({
+  const instance = Form.useForm<SchemaFieldsData<Fields>>({
     initialValues: props.initialValues,
     schema: props.schema,
     onSubmit: submit,
@@ -50,23 +45,18 @@ function SchemeForm<Fields extends FieldsRecord>(
   return (
     <Form form={instance} className="space-y-5">
       {entries.map(([key, field]) => {
-        const componentRenderer = SCHEME_COMPONENT_MAP[field.type];
-        if (!componentRenderer) { 
+        const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
+        if (!componentRenderer) {
           return null;
         }
-        
+
         const component = componentRenderer(field);
-        if (!component) { 
+        if (!component) {
           return null;
         }
-        
+
         return (
-          <Form.Item
-            form={instance}
-            label={field.label}
-            name={key}
-            key={key}
-          >
+          <Form.Item form={instance} label={field.label} name={key} key={key}>
             {component}
           </Form.Item>
         );
@@ -81,29 +71,28 @@ function SchemeForm<Fields extends FieldsRecord>(
   );
 }
 
-interface UseSchemeFormParams<U, Fields extends FieldsRecord> {
+interface UseSchemaFormParams<U, Fields extends FieldsRecord> {
   title: string;
   confirmText?: string;
   cancelText?: string;
-  map: (data: U) => SchemeFieldsData<Fields>;
-  onSubmit: (data: SchemeFieldsData<Fields>) => Promise<void>;
+  map: (data: U) => SchemaFieldsData<Fields>;
+  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void>;
 }
 
-interface CreateSchemeFormParams<Fields extends FieldsRecord> {
+interface CreateSchemaFormParams<Fields extends FieldsRecord> {
   fields: Fields;
-  schema?: Parameters<(typeof zodResolver)>[0];
+  schema?: Parameters<typeof zodResolver>[0];
 }
 
-export function createSchemeForm<Fields extends FieldsRecord>({
-  fields,
-  schema,
-}: CreateSchemeFormParams<Fields>) {
-  const showDialog = FormDialog.create<SchemeFieldsData<Fields>>((props) => {
+export function createSchemaForm<Fields extends FieldsRecord>(
+  params: CreateSchemaFormParams<Fields>,
+) {
+  const showDialog = FormDialog.create<SchemaFieldsData<Fields>>((props) => {
     return (
-      <SchemeForm
+      <SchemaForm
         {...props}
-        fields={fields}
-        schema={schema}
+        fields={params.fields}
+        schema={params.schema}
         initialValues={props.initialValues}
         confirmText={props.confirmText}
         cancelText={props.cancelText}
@@ -113,7 +102,7 @@ export function createSchemeForm<Fields extends FieldsRecord>({
     );
   });
 
-  return function useSchemeForm<U>(params: UseSchemeFormParams<U, Fields>) {
+  return function useSchemaForm<U>(params: UseSchemaFormParams<U, Fields>) {
     return (data: U) =>
       showDialog({
         initialValues: params.map(data),

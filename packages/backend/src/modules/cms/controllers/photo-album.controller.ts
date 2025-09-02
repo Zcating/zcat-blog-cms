@@ -10,13 +10,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
 
 import { createResult, ResultCode, ResultData } from '@backend/model';
+import { PhotoAlbum } from '@backend/prisma';
+import { PrismaService } from '@backend/prisma.service';
 
-import { Repository } from 'typeorm';
-
-import { PhotoAlbum } from '../../../table/photo-album.entity';
 import { CreatePhotoAlbumDto, UpdateAlbumDto } from '../dto';
 import { SetCoverDto } from '../dto/set-cover.dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
@@ -27,10 +25,7 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 export class PhotoAlbumController {
   private readonly logger = new Logger(PhotoAlbumController.name);
 
-  constructor(
-    @InjectRepository(PhotoAlbum)
-    private photoAlbumRepository: Repository<PhotoAlbum>,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
   /**
    * 获取所有相册
@@ -42,9 +37,9 @@ export class PhotoAlbumController {
   async findAll(): Promise<ResultData<PhotoAlbum[]>> {
     try {
       this.logger.log('开始获取所有相册');
-      const albums = await this.photoAlbumRepository.find({
-        relations: ['cover'],
-      });
+
+      const albums = await this.prismaService.photoAlbum.findMany();
+
       this.logger.log(`成功获取 ${albums.length} 个相册`);
       return createResult({
         code: ResultCode.Success,
@@ -71,9 +66,8 @@ export class PhotoAlbumController {
   ): Promise<ResultData<PhotoAlbum | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的相册`);
-      const album = await this.photoAlbumRepository.findOne({
+      const album = await this.prismaService.photoAlbum.findUnique({
         where: { id: parseInt(id) },
-        relations: ['cover'],
       });
       this.logger.log(`${album ? '成功' : '未找到'}获取ID为 ${id} 的相册`);
       return createResult({
@@ -95,7 +89,9 @@ export class PhotoAlbumController {
   ): Promise<ResultData<PhotoAlbum>> {
     try {
       this.logger.log(`开始创建相册: ${createPhotoAlbumDto.name}`);
-      const album = await this.photoAlbumRepository.save(createPhotoAlbumDto);
+      const album = await this.prismaService.photoAlbum.create({
+        data: createPhotoAlbumDto,
+      });
       this.logger.log(`成功创建相册，ID: ${album.id}, 名称: ${album.name}`);
       return createResult({
         code: ResultCode.Success,
@@ -120,25 +116,18 @@ export class PhotoAlbumController {
       this.logger.log(
         `开始更新ID为 ${id} 的相册: ${updatePhotoAlbumDto.name || '未提供名称'}`,
       );
-      const result = await this.photoAlbumRepository.update(
-        id,
-        updatePhotoAlbumDto,
-      );
-      if (result.affected === 0) {
-        this.logger.warn(`更新ID为 ${id} 的相册失败：未找到记录`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '更新失败',
-        });
-      }
+
+      const result = await this.prismaService.photoAlbum.update({
+        where: { id: parseInt(id) },
+        data: updatePhotoAlbumDto,
+      });
+
       this.logger.log(`成功更新ID为 ${id} 的相册`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: await this.photoAlbumRepository.findOne({
-          where: { id: parseInt(id) },
-          relations: ['cover'],
-        }),
+        data: result,
       });
     } catch (error) {
       this.logger.error(`更新ID为 ${id} 的相册失败`, error);
@@ -153,14 +142,11 @@ export class PhotoAlbumController {
   async remove(@Param('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的相册`);
-      const result = await this.photoAlbumRepository.delete(id);
-      if (result.affected === 0) {
-        this.logger.warn(`删除ID为 ${id} 的相册失败：未找到记录`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '删除失败',
-        });
-      }
+
+      await this.prismaService.photoAlbum.delete({
+        where: { id: parseInt(id) },
+      });
+
       this.logger.log(`成功删除ID为 ${id} 的相册`);
       return createResult({
         code: ResultCode.Success,
@@ -178,23 +164,14 @@ export class PhotoAlbumController {
   async setCover(@Body() setCoverDto: SetCoverDto): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始设置ID为 ${setCoverDto.albumId} 的相册封面`);
-      const result = await this.photoAlbumRepository.update(
-        setCoverDto.albumId,
-        {
-          cover: {
-            id: setCoverDto.photoId,
-          },
+
+      await this.prismaService.photoAlbum.update({
+        where: { id: setCoverDto.albumId },
+        data: {
+          coverId: setCoverDto.photoId,
         },
-      );
-      if (result.affected === 0) {
-        this.logger.warn(
-          `设置ID为 ${setCoverDto.albumId} 的相册封面失败：未找到记录`,
-        );
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '设置失败',
-        });
-      }
+      });
+
       this.logger.log(`成功设置ID为 ${setCoverDto.albumId} 的相册封面`);
       return createResult({
         code: ResultCode.Success,

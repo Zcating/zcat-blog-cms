@@ -8,15 +8,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Article {
+  id                       Int                        @id @default(autoincrement())
+  title                    String                     @db.VarChar(255)
+  excerpt                  String                     @db.Text
+  createdAt                DateTime                   @default(now()) @db.DateTime(6)
+  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
+  createByUserId           Int?
+  content                  String                     @db.Text
+  articleAndArticleTags    ArticleAndArticleTags[]
+
+  @@index([createByUserId], map: "FK_c88fba17a93bd0e551058d9ed73")
+
+  @@map("article")
+}
+
+model ArticleAndArticleTags {
+  articleId    Int
+  articleTagId Int
+  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "FK_54b2005ea489ec43684104f6ce6")
+  articleTag   ArticleTag @relation(fields: [articleTagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_294cb268d5d5b961739598ee49b")
+
+  @@id([articleId, articleTagId])
+  @@index([articleTagId], map: "IDX_294cb268d5d5b961739598ee49")
+  @@index([articleId], map: "IDX_54b2005ea489ec43684104f6ce")
+  @@map("article_and_article_tags")
+}
+
+model ArticleTag {
+  id                       Int                        @id @default(autoincrement())
+  name                     String                     @unique(map: "IDX_c043c7daa8e5141e909e1cd841") @db.VarChar(255)
+  createdAt                DateTime                   @default(now()) @db.DateTime(6)
+  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
+  articleAndArticleTags ArticleAndArticleTags[]
+
+  @@map("article_tag")
+}
+
+model Photo {
+  id                                     Int          @id @default(autoincrement())
+  name                                   String       @db.VarChar(255)
+  url                                    String       @db.VarChar(255)
+  thumbnailUrl                           String       @db.VarChar(255)
+  albumId                                Int?
+  createdAt                              DateTime     @default(now()) @db.DateTime(6)
+  updatedAt                              DateTime     @default(now()) @db.DateTime(6)
+
+  @@map("photo")
+}
+
+model PhotoAlbum {
+  id                               Int      @id @default(autoincrement())
+  name                             String   @db.VarChar(255)
+  createdAt                        DateTime @default(now()) @db.DateTime(6)
+  updatedAt                        DateTime @default(now()) @db.DateTime(6)
+  description                      String   @db.VarChar(255)
+  coverId                          Int?     @unique(map: "REL_b6ca2bc9d490800f271b6155f1")
+
+  @@map("photo_album")
+}
+
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique(map: "IDX_78a916df40e02a9deb1c4b75ed") @db.VarChar(255)
-  password  String    @db.VarChar(255)
-  email     String    @unique(map: "IDX_e12875dfb3b1d92d7d7c5377e2") @db.VarChar(255)
-  createdAt DateTime  @default(now()) @db.DateTime(6)
-  updatedAt DateTime  @default(now()) @db.DateTime(6)
-  salt      String    @db.VarChar(64)
-  user_info UserInfo?
+  id        Int        @id @default(autoincrement())
+  username  String     @unique(map: "IDX_78a916df40e02a9deb1c4b75ed") @db.VarChar(255)
+  password  String     @db.VarChar(255)
+  email     String     @unique(map: "IDX_e12875dfb3b1d92d7d7c5377e2") @db.VarChar(255)
+  createdAt DateTime   @default(now()) @db.DateTime(6)
+  updatedAt DateTime   @default(now()) @db.DateTime(6)
+  salt      String     @db.VarChar(64)
+  userInfo  UserInfo?
 
   @@map("user")
 }
@@ -31,72 +91,7 @@ model UserInfo {
   createdAt DateTime  @default(now()) @db.DateTime(6)
   updatedAt DateTime  @default(now()) @db.DateTime(6)
   userId    Int?      @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
-  article   Article[]
   user      User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3a7fa0c3809d19eaf2fb4f65949")
 
   @@map("user_info")
-}
-
-model Article {
-  id                       Int                        @id @default(autoincrement())
-  title                    String                     @db.VarChar(255)
-  excerpt                  String                     @db.Text
-  createdAt                DateTime                   @default(now()) @db.DateTime(6)
-  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
-  createByUserId           Int?
-  content                  String                     @db.Text
-  user_info                UserInfo?                  @relation(fields: [createByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_c88fba17a93bd0e551058d9ed73")
-  article_and_article_tags article_and_article_tags[]
-
-  @@index([createByUserId], map: "FK_c88fba17a93bd0e551058d9ed73")
-  @@map("article")
-}
-
-model ArticleTag {
-  id                       Int                        @id @default(autoincrement())
-  name                     String                     @unique(map: "IDX_c043c7daa8e5141e909e1cd841") @db.VarChar(255)
-  createdAt                DateTime                   @default(now()) @db.DateTime(6)
-  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
-  article_and_article_tags article_and_article_tags[]
-
-  @@map("article_tag")
-}
-
-model PhotoAlbum {
-  id                               Int      @id @default(autoincrement())
-  name                             String   @db.VarChar(255)
-  createdAt                        DateTime @default(now()) @db.DateTime(6)
-  updatedAt                        DateTime @default(now()) @db.DateTime(6)
-  coverId                          Int?     @unique(map: "REL_b6ca2bc9d490800f271b6155f1")
-  description                      String   @db.VarChar(255)
-  photo_photo_albumIdTophoto_album Photo[]  @relation("photo_albumIdTophoto_album")
-  photo_photo_album_coverIdTophoto Photo?   @relation("photo_album_coverIdTophoto", fields: [coverId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_b6ca2bc9d490800f271b6155f18")
-
-  @@map("photo_album")
-}
-
-model Photo {
-  id                                     Int         @id @default(autoincrement())
-  name                                   String      @db.VarChar(255)
-  url                                    String      @db.VarChar(255)
-  createdAt                              DateTime    @default(now()) @db.DateTime(6)
-  updatedAt                              DateTime    @default(now()) @db.DateTime(6)
-  albumId                                Int?
-  thumbnailUrl                           String      @db.VarChar(255)
-  photo_album_photo_albumIdTophoto_album PhotoAlbum? @relation("photo_albumIdTophoto_album", fields: [albumId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_464bcdec1590ef4d623166f1b54")
-  photo_album_photo_album_coverIdTophoto PhotoAlbum? @relation("photo_album_coverIdTophoto")
-
-  @@index([albumId], map: "FK_464bcdec1590ef4d623166f1b54")
-  @@map("photo")
-}
-
-model article_and_article_tags {
-  articleId    Int
-  articleTagId Int
-  article_tag  ArticleTag @relation(fields: [articleTagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_294cb268d5d5b961739598ee49b")
-  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "FK_54b2005ea489ec43684104f6ce6")
-
-  @@id([articleId, articleTagId])
-  @@index([articleTagId], map: "IDX_294cb268d5d5b961739598ee49")
-  @@index([articleId], map: "IDX_54b2005ea489ec43684104f6ce")
 }

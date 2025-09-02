@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+// import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
+
+// import * as path from 'path';
+
+import { PrismaService } from './prisma.service';
 
 // import * as path from 'path';
 
@@ -20,22 +24,6 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
         '.env.production',
       ],
     }),
-    // 使用环境变量配置数据库
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        synchronize: configService.get('DB_SYNCHRONIZE'),
-        autoLoadEntities: true,
-        entities: [`${__dirname}/src/table/*{.ts,.js}`],
-        migrations: [`${__dirname}/src/migration/*{.ts,.js}`],
-      }),
-    }),
     // ServeStaticModule.forRoot({
     //   rootPath: path.join(__dirname, '..', 'uploads/'),
     // }),
@@ -43,5 +31,6 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
     CmsModule,
     BlogModule,
   ],
+  providers: [PrismaService],
 })
 export class AppModule {}

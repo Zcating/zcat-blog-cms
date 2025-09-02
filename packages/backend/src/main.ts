@@ -39,7 +39,7 @@ async function bootstrap() {
   app.useBodyParser('json', { limit: '10mb' });
 
   // 配置静态文件服务
-  app.useStaticAssets(join(__dirname, '../..', 'uploads'), {
+  app.useStaticAssets(join(__dirname, '../', 'uploads'), {
     prefix: '/uploads/',
   });
 
