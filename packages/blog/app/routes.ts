@@ -12,6 +12,7 @@ export default [
     route("about", "routes/about.tsx"),
     route("gallery", "routes/gallery.tsx"),
     route("moments", "routes/moments.tsx"),
+    route("utils", "routes/utils.tsx"),
   ]),
   route("gallery/:id", "routes/gallery.id.tsx"),
 ] satisfies RouteConfig;
