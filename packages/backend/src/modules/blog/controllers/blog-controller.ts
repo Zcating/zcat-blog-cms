@@ -15,6 +15,9 @@ export class BlogController {
   async getArticles(@Query() query: PaginateQueryDto) {
     const articles = await this.prisma.article.findMany({
       ...createPaginate(query.page, query.pageSize),
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: {
         id: true,
         title: true,

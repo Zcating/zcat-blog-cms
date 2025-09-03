@@ -53,6 +53,14 @@ export class AuthService {
     password: string;
     email: string;
   }) {
+    const users = await this.prismaService.user.findMany();
+    console.log(users);
+    if (users.length >= 1) {
+      return createResult({
+        code: ResultCode.RegisterError,
+        message: '注册失败',
+      });
+    }
     // console.log(bcrypt);
     // return {
     //   accessToken: '',
