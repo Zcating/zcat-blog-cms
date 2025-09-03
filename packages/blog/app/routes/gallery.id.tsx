@@ -15,7 +15,11 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { Assets } from "@blog/assets";
 
-export async function clientLoader({ params }: Route.LoaderArgs) {
+export function meta() {
+  return [{ title: "相册" }, { name: "description", content: "个人技术博客" }];
+}
+
+export async function loader({ params }: Route.LoaderArgs) {
   const gallery = await GalleryApi.getGalleryDetail(params.id);
   return {
     gallery,
@@ -44,7 +48,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
   const back = () => {
     navigate(`/gallery`);
   };
-  console.log(`url("${Assets.iconLeft}") auto`);
+
   return (
     <View
       className="h-screen overflow-hidden flex flex-row items-center justify-center"

@@ -1,14 +1,14 @@
 import { ArticleApi } from "@blog/apis";
 import { Link } from "react-router";
-import type { Route } from "./post-board/+types/post-board-page";
 import { View } from "@blog/components";
 import { PostExcerptCard } from "@blog/modules/post";
+import type { Route } from "./+types/post-board";
 
 export function meta() {
   return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];
 }
 
-export async function clientLoader() {
+export async function loader() {
   return {
     pagination: await ArticleApi.getArticleList(),
   };

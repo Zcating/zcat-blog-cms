@@ -4,6 +4,7 @@ import { iconVariants } from "./variants";
 export function IconPhoto(props: IconProps) {
   return (
     <svg
+      suppressHydrationWarning
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

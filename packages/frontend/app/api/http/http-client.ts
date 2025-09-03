@@ -2,9 +2,9 @@ import Cookies from 'js-cookie';
 import { createQueryPath } from './http-utils';
 
 export namespace HttpClient {
-  export const STATIC_URL = import.meta.env.VITE_STATIC_URL;
+  export const STATIC_URL: string = import.meta.env.VITE_STATIC_URL;
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL: string = import.meta.env.VITE_API_URL;
 
   interface ResponseResult {
     code: string;
@@ -87,6 +87,24 @@ export namespace HttpClient {
     const queryPath = createQueryPath(path, body);
     const response = await fetch(`${API_URL}/${queryPath}`, {
       method: 'DELETE',
+      headers: {
+        Authorization: Cookies.get('token') || '',
+      },
+    });
+    const result = (await response.json()) as ResponseResult;
+    if (result.code !== '0000') {
+      throw new Error(result.message);
+    }
+    return result.data;
+  }
+
+  export async function serverSideGet<T>(
+    path: string,
+    body?: Record<string, any>,
+  ): Promise<T> {
+    const queryPath = createQueryPath(path, body);
+    const response = await fetch(`localhost:9090/${queryPath}`, {
+      method: 'GET',
       headers: {
         Authorization: Cookies.get('token') || '',
       },

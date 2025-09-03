@@ -13,8 +13,8 @@ export namespace GalleryApi {
     name: string;
     description: string;
     cover?: Photo;
-    createdAt: dayjs.Dayjs;
-    updatedAt: dayjs.Dayjs;
+    createdAt: string;
+    updatedAt: string;
   }
 
   export interface GalleryDetail extends Gallery {
@@ -29,26 +29,22 @@ export namespace GalleryApi {
   export async function getGalleries(
     params: GetPhotosParams,
   ): Promise<Pagination<Gallery>> {
-    const pagination = await HttpClient.get<Pagination>("blog/gallery", {
-      page: params.page,
-      pageSize: params.pageSize ?? 8,
-    });
-    return {
-      ...pagination,
-      data: pagination.data.map((gallery: any) => ({
-        ...gallery,
-        createdAt: dayjs(gallery.createdAt),
-        updatedAt: dayjs(gallery.updatedAt),
-      })),
-    };
+    const pagination = await HttpClient.serverSideGet<Pagination>(
+      "blog/gallery",
+      {
+        page: params.page,
+        pageSize: params.pageSize ?? 8,
+      },
+    );
+    return pagination;
   }
 
   export async function getGalleryDetail(id: string): Promise<GalleryDetail> {
-    const gallery = await HttpClient.get<GalleryDetail>(`blog/gallery/${id}`);
+    const gallery = await HttpClient.serverSideGet<GalleryDetail>(
+      `blog/gallery/${id}`,
+    );
     return {
       ...gallery,
-      createdAt: dayjs(gallery.createdAt),
-      updatedAt: dayjs(gallery.updatedAt),
       cover: transformPhoto(gallery.cover),
       photos: gallery.photos.map(transformPhoto),
     };

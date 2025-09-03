@@ -11,7 +11,7 @@ export function meta() {
   ];
 }
 
-export async function clientLoader() {
+export async function loader() {
   return {
     pagination: await ArticleApi.getArticleList(),
   };

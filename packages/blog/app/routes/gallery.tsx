@@ -16,7 +16,7 @@ export function meta() {
   return [{ title: "相册" }, { name: "description", content: "个人技术博客" }];
 }
 
-export async function clientLoader() {
+export async function loader() {
   const pagination = await GalleryApi.getGalleries({ page: 1 });
   return {
     pagination,
@@ -69,19 +69,15 @@ interface PhotoItemProps {
   onClick: (value: GalleryApi.Gallery) => void;
 }
 function PhotoItem({ value, onClick }: PhotoItemProps) {
+  const url = value.cover?.url;
   return (
     <div className="flex flex-col items-center gap-4">
       <Card
         className="cursor-pointer !p-0 w-full h-full overflow-hidden"
         onClick={() => onClick(value)}
       >
-        {value.cover?.url ? (
-          <Image
-            contentMode="cover"
-            className=""
-            src={value.cover?.url}
-            alt={value.name}
-          />
+        {url ? (
+          <Image contentMode="cover" className="" src={url} alt={value.name} />
         ) : (
           <div className="aspect-3/2 flex items-center justify-center">
             <IconPhoto size="lg" />

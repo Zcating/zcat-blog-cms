@@ -6,8 +6,8 @@ export namespace ArticleApi {
     id: string;
     title: string;
     excerpt: string;
-    createdAt: dayjs.Dayjs;
-    updatedAt: dayjs.Dayjs;
+    createdAt: string;
+    updatedAt: string;
   }
 
   export interface ArticleDetail {
@@ -15,29 +15,18 @@ export namespace ArticleApi {
     title: string;
     excerpt: string;
     content: string;
-    createdAt: dayjs.Dayjs;
-    updatedAt: dayjs.Dayjs;
+    createdAt: string;
+    updatedAt: string;
   }
 
   export async function getArticleList(): Promise<Pagination<Article>> {
-    const pagination = await HttpClient.get<Pagination>("blog/article/list");
-    return {
-      ...pagination,
-      data: pagination.data.map((article: any) => ({
-        ...article,
-        createdAt: dayjs(article.createdAt),
-        updatedAt: dayjs(article.updatedAt),
-      })),
-    };
-    // return articles;
+    return HttpClient.serverSideGet<Pagination>("blog/article/list");
   }
 
   export async function getArticleDetail(id: string) {
-    const article = await HttpClient.get<ArticleDetail>(`blog/article/${id}`);
-    return {
-      ...article,
-      createdAt: dayjs(article.createdAt),
-      updatedAt: dayjs(article.updatedAt),
-    };
+    const article = HttpClient.serverSideGet<ArticleDetail>(
+      `blog/article/${id}`,
+    );
+    return article;
   }
 }

@@ -7,7 +7,7 @@ export function meta() {
   return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];
 }
 
-export async function clientLoader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
   const article = await ArticleApi.getArticleDetail(id);
   if (!article) {
