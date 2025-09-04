@@ -9,16 +9,18 @@ const envContent = `
 # 数据库配置
 DATABASE_URL="mysql://username:password@ip:port/db_name?connect_timeout=300"
 
-# JWT配置
-JWT_SECRET=
-JWT_EXPIRES_IN=
+# dev 环境
+FRONTEND_URL=http://localhost:5173
+BLOG_URL=http://localhost:5000
+
+# JWT 配置
+JWT_SECRET=HELLO_WORLD
+JWT_EXPIRES_IN=1d
 
 # 应用配置
-PORT=
-NODE_ENV=
+PORT=9090
+NODE_ENV=development
 `;
-
-// const sql = `CREATE DATABASE IF NOT EXISTS ${DB_DATABASE};`;
 
 async function exists(filePath: string) {
   try {
