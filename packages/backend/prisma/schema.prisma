@@ -9,16 +9,14 @@ datasource db {
 }
 
 model Article {
-  id                       Int                        @id @default(autoincrement())
-  title                    String                     @db.VarChar(255)
-  excerpt                  String                     @db.Text
-  createdAt                DateTime                   @default(now()) @db.DateTime(6)
-  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
-  createByUserId           Int?
-  content                  String                     @db.Text
-  articleAndArticleTags    ArticleAndArticleTags[]
-
-  @@index([createByUserId], map: "FK_c88fba17a93bd0e551058d9ed73")
+  id                    Int                     @id @default(autoincrement())
+  title                 String                  @db.VarChar(255)
+  excerpt               String                  @db.Text
+  createdAt             DateTime                @default(now()) @db.DateTime(6)
+  updatedAt             DateTime                @default(now()) @db.DateTime(6)
+  createByUserId        Int?
+  content               String                  @db.Text
+  articleAndArticleTags ArticleAndArticleTags[]
 
   @@map("article")
 }
@@ -26,8 +24,8 @@ model Article {
 model ArticleAndArticleTags {
   articleId    Int
   articleTagId Int
-  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "FK_54b2005ea489ec43684104f6ce6")
   articleTag   ArticleTag @relation(fields: [articleTagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_294cb268d5d5b961739598ee49b")
+  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade, map: "FK_54b2005ea489ec43684104f6ce6")
 
   @@id([articleId, articleTagId])
   @@index([articleTagId], map: "IDX_294cb268d5d5b961739598ee49")
@@ -36,62 +34,60 @@ model ArticleAndArticleTags {
 }
 
 model ArticleTag {
-  id                       Int                        @id @default(autoincrement())
-  name                     String                     @unique(map: "IDX_c043c7daa8e5141e909e1cd841") @db.VarChar(255)
-  createdAt                DateTime                   @default(now()) @db.DateTime(6)
-  updatedAt                DateTime                   @default(now()) @db.DateTime(6)
+  id                    Int                     @id @default(autoincrement())
+  name                  String                  @unique(map: "IDX_c043c7daa8e5141e909e1cd841") @db.VarChar(255)
+  createdAt             DateTime                @default(now()) @db.DateTime(6)
+  updatedAt             DateTime                @default(now()) @db.DateTime(6)
   articleAndArticleTags ArticleAndArticleTags[]
 
   @@map("article_tag")
 }
 
 model Photo {
-  id                                     Int          @id @default(autoincrement())
-  name                                   String       @db.VarChar(255)
-  url                                    String       @db.VarChar(255)
-  thumbnailUrl                           String       @db.VarChar(255)
-  albumId                                Int?
-  createdAt                              DateTime     @default(now()) @db.DateTime(6)
-  updatedAt                              DateTime     @default(now()) @db.DateTime(6)
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(255)
+  url          String   @db.VarChar(255)
+  createdAt    DateTime @default(now()) @db.DateTime(6)
+  updatedAt    DateTime @default(now()) @db.DateTime(6)
+  albumId      Int?
+  thumbnailUrl String   @db.VarChar(255)
 
   @@map("photo")
 }
 
 model PhotoAlbum {
-  id                               Int      @id @default(autoincrement())
-  name                             String   @db.VarChar(255)
-  createdAt                        DateTime @default(now()) @db.DateTime(6)
-  updatedAt                        DateTime @default(now()) @db.DateTime(6)
-  description                      String   @db.VarChar(255)
-  coverId                          Int?     @unique(map: "REL_b6ca2bc9d490800f271b6155f1")
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.DateTime(6)
+  updatedAt   DateTime @default(now()) @db.DateTime(6)
+  coverId     Int?
+  description String   @db.VarChar(255)
 
   @@map("photo_album")
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  username  String     @unique(map: "IDX_78a916df40e02a9deb1c4b75ed") @db.VarChar(255)
-  password  String     @db.VarChar(255)
-  email     String     @unique(map: "IDX_e12875dfb3b1d92d7d7c5377e2") @db.VarChar(255)
-  createdAt DateTime   @default(now()) @db.DateTime(6)
-  updatedAt DateTime   @default(now()) @db.DateTime(6)
-  salt      String     @db.VarChar(64)
-  userInfo  UserInfo?
+  id        Int      @id @default(autoincrement())
+  username  String   @unique(map: "IDX_78a916df40e02a9deb1c4b75ed") @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  email     String   @unique(map: "IDX_e12875dfb3b1d92d7d7c5377e2") @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.DateTime(6)
+  updatedAt DateTime @default(now()) @db.DateTime(6)
+  salt      String   @db.VarChar(64)
 
   @@map("user")
 }
 
 model UserInfo {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(255)
-  email     String?   @db.VarChar(255)
-  phone     String?   @db.VarChar(255)
-  address   String?   @db.VarChar(255)
-  aboutMe   String?   @db.Text
-  createdAt DateTime  @default(now()) @db.DateTime(6)
-  updatedAt DateTime  @default(now()) @db.DateTime(6)
-  userId    Int?      @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
-  user      User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3a7fa0c3809d19eaf2fb4f65949")
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  email     String?  @db.VarChar(255)
+  phone     String?  @db.VarChar(255)
+  address   String?  @db.VarChar(255)
+  aboutMe   String?  @db.Text
+  createdAt DateTime @default(now()) @db.DateTime(6)
+  updatedAt DateTime @default(now()) @db.DateTime(6)
+  userId    Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
 
   @@map("user_info")
 }
