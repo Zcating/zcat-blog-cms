@@ -32,22 +32,20 @@ async function exists(filePath: string) {
 }
 
 async function main() {
-  const filePath = path.join(process.cwd(), '.env');
   const devPath = path.join(process.cwd(), '.env.development');
   const prodPath = path.join(process.cwd(), '.env.production');
+
   if (await exists(devPath)) {
     console.log('.env.development 文件已存在');
-    return;
+  } else {
+    await writeFile(devPath, envContent);
   }
+
   if (await exists(prodPath)) {
     console.log('.env.production 文件已存在');
-    return;
+  } else {
+    await writeFile(prodPath, envContent);
   }
-  if (await exists(filePath)) {
-    console.log('.env 文件已存在');
-    return;
-  }
-  await writeFile(filePath, envContent);
 }
 
 main();
