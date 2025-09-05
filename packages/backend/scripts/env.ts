@@ -34,18 +34,11 @@ async function exists(filePath: string) {
 async function main() {
   const devPath = path.join(process.cwd(), '.env.development');
   const prodPath = path.join(process.cwd(), '.env.production');
-
-  if (await exists(devPath)) {
-    console.log('.env.development 文件已存在');
-  } else {
-    await writeFile(devPath, envContent);
+  if ((await exists(devPath)) || (await exists(prodPath))) {
+    console.log('.env.development 或 .env.production 文件已存在');
+    return;
   }
-
-  if (await exists(prodPath)) {
-    console.log('.env.production 文件已存在');
-  } else {
-    await writeFile(prodPath, envContent);
-  }
+  await writeFile(devPath, envContent);
 }
 
 main();
