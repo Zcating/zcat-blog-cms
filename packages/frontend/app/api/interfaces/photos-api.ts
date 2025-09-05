@@ -7,6 +7,7 @@ export namespace PhotosApi {
     name: string;
     url: string;
     thumbnailUrl: string;
+    albumId?: number;
     isCover?: boolean;
     createdAt?: string;
     updatedAt?: string;

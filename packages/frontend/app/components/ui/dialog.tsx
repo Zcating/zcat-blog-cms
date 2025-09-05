@@ -55,10 +55,13 @@ export namespace Dialog {
       close();
       props.onClose?.();
     };
+    const currentId = id++;
+    const key = `dialog-portal-${currentId}`;
 
-    const modal = createPortal(
+    const dialogPortal = createPortal(
       <div
-        key={`modal-${id++}`}
+        key={`dialog-${currentId}`}
+        id={key}
         className={classnames(
           'modal scrollbar-auto',
           positionClass,
@@ -77,10 +80,10 @@ export namespace Dialog {
         ) : null}
       </div>,
       portalRoot,
-      'modal-portal',
+      key,
     );
 
-    UiProviderContext.set({ portal: modal });
+    UiProviderContext.add(dialogPortal);
 
     const dialogElement = await resolvers.promise;
 
@@ -92,10 +95,11 @@ export namespace Dialog {
       return;
     }
 
+    const key = currentModal.getAttribute('id') ?? '';
     currentModal.classList.remove('modal-open');
     currentModal.onanimationend = () => {
+      UiProviderContext.remove(key);
       currentModal = null;
-      UiProviderContext.set({ portal: null });
     };
   }
 }

@@ -2,19 +2,27 @@ import { useAtom, atom } from 'jotai';
 import React from 'react';
 
 interface UiProviderContextState {
-  portal: React.ReactPortal | null;
+  portals: React.ReactPortal[];
 }
 
 export namespace UiProviderContext {
   type Listener = (value: UiProviderContextState) => void;
   let context: UiProviderContextState = {
-    portal: null,
+    portals: [],
   };
 
   const listener: Listener[] = [];
 
-  export function set(value: Partial<UiProviderContextState>) {
-    context = { ...context, ...value };
+  export function add(portal: React.ReactPortal) {
+    context = { ...context, portals: [...context.portals, portal] };
+    listener.forEach((fn) => fn(context));
+  }
+
+  export function remove(key: string) {
+    context = {
+      ...context,
+      portals: context.portals.filter((p) => p.key === key),
+    };
     listener.forEach((fn) => fn(context));
   }
 
@@ -45,7 +53,7 @@ interface UiProviderProps {
   children: React.ReactNode;
 }
 export function UiProvider({ children }: UiProviderProps) {
-  const portal = useUiProviderContext((state) => state.portal);
+  const portals = useUiProviderContext((state) => state.portals);
 
   // const [state, setState] = React.useState(UiProviderContext.get());
   // React.useEffect(() => {
@@ -59,7 +67,7 @@ export function UiProvider({ children }: UiProviderProps) {
   return (
     <React.Fragment>
       {children}
-      <div id="portal-root">{portal}</div>
+      <div id="portal-root">{portals}</div>
     </React.Fragment>
   );
 }

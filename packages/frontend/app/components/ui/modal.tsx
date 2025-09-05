@@ -9,7 +9,7 @@ export namespace Modal {
 
   type ModalPosition = 'top' | 'left' | 'right' | 'bottom' | 'center';
 
-  export interface ModalProps {
+  interface ModalProps {
     className?: string;
     contentContainerClassName?: string;
     children: React.ReactNode;
@@ -34,67 +34,116 @@ export namespace Modal {
     },
   });
 
-  let currentModal: HTMLDivElement | null = null;
+  const idModalMap = new Map<number, HTMLDivElement>();
 
-  export async function open(props: ModalProps) {
+  type ModalCreate<T> = (resolve: (value?: T) => void) => ModalProps;
+
+  export function open(props: ModalProps): Promise<void>;
+  export function open<T>(create: ModalCreate<T>): Promise<T | undefined>;
+  export async function open(
+    args: ModalProps | ModalCreate<any>,
+  ): Promise<any> {
+    const currentId = ++id;
     const portalRoot = document.getElementById('portal-root');
     if (!portalRoot) {
       throw new Error('modal portal root not found');
     }
 
-    const modalClass = modalTv({ position: props.position });
-    const backdropClose = props.backdropClose ?? true;
-    const resolvers = Promise.withResolvers<HTMLDivElement>();
+    const create = parseArgs(args);
+
+    const adapter = createAdapter(currentId, create);
+
+    const modalClass = modalTv({ position: adapter.props.position });
+    const backdropClose = adapter.props.backdropClose ?? true;
+    const elementResolvers = Promise.withResolvers<HTMLDivElement>();
     const handleRef = (ref: HTMLDivElement) => {
-      currentModal = ref;
       setTimeout(() => {
-        resolvers.resolve(ref);
+        elementResolvers.resolve(ref);
       }, 0);
-    };
-    const handleClose = () => {
-      close();
-      props.onClose?.();
     };
 
     const modal = createPortal(
       <div
-        key={`modal-${id++}`}
-        className={classnames(modalClass, props.className)}
+        key={`modal-${currentId}`}
+        className={classnames(modalClass, adapter.props.className)}
         role="dialog"
         ref={handleRef}
       >
         <div
           className={classnames(
             'modal-box p-0',
-            props.contentContainerClassName,
+            adapter.props.contentContainerClassName,
           )}
         >
-          {props.children}
+          {adapter.props.children}
         </div>
         {backdropClose ? (
-          <div className="modal-backdrop" onClick={handleClose}></div>
+          <div className="modal-backdrop" onClick={adapter.handleClose}></div>
         ) : null}
       </div>,
       portalRoot,
-      'modal-portal',
+      `modal-portal-${currentId}`,
     );
 
-    UiProviderContext.set({ portal: modal });
+    UiProviderContext.add(modal);
 
-    const modalElement = await resolvers.promise;
+    const modalElement = await elementResolvers.promise;
+
+    idModalMap.set(currentId, modalElement);
 
     modalElement.classList.add('modal-open');
+
+    return await adapter.resolvers.promise;
   }
 
-  export function close() {
+  function close(currentId: number) {
+    const currentModal = idModalMap.get(currentId);
     if (!currentModal) {
       return;
     }
 
     currentModal.classList.remove('modal-open');
     currentModal.onanimationend = () => {
-      currentModal = null;
-      UiProviderContext.set({ portal: null });
+      UiProviderContext.remove(`modal-portal-${currentId}`);
+    };
+  }
+
+  /**
+   * 解析 modal 构造参数
+   * @param args modal参数
+   * @returns
+   */
+  function parseArgs(args: ModalProps | ModalCreate<any>) {
+    if (typeof args === 'function') {
+      return args;
+    }
+
+    return () => args;
+  }
+
+  /**
+   * 创建一个modal适配器
+   * @param id modal实例id
+   * @param create modal创建函数
+   * @returns
+   */
+  function createAdapter<T>(id: number, create: ModalCreate<T>) {
+    const resolvers = Promise.withResolvers<T | undefined>();
+
+    const props = create(function resolve(value?: T) {
+      resolvers.resolve(value);
+      close(id);
+      props.onClose?.();
+    });
+
+    return {
+      props,
+      handleClose() {
+        resolvers.resolve(undefined);
+        close(id);
+        props.onClose?.();
+      },
+      resolvers,
     };
   }
 }

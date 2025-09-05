@@ -9,6 +9,7 @@ import {
   createInput,
   createSchemaForm,
   PhotoCard,
+  showPhotoSelector,
   updateArray,
 } from '@cms/core';
 
@@ -23,17 +24,19 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw new Error('Not Found');
   }
 
-  const photos = await PhotosApi.getPhotos(id);
+  const albumPhotos = await PhotosApi.getPhotos(id);
+
+  const allPhotos = await PhotosApi.getPhotos();
 
   return {
     album,
-    albumPhotos: photos,
+    albumPhotos,
+    allPhotos,
   };
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
-  const { album, albumPhotos } = props.loaderData;
-  const [coverId, setCoverId] = React.useState<number>(album?.cover?.id || 0);
+  const { album, albumPhotos, allPhotos } = props.loaderData;
   const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
   const addPhoto = useSchemeForm({
     title: '新增照片',
@@ -82,6 +85,18 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
+  const selectPhoto = async () => {
+    const selectedPhotos = await showPhotoSelector({
+      photos: allPhotos.filter((photo) => photo.albumId !== album.id),
+    });
+    if (!selectedPhotos) {
+      return;
+    }
+
+    setPhotos([...photos, ...selectedPhotos]);
+  };
+
+  const [coverId, setCoverId] = React.useState<number>(album?.cover?.id || 0);
   const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
     // selectPhotoDialog.show();
     await AlbumsApi.setPhotoAlbumCover({
@@ -114,9 +129,9 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="primary" onClick={addPhoto}>
             添加照片
           </Button>
-          {/* <Button variant="neutral" onClick={setCover}>
-            设为封面
-          </Button> */}
+          <Button variant="neutral" onClick={selectPhoto}>
+            选择照片
+          </Button>
         </div>
       </div>
       <Grid
