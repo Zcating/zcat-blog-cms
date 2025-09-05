@@ -40,7 +40,7 @@ async function bootstrap() {
 
   // 配置静态文件服务
   app.useStaticAssets(join(__dirname, '../', 'uploads'), {
-    prefix: '/uploads/',
+    prefix: '/static/uploads/',
   });
 
   const config = new DocumentBuilder()

@@ -67,8 +67,8 @@ export async function createBaseImage(
   const uniqueSuffix = unique();
   const ext = path.extname(filename);
   const imageFilename = `base_${uniqueSuffix}${ext}`;
-  const imagePath = path.join(dir, imageFilename);
-  await fs.writeFile(imagePath, buffer);
+
+  await saveImage(dir, imageFilename, buffer);
 
   return imageFilename;
 }
@@ -78,19 +78,22 @@ export async function createThumbnail(
   filename: string,
   buffer: Buffer,
 ) {
-  const thumbnailFilename = `thumb_${filename}`;
-  const thumbnailPath = path.join(dir, thumbnailFilename);
+  const ext = path.extname(filename);
+  const nameWithoutExt = path.basename(filename, ext);
+  const thumbnailFilename = `${nameWithoutExt}.thumbnail${ext}`;
 
   // 确保缩略图目录存在
   await fs.mkdir(dir, { recursive: true });
   // 生成缩略图 (300x300像素)
-  await sharp(buffer)
+  const thumbnailBuffer = await sharp(buffer)
     .resize(300, 300, {
       fit: 'cover',
       position: 'center',
     })
     .jpeg({ quality: 80 })
-    .toFile(thumbnailPath);
+    .toBuffer();
+
+  await saveImage(dir, thumbnailFilename, thumbnailBuffer);
 
   return thumbnailFilename;
 }
@@ -109,4 +112,28 @@ export function ImageInterceptor(fieldName: string) {
       fileSize: 20 * 1024 * 1024, // 20MB
     },
   });
+}
+
+/**
+ * 将图片保存到指定目录，如果目录不存在则自动创建
+ * @param targetDir 目标目录路径
+ * @param filename 文件名
+ * @param buffer 图片缓冲区数据
+ * @param options 可选参数
+ * @returns 保存的文件路径
+ */
+export async function saveImage(
+  targetDir: string,
+  filename: string,
+  buffer: Buffer,
+): Promise<string> {
+  // 确保目录存在，如果不存在则递归创建
+  await fs.mkdir(targetDir, { recursive: true });
+
+  const filePath = path.join(targetDir, filename);
+
+  // 写入文件
+  await fs.writeFile(filePath, buffer);
+
+  return filePath;
 }
