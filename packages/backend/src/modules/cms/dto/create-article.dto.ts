@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsNotEmpty } from 'class-validator';
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty({
@@ -25,21 +25,10 @@ export class CreateArticleDto {
   content: string;
 
   @ApiPropertyOptional({
-    description: '文章内容URL（用于文件上传）',
-    example: '/uploads/articles/article-123.md',
-  })
-  contentUrl?: string;
-
-  @ApiPropertyOptional({
-    description: '创建用户ID',
-    example: 1,
-  })
-  createByUserId?: number;
-
-  @ApiPropertyOptional({
     description: '文章标签ID数组',
     example: [1, 2, 3],
     type: [Number],
   })
+  @IsArray({ message: '标签ID数组必须是数组' })
   tagIds?: number[];
 }

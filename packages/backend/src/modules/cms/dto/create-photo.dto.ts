@@ -3,16 +3,16 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { safeNumber } from '@backend/utils';
 
 import { Type } from 'class-transformer';
-import { MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
 export class CreatePhotoDto {
   @ApiProperty({
     description: '照片名称',
     example: '美丽的风景',
   })
-  @Type(() => String)
   @MinLength(1)
   @MaxLength(32)
+  @IsNotEmpty({ message: '照片名称不能为空' })
   name: string;
 
   @ApiPropertyOptional({
@@ -26,5 +26,6 @@ export class CreatePhotoDto {
     description: '是否封面',
     example: false,
   })
+  @IsBoolean({ message: '是否封面必须是布尔值' })
   isCover?: boolean;
 }

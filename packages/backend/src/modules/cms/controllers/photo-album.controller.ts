@@ -88,6 +88,7 @@ export class PhotoAlbumController {
     @Body() createPhotoAlbumDto: CreatePhotoAlbumDto,
   ): Promise<ResultData<PhotoAlbum>> {
     try {
+      console.log(createPhotoAlbumDto);
       this.logger.log(`开始创建相册: ${createPhotoAlbumDto.name}`);
       const album = await this.prismaService.photoAlbum.create({
         data: createPhotoAlbumDto,
