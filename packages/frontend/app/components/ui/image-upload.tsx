@@ -38,7 +38,6 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
     >
       <input
         ref={fileRef}
-        onClick={console.trace}
         type="file"
         className="hidden cursor-pointer"
         onChange={handleChange}
