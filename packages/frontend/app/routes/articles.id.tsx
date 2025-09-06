@@ -3,7 +3,7 @@ import { ArticlesApi } from '@cms/api';
 import { ArticleEditor, ArticleViewer } from '@cms/core/modules';
 import type { Route } from './+types/articles.id';
 import { useLoadingFn } from '@cms/components';
-import { useNavigate, useNavigation } from 'react-router';
+import { useNavigate } from 'react-router';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   if (params.id === 'create') {
