@@ -36,7 +36,10 @@ export namespace GalleryApi {
         pageSize: params.pageSize ?? 8,
       },
     );
-    return pagination;
+    return {
+      ...pagination,
+      data: pagination.data.map(transformGallery),
+    };
   }
 
   export async function getGalleryDetail(id: string): Promise<GalleryDetail> {
@@ -56,5 +59,10 @@ export namespace GalleryApi {
       photo.thumbnailUrl = `${HttpClient.STATIC_URL}/${photo.thumbnailUrl}`;
     }
     return photo;
+  }
+
+  export function transformGallery(gallery: Gallery): Gallery {
+    gallery.cover = transformPhoto(gallery.cover);
+    return gallery;
   }
 }
