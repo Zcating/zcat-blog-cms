@@ -16,7 +16,7 @@ export namespace AlbumsApi {
     id: number;
     name: string;
     description?: string;
-    cover?: PhotosApi.Photo;
+    coverId?: number;
     createdAt?: string;
     updatedAt?: string;
   }
@@ -61,7 +61,7 @@ export namespace AlbumsApi {
     const detail = await HttpClient.get<PhotoAlbumDetail>(
       `cms/photo-albums/${id}`,
     );
-    return transformPhotoAlbumDetail(detail);
+    return detail;
   }
 
   export async function createPhotoAlbum(

@@ -104,7 +104,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     setPhotos([...photos, ...selectedPhotos]);
   };
 
-  const [coverId, setCoverId] = React.useState<number>(album?.cover?.id || 0);
+  const [coverId, setCoverId] = React.useState<number>(album?.coverId || 0);
   const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
     // selectPhotoDialog.show();
     await AlbumsApi.setPhotoAlbumCover({
