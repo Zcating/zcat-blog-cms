@@ -38,6 +38,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function AlbumsId(props: Route.ComponentProps) {
   const { album, albumPhotos, allPhotos } = props.loaderData;
   const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
+
+  // 新增照片
   const addPhoto = useSchemeForm({
     title: '新增照片',
     map: () => ({
@@ -61,6 +63,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
+  // 编辑照片
   const editPhoto = useSchemeForm({
     title: '编辑照片',
     map: (data: PhotosApi.Photo) => ({
@@ -85,6 +88,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
+  // 选择照片
   const selectPhoto = async () => {
     const selectedPhotos = await showPhotoSelector({
       photos: allPhotos.filter((photo) => photo.albumId !== album.id),
@@ -93,6 +97,10 @@ export default function AlbumsId(props: Route.ComponentProps) {
       return;
     }
 
+    await AlbumsApi.addPhotos({
+      albumId: album.id,
+      photoIds: selectedPhotos.map((photo) => photo.id),
+    });
     setPhotos([...photos, ...selectedPhotos]);
   };
 

@@ -16,6 +16,8 @@ import { PhotoAlbum } from '@backend/prisma';
 import { PrismaService } from '@backend/prisma.service';
 
 import { CreatePhotoAlbumDto, UpdateAlbumDto } from '../dto';
+import { AddPhotosDto } from '../dto/add-photos.dto';
+import { ReturnPhotoAlbumDto } from '../dto/return-photo-album.dto';
 import { SetCoverDto } from '../dto/set-cover.dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 
@@ -34,17 +36,40 @@ export class PhotoAlbumController {
   @Get()
   @ApiOperation({ summary: '获取所有相册' })
   @ApiResponse({ status: 200, description: '成功获取相册列表' })
-  async findAll(): Promise<ResultData<PhotoAlbum[]>> {
+  async findAll(): Promise<ResultData<ReturnPhotoAlbumDto[]>> {
     try {
       this.logger.log('开始获取所有相册');
 
       const albums = await this.prismaService.photoAlbum.findMany();
+      const covers = await this.prismaService.photo.findMany({
+        where: {
+          id: {
+            in: albums
+              .map((album) => album.coverId)
+              .filter((id) => id !== null),
+          },
+        },
+      });
 
-      this.logger.log(`成功获取 ${albums.length} 个相册`);
+      const result = albums.map((album) => {
+        const cover = covers.find((cover) => cover.id === album.coverId);
+        return {
+          id: album.id,
+          name: album.name,
+          description: album.description,
+          coverId: album.coverId,
+          createdAt: album.createdAt,
+          updatedAt: album.updatedAt,
+          cover,
+        };
+      });
+
+      this.logger.log(`成功获取 ${result.length} 个相册`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: albums,
+        data: result,
       });
     } catch (error) {
       this.logger.error('获取相册列表失败', error);
@@ -88,7 +113,6 @@ export class PhotoAlbumController {
     @Body() createPhotoAlbumDto: CreatePhotoAlbumDto,
   ): Promise<ResultData<PhotoAlbum>> {
     try {
-      console.log(createPhotoAlbumDto);
       this.logger.log(`开始创建相册: ${createPhotoAlbumDto.name}`);
       const album = await this.prismaService.photoAlbum.create({
         data: createPhotoAlbumDto,
@@ -181,6 +205,59 @@ export class PhotoAlbumController {
     } catch (error) {
       this.logger.error(
         `设置ID为 ${setCoverDto.albumId} 的相册封面失败`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  @Post('add-photos')
+  @ApiOperation({ summary: '批量添加照片到相册' })
+  @ApiResponse({ status: 200, description: '批量添加成功' })
+  async batchAddPhotos(
+    @Body() batchAddDto: AddPhotosDto,
+  ): Promise<ResultData<void>> {
+    try {
+      this.logger.log(
+        `开始批量添加 ${batchAddDto.photoIds.length} 张照片到相册 ${batchAddDto.albumId}`,
+      );
+
+      // 验证相册是否存在
+      const album = await this.prismaService.photoAlbum.findUnique({
+        where: { id: batchAddDto.albumId },
+      });
+
+      if (!album) {
+        this.logger.warn(`相册 ${batchAddDto.albumId} 不存在`);
+        return createResult({
+          code: ResultCode.ValidationError,
+          message: '相册不存在',
+        });
+      }
+
+      // 批量更新照片的相册归属
+      await this.prismaService.photo.updateMany({
+        where: {
+          id: {
+            in: batchAddDto.photoIds,
+          },
+        },
+        data: {
+          albumId: batchAddDto.albumId,
+        },
+      });
+
+      this.logger.log(
+        `成功批量添加 ${batchAddDto.photoIds.length} 张照片到相册 ${batchAddDto.albumId}`,
+      );
+
+      return createResult({
+        code: ResultCode.Success,
+        message: '批量添加照片到相册成功',
+      });
+    } catch (error) {
+      this.logger.error(
+        `批量添加照片到相册 ${batchAddDto.albumId} 失败`,
         error,
       );
       throw error;

@@ -99,4 +99,13 @@ export namespace AlbumsApi {
   ): Promise<void> {
     return await HttpClient.post('cms/photo-albums/cover', params);
   }
+
+  interface AddPhotosParams {
+    albumId: number;
+    photoIds: number[];
+  }
+
+  export async function addPhotos(params: AddPhotosParams): Promise<void> {
+    return await HttpClient.post('cms/photo-albums/add-photos', params);
+  }
 }
