@@ -68,6 +68,9 @@ export class BlogController {
   async getGallery(@Query() query: PaginateQueryDto) {
     const albumModels = await this.prisma.photoAlbum.findMany({
       ...createPaginate(query.page, query.pageSize),
+      where: {
+        available: true,
+      },
       select: {
         id: true,
         name: true,
