@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreatePhotoAlbumDto {
   @ApiProperty({
@@ -21,6 +21,7 @@ export class CreatePhotoAlbumDto {
     description: '封面照片ID',
     example: 1,
   })
+  @IsOptional()
   @IsNumber()
   coverId: number | null = null;
 
