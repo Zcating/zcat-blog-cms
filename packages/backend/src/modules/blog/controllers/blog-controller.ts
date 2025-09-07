@@ -80,6 +80,7 @@ export class BlogController {
         coverId: true,
       },
     });
+
     const photos = await this.prisma.photo.findMany({
       where: {
         albumId: {
@@ -117,11 +118,19 @@ export class BlogController {
       select: {
         id: true,
         name: true,
+        coverId: true,
         description: true,
         createdAt: true,
         updatedAt: true,
       },
     });
+    if (!album) {
+      return createResult({
+        code: ResultCode.Success,
+        message: 'success',
+        data: null,
+      });
+    }
 
     const photos = await this.prisma.photo.findMany({
       where: {
@@ -133,7 +142,12 @@ export class BlogController {
       code: ResultCode.Success,
       message: 'success',
       data: {
-        ...album,
+        id: album.id,
+        name: album.name,
+        description: album.description,
+        createdAt: album.createdAt,
+        updatedAt: album.updatedAt,
+        cover: photos.find((photo) => photo.id === album.coverId),
         photos,
       },
     });

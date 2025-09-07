@@ -13,7 +13,6 @@ import type { Route } from "./+types/gallery.id";
 import { PhotoPoster } from "@blog/modules";
 import React from "react";
 import { useNavigate } from "react-router";
-import { Assets } from "@blog/assets";
 
 export function meta() {
   return [{ title: "相册" }, { name: "description", content: "个人技术博客" }];
