@@ -45,6 +45,11 @@ export namespace PhotosApi {
     return photos.map(transformPhoto);
   }
 
+  export async function getEmptyAlbumPhotos(): Promise<Photo[]> {
+    const photos = await HttpClient.get<Photo[]>('cms/photos/empty-album');
+    return photos.map(transformPhoto);
+  }
+
   export async function getPhoto(id: number): Promise<Photo> {
     const photo = await HttpClient.get<Photo>(`cms/photos/${id}`);
     return transformPhoto(photo);

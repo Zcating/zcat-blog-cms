@@ -26,17 +26,17 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const albumPhotos = await PhotosApi.getPhotos(id);
 
-  const allPhotos = await PhotosApi.getPhotos();
+  const reminderPhotos = await PhotosApi.getEmptyAlbumPhotos();
 
   return {
     album,
     albumPhotos,
-    allPhotos,
+    reminderPhotos,
   };
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
-  const { album, albumPhotos, allPhotos } = props.loaderData;
+  const { album, albumPhotos, reminderPhotos } = props.loaderData;
   const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
 
   // 新增照片
@@ -91,7 +91,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   // 选择照片
   const selectPhoto = async () => {
     const selectedPhotos = await showPhotoSelector({
-      photos: allPhotos.filter((photo) => photo.albumId !== album.id),
+      photos: reminderPhotos.filter((photo) => photo.albumId !== album.id),
     });
     if (!selectedPhotos) {
       return;

@@ -76,6 +76,34 @@ export class PhotoController {
     }
   }
 
+  @Get('empty-album')
+  @ApiOperation({ summary: '获取所有未所属相册的照片' })
+  @ApiResponse({ status: 200, description: '成功获取照片列表' })
+  async findEmptyAlbumPhotos() {
+    try {
+      this.logger.log('开始获取所有照片');
+
+      const photos = await this.prisma.photo.findMany({
+        where: {
+          albumId: {
+            equals: null,
+          },
+        },
+      });
+
+      this.logger.log(`成功获取 ${photos.length} 张照片`);
+
+      return createResult({
+        code: ResultCode.Success,
+        message: '成功',
+        data: photos,
+      });
+    } catch (error) {
+      this.logger.error('获取照片列表失败', error);
+      throw error;
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '根据ID获取照片' })
   @ApiParam({ name: 'id', description: '照片ID' })
