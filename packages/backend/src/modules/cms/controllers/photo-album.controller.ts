@@ -60,6 +60,7 @@ export class PhotoAlbumController {
           coverId: album.coverId,
           createdAt: album.createdAt,
           updatedAt: album.updatedAt,
+          available: album.available,
           cover,
         };
       });
