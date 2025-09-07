@@ -62,6 +62,7 @@ model PhotoAlbum {
   updatedAt   DateTime @default(now()) @db.DateTime(6)
   coverId     Int?
   description String   @db.VarChar(255)
+  available  Boolean  @default(false)
 
   @@map("photo_album")
 }
