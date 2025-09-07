@@ -7,6 +7,7 @@ export namespace AlbumsApi {
     id: number;
     name: string;
     description?: string;
+    available?: boolean;
     cover?: PhotosApi.Photo;
     createdAt?: string;
     updatedAt?: string;
@@ -16,6 +17,7 @@ export namespace AlbumsApi {
     id: number;
     name: string;
     description?: string;
+    available?: boolean;
     coverId?: number;
     createdAt?: string;
     updatedAt?: string;
@@ -24,11 +26,14 @@ export namespace AlbumsApi {
   export interface CreatePhotoAlbumParams {
     name: string;
     description?: string;
+    available?: boolean;
   }
 
   export interface UpdatePhotoAlbumParams {
     id: number;
     name?: string;
+    description?: string;
+    available?: boolean;
   }
 
   function transformPhotoAlbum<T extends { cover?: PhotosApi.Photo }>(
@@ -75,6 +80,8 @@ export namespace AlbumsApi {
   ): Promise<PhotoAlbum> {
     return await HttpClient.put(`cms/photo-albums/${params.id}`, {
       name: params.name,
+      description: params.description,
+      available: params.available,
     });
   }
 

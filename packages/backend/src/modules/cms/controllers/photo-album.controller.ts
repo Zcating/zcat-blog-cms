@@ -92,10 +92,13 @@ export class PhotoAlbumController {
   ): Promise<ResultData<PhotoAlbum | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的相册`);
+
       const album = await this.prismaService.photoAlbum.findUnique({
         where: { id: parseInt(id) },
       });
+
       this.logger.log(`${album ? '成功' : '未找到'}获取ID为 ${id} 的相册`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',
@@ -115,10 +118,13 @@ export class PhotoAlbumController {
   ): Promise<ResultData<PhotoAlbum>> {
     try {
       this.logger.log(`开始创建相册: ${createPhotoAlbumDto.name}`);
+
       const album = await this.prismaService.photoAlbum.create({
         data: createPhotoAlbumDto,
       });
+
       this.logger.log(`成功创建相册，ID: ${album.id}, 名称: ${album.name}`);
+
       return createResult({
         code: ResultCode.Success,
         message: '成功',
@@ -130,6 +136,12 @@ export class PhotoAlbumController {
     }
   }
 
+  /**
+   * 更新相册
+   * @param id 相册ID
+   * @param updatePhotoAlbumDto 更新相册DTO
+   * @returns
+   */
   @Put(':id')
   @ApiOperation({ summary: '更新相册' })
   @ApiParam({ name: 'id', description: '相册ID' })
