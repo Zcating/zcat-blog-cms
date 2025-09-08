@@ -5,3 +5,14 @@ export function safeNumber(value: unknown, defaultValue: number = 0) {
   }
   return num;
 }
+
+export function safeParseObject<T extends object>(
+  value: unknown,
+  defaultValue: T = {} as T,
+) {
+  try {
+    return JSON.parse(value as string) as T;
+  } finally {
+    return defaultValue;
+  }
+}

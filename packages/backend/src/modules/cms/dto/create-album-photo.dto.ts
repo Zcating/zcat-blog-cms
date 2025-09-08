@@ -23,4 +23,18 @@ export class CreateAlbumPhotoDto {
   })
   @IsNumber()
   albumId: number;
+
+  @ApiPropertyOptional({
+    description: '照片URL',
+    example: 'https://example.com/photo.jpg',
+  })
+  @IsString()
+  url: string;
+
+  @ApiPropertyOptional({
+    description: '照片缩略图URL',
+    example: 'https://example.com/photo-thumbnail.jpg',
+  })
+  @IsString()
+  thumbnailUrl: string;
 }

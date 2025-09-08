@@ -3,6 +3,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { PrismaService } from '@backend/prisma.service';
 
+import { SystemSettingController } from './controllers';
 import { ArticleTagController } from './controllers/article-tag.controller';
 import { ArticleController } from './controllers/article.controller';
 import { PhotoAlbumController } from './controllers/photo-album.controller';
@@ -17,6 +18,7 @@ import { PhotoService } from './services/photo.service';
     ArticleTagController,
     PhotoController,
     PhotoAlbumController,
+    SystemSettingController,
   ],
   providers: [PhotoService, PrismaService],
 })

@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateAlbumPhotoDto {
   @ApiPropertyOptional({
@@ -30,6 +30,22 @@ export class UpdateAlbumPhotoDto {
   })
   @IsNumber()
   albumId: number;
+
+  @ApiPropertyOptional({
+    description: '照片URL',
+    example: 'https://example.com/photo.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  @ApiPropertyOptional({
+    description: '照片缩略图URL',
+    example: 'https://example.com/photo-thumbnail.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  thumbnailUrl?: string;
 }
 
 export class UpdateAlbumPhotoResultDto {

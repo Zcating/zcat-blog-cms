@@ -6,8 +6,6 @@ import {
   Delete,
   Param,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   ParseIntPipe,
   Logger,
   Query,
@@ -23,7 +21,6 @@ import {
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Photo } from '@backend/prisma';
 import { PrismaService } from '@backend/prisma.service';
-import { ImageInterceptor } from '@backend/utils';
 
 import {
   CreateAlbumPhotoDto,
@@ -132,25 +129,14 @@ export class PhotoController {
   @ApiOperation({ summary: '创建照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片创建成功' })
-  @UseInterceptors(ImageInterceptor('image'))
-  async create(
-    @UploadedFile() image: Express.Multer.File | null,
-    @Body() body: CreatePhotoDto,
-  ): Promise<ResultData<Photo>> {
+  async create(@Body() body: CreatePhotoDto): Promise<ResultData<Photo>> {
     try {
       this.logger.log(`开始创建照片: ${body.name || '未提供名称'}`);
-      const photo = await this.photoService.createPhoto(image, body);
-      // 如果有文件上传，使用文件信息
-      if (!photo) {
-        // 如果没有文件上传，返回错误
-        this.logger.warn('创建照片失败：未选择文件');
-        return createResult({
-          code: ResultCode.UploadError,
-          message: '请选择要上传的文件',
-        });
-      }
+
+      const photo = await this.photoService.createPhoto(body);
 
       this.logger.log(`成功创建照片，ID: ${photo.id}, 名称: ${photo.name}`);
+
       return createResult({
         code: ResultCode.Success,
         message: '照片创建成功',
@@ -166,23 +152,13 @@ export class PhotoController {
   @ApiOperation({ summary: '创建相册照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片创建成功' })
-  @UseInterceptors(ImageInterceptor('image'))
   async createAlbumPhoto(
-    @UploadedFile() image: Express.Multer.File | null,
     @Body() body: CreateAlbumPhotoDto,
   ): Promise<ResultData<Photo>> {
     try {
       this.logger.log(`开始创建相册照片: ${body.name || '未提供名称'}`);
-      const photo = await this.photoService.createAlbumPhoto(image, body);
-      // 如果有文件上传，使用文件信息
-      if (!photo) {
-        // 如果没有文件上传，返回错误
-        this.logger.warn('创建相册照片失败：未选择文件');
-        return createResult({
-          code: ResultCode.UploadError,
-          message: '请选择要上传的文件',
-        });
-      }
+
+      const photo = await this.photoService.createAlbumPhoto(body);
 
       this.logger.log(`成功创建相册照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
@@ -200,23 +176,14 @@ export class PhotoController {
   @ApiOperation({ summary: '更新照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片信息更新成功' })
-  @UseInterceptors(ImageInterceptor('image'))
   async update(
-    @UploadedFile() image: Express.Multer.File | null,
     @Body() body: UpdatePhotoDto,
   ): Promise<ResultData<Photo | null>> {
     try {
       this.logger.log(
         `开始更新照片ID: ${body.id}, 名称: ${body.name || '未提供名称'}`,
       );
-      const photo = await this.photoService.updatePhoto(image, body);
-      if (!photo) {
-        this.logger.warn(`更新照片失败：未找到ID为 ${body.id} 的照片`);
-        return createResult({
-          code: ResultCode.DatabaseError,
-          message: '更新失败',
-        });
-      }
+      const photo = await this.photoService.updatePhoto(body);
 
       this.logger.log(`成功更新照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return createResult({
@@ -234,16 +201,14 @@ export class PhotoController {
   @ApiOperation({ summary: '更新照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片信息更新成功' })
-  @UseInterceptors(ImageInterceptor('image'))
   async updateAlbumPhoto(
-    @UploadedFile() image: Express.Multer.File | null,
     @Body() body: UpdateAlbumPhotoDto,
   ): Promise<ResultData<UpdateAlbumPhotoResultDto | null>> {
     try {
       this.logger.log(
         `开始更新相册照片ID: ${body.id}, 相册ID: ${body.albumId}`,
       );
-      const result = await this.photoService.updateAlbumPhoto(image, body);
+      const result = await this.photoService.updateAlbumPhoto(body);
       if (!result) {
         this.logger.warn(`更新相册照片失败：未找到ID为 ${body.id} 的照片`);
         return createResult({
