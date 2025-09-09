@@ -21,6 +21,7 @@
     "jotai": "^2.12.5",
     "js-cookie": "^3.0.5",
     "markdown-it": "^14.1.0",
+    "qiniu-js": "^3.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
@@ -45,12 +46,12 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.2.0",
+    "script": "../scripts",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "script": "../scripts"
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }
