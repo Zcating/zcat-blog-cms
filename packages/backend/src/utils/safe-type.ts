@@ -7,12 +7,12 @@ export function safeNumber(value: unknown, defaultValue: number = 0) {
 }
 
 export function safeParseObject<T extends object>(
-  value: unknown,
+  value: string,
   defaultValue: T = {} as T,
 ) {
   try {
-    return JSON.parse(value as string) as T;
-  } finally {
+    return JSON.parse(value) as T;
+  } catch {
     return defaultValue;
   }
 }
