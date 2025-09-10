@@ -6,6 +6,7 @@ import {
   createImageUpload,
   createInput,
   createSchemaForm,
+  OssAction,
   PhotoCard,
   updateArray,
 } from '@cms/core';
@@ -33,12 +34,10 @@ export default function Photos(props: Route.ComponentProps) {
       if (!(data.image instanceof Blob)) {
         return;
       }
-
-      const photo = await PhotosApi.createPhoto({
+      const photo = await OssAction.upload({
         name: data.name,
         image: data.image,
       });
-
       setPhotos([photo, ...photos]);
     },
   });

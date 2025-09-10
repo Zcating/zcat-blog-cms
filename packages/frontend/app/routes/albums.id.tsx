@@ -74,13 +74,13 @@ export default function AlbumsId(props: Route.ComponentProps) {
         return;
       }
 
-      const photo = await PhotosApi.createAlbumPhoto({
-        name: data.name,
-        albumId: data.albumId,
-        image: data.image,
-      });
+      // const photo = await PhotosApi.createAlbumPhoto({
+      //   name: data.name,
+      //   albumId: data.albumId,
+      //   image: data.image,
+      // });
 
-      setPhotos([photo, ...photos]);
+      // setPhotos([photo, ...photos]);
     },
   });
 
@@ -95,17 +95,16 @@ export default function AlbumsId(props: Route.ComponentProps) {
       isCover: data.isCover || false,
     }),
     async onSubmit(data) {
-      const photo = await PhotosApi.updateAlbumPhoto({
-        id: data.id,
-        name: data.name,
-        image: data.image,
-        albumId: data.albumId,
-      });
-      if (!photo) {
-        return;
-      }
-
-      setPhotos(updateArray(photos, photo));
+      // const photo = await PhotosApi.updateAlbumPhoto({
+      //   id: data.id,
+      //   name: data.name,
+      //   image: data.image,
+      //   albumId: data.albumId,
+      // });
+      // if (!photo) {
+      //   return;
+      // }
+      // setPhotos(updateArray(photos, photo));
     },
   });
 

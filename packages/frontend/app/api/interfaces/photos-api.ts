@@ -15,116 +15,62 @@ export namespace PhotosApi {
 
   export interface CreatePhotoParams {
     name: string;
-    albumId?: number;
-    image: Blob;
+    url: string;
+    thumbnailUrl: string;
   }
 
   export interface CreateAlbumPhotoParams {
     name: string;
     albumId: number;
-    image: Blob;
+    url: string;
+    thumbnailUrl: string;
   }
 
   export interface UpdatePhotoParams {
     id: number;
     name?: string;
-    image?: string | Blob | null;
+    url?: string;
+    thumbnailUrl?: string;
     albumId?: number;
     isCover?: boolean;
   }
 
-  function transformPhoto(photo: Photo): Photo {
-    photo.url = `${HttpClient.STATIC_URL}/${photo.url}`;
-    photo.thumbnailUrl = `${HttpClient.STATIC_URL}/${photo.thumbnailUrl}`;
-    return photo;
-  }
-
   // Photo API functions
   export async function getPhotos(albumId?: number): Promise<Photo[]> {
-    const photos = await HttpClient.get<Photo[]>('cms/photos', { albumId });
-    return photos.map(transformPhoto);
+    return HttpClient.get<Photo[]>('cms/photos', { albumId });
   }
 
   export async function getEmptyAlbumPhotos(): Promise<Photo[]> {
-    const photos = await HttpClient.get<Photo[]>('cms/photos/empty-album');
-    return photos.map(transformPhoto);
+    return HttpClient.get<Photo[]>('cms/photos/empty-album');
   }
 
   export async function getPhoto(id: number): Promise<Photo> {
-    const photo = await HttpClient.get<Photo>(`cms/photos/${id}`);
-    return transformPhoto(photo);
+    return HttpClient.get<Photo>(`cms/photos/detail?id=${id}`);
   }
 
   export async function createPhoto(params: CreatePhotoParams): Promise<Photo> {
-    const formData = new FormData();
-    formData.append('name', params.name);
-    formData.append('image', params.image);
-    if (params.albumId) {
-      formData.append('albumId', params.albumId.toString());
-    }
-
-    return transformPhoto(await HttpClient.post('cms/photos', formData));
+    return HttpClient.post('cms/photos/create', params);
   }
 
   export async function updatePhoto(
     params: UpdatePhotoParams,
   ): Promise<Photo | null> {
-    const formData = new FormData();
-    formData.append('id', params.id.toString());
-    if (params.name) {
-      formData.append('name', params.name);
-    }
-    if (isBlob(params.image)) {
-      formData.append('image', params.image);
-    }
-    if (params.albumId) {
-      formData.append('albumId', params.albumId.toString());
-    }
-    if (isBoolean(params.isCover)) {
-      formData.append('isCover', params.isCover.toString());
-    }
-
-    return transformPhoto(await HttpClient.post(`cms/photos/update`, formData));
+    return HttpClient.post(`cms/photos/update`, params);
   }
 
   export async function deletePhoto(id: number): Promise<void> {
-    return await HttpClient.del(`cms/photos/${id}`);
+    return await HttpClient.post(`cms/photos/delete`, { id });
   }
 
   export async function createAlbumPhoto(
     params: PhotosApi.CreateAlbumPhotoParams,
   ): Promise<PhotosApi.Photo> {
-    const formData = new FormData();
-    formData.append('name', params.name);
-    formData.append('image', params.image);
-    if (params.albumId) {
-      formData.append('albumId', params.albumId.toString());
-    }
-    return transformPhoto(
-      await HttpClient.post('cms/photos/create/with-album', formData),
-    );
+    return HttpClient.post('cms/photos/create/with-album', params);
   }
 
   export async function updateAlbumPhoto(
     params: PhotosApi.UpdatePhotoParams,
   ): Promise<PhotosApi.Photo> {
-    const formData = new FormData();
-    formData.append('id', params.id.toString());
-    if (params.name) {
-      formData.append('name', params.name);
-    }
-    if (isBlob(params.image)) {
-      formData.append('image', params.image);
-    }
-    if (params.albumId) {
-      formData.append('albumId', params.albumId.toString());
-    }
-
-    const result = await HttpClient.post(
-      `cms/photos/update/with-album`,
-      formData,
-    );
-
-    return transformPhoto(result);
+    return HttpClient.post(`cms/photos/update/with-album`, params);
   }
 }

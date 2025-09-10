@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+import { PrismaService } from '@backend/core';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Article } from '@backend/prisma';
-import { PrismaService } from '@backend/prisma.service';
 
 import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';

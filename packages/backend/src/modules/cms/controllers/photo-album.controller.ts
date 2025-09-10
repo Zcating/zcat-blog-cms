@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+import { PrismaService } from '@backend/core';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { PhotoAlbum } from '@backend/prisma';
-import { PrismaService } from '@backend/prisma.service';
 
 import { CreatePhotoAlbumDto, UpdateAlbumDto } from '../dto';
 import { AddPhotosDto } from '../dto/add-photos.dto';

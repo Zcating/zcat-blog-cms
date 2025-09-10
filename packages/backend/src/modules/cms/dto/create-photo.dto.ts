@@ -6,6 +6,7 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -25,6 +26,7 @@ export class CreatePhotoDto {
     description: '所属相册ID',
     example: 1,
   })
+  @IsOptional()
   @Type(() => safeNumber)
   albumId: number;
 
@@ -32,6 +34,7 @@ export class CreatePhotoDto {
     description: '是否封面',
     example: false,
   })
+  @IsOptional()
   @IsBoolean({ message: '是否封面必须是布尔值' })
   isCover?: boolean;
 

@@ -1,100 +1,41 @@
-import { Controller, Get, UseGuards, Post, Req, Body } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-import { createResult, ResultCode, ResultData } from '@backend/model';
-import { PrismaService } from '@backend/prisma.service';
-import { safeParseObject } from '@backend/utils';
+import { PrismaService } from '@backend/core';
+import { createResult, ResultCode } from '@backend/model';
 
-import { Request } from 'express';
+import * as qiniu from 'qiniu';
 
-import {
-  SystemSettingDto,
-  SystemSettingUpdateDto,
-} from '../dto/system-setting.dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 
 @Controller('api/cms/system-setting')
 @UseGuards(JwtAuthGuard)
 export class SystemSettingController {
-  private readonly defaultOssConfig = {
-    accessKey: '',
-    secretKey: '',
-  };
+  constructor(
+    private prismaService: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
-  constructor(private prismaService: PrismaService) {}
+  @Get('upload-token')
+  getUpdloadToken() {
+    const accessKey = this.configService.get<string>('OSS_ACCESS_KEY') ?? '';
+    const secretKey = this.configService.get<string>('OSS_SECRET_KEY') ?? '';
+    const bucket = this.configService.get<string>('OSS_BUCKET') ?? '';
 
-  @Get()
-  async getSystemSetting(
-    @Req() request: Request,
-  ): Promise<ResultData<SystemSettingDto>> {
-    const userId = request.user?.userId;
-    if (!userId) {
-      return createResult({
-        code: ResultCode.LoginError,
-        message: '未登录',
-      });
-    }
+    const mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
 
-    const setting = await this.prismaService.systemSetting.findUnique({
-      where: {
-        userId: userId,
-      },
-      select: {
-        ossConfig: true,
-      },
+    const putPolicy = new qiniu.rs.PutPolicy({
+      scope: bucket,
+      expires: 60,
     });
-    console.log(setting);
-
-    if (setting) {
-      return createResult({
-        code: ResultCode.Success,
-        message: '成功',
-        data: {
-          ossConfig: safeParseObject(setting.ossConfig, this.defaultOssConfig),
-        },
-      });
-    }
-
-    await this.prismaService.systemSetting.create({
-      data: {
-        ossConfig: JSON.stringify(this.defaultOssConfig),
-        userId: userId,
-      },
-    });
+    const uploadToken = putPolicy.uploadToken(mac);
 
     return createResult({
       code: ResultCode.Success,
-      message: '成功',
+      message: 'success',
       data: {
-        ossConfig: this.defaultOssConfig,
+        uploadToken,
       },
-    });
-  }
-
-  @Post('update')
-  async updateSystemSetting(
-    @Req() request: Request,
-    @Body() body: SystemSettingUpdateDto,
-  ) {
-    const userId = request.user?.userId;
-    if (!userId) {
-      return createResult({
-        code: ResultCode.LoginError,
-        message: '未登录',
-      });
-    }
-
-    await this.prismaService.systemSetting.update({
-      where: {
-        userId: userId,
-      },
-      data: {
-        ossConfig: JSON.stringify(body.ossConfig),
-      },
-    });
-
-    return createResult({
-      code: ResultCode.Success,
-      message: '成功',
     });
   }
 }

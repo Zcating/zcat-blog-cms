@@ -96,7 +96,6 @@ model UserInfo {
 
 model SystemSetting {
   id        Int      @id @default(autoincrement())
-  ossConfig String   @db.Text
   userId    Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
   createdAt DateTime @default(now()) @db.DateTime(6)
   updatedAt DateTime @default(now()) @db.DateTime(6)

@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 // import { ServeStaticModule } from '@nestjs/serve-static';
 
+import { CoreModule } from '@backend/core';
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
 
 // import * as path from 'path';
-
-import { PrismaService } from './prisma.service';
 
 // import * as path from 'path';
 
@@ -24,6 +23,7 @@ import { PrismaService } from './prisma.service';
         '.env.production',
       ],
     }),
+    CoreModule,
     // ServeStaticModule.forRoot({
     //   rootPath: path.join(__dirname, '..', 'uploads/'),
     // }),
@@ -31,6 +31,5 @@ import { PrismaService } from './prisma.service';
     CmsModule,
     BlogModule,
   ],
-  providers: [PrismaService],
 })
 export class AppModule {}

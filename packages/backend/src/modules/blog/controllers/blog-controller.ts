@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { PrismaService } from '@backend/core';
 import { createResult, PaginateQueryDto, ResultCode } from '@backend/model';
-import { PrismaService } from '@backend/prisma.service';
 import { createPaginate } from '@backend/utils';
 
 @ApiTags('文章对外接口')
