@@ -1,4 +1,3 @@
-import { Dialog } from './dialog';
 import { Modal } from './modal';
 
 export namespace FormDialog {
@@ -26,36 +25,31 @@ export namespace FormDialog {
     FormComponent: TheFormComponentType<T>,
   ): TheFormOpener<T> {
     return async (props: TheFormProps<T>) => {
-      const { title, initialValues, onSubmit, ...rest } = props;
-      const resolvers = Promise.withResolvers<void>();
+      return Modal.open((resolve) => {
+        const { title, initialValues, onSubmit, ...rest } = props;
+        const close = () => {
+          resolve();
+        };
 
-      const close = () => {
-        resolvers.resolve();
-        Dialog.close();
-      };
-
-      const submit = async (data: T) => {
-        await onSubmit(data);
-        resolvers.resolve();
-        Dialog.close();
-      };
-
-      await Dialog.show({
-        backdropClose: false,
-        content: (
-          <div className="space-y-5">
-            <h3 className="font-bold text-lg">{title}</h3>
-            <FormComponent
-              {...rest}
-              initialValues={initialValues}
-              onSubmit={submit}
-              onCancel={close}
-            />
-          </div>
-        ),
+        const submit = async (data: T) => {
+          await onSubmit(data);
+          resolve();
+        };
+        return {
+          backdropClose: false,
+          children: (
+            <div className="space-y-5">
+              <h3 className="font-bold text-lg">{title}</h3>
+              <FormComponent
+                {...rest}
+                initialValues={initialValues}
+                onSubmit={submit}
+                onCancel={close}
+              />
+            </div>
+          ),
+        };
       });
-
-      return await resolvers.promise;
     };
   }
 }

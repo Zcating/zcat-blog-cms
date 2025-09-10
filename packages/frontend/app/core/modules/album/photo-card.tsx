@@ -6,6 +6,7 @@ import React from 'react';
 interface PhotoCardProps {
   data: PhotosApi.Photo;
   onEdit: (data: PhotosApi.Photo) => void;
+  onDelete: (data: PhotosApi.Photo) => void;
   hoverComponent?: React.ReactNode;
 }
 
@@ -35,6 +36,7 @@ export function PhotoCard(props: PhotoCardProps) {
         <Card.Title>{props.data.name}</Card.Title>
         <Card.Actions>
           <Button onClick={() => props.onEdit(props.data)}>编辑</Button>
+          <Button onClick={() => props.onDelete(props.data)}>全屏</Button>
         </Card.Actions>
       </Card.Body>
       {visible && (

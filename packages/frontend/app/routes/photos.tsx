@@ -61,6 +61,11 @@ export default function Photos(props: Route.ComponentProps) {
     },
   });
 
+  const deletePhoto = async (data: PhotosApi.Photo) => {
+    await PhotosApi.deletePhoto(data.id);
+    setPhotos(photos.filter((item) => item.id !== data.id));
+  };
+
   return (
     <div className="space-y-5 p-3">
       <h1 className="text-2xl font-bold">照片</h1>
@@ -70,7 +75,9 @@ export default function Photos(props: Route.ComponentProps) {
       <Grid
         cols={5}
         items={photos}
-        renderItem={(item) => <PhotoCard data={item} onEdit={edit} />}
+        renderItem={(item) => (
+          <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
+        )}
       />
     </div>
   );

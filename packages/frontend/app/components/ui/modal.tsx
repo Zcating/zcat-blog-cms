@@ -61,8 +61,8 @@ export namespace Modal {
         elementResolvers.resolve(ref);
       }, 0);
     };
-
-    const modal = createPortal(
+    const modalPortalKey = `modal-portal-${currentId}`;
+    const modalPortal = createPortal(
       <div
         key={`modal-${currentId}`}
         className={classnames(modalClass, adapter.props.className)}
@@ -71,7 +71,7 @@ export namespace Modal {
       >
         <div
           className={classnames(
-            'modal-box p-0',
+            'modal-box',
             adapter.props.contentContainerClassName,
           )}
         >
@@ -82,10 +82,10 @@ export namespace Modal {
         ) : null}
       </div>,
       portalRoot,
-      `modal-portal-${currentId}`,
+      modalPortalKey,
     );
 
-    UiProviderContext.add(modal);
+    UiProviderContext.add(modalPortal);
 
     const modalElement = await elementResolvers.promise;
 
@@ -102,10 +102,11 @@ export namespace Modal {
       return;
     }
 
-    currentModal.classList.remove('modal-open');
-    currentModal.onanimationend = () => {
+    setTimeout(() => {
       UiProviderContext.remove(`modal-portal-${currentId}`);
-    };
+    }, 1000);
+
+    currentModal.classList.remove('modal-open');
   }
 
   /**

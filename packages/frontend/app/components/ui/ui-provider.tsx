@@ -21,7 +21,7 @@ export namespace UiProviderContext {
   export function remove(key: string) {
     context = {
       ...context,
-      portals: context.portals.filter((p) => p.key === key),
+      portals: context.portals.filter((p) => p.key !== key),
     };
     listener.forEach((fn) => fn(context));
   }
