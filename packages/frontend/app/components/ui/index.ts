@@ -13,6 +13,7 @@ export * from './input';
 export * from './select';
 export * from './checkbox';
 export * from './textarea';
+export * from './dialog';
 export * from './list';
 
 export { UiProvider } from './ui-provider';

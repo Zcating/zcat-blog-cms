@@ -52,9 +52,7 @@ export namespace PhotosApi {
     return HttpClient.post('cms/photos/create', params);
   }
 
-  export async function updatePhoto(
-    params: UpdatePhotoParams,
-  ): Promise<Photo | null> {
+  export async function updatePhoto(params: UpdatePhotoParams): Promise<Photo> {
     return HttpClient.post(`cms/photos/update`, params);
   }
 

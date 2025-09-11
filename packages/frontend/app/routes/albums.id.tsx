@@ -2,7 +2,7 @@ import React from 'react';
 import zod from 'zod';
 import type { Route } from './+types/albums.id';
 
-import { Button, Grid, useLoadingFn } from '@cms/components';
+import { Button, Dialog, Grid, useLoadingFn } from '@cms/components';
 import { AlbumsApi, PhotosApi } from '@cms/api';
 import {
   createCheckbox,
@@ -11,6 +11,7 @@ import {
   createInput,
   createSchemaForm,
   createTextArea,
+  OssAction,
   PhotoCard,
   showPhotoSelector,
   updateArray,
@@ -73,14 +74,12 @@ export default function AlbumsId(props: Route.ComponentProps) {
       if (!data || !(data.image instanceof Blob)) {
         return;
       }
-
-      // const photo = await PhotosApi.createAlbumPhoto({
-      //   name: data.name,
-      //   albumId: data.albumId,
-      //   image: data.image,
-      // });
-
-      // setPhotos([photo, ...photos]);
+      const photo = await OssAction.createPhoto({
+        name: data.name,
+        image: data.image,
+        albumId: data.albumId,
+      });
+      setPhotos([photo, ...photos]);
     },
   });
 
@@ -95,16 +94,13 @@ export default function AlbumsId(props: Route.ComponentProps) {
       isCover: data.isCover || false,
     }),
     async onSubmit(data) {
-      // const photo = await PhotosApi.updateAlbumPhoto({
-      //   id: data.id,
-      //   name: data.name,
-      //   image: data.image,
-      //   albumId: data.albumId,
-      // });
-      // if (!photo) {
-      //   return;
-      // }
-      // setPhotos(updateArray(photos, photo));
+      const photo = await OssAction.updatePhoto({
+        id: data.id,
+        name: data.name,
+        image: data.image,
+        albumId: data.albumId,
+      });
+      setPhotos(updateArray(photos, photo));
     },
   });
 
@@ -124,29 +120,26 @@ export default function AlbumsId(props: Route.ComponentProps) {
     setPhotos([...photos, ...selectedPhotos]);
   };
 
-  const [coverId, setCoverId] = React.useState<number>(album?.coverId || 0);
-  const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
-    // selectPhotoDialog.show();
-    await AlbumsApi.setPhotoAlbumCover({
-      photoId: photo.id,
-      albumId: album.id,
+  // 删除照片
+  const deletePhoto = async (photo: PhotosApi.Photo) => {
+    const confirm = await Dialog.confirm({
+      title: '删除照片',
+      content: (
+        <div>
+          确定删除照片 <strong>{photo.name}</strong> 吗？
+        </div>
+      ),
     });
+    if (!confirm) {
+      return;
+    }
 
-    setCoverId(photo.id);
-  });
-
-  const hoverComponent = (photo: PhotosApi.Photo) => {
-    const isCover = coverId === photo.id;
-    return isCover ? (
-      <Button variant="error" loading={setCover.loading}>
-        取消封面
-      </Button>
-    ) : (
-      <Button onClick={() => setCover(photo)} loading={setCover.loading}>
-        设为封面
-      </Button>
-    );
+    await OssAction.deletePhoto(photo.id);
+    setPhotos(photos.filter((item) => item.id !== photo.id));
   };
+
+  // 设为封面
+  const coverSetter = useCoverSetter(album);
 
   return (
     <div className="space-y-10 p-3">
@@ -172,7 +165,8 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <PhotoCard
             data={item}
             onEdit={editPhoto}
-            hoverComponent={hoverComponent(item)}
+            onDelete={deletePhoto}
+            hoverComponent={coverSetter(item)}
           />
         )}
       />
@@ -204,3 +198,37 @@ const useAlbumForm = createSchemaForm({
     available: zod.boolean(),
   }),
 });
+
+/**
+ * 相册封面设置
+ * @param {AlbumsApi.PhotoAlbumDetail} album 相册详情
+ * @returns 封面设置组件
+ */
+function useCoverSetter(album: AlbumsApi.PhotoAlbumDetail) {
+  const [coverId, setCoverId] = React.useState<number>(album?.coverId || 0);
+  const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
+    // selectPhotoDialog.show();
+    await AlbumsApi.setPhotoAlbumCover({
+      photoId: photo.id,
+      albumId: album.id,
+    });
+
+    setCoverId(photo.id);
+  });
+
+  return React.useCallback(
+    (photo: PhotosApi.Photo) => {
+      const isCover = coverId === photo.id;
+      return isCover ? (
+        <Button variant="error" loading={setCover.loading}>
+          取消封面
+        </Button>
+      ) : (
+        <Button onClick={() => setCover(photo)} loading={setCover.loading}>
+          设为封面
+        </Button>
+      );
+    },
+    [coverId, setCover.loading],
+  );
+}

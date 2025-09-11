@@ -82,7 +82,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   // 全屏预览
   const handleFullscreen = async (photo: PhotosApi.Photo) => {
     await Modal.open({
-      contentContainerClassName: 'max-w-3xl',
+      contentContainerClassName: 'min-h-[50vh] max-h-[80vh] max-w-3xl',
       children: <Image className="w-full" src={photo.url} alt={photo.name} />,
       backdropClose: true,
     });
@@ -93,7 +93,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   const hasSelection = internalSelectedIds.length > 0;
 
   return (
-    <div className={`p-3 ${className}`}>
+    <div className={className}>
       {/* 操作栏 */}
       {showActions && (
         <div className="mb-4 flex items-center justify-between">
@@ -130,7 +130,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
       )}
 
       {/* 照片网格 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
         {photos.map((photo) => (
           <PhotoSelectorCard
             key={photo.id}
@@ -212,8 +212,9 @@ interface PhotoSelectorModalProps
 
 export async function showPhotoSelector(props: PhotoSelectorModalProps) {
   return Modal.open<PhotosApi.Photo[]>((resolve) => ({
+    contentContainerClassName: 'min-h-[70vh] min-w-[70vw]',
     children: (
-      <div className="p-6">
+      <div className="space-y-5">
         <h2 className="text-xl font-semibold mb-4">选择照片</h2>
         <div className="max-h-[60vh] overflow-y-auto">
           <PhotoSelector

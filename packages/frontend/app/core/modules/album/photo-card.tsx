@@ -35,8 +35,12 @@ export function PhotoCard(props: PhotoCardProps) {
       <Card.Body>
         <Card.Title>{props.data.name}</Card.Title>
         <Card.Actions>
-          <Button onClick={() => props.onEdit(props.data)}>编辑</Button>
-          <Button onClick={() => props.onDelete(props.data)}>全屏</Button>
+          <Button variant="info" onClick={() => props.onEdit(props.data)}>
+            编辑
+          </Button>
+          <Button variant="error" onClick={() => props.onDelete(props.data)}>
+            删除
+          </Button>
         </Card.Actions>
       </Card.Body>
       {visible && (

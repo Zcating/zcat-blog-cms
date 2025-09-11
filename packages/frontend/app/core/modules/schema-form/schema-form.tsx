@@ -65,7 +65,9 @@ function SchemaForm<Fields extends FieldsRecord>(
         <Button variant="primary" type="submit" loading={submit.loading}>
           {props.confirmText || '创建'}
         </Button>
-        <Button onClick={props.onCancel}>{props.cancelText || '取消'}</Button>
+        <Button onClick={props.onCancel} disabled={submit.loading}>
+          {props.cancelText || '取消'}
+        </Button>
       </Row>
     </Form>
   );

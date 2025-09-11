@@ -1,6 +1,6 @@
 import { PhotosApi } from '@cms/api';
 import type { Route } from './+types/photos';
-import { Button, Grid } from '@cms/components';
+import { Button, Dialog, Grid } from '@cms/components';
 import {
   createConstNumber,
   createImageUpload,
@@ -34,7 +34,7 @@ export default function Photos(props: Route.ComponentProps) {
       if (!(data.image instanceof Blob)) {
         return;
       }
-      const photo = await OssAction.upload({
+      const photo = await OssAction.createPhoto({
         name: data.name,
         image: data.image,
       });
@@ -49,10 +49,10 @@ export default function Photos(props: Route.ComponentProps) {
     map: (data: PhotosApi.Photo) => ({
       id: data.id,
       name: data.name,
-      image: data.url,
+      image: data.thumbnailUrl,
     }),
     onSubmit: async (data) => {
-      const photo = await PhotosApi.updatePhoto(data);
+      const photo = await OssAction.updatePhoto(data);
       if (!photo) {
         return;
       }
@@ -62,6 +62,19 @@ export default function Photos(props: Route.ComponentProps) {
   });
 
   const deletePhoto = async (data: PhotosApi.Photo) => {
+    const confirm = await Dialog.confirm({
+      title: '删除照片',
+      content: (
+        <div>
+          确定删除照片 <strong>{data.name}</strong> 吗？
+        </div>
+      ),
+    });
+
+    if (!confirm) {
+      return;
+    }
+
     await PhotosApi.deletePhoto(data.id);
     setPhotos(photos.filter((item) => item.id !== data.id));
   };

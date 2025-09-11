@@ -19,11 +19,11 @@ export namespace Toast {
 
     const typeClass = getTypeClass(props.type);
 
-    return Modal.show({
+    return Modal.open({
       // backdropClose: false,
       className: '!bg-transparent',
       contentContainerClassName: 'bg-transparent shadow-none',
-      content: (
+      children: (
         <div className="flex flex-col items-center gap-5 w-full">
           <div
             role="alert"
