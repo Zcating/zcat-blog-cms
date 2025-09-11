@@ -36,30 +36,9 @@ export namespace AlbumsApi {
     available?: boolean;
   }
 
-  function transformPhotoAlbum<T extends { cover?: PhotosApi.Photo }>(
-    album: T,
-  ): T {
-    if (album.cover) {
-      album.cover.url = `${HttpClient.STATIC_URL}/${album.cover?.url}`;
-      album.cover.thumbnailUrl = `${HttpClient.STATIC_URL}/${album.cover?.thumbnailUrl}`;
-    }
-    return album;
-  }
-
-  function transformPhotoAlbumDetail<
-    T extends { cover?: PhotosApi.Photo; photos?: PhotosApi.Photo[] },
-  >(album: T): T {
-    if (album.cover) {
-      album.cover.url = `${HttpClient.STATIC_URL}/${album.cover?.url}`;
-      album.cover.thumbnailUrl = `${HttpClient.STATIC_URL}/${album.cover?.thumbnailUrl}`;
-    }
-    return album;
-  }
-
   // PhotoAlbum API functions
   export async function getPhotoAlbums(): Promise<PhotoAlbum[]> {
-    const albums = await HttpClient.get<PhotoAlbum[]>('cms/photo-albums');
-    return albums.map(transformPhotoAlbum);
+    return HttpClient.get<PhotoAlbum[]>('cms/photo-albums');
   }
 
   export async function getPhotoAlbum(id: number): Promise<PhotoAlbumDetail> {
@@ -69,16 +48,16 @@ export namespace AlbumsApi {
     return detail;
   }
 
-  export async function createPhotoAlbum(
+  export function createPhotoAlbum(
     params: CreatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return await HttpClient.post('cms/photo-albums', params);
+    return HttpClient.post('cms/photo-albums', params);
   }
 
-  export async function updatePhotoAlbum(
+  export function updatePhotoAlbum(
     params: UpdatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return await HttpClient.put(`cms/photo-albums/${params.id}`, {
+    return HttpClient.put(`cms/photo-albums/${params.id}`, {
       name: params.name,
       description: params.description,
       available: params.available,

@@ -20,6 +20,7 @@ import { AddPhotosDto } from '../dto/add-photos.dto';
 import { ReturnPhotoAlbumDto } from '../dto/return-photo-album.dto';
 import { SetCoverDto } from '../dto/set-cover.dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { PhotoService } from '../services/photo.service';
 
 @ApiTags('相册管理')
 @Controller('api/cms/photo-albums')
@@ -27,7 +28,10 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 export class PhotoAlbumController {
   private readonly logger = new Logger(PhotoAlbumController.name);
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private photoService: PhotoService,
+  ) {}
 
   /**
    * 获取所有相册
@@ -39,38 +43,14 @@ export class PhotoAlbumController {
   async findAll(): Promise<ResultData<ReturnPhotoAlbumDto[]>> {
     try {
       this.logger.log('开始获取所有相册');
+      const albums = await this.photoService.getAlbums();
 
-      const albums = await this.prismaService.photoAlbum.findMany();
-      const covers = await this.prismaService.photo.findMany({
-        where: {
-          id: {
-            in: albums
-              .map((album) => album.coverId)
-              .filter((id) => id !== null),
-          },
-        },
-      });
-
-      const result = albums.map((album) => {
-        const cover = covers.find((cover) => cover.id === album.coverId);
-        return {
-          id: album.id,
-          name: album.name,
-          description: album.description,
-          coverId: album.coverId,
-          createdAt: album.createdAt,
-          updatedAt: album.updatedAt,
-          available: album.available,
-          cover,
-        };
-      });
-
-      this.logger.log(`成功获取 ${result.length} 个相册`);
+      this.logger.log(`成功获取 ${albums.length} 个相册`);
 
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: result,
+        data: albums,
       });
     } catch (error) {
       this.logger.error('获取相册列表失败', error);

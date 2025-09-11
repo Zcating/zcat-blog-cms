@@ -101,6 +101,7 @@ export class PhotoService {
   async updateAlbumPhoto(
     body: UpdateAlbumPhotoDto,
   ): Promise<UpdateAlbumPhotoResultDto | null> {
+    // 先更新相册封面
     if (body.isCover) {
       await this.prisma.photoAlbum.update({
         where: { id: body.albumId },
@@ -110,6 +111,7 @@ export class PhotoService {
       });
     }
 
+    // 再更新照片
     const updatedPhoto = await this.prisma.photo.update({
       where: { id: body.id },
       data: {
@@ -127,7 +129,72 @@ export class PhotoService {
     };
   }
 
-  transformPhoto(photo: Photo) {
+  /**
+   * 删除照片
+   * @param id 照片ID
+   * @returns 删除成功返回true，失败返回false
+   */
+  async deletePhoto(id: number) {
+    const photo = await this.prisma.photo.findUnique({
+      where: { id },
+    });
+
+    if (!photo) {
+      return false;
+    }
+
+    // 删除 oss 的数据
+    await Promise.all([
+      this.ossService.deleteFile(photo.url),
+      this.ossService.deleteFile(photo.thumbnailUrl),
+    ]);
+
+    // 删除数据库记录
+    await this.prisma.photo.delete({
+      where: { id },
+    });
+
+    return true;
+  }
+
+  /**
+   * 获取相册列表
+   * @returns 相册列表
+   */
+  async getAlbums() {
+    const albums = await this.prisma.photoAlbum.findMany();
+    const covers = await this.prisma.photo.findMany({
+      where: {
+        id: {
+          in: albums.map((album) => album.coverId).filter((id) => id !== null),
+        },
+      },
+    });
+
+    const result = albums.map((album) => {
+      const foundedCover = covers.find((cover) => cover.id === album.coverId);
+      const cover = foundedCover ? this.transformPhoto(foundedCover) : null;
+      return {
+        id: album.id,
+        name: album.name,
+        description: album.description,
+        coverId: album.coverId,
+        createdAt: album.createdAt,
+        updatedAt: album.updatedAt,
+        available: album.available,
+        cover,
+      };
+    });
+
+    return result;
+  }
+
+  /**
+   * 转换照片为私有URL
+   * @param {Photo} photo 照片
+   * @returns {Photo} 转换后的照片
+   */
+  transformPhoto(photo: Photo): Photo {
     return {
       ...photo,
       url: this.ossService.getPrivateUrl(photo.url),

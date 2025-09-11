@@ -19,11 +19,21 @@ export class OssService {
   }
 
   getPrivateUrl(filename: string) {
-    const deadline = Math.floor(Date.now() / 1000) + 600;
+    // 一小时有效期
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
     return this.bucketManager.privateDownloadUrl(
       this.domain,
       filename,
       deadline,
     );
+  }
+
+  async deleteFile(filename: string) {
+    try {
+      await this.bucketManager.delete(this.domain, filename);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

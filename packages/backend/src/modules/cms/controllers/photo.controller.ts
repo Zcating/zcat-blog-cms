@@ -231,9 +231,7 @@ export class PhotoController {
     try {
       this.logger.log(`开始删除ID为 ${body.id} 的照片`);
 
-      await this.prisma.photo.delete({
-        where: { id: Number(body.id) },
-      });
+      await this.photoService.deletePhoto(body.id);
 
       this.logger.log(`成功删除ID为 ${body.id} 的照片`);
 
