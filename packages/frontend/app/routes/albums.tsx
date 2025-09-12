@@ -6,6 +6,7 @@ import { Grid, Button } from '@cms/components';
 import { AlbumsApi } from '@cms/api';
 import {
   AlbumImageCard,
+  createCheckbox,
   createConstNumber,
   createInput,
   createSchemaForm,
@@ -35,6 +36,7 @@ export default function Albums(props: Route.ComponentProps) {
       return {
         id: 0,
         name: '默认相册',
+        available: true,
         description: '',
       };
     },
@@ -51,6 +53,7 @@ export default function Albums(props: Route.ComponentProps) {
       return {
         id: item.id,
         name: item.name ?? '',
+        available: item.available ?? false,
         description: item.description ?? '',
       };
     },
@@ -109,6 +112,7 @@ const useAlbumForm = createSchemaForm({
     id: createConstNumber(),
     name: createInput('相册名称'),
     description: createTextArea('相册描述'),
+    available: createCheckbox('发布相册'),
   },
   schema: zod.object({
     id: zod.number().int(),
