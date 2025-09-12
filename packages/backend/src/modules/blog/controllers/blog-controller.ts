@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { OssService, PrismaService } from '@backend/core';
 import { createResult, PaginateQueryDto, ResultCode } from '@backend/model';
+import { Prisma } from '@backend/prisma';
 import { createPaginate } from '@backend/utils';
 
 import {
@@ -101,7 +102,7 @@ export class BlogController {
       switchMap((albumModels) => {
         return zip(
           of(albumModels),
-          this.prisma.photo.findMany({
+          this.photoFindMany({
             where: {
               albumId: {
                 in: albumModels.map((item) => item.id),
@@ -111,13 +112,6 @@ export class BlogController {
         );
       }),
       map(([albumModels, photos]) => {
-        photos.forEach((photo) => {
-          photo.url = this.ossService.getPrivateUrl(photo.url);
-          photo.thumbnailUrl = this.ossService.getPrivateUrl(
-            photo.thumbnailUrl,
-          );
-        });
-
         return albumModels.map((item) => ({
           id: item.id,
           name: item.name,
@@ -167,7 +161,7 @@ export class BlogController {
       takeWhile(Boolean),
       zipWith(
         defer(() =>
-          this.prisma.photo.findMany({
+          this.photoFindMany({
             where: {
               albumId: id,
             },
@@ -175,13 +169,6 @@ export class BlogController {
         ),
       ),
       map(([album, photos]) => {
-        photos.forEach((photo) => {
-          photo.url = this.ossService.getPrivateUrl(photo.url);
-          photo.thumbnailUrl = this.ossService.getPrivateUrl(
-            photo.thumbnailUrl,
-          );
-        });
-
         return {
           id: album.id,
           name: album.name,
@@ -196,11 +183,22 @@ export class BlogController {
       }),
     );
     const album = await lastValueFrom(result$).catch(() => null);
-    console.log(album);
+
     return createResult({
       code: ResultCode.Success,
       message: 'success',
       data: album,
     });
   }
+
+  private photoFindMany = async (
+    ...args: Parameters<Prisma.PhotoDelegate['findMany']>
+  ) => {
+    const photos = await this.prisma.photo.findMany(...args);
+    return photos.map((photo) => ({
+      ...photo,
+      url: this.ossService.getPrivateUrl(photo.url),
+      thumbnailUrl: this.ossService.getPrivateUrl(photo.thumbnailUrl),
+    }));
+  };
 }

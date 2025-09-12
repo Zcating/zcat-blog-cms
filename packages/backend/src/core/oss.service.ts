@@ -19,6 +19,9 @@ export class OssService {
   }
 
   getPrivateUrl(filename: string) {
+    if (!filename) {
+      return '';
+    }
     // 一小时有效期
     const deadline = Math.floor(Date.now() / 1000) + 3600;
     return this.bucketManager.privateDownloadUrl(
