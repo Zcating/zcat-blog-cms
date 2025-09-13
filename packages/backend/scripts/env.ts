@@ -20,6 +20,12 @@ JWT_EXPIRES_IN=1d
 # 应用配置
 PORT=9090
 NODE_ENV=development
+
+# OSS 配置
+OSS_ACCESS_KEY=
+OSS_SECRET_KEY=QQzs-
+OSS_BUCKET=
+OSS_DOMAIN=
 `;
 
 async function exists(filePath: string) {
