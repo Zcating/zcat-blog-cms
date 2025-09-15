@@ -181,9 +181,15 @@ const usePhotoForm = createSchemaForm({
     image: createImageUpload('上传图片'),
     albumId: createConstNumber(),
   },
+  schema: zod.object({
+    id: zod.number().int(),
+    name: zod.string().min(1, '照片名称不能为空'),
+    image: zod.instanceof(Blob),
+    albumId: zod.number().int(),
+  }),
 });
 
-// 相册创建表单
+// 相册编辑表单
 const useAlbumForm = createSchemaForm({
   fields: {
     id: createConstNumber(),
