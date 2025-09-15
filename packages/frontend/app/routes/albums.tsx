@@ -36,7 +36,7 @@ export default function Albums(props: Route.ComponentProps) {
       return {
         id: 0,
         name: '默认相册',
-        available: true,
+        available: false,
         description: '',
       };
     },
@@ -50,6 +50,7 @@ export default function Albums(props: Route.ComponentProps) {
     title: '编辑相册',
     confirmText: '保存',
     map(item: AlbumsApi.PhotoAlbum) {
+      console.log(item);
       return {
         id: item.id,
         name: item.name ?? '',
@@ -58,6 +59,7 @@ export default function Albums(props: Route.ComponentProps) {
       };
     },
     onSubmit: async (data) => {
+      console.log(data);
       const result = await AlbumsApi.updatePhotoAlbum(data);
       setAlbums(albums.map((album) => (album.id === data.id ? result : album)));
     },
@@ -118,5 +120,6 @@ const useAlbumForm = createSchemaForm({
     id: zod.number().int(),
     name: zod.string().min(1, '相册名称不能为空'),
     description: zod.string(),
+    available: zod.boolean(),
   }),
 });

@@ -54,9 +54,13 @@ function SchemaForm<Fields extends FieldsRecord>(
         if (!component) {
           return null;
         }
-
         return (
-          <Form.Item form={instance} label={field.label} name={key} key={key}>
+          <Form.Item
+            form={instance}
+            label={field.label}
+            name={key}
+            key={`form-${key}`}
+          >
             {component}
           </Form.Item>
         );
