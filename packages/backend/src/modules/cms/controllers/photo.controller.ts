@@ -161,7 +161,7 @@ export class PhotoController {
     }
   }
 
-  @Post('/update')
+  @Post('update')
   @ApiOperation({ summary: '更新照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片信息更新成功' })
@@ -187,7 +187,7 @@ export class PhotoController {
     }
   }
 
-  @Post('/update/with-album')
+  @Post('update/with-album')
   @ApiOperation({ summary: '更新照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: '照片信息更新成功' })

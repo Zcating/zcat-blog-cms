@@ -144,7 +144,7 @@ export class PhotoService {
     }
 
     // 删除 oss 的数据
-    await Promise.all([
+    await Promise.allSettled([
       this.ossService.deleteFile(photo.url),
       this.ossService.deleteFile(photo.thumbnailUrl),
     ]);
