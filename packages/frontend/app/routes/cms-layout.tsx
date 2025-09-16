@@ -2,6 +2,14 @@ import { Outlet, redirect, useNavigate, useRouteError } from 'react-router';
 import { isObject, Navbar, Sidebar } from '@cms/components';
 import { isRouteErrorResponse } from 'react-router';
 import React from 'react';
+import {
+  FormOutlined,
+  PictureOutlined,
+  PieChartOutlined,
+  SettingOutlined,
+  TagsOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -27,13 +35,41 @@ export function ErrorBoundary() {
 }
 
 const menuItems = [
-  { name: '仪表盘', icon: '📊', href: '/dashboard' },
-  { name: '文章管理', icon: '📝', href: '/articles' },
-  { name: '分类管理', icon: '📁', href: '/article-categories' },
-  { name: '相册管理', icon: '🖼️', href: '/albums' },
-  { name: '照片管理', icon: '🖼️', href: '/photos' },
-  { name: '用户信息', icon: '👥', href: '/user-info' },
-  { name: '系统设置', icon: '⚙️', href: '/settings' },
+  {
+    name: '仪表盘',
+    icon: <PieChartOutlined style={{ color: 'oklch(0.45 0.15 45)' }} />,
+    href: '/dashboard',
+  },
+  {
+    name: '文章管理',
+    icon: <FormOutlined style={{ color: 'oklch(0.42 0.12 35)' }} />,
+    href: '/articles',
+  },
+  {
+    name: '分类管理',
+    icon: <TagsOutlined style={{ color: 'oklch(0.48 0.18 55)' }} />,
+    href: '/article-categories',
+  },
+  {
+    name: '相册管理',
+    icon: <PictureOutlined style={{ color: 'oklch(0.46 0.14 65)' }} />,
+    href: '/albums',
+  },
+  {
+    name: '照片管理',
+    icon: <PictureOutlined style={{ color: 'oklch(0.44 0.16 25)' }} />,
+    href: '/photos',
+  },
+  {
+    name: '用户信息',
+    icon: <UserOutlined style={{ color: 'oklch(0.43 0.13 15)' }} />,
+    href: '/user-info',
+  },
+  {
+    name: '系统设置',
+    icon: <SettingOutlined style={{ color: 'oklch(0.41 0.11 75)' }} />,
+    href: '/settings',
+  },
 ];
 
 export default function CMSLayout() {

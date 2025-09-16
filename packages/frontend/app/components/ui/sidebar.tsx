@@ -2,7 +2,7 @@ import { classnames } from '../utils';
 
 export interface SiderBarItemValues {
   name: string;
-  icon: string;
+  icon: React.ReactNode;
   href: string;
 }
 
