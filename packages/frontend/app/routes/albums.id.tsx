@@ -45,6 +45,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
 
   const editAlbum = useAlbumForm({
     title: '编辑相册',
+    confirmText: '保存',
     map: (item: AlbumsApi.PhotoAlbumDetail) => ({
       id: item.id,
       name: item.name ?? '',
