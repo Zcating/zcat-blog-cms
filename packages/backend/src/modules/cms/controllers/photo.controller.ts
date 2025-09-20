@@ -16,7 +16,6 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 
-import { PrismaService } from '@backend/core';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Photo } from '@backend/prisma';
 
@@ -39,10 +38,7 @@ export class PhotoController {
 
   private readonly logger = new Logger(PhotoController.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private photoService: PhotoService,
-  ) {}
+  constructor(private photoService: PhotoService) {}
 
   @Get()
   @ApiOperation({ summary: '获取所有照片' })
