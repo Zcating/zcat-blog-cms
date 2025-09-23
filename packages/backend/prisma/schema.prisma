@@ -102,3 +102,23 @@ model SystemSetting {
 
   @@map("system_setting")
 }
+
+model Statistic {
+  id        Int      @id @default(autoincrement())
+  time      DateTime @default(now()) @db.DateTime(6)
+  browser   String?  @db.VarChar(255)
+  os        String?  @db.VarChar(255)
+  device    String?  @db.VarChar(255)
+  deviceId  String?  @db.VarChar(255)
+  ip        String   @db.VarChar(45)
+  pagePath  String?  @db.VarChar(500)
+  pageTitle String?  @db.VarChar(255)
+  referrer  String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @db.DateTime(6)
+  updatedAt DateTime @default(now()) @db.DateTime(6)
+
+  @@index([time])
+  @@index([pagePath])
+  @@index([ip])
+  @@map("statistic")
+}

@@ -15,5 +15,6 @@ export * from './checkbox';
 export * from './textarea';
 export * from './dialog';
 export * from './list';
+export * from './col';
 
 export { UiProvider } from './ui-provider';

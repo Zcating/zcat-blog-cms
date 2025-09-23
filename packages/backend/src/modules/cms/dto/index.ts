@@ -12,3 +12,4 @@ export * from './create-page-statistics.dto';
 export * from './page-statistics-query.dto';
 export * from './create-page-statistics.dto';
 export * from './create-album-photo.dto';
+export * from './statistic-query.dto';

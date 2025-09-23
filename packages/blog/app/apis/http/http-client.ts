@@ -27,9 +27,12 @@ export namespace HttpClient {
   export async function get<T = any>(
     path: string,
     params?: Record<string, any>,
+    headers?: Record<string, any>,
   ) {
     const queryPath = createQueryPath(path, params);
-    const response = await fetch(`${API_URL}/${queryPath}`);
+    const response = await fetch(`${API_URL}/${queryPath}`, {
+      headers,
+    });
     const result = (await response.json()) as ResponseResult;
     if (result.code !== "0000") {
       throw new Error(result.message);
@@ -37,9 +40,17 @@ export namespace HttpClient {
     return result.data as T;
   }
 
-  export async function post<T>(path: string, body: unknown) {
+  export async function post<T>(
+    path: string,
+    body: unknown,
+    headers?: Record<string, any>,
+  ) {
     const response = await fetch(`${API_URL}/${path}`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
       body: JSON.stringify(body),
     });
     const result = (await response.json()) as ResponseResult;

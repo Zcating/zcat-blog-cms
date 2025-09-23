@@ -1,8 +1,8 @@
-import * as React from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { cn } from "@blog/components/utils";
+import { cn, useMount } from "@blog/components";
 
 export interface MarkdownProps {
   content: string;
@@ -10,7 +10,13 @@ export interface MarkdownProps {
 }
 
 export function Markdown({ content, className }: MarkdownProps) {
-  return (
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  useMount(() => {
+    setIsMounted(true);
+  });
+
+  return isMounted ? (
     <article
       data-slot="markdown"
       className={cn(
@@ -69,5 +75,7 @@ export function Markdown({ content, className }: MarkdownProps) {
         {content}
       </ReactMarkdown>
     </article>
+  ) : (
+    <div className="flex items-center justify-center h-full">Loading...</div>
   );
 }

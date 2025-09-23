@@ -64,7 +64,7 @@ interface CardTitleProps {
 }
 
 function CardTitle(props: CardTitleProps) {
-  const className = classnames('card-title', props.className);
+  const className = classnames('card-title px-3 py-4', props.className);
   return <h2 className={className}>{props.children}</h2>;
 }
 

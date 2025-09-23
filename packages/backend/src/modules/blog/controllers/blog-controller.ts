@@ -1,11 +1,26 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Post,
+  Body,
+  Req,
+  Headers,
+} from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 
 import { OssService, PrismaService } from '@backend/core';
-import { createResult, PaginateQueryDto, ResultCode } from '@backend/model';
+import {
+  createResult,
+  PaginateQueryDto,
+  ResultCode,
+  ResultData,
+} from '@backend/model';
 import { Prisma } from '@backend/prisma';
 import { createPaginate } from '@backend/utils';
 
+import { Request } from 'express';
 import {
   defer,
   from,
@@ -18,6 +33,20 @@ import {
   zip,
   zipWith,
 } from 'rxjs';
+
+import { hashTest } from '@backend/utils/hash';
+
+// 博客访客记录DTO
+interface BlogVisitorDto {
+  pagePath: string;
+  pageTitle: string;
+  referrer: string;
+  browser: string;
+  os: string;
+  device: string;
+  deviceId: string;
+  hmac: string;
+}
 
 @ApiTags('文章对外接口')
 @Controller('api/blog')
@@ -189,6 +218,62 @@ export class BlogController {
       message: 'success',
       data: album,
     });
+  }
+
+  @ApiOperation({ summary: '记录博客访客' })
+  @ApiResponse({ status: 200, description: '访客记录成功' })
+  @Post('visitor')
+  async recordVisitor(
+    @Body() visitorDto: BlogVisitorDto,
+    @Req() request: Request,
+    @Headers('Data-Hash') hash: string,
+  ): Promise<ResultData<void>> {
+    try {
+      const result = hashTest(visitorDto, hash);
+      if (!result) {
+        return createResult({
+          code: ResultCode.Success,
+          message: 'success',
+        });
+      }
+
+      // 获取客户端IP
+      const clientIp =
+        request.ip ||
+        (request.headers['x-forwarded-for'] as string) ||
+        'unknown';
+
+      // 获取referrer信息
+      const referrer = visitorDto.referrer || request.get('Referer') || '';
+
+      // 创建统计记录，直接使用前端传递的设备信息
+      // 异步入库
+
+      await this.prisma.statistic.create({
+        data: {
+          pagePath: visitorDto.pagePath,
+          pageTitle: visitorDto.pageTitle,
+          browser: visitorDto.browser || 'Unknown',
+          os: visitorDto.os || 'Unknown',
+          device: visitorDto.device || 'Unknown',
+          deviceId: visitorDto.deviceId,
+          ip: clientIp,
+          referrer,
+        },
+      });
+
+      return createResult({
+        code: ResultCode.Success,
+        message: 'success',
+      });
+    } catch (error) {
+      console.error('记录博客访客失败:', error);
+      // 访客记录失败不应该影响用户体验，返回成功
+      return createResult({
+        code: ResultCode.Success,
+        message: 'success',
+      });
+    }
   }
 
   private photoFindMany = async (

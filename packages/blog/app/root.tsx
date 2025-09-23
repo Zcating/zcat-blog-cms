@@ -11,6 +11,8 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { useMount } from "@blog/components";
+import { StatisticsApi } from "@blog/apis";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -44,6 +46,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useMount(() => {
+    StatisticsApi.uploadVisitRecord(window.location.href, document.title);
+  });
+
   return <Outlet />;
 }
 
@@ -75,15 +81,3 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </main>
   );
 }
-
-declare global {
-  interface PromiseConstructor {
-    timeout(ms: number): Promise<void>;
-  }
-}
-
-Promise.timeout = function (ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};

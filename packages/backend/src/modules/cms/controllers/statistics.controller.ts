@@ -1,292 +1,266 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  UseGuards,
-  Req,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 
-// import { createResult, ResultCode, ResultData } from '@backend/model';
-// import { PrismaService } from '@backend/prisma.service';
-// import { PageStatistics } from '@backend/table';
+import { PrismaService } from '@backend/core';
+import { createResult, ResultCode, ResultData } from '@backend/model';
+import { Statistic } from '@backend/prisma';
 
-// import { Request } from 'express';
-// import { Repository, Between, Like, FindOperator } from 'typeorm';
+import { StatisticQueryDto } from '../dto';
+import { JwtAuthGuard } from '../jwt-auth.guard';
 
-// import { CreatePageStatisticsDto, PageStatisticsQueryDto } from '../dto';
-// import { JwtAuthGuard } from '../jwt-auth.guard';
-
-interface StatisticsResult {
-  total: string;
-}
-
-interface PageStatisticsResult {
-  pagePath: string;
-  pageTitle: string;
-  visitCount: number;
-}
-
-interface PageStatisticsQueryResult {
+interface StatisticsSummary {
   totalVisits: number;
   totalUniqueVisitors: number;
   todayVisits: number;
   todayUniqueVisitors: number;
-  topPages: Array<PageStatisticsResult>;
+  topPages: Array<{
+    pagePath: string;
+    pageTitle: string;
+    visitCount: number;
+  }>;
 }
 
-interface StatisticsChartResult {
+interface StatisticsChartData {
   date: string;
   visits: number;
   uniqueVisitors: number;
 }
 
-@ApiTags('页面统计管理')
+@ApiTags('访问统计管理')
 @Controller('api/cms/statistics')
 export class StatisticsController {
-  // private readonly logger = new Logger(StatisticsController.name);
-  // constructor(private prisma: PrismaService) {}
-  // @Post('visit')
-  // @ApiOperation({ summary: '记录页面访问' })
-  // @ApiResponse({ status: 200, description: '访问记录成功' })
-  // async recordVisit(
-  //   @Body() createStatisticsDto: CreatePageStatisticsDto,
-  //   @Req() request: Request,
-  // ): Promise<ResultData<void>> {
-  //   try {
-  //     this.logger.log(`开始记录页面访问: ${createStatisticsDto.pagePath}`);
-  //     const today = new Date();
-  //     today.setHours(0, 0, 0, 0);
-  //     const visitorIp =
-  //       createStatisticsDto.visitorIp ||
-  //       request.ip ||
-  //       request.connection.remoteAddress ||
-  //       'unknown';
-  //     // 查找今天该页面的统计记录
-  //     let statistics = await this.prisma.p({
-  //       where: {
-  //         pagePath: createStatisticsDto.pagePath,
-  //         visitDate: today,
-  //       },
-  //     });
-  //     if (statistics) {
-  //       // 更新访问次数
-  //       statistics.visitCount += 1;
-  //       // 检查是否是新的独立访客（简单的IP去重）
-  //       const existingVisitor = await this.prisma.pageStatistics.findOne({
-  //         where: {
-  //           pagePath: createStatisticsDto.pagePath,
-  //           visitDate: today,
-  //           visitorIp: visitorIp,
-  //         },
-  //       });
-  //       if (!existingVisitor) {
-  //         statistics.uniqueVisitors += 1;
-  //       }
-  //       await this.statisticsRepository.save(statistics);
-  //       this.logger.log(
-  //         `更新页面访问记录: ${createStatisticsDto.pagePath}, 访问次数: ${statistics.visitCount}`,
-  //       );
-  //     } else {
-  //       // 创建新的统计记录
-  //       statistics = this.statisticsRepository.create({
-  //         pagePath: createStatisticsDto.pagePath,
-  //         pageTitle: createStatisticsDto.pageTitle,
-  //         visitCount: 1,
-  //         uniqueVisitors: 1,
-  //         visitDate: today,
-  //         visitorIp: visitorIp,
-  //         userAgent: createStatisticsDto.userAgent || request.get('User-Agent'),
-  //         referrer: createStatisticsDto.referrer || request.get('Referer'),
-  //       });
-  //       await this.statisticsRepository.save(statistics);
-  //       this.logger.log(
-  //         `创建新的页面访问记录: ${createStatisticsDto.pagePath}`,
-  //       );
-  //     }
-  //     return createResult({
-  //       code: ResultCode.Success,
-  //       message: '访问记录成功',
-  //     });
-  //   } catch (error) {
-  //     this.logger.error('记录页面访问失败', error);
-  //     throw error;
-  //   }
-  // }
-  // @Get()
-  // @UseGuards(JwtAuthGuard)
-  // @ApiOperation({ summary: '获取页面统计数据' })
-  // @ApiResponse({ status: 200, description: '成功获取统计数据' })
-  // async getStatistics(@Query() query: PageStatisticsQueryDto): Promise<
-  //   ResultData<{
-  //     data: PageStatistics[];
-  //     total: number;
-  //     page: number;
-  //     limit: number;
-  //   }>
-  // > {
-  //   try {
-  //     this.logger.log('开始获取页面统计数据');
-  //     const { pagePath, startDate, endDate, page = 1, limit = 10 } = query;
-  //     const whereConditions: {
-  //       pagePath?: FindOperator<string>;
-  //       visitDate?: FindOperator<Date>;
-  //     } = {};
-  //     if (pagePath) {
-  //       whereConditions.pagePath = Like(`%${pagePath}%`);
-  //     }
-  //     if (startDate && endDate) {
-  //       whereConditions.visitDate = Between(
-  //         new Date(startDate),
-  //         new Date(endDate),
-  //       );
-  //     } else if (startDate) {
-  //       whereConditions.visitDate = Between(new Date(startDate), new Date());
-  //     } else if (endDate) {
-  //       whereConditions.visitDate = Between(
-  //         new Date('1970-01-01'),
-  //         new Date(endDate),
-  //       );
-  //     }
-  //     const [data, total] = await this.statisticsRepository.findAndCount({
-  //       where: whereConditions,
-  //       order: {
-  //         visitDate: 'DESC',
-  //         visitCount: 'DESC',
-  //       },
-  //       skip: (page - 1) * limit,
-  //       take: limit,
-  //     });
-  //     this.logger.log(`成功获取页面统计数据，共 ${total} 条记录`);
-  //     return createResult({
-  //       code: ResultCode.Success,
-  //       message: '成功',
-  //       data: {
-  //         data,
-  //         total,
-  //         page,
-  //         limit,
-  //       },
-  //     });
-  //   } catch (error) {
-  //     this.logger.error('获取页面统计数据失败', error);
-  //     throw error;
-  //   }
-  // }
-  // @Get('summary')
-  // @UseGuards(JwtAuthGuard)
-  // @ApiOperation({ summary: '获取统计摘要' })
-  // @ApiResponse({ status: 200, description: '成功获取统计摘要' })
-  // async getSummary(): Promise<ResultData<PageStatisticsQueryResult>> {
-  //   try {
-  //     this.logger.log('开始获取统计摘要数据');
-  //     const today = new Date();
-  //     today.setHours(0, 0, 0, 0);
-  //     // 总访问量
-  //     const totalVisitsResult = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('SUM(stats.visitCount)', 'total')
-  //       .getRawOne<StatisticsResult>();
-  //     // 总独立访客数
-  //     const totalUniqueVisitorsResult = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('SUM(stats.uniqueVisitors)', 'total')
-  //       .getRawOne<StatisticsResult>();
-  //     // 今日访问量
-  //     const todayVisitsResult = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('SUM(stats.visitCount)', 'total')
-  //       .where('stats.visitDate = :today', { today })
-  //       .getRawOne<StatisticsResult>();
-  //     // 今日独立访客数
-  //     const todayUniqueVisitorsResult = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('SUM(stats.uniqueVisitors)', 'total')
-  //       .where('stats.visitDate = :today', { today })
-  //       .getRawOne<StatisticsResult>();
-  //     // 热门页面（最近7天）
-  //     const sevenDaysAgo = new Date();
-  //     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  //     sevenDaysAgo.setHours(0, 0, 0, 0);
-  //     const topPages = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('stats.pagePath', 'pagePath')
-  //       .addSelect('stats.pageTitle', 'pageTitle')
-  //       .addSelect('SUM(stats.visitCount)', 'visitCount')
-  //       .where('stats.visitDate >= :sevenDaysAgo', { sevenDaysAgo })
-  //       .groupBy('stats.pagePath')
-  //       .addGroupBy('stats.pageTitle')
-  //       .orderBy('visitCount', 'DESC')
-  //       .limit(10)
-  //       .getRawMany<{
-  //         pagePath: string;
-  //         pageTitle: string;
-  //         visitCount: string;
-  //       }>();
-  //     this.logger.log('成功获取统计摘要数据');
-  //     return createResult({
-  //       code: ResultCode.Success,
-  //       message: '成功',
-  //       data: {
-  //         totalVisits: parseInt(totalVisitsResult?.total || '0'),
-  //         totalUniqueVisitors: parseInt(
-  //           totalUniqueVisitorsResult?.total || '0',
-  //         ),
-  //         todayVisits: parseInt(todayVisitsResult?.total || '0'),
-  //         todayUniqueVisitors: parseInt(
-  //           todayUniqueVisitorsResult?.total || '0',
-  //         ),
-  //         topPages: topPages.map((page) => ({
-  //           pagePath: page.pagePath,
-  //           pageTitle: page.pageTitle || page.pagePath,
-  //           visitCount: parseInt(page.visitCount),
-  //         })),
-  //       },
-  //     });
-  //   } catch (error) {
-  //     this.logger.error('获取统计摘要数据失败', error);
-  //     throw error;
-  //   }
-  // }
-  // @Get('chart-data')
-  // @UseGuards(JwtAuthGuard)
-  // @ApiOperation({ summary: '获取图表数据' })
-  // @ApiQuery({ name: 'days', description: '天数', example: 7, required: false })
-  // @ApiResponse({ status: 200, description: '成功获取图表数据' })
-  // async getChartData(
-  //   @Query('days') days: string = '7',
-  // ): Promise<ResultData<StatisticsChartResult[]>> {
-  //   try {
-  //     this.logger.log(`开始获取图表数据，天数: ${days}`);
-  //     const daysCount = parseInt(days) || 7;
-  //     const startDate = new Date();
-  //     startDate.setDate(startDate.getDate() - daysCount + 1);
-  //     startDate.setHours(0, 0, 0, 0);
-  //     const chartData = await this.statisticsRepository
-  //       .createQueryBuilder('stats')
-  //       .select('stats.visitDate', 'date')
-  //       .addSelect('SUM(stats.visitCount)', 'visits')
-  //       .addSelect('SUM(stats.uniqueVisitors)', 'uniqueVisitors')
-  //       .where('stats.visitDate >= :startDate', { startDate })
-  //       .groupBy('stats.visitDate')
-  //       .orderBy('stats.visitDate', 'ASC')
-  //       .getRawMany<{ date: string; visits: string; uniqueVisitors: string }>();
-  //     this.logger.log(`成功获取图表数据，共 ${chartData.length} 天的数据`);
-  //     return createResult({
-  //       code: ResultCode.Success,
-  //       message: '成功',
-  //       data: chartData.map((item) => ({
-  //         date: item.date,
-  //         visits: parseInt(item.visits),
-  //         uniqueVisitors: parseInt(item.uniqueVisitors),
-  //       })),
-  //     });
-  //   } catch (error) {
-  //     this.logger.error('获取图表数据失败', error);
-  //     throw error;
-  //   }
-  // }
+  private readonly logger = new Logger(StatisticsController.name);
+
+  constructor(private prisma: PrismaService) {}
+
+  @Get('/detail')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '获取统计数据' })
+  @ApiResponse({ status: 200, description: '成功获取统计数据' })
+  async getStatistics(@Query() query: StatisticQueryDto): Promise<
+    ResultData<{
+      data: Statistic[];
+      total: number;
+      page: number;
+      limit: number;
+    }>
+  > {
+    try {
+      this.logger.log('开始获取统计数据');
+      const { pagePath, page = 1, limit = 10, ip, browser, os, device } = query;
+
+      const condition = {
+        pagePath,
+        ip,
+        browser,
+        os,
+        device,
+      };
+
+      // 获取总数
+      const total = await this.prisma.statistic.count({
+        where: condition,
+      });
+
+      // 获取分页数据
+      const data = await this.prisma.statistic.findMany({
+        where: condition,
+        orderBy: {
+          time: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      this.logger.log(`成功获取统计数据，共 ${total} 条记录`);
+
+      return createResult({
+        code: ResultCode.Success,
+        message: '成功',
+        data: {
+          data,
+          total,
+          page,
+          limit,
+        },
+      });
+    } catch (error) {
+      this.logger.error('获取统计数据失败', error);
+      throw error;
+    }
+  }
+
+  @Get('/summary')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '获取统计摘要' })
+  @ApiResponse({ status: 200, description: '成功获取统计摘要' })
+  async getSummary(): Promise<ResultData<StatisticsSummary>> {
+    try {
+      this.logger.log('开始获取统计摘要数据');
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // 总访问量
+      const totalVisits = await this.prisma.statistic.count();
+
+      // 总独立访客数（按IP去重）
+      const totalUniqueVisitors = await this.prisma.statistic.groupBy({
+        by: ['ip'],
+        _count: {
+          ip: true,
+        },
+      });
+
+      // 今日访问量
+      const todayVisits = await this.prisma.statistic.count({
+        where: {
+          time: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+      });
+
+      // 今日独立访客数
+      const todayUniqueVisitors = await this.prisma.statistic.groupBy({
+        by: ['ip'],
+        where: {
+          time: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+        _count: {
+          ip: true,
+        },
+      });
+
+      // 热门页面（最近7天）
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const topPagesData = await this.prisma.statistic.groupBy({
+        by: ['pagePath', 'pageTitle'],
+        where: {
+          time: {
+            gte: sevenDaysAgo,
+          },
+          pagePath: {
+            not: null,
+          },
+        },
+        _count: {
+          id: true,
+        },
+        orderBy: {
+          _count: {
+            id: 'desc',
+          },
+        },
+        take: 10,
+      });
+
+      const topPages = topPagesData.map((item) => ({
+        pagePath: item.pagePath || '',
+        pageTitle: item.pageTitle || item.pagePath || '',
+        visitCount: item._count.id,
+      }));
+
+      this.logger.log('成功获取统计摘要数据');
+
+      return createResult({
+        code: ResultCode.Success,
+        message: '成功',
+        data: {
+          totalVisits,
+          totalUniqueVisitors: totalUniqueVisitors.length,
+          todayVisits,
+          todayUniqueVisitors: todayUniqueVisitors.length,
+          topPages,
+        },
+      });
+    } catch (error) {
+      this.logger.error('获取统计摘要数据失败', error);
+      throw error;
+    }
+  }
+
+  @Get('/chart-data')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '获取图表数据' })
+  @ApiQuery({ name: 'days', description: '天数', example: 7, required: false })
+  @ApiResponse({ status: 200, description: '成功获取图表数据' })
+  async getChartData(
+    @Query('days') days: string = '7',
+  ): Promise<ResultData<StatisticsChartData[]>> {
+    try {
+      this.logger.log(`开始获取图表数据，天数: ${days}`);
+
+      const daysCount = parseInt(days) || 7;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysCount + 1);
+      startDate.setHours(0, 0, 0, 0);
+
+      // 生成日期范围
+      const dateRange: Date[] = [];
+      for (let i = 0; i < daysCount; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        dateRange.push(date);
+      }
+
+      // 获取每天的统计数据
+      const chartData: StatisticsChartData[] = [];
+
+      for (const date of dateRange) {
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+
+        // 当天访问量
+        const visits = await this.prisma.statistic.count({
+          where: {
+            time: {
+              gte: date,
+              lt: nextDate,
+            },
+          },
+        });
+
+        // 当天独立访客数
+        const uniqueVisitorsData = await this.prisma.statistic.groupBy({
+          by: ['ip'],
+          where: {
+            time: {
+              gte: date,
+              lt: nextDate,
+            },
+          },
+          _count: {
+            ip: true,
+          },
+        });
+
+        chartData.push({
+          date: date.toISOString().split('T')[0],
+          visits,
+          uniqueVisitors: uniqueVisitorsData.length,
+        });
+      }
+
+      this.logger.log(`成功获取图表数据，共 ${chartData.length} 天的数据`);
+
+      return createResult({
+        code: ResultCode.Success,
+        message: '成功',
+        data: chartData,
+      });
+    } catch (error) {
+      this.logger.error('获取图表数据失败', error);
+      throw error;
+    }
+  }
 }

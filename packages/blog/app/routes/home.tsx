@@ -22,8 +22,8 @@ export default function HomePage(props: Route.ComponentProps) {
   const articles = props.loaderData.pagination.data;
   return (
     <View className="max-w-4xl mx-auto space-y-4">
-      {articles.map((article) => (
-        <Link to={`/post-board/${article.id}`} className="block">
+      {articles.map((article, index) => (
+        <Link to={`/post-board/${article.id}`} className="block" key={index}>
           <PostExcerptCard value={article} />
         </Link>
       ))}

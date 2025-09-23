@@ -27,6 +27,9 @@ export interface SelectProps {
   disabled?: boolean;
   className?: string;
   options: SelectOption[];
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
 }
 
 const selectClassVariant = tv({
@@ -70,8 +73,25 @@ export function Select(props: SelectProps) {
     }),
     props.className,
   );
+  
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (props.onChange) {
+      props.onChange(event.target.value);
+    }
+  };
+  
   return (
-    <select className={selectClassNames} disabled={props.disabled}>
+    <select 
+      className={selectClassNames} 
+      disabled={props.disabled}
+      value={props.value}
+      onChange={handleChange}
+    >
+      {props.placeholder && (
+        <option value="" disabled>
+          {props.placeholder}
+        </option>
+      )}
       {props.options.map((option, index) => (
         <option key={index} value={option.value}>
           {option.label}
