@@ -68,11 +68,11 @@ export class StatisticService {
    * @param {BlogVisitorDto} visitorDto 博客访客记录DTO
    * @returns {Promise<void>}
    */
-  async recordBlogVisitor(
+  async recordVisitor(
     request: Request,
     visitorDto: BlogVisitorDto,
   ): Promise<void> {
-    const hash = request.headers['Data-Hash'] as string;
+    const hash = request.headers['data-hash'] as string;
     const result = hashTest(visitorDto, hash);
     if (!result) {
       return;

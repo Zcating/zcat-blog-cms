@@ -1,16 +1,7 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  Post,
-  Body,
-  Req,
-  Headers,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, Post, Body, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 
-import { OssService, PrismaService } from '@backend/common';
+import { OssService, PrismaService, StatisticService } from '@backend/common';
 import {
   createResult,
   PaginateQueryDto,
@@ -34,8 +25,6 @@ import {
   zipWith,
 } from 'rxjs';
 
-import { hashTest } from '@backend/utils/hash';
-
 // 博客访客记录DTO
 interface BlogVisitorDto {
   pagePath: string;
@@ -54,6 +43,7 @@ export class BlogController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ossService: OssService,
+    private readonly statisticService: StatisticService,
   ) {}
 
   @ApiOperation({ summary: '获取文章列表' })
@@ -226,48 +216,9 @@ export class BlogController {
   async recordVisitor(
     @Body() visitorDto: BlogVisitorDto,
     @Req() request: Request,
-    @Headers('Data-Hash') hash: string,
   ): Promise<ResultData<void>> {
     try {
-      const result = hashTest(visitorDto, hash);
-      if (!result) {
-        return createResult({
-          code: ResultCode.Success,
-          message: 'success',
-        });
-      }
-
-      // 获取客户端IP
-      const clientIp =
-        request.ip ||
-        (request.headers['x-forwarded-for'] as string) ||
-        'unknown';
-
-      // 获取referrer信息
-      const referrer = visitorDto.referrer || request.get('Referer') || '';
-
-      if (!visitorDto.browser) {
-        return createResult({
-          code: ResultCode.Success,
-          message: 'success',
-        });
-      }
-
-      // 创建统计记录，直接使用前端传递的设备信息
-      // 异步入库
-
-      await this.prisma.statistic.create({
-        data: {
-          pagePath: visitorDto.pagePath,
-          pageTitle: visitorDto.pageTitle,
-          browser: visitorDto.browser || 'Unknown',
-          os: visitorDto.os || 'Unknown',
-          device: visitorDto.device || 'Unknown',
-          deviceId: visitorDto.deviceId,
-          ip: clientIp,
-          referrer,
-        },
-      });
+      await this.statisticService.recordVisitor(request, visitorDto);
 
       return createResult({
         code: ResultCode.Success,
