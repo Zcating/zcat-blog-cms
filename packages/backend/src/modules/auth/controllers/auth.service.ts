@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { PrismaService } from '@backend/core';
+import { PrismaService } from '@backend/common';
 import { createResult, ResultCode } from '@backend/model';
 
 import * as bcrypt from 'bcrypt';

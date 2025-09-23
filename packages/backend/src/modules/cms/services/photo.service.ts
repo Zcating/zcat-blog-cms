@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { OssService, PrismaService } from '@backend/core';
+import { OssService, PrismaService } from '@backend/common';
 import { Photo } from '@backend/prisma';
 
 import { isNumber } from 'class-validator';

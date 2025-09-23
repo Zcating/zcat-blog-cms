@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 // import { ServeStaticModule } from '@nestjs/serve-static';
 
-import { CoreModule } from '@backend/core';
+import { CommonModule } from '@backend/common';
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
 
 // import * as path from 'path';
@@ -23,7 +23,7 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
         '.env.production',
       ],
     }),
-    CoreModule,
+    CommonModule,
     // ServeStaticModule.forRoot({
     //   rootPath: path.join(__dirname, '..', 'uploads/'),
     // }),

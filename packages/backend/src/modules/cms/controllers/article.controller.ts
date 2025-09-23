@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
-import { PrismaService } from '@backend/core';
+import { PrismaService } from '@backend/common';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Article } from '@backend/prisma';
 

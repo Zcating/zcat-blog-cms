@@ -94,7 +94,7 @@ export namespace StatisticsApi {
     }
 
     // 更精确的操作系统检测
-    let os = "Unknown";
+    let os = "";
     let osVersion = "";
 
     if (userAgent.includes("Windows NT")) {
@@ -174,7 +174,8 @@ export namespace StatisticsApi {
 
     return {
       browser: browserVersion ? `${browser} ${browserVersion}` : browser,
-      os: osVersion ? `${os} ${osVersion}` : os,
+      os: os,
+      osVersion: osVersion,
       device,
     };
   }

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 
-import { OssService, PrismaService } from '@backend/core';
+import { OssService, PrismaService } from '@backend/common';
 import {
   createResult,
   PaginateQueryDto,
@@ -245,6 +245,13 @@ export class BlogController {
 
       // 获取referrer信息
       const referrer = visitorDto.referrer || request.get('Referer') || '';
+
+      if (!visitorDto.browser) {
+        return createResult({
+          code: ResultCode.Success,
+          message: 'success',
+        });
+      }
 
       // 创建统计记录，直接使用前端传递的设备信息
       // 异步入库
