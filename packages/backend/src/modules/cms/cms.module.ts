@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 
-import { StatisticsController, SystemSettingController } from './controllers';
+import {
+  StatisticsController,
+  SystemSettingController,
+  UserInfoController,
+} from './controllers';
 import { ArticleTagController } from './controllers/article-tag.controller';
 import { ArticleController } from './controllers/article.controller';
 import { PhotoAlbumController } from './controllers/photo-album.controller';
@@ -18,6 +22,7 @@ import { PhotoService } from './services/photo.service';
     PhotoAlbumController,
     SystemSettingController,
     StatisticsController,
+    UserInfoController,
   ],
   providers: [PhotoService],
 })

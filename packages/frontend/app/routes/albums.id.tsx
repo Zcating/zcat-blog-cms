@@ -143,7 +143,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const coverSetter = useCoverSetter(album);
 
   return (
-    <div className="space-y-10 p-3">
+    <div className="space-y-10">
       <div className="space-y-3">
         <h1 className="text-2xl font-bold">相册名称：{album.name}</h1>
         <p>{album.description}</p>

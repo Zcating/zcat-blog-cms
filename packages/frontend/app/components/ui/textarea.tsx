@@ -22,7 +22,7 @@ interface TextareaProps {
 }
 
 const textarea = tv({
-  base: 'textarea',
+  base: 'textarea !outline-none',
   variants: {
     variant: {
       neutral: 'textarea-neutral',

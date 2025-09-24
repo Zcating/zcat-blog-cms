@@ -9,7 +9,7 @@ import {
   ResultData,
 } from '@backend/model';
 import { Prisma } from '@backend/prisma';
-import { createPaginate } from '@backend/utils';
+import { createPaginate, safeParse } from '@backend/utils';
 
 import { Request } from 'express';
 import {
@@ -232,6 +232,39 @@ export class BlogController {
         message: 'success',
       });
     }
+  }
+
+  @ApiOperation({ summary: '获取用户信息' })
+  @Get('user-info')
+  async getUserInfo() {
+    const userInfo = await this.prisma.userInfo.findUnique({
+      where: {
+        id: 1,
+      },
+      select: {
+        name: true,
+        occupation: true,
+        abstract: true,
+        aboutMe: true,
+        contact: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return createResult({
+      code: ResultCode.Success,
+      message: 'success',
+      data: {
+        name: userInfo?.name || '',
+        occupation: userInfo?.occupation || '',
+        abstract: userInfo?.abstract || '',
+        aboutMe: userInfo?.aboutMe || '',
+        avatar: this.ossService.getPrivateUrl(userInfo?.avatar || ''),
+        contact: safeParse<Record<string, string>>(userInfo?.contact, {}),
+      },
+    });
   }
 
   private photoFindMany = async (

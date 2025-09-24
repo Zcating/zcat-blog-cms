@@ -81,7 +81,7 @@ export default function Photos(props: Route.ComponentProps) {
 
   return (
     <div className="space-y-5 p-3">
-      <h1 className="text-2xl font-bold">照片</h1>
+      <div className="text-2xl font-bold">照片</div>
       <Button variant="primary" onClick={create}>
         新增
       </Button>

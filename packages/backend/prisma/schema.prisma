@@ -80,15 +80,16 @@ model User {
 }
 
 model UserInfo {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  email     String?  @db.VarChar(255)
-  phone     String?  @db.VarChar(255)
-  address   String?  @db.VarChar(255)
-  aboutMe   String?  @db.Text
-  createdAt DateTime @default(now()) @db.DateTime(6)
-  updatedAt DateTime @default(now()) @db.DateTime(6)
-  userId    Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  occupation String?  @db.VarChar(255)
+  abstract   String?  @db.VarChar(255)
+  avatar     String?  @db.VarChar(255)
+  aboutMe    String?  @db.Text
+  contact    String?  @db.Text
+  createdAt  DateTime @default(now()) @db.DateTime(6)
+  updatedAt  DateTime @default(now()) @db.DateTime(6)
+  userId     Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
 
   @@map("user_info")
 }

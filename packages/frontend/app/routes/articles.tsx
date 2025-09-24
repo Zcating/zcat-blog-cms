@@ -20,8 +20,8 @@ export default function Articles(props: Route.ComponentProps) {
     navigate('/articles/create');
   };
   return (
-    <div className="space-y-10 p-3">
-      <h1>文章列表</h1>
+    <div className="space-y-10">
+      <div className="text-2xl font-bold">文章列表</div>
       <div>
         <button className="btn btn-primary" onClick={handleClick}>
           新增文章

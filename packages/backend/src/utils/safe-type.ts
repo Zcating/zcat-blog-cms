@@ -6,12 +6,21 @@ export function safeNumber(value: unknown, defaultValue: number = 0) {
   return num;
 }
 
-export function safeParseObject<T extends object>(
-  value: string,
-  defaultValue: T = {} as T,
-) {
+export function safeParse<T>(value: unknown): T | null;
+export function safeParse<T>(value: unknown, defaultValue: T): T;
+export function safeParse<T>(
+  value: unknown,
+  defaultValue: T | null = null,
+): T | null {
   try {
-    return JSON.parse(value) as T;
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    const result = JSON.parse(value as string) as T;
+    if (!result) {
+      return defaultValue;
+    }
+    return result;
   } catch {
     return defaultValue;
   }

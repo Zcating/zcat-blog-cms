@@ -5,3 +5,4 @@ export * from './photos-api';
 export * from './albums-api';
 export * from './system-setting-api';
 export * from './statistics-api';
+export * from './user-api';

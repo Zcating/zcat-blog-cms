@@ -70,8 +70,8 @@ export default function Albums(props: Route.ComponentProps) {
   };
 
   return (
-    <div className="space-y-3 p-3">
-      <h1>相册列表</h1>
+    <div className="space-y-3">
+      <div className="text-2xl font-bold">相册列表</div>
       <div>
         <Button variant="primary" onClick={create}>
           新增相册

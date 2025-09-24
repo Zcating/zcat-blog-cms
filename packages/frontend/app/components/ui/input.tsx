@@ -25,7 +25,7 @@ interface InputProps
 }
 
 const inputClassVariant = tv({
-  base: 'input',
+  base: 'input !outline-none',
   variants: {
     variant: {
       primary: 'input-primary',

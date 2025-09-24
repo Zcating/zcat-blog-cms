@@ -1,5 +1,4 @@
 import { HttpClient } from "../http/http-client";
-import dayjs from "dayjs";
 export namespace GalleryApi {
   export interface Photo {
     id: string;

@@ -1,5 +1,5 @@
-import { Outlet, redirect, useNavigate, useRouteError } from 'react-router';
-import { isObject, Navbar, Sidebar } from '@cms/components';
+import { Outlet, useNavigate, useRouteError } from 'react-router';
+import { Navbar, Sidebar } from '@cms/components';
 import { isRouteErrorResponse } from 'react-router';
 import React from 'react';
 import {
@@ -14,24 +14,36 @@ import {
 export function ErrorBoundary() {
   const error = useRouteError();
   const navigate = useNavigate();
-  React.useEffect(() => {
-    if (isObject(error) && error.message) {
-      navigate('/login');
-    }
-  }, [error, navigate]);
+  const [message, setMessage] = React.useState('');
 
-  if (isRouteErrorResponse(error)) {
-    return (
-      <div>
-        <h1>
-          {error.status} {error.statusText}
-        </h1>
-        <p>{error.data}</p>
-      </div>
-    );
-  } else {
-    return <h1>未知错误</h1>;
-  }
+  React.useEffect(() => {
+    if (isRouteErrorResponse(error)) {
+      setMessage(`状态码：${error.status} \n 错误内容: ${error.statusText}`);
+    }
+    if (error instanceof Error) {
+      if (error.message === 'Unauthorized') {
+        navigate('/login');
+      } else {
+        setMessage(error.message);
+      }
+    } else {
+      setMessage('未知错误');
+    }
+  }, [error]);
+
+  return (
+    <Layout>
+      <div>{message}</div>
+    </Layout>
+  );
+}
+
+export default function CMSLayout() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
 }
 
 const menuItems = [
@@ -72,7 +84,11 @@ const menuItems = [
   },
 ];
 
-export default function CMSLayout() {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+function Layout(props: LayoutProps) {
   return (
     <div className="h-screen bg-base-200">
       {/* 主内容区域 */}
@@ -84,8 +100,8 @@ export default function CMSLayout() {
         <div className="flex flex-1">
           <Sidebar className="w-40 h-full" items={menuItems} />
           <main className="flex-1 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto">
-              <Outlet />
+            <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto p-6">
+              {props.children}
             </div>
           </main>
         </div>
