@@ -16,7 +16,7 @@
     "deploy:backend": "pnpm run build:backend && pnpm run -C packages/backend deploy",
     "deploy:frontend": "pnpm run build:frontend && pnpm run -C packages/frontend deploy",
     "deploy:blog": "pnpm run build:blog && pnpm run -C packages/blog deploy",
-    "deploy": "pnpm run migrate && concurrently \"pnpm run deploy:backend\" \"pnpm run deploy:frontend\" \"pnpm run deploy:blog\"",
+    "deploy": "pnpm run migrate:prod && concurrently \"pnpm run deploy:backend\" \"pnpm run deploy:frontend\" \"pnpm run deploy:blog\"",
     "migrate:dev": "pnpm run -C packages/backend prisma:migrate:dev",
     "migrate:prod": "pnpm run -C packages/backend prisma:migrate:prod"
   },
