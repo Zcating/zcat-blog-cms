@@ -21,7 +21,7 @@ async function bootstrap() {
       configService.get('BLOG_URL') ?? '',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Data-Hash'],
     credentials: true,
   });
 
