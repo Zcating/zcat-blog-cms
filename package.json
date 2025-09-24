@@ -18,7 +18,7 @@
     "deploy:blog": "pnpm run build:blog && pnpm run -C packages/blog deploy",
     "deploy": "pnpm run migrate:prod && concurrently \"pnpm run deploy:backend\" \"pnpm run deploy:frontend\" \"pnpm run deploy:blog\"",
     "migrate:dev": "pnpm run -C packages/backend prisma:migrate:dev",
-    "migrate:prod": "pnpm run -C packages/backend prisma:migrate:prod"
+    "migrate:prod": "pnpm run -C packages/backend prisma:migrate:prod && pnpm run -C packages/backend prisma:generate:prod"
   },
   "keywords": [],
   "author": "",
