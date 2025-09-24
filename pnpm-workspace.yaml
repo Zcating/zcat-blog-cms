@@ -1,2 +1,16 @@
 packages:
-  - 'packages/*'
+  - packages/*
+
+ignoredBuiltDependencies:
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - bcrypt
+  - core-js
+  - esbuild
+  - prisma
+  - sharp
+  - unrs-resolver
