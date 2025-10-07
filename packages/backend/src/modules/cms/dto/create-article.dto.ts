@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { IsArray, IsNotEmpty } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty({
@@ -29,6 +29,8 @@ export class CreateArticleDto {
     example: [1, 2, 3],
     type: [Number],
   })
-  @IsArray({ message: '标签ID数组必须是数组' })
+  @IsOptional()
+  @IsArray({ message: '标签ID数组必须是数组', each: true })
+  @IsNumber({}, { each: true, message: '标签ID必须是数字' })
   tagIds?: number[];
 }
