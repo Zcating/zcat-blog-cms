@@ -158,11 +158,11 @@ export class StatisticService {
     // 总访问量
     const totalVisits = await this.prisma.statistic.count();
 
-    // 总独立访客数（按IP去重）
+    // 总独立访客数（按设备ID去重）
     const totalUniqueVisitors = await this.prisma.statistic.groupBy({
-      by: ['ip'],
+      by: ['deviceId'],
       _count: {
-        ip: true,
+        deviceId: true,
       },
     });
 
@@ -176,9 +176,9 @@ export class StatisticService {
       },
     });
 
-    // 今日独立访客数
+    // 今日独立访客数（按设备ID去重）
     const todayUniqueVisitors = await this.prisma.statistic.groupBy({
-      by: ['ip'],
+      by: ['deviceId'],
       where: {
         time: {
           gte: today,
