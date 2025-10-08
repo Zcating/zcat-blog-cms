@@ -57,11 +57,11 @@ const menuItems = [
     icon: <FormOutlined style={{ color: 'oklch(0.42 0.12 35)' }} />,
     href: '/articles',
   },
-  {
-    name: '分类管理',
-    icon: <TagsOutlined style={{ color: 'oklch(0.48 0.18 55)' }} />,
-    href: '/article-categories',
-  },
+  // {
+  //   name: '分类管理',
+  //   icon: <TagsOutlined style={{ color: 'oklch(0.48 0.18 55)' }} />,
+  //   href: '/article-categories',
+  // },
   {
     name: '相册管理',
     icon: <PictureOutlined style={{ color: 'oklch(0.46 0.14 65)' }} />,
@@ -98,7 +98,11 @@ function Layout(props: LayoutProps) {
 
         {/* 主内容 */}
         <div className="flex flex-1">
-          <Sidebar className="w-40 h-full" items={menuItems} />
+          <Sidebar
+            className="w-40 h-full"
+            items={menuItems}
+            currentHref={window.location.pathname}
+          />
           <main className="flex-1 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto p-6">
               {props.children}

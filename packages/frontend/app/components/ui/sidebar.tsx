@@ -7,16 +7,19 @@ export interface SiderBarItemValues {
 }
 
 export interface SiderbarProps {
+  currentHref?: string;
   items: SiderBarItemValues[];
   className?: string;
 }
 
 export function Sidebar(props: SiderbarProps) {
+  const selected = (item: SiderBarItemValues) =>
+    props.currentHref?.startsWith(item.href);
   return (
     <nav className={classnames('shadow-sm', props.className)}>
       <ul className="menu p-4">
         {props.items.map((item, index) => (
-          <Item key={index.toString()} data={item} />
+          <Item key={index.toString()} data={item} selected={selected(item)} />
         ))}
       </ul>
     </nav>
@@ -25,6 +28,7 @@ export function Sidebar(props: SiderbarProps) {
 
 interface SiderBarItemProps {
   data: SiderBarItemValues;
+  selected?: boolean;
 }
 
 function Item(props: SiderBarItemProps) {
@@ -32,7 +36,11 @@ function Item(props: SiderBarItemProps) {
     <li>
       <a
         href={props.data.href}
-        className="flex items-center space-x-3 text-base-content hover:bg-base-200 rounded-lg p-3 transition-colors"
+        className={classnames(
+          'flex items-center gap-3 text-base-content rounded-lg p-3',
+          'hover:bg-gray-300',
+          props.selected && 'bg-gray-200',
+        )}
       >
         <span className="text-lg">{props.data.icon}</span>
         <span>{props.data.name}</span>
