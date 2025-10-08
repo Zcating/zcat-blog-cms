@@ -1,16 +1,9 @@
 import { useState } from 'react';
 import MdEditor from 'react-markdown-editor-lite';
-import MarkdownIt from 'markdown-it';
-import 'react-markdown-editor-lite/lib/index.css';
 import { ArticlesApi } from '@cms/api';
-import { Button, Input, Textarea } from '@cms/components';
+import { Button, Input, Markdown, Textarea } from '@cms/components';
 
-// 初始化 markdown 解析器
-const mdParser = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-});
+import 'react-markdown-editor-lite/lib/index.css';
 
 interface ArticleEditorProps {
   article: ArticlesApi.Article;
@@ -71,7 +64,7 @@ export function ArticleEditor({
         <MdEditor
           value={article.content || ''}
           style={{ height: '600px' }}
-          renderHTML={(text) => mdParser.render(text)}
+          renderHTML={(text) => <Markdown content={text} />}
           onChange={handleEditorChange}
           config={{
             view: {

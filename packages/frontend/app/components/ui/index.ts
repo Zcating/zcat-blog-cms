@@ -16,5 +16,6 @@ export * from './textarea';
 export * from './dialog';
 export * from './list';
 export * from './col';
+export * from './markdown';
 
 export { UiProvider } from './ui-provider';
