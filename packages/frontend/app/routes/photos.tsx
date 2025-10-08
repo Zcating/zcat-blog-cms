@@ -9,6 +9,7 @@ import {
   OssAction,
   PhotoCard,
   updateArray,
+  Workspace,
 } from '@cms/core';
 import React from 'react';
 
@@ -80,11 +81,14 @@ export default function Photos(props: Route.ComponentProps) {
   };
 
   return (
-    <div className="space-y-5 p-3">
-      <div className="text-2xl font-bold">照片</div>
-      <Button variant="primary" onClick={create}>
-        新增
-      </Button>
+    <Workspace
+      title="照片"
+      operation={
+        <Button variant="primary" onClick={create}>
+          新增
+        </Button>
+      }
+    >
       <Grid
         cols={5}
         items={photos}
@@ -92,7 +96,7 @@ export default function Photos(props: Route.ComponentProps) {
           <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
         )}
       />
-    </div>
+    </Workspace>
   );
 }
 

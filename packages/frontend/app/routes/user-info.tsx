@@ -1,7 +1,7 @@
 import { UserApi } from '@cms/api';
 import type { Route } from './+types/user-info';
 import { Button, Form, ImageUpload, Input, Textarea } from '@cms/components';
-import { OssAction } from '@cms/core';
+import { OssAction, Workspace } from '@cms/core';
 
 export async function clientLoader() {
   return {
@@ -31,8 +31,7 @@ export default function UserInfo(props: Route.ComponentProps) {
   });
 
   return (
-    <div className="space-y-10">
-      <div className="text-2xl font-bold">个人资料</div>
+    <Workspace title="个人资料">
       <Form form={form} className="space-y-5">
         <Form.Item form={form} name="avatar" label="头像">
           <ImageUpload />
@@ -60,6 +59,6 @@ export default function UserInfo(props: Route.ComponentProps) {
           提交
         </Button>
       </Form>
-    </div>
+    </Workspace>
   );
 }

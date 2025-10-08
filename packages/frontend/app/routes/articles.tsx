@@ -2,6 +2,7 @@ import { ArticlesApi } from '@cms/api';
 import { useNavigate } from 'react-router';
 import type { Route } from './+types/articles';
 import { Button, Card, List, Row } from '@cms/components';
+import { Workspace } from '@cms/core';
 
 export async function clientLoader() {
   const articles = await ArticlesApi.getArticles();
@@ -20,13 +21,14 @@ export default function Articles(props: Route.ComponentProps) {
     navigate('/articles/create');
   };
   return (
-    <div className="space-y-10">
-      <div className="text-2xl font-bold">文章列表</div>
-      <div>
-        <button className="btn btn-primary" onClick={handleClick}>
+    <Workspace
+      title="文章列表"
+      operation={
+        <Button variant="primary" onClick={handleClick}>
           新增文章
-        </button>
-      </div>
+        </Button>
+      }
+    >
       <List
         data={loaderData.articles}
         contentContainerClassName="px-10 gap-5"
@@ -51,6 +53,6 @@ export default function Articles(props: Route.ComponentProps) {
           </Card>
         )}
       />
-    </div>
+    </Workspace>
   );
 }

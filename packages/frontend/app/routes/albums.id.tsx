@@ -15,6 +15,7 @@ import {
   PhotoCard,
   showPhotoSelector,
   updateArray,
+  Workspace,
 } from '@cms/core';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
@@ -143,11 +144,11 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const coverSetter = useCoverSetter(album);
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-3">
-        <h1 className="text-2xl font-bold">相册名称：{album.name}</h1>
-        <p>{album.description}</p>
-        <div className="flex gap-5">
+    <Workspace
+      title={`相册名称：${album.name}`}
+      description={`相册描述：${album.description}`}
+      operation={
+        <>
           <Button variant="primary" onClick={() => editAlbum(album)}>
             编辑相册
           </Button>
@@ -157,8 +158,9 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="neutral" onClick={selectPhoto}>
             选择照片
           </Button>
-        </div>
-      </div>
+        </>
+      }
+    >
       <Grid
         items={photos}
         cols={5}
@@ -171,7 +173,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
           />
         )}
       />
-    </div>
+    </Workspace>
   );
 }
 

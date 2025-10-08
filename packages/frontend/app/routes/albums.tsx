@@ -11,6 +11,7 @@ import {
   createInput,
   createSchemaForm,
   createTextArea,
+  Workspace,
 } from '@cms/core';
 
 import type { Route } from './+types/albums';
@@ -70,14 +71,14 @@ export default function Albums(props: Route.ComponentProps) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="text-2xl font-bold">相册列表</div>
-      <div>
+    <Workspace
+      title="相册列表"
+      operation={
         <Button variant="primary" onClick={create}>
           新增相册
         </Button>
-      </div>
-
+      }
+    >
       <Grid
         items={albums}
         cols={3}
@@ -85,7 +86,7 @@ export default function Albums(props: Route.ComponentProps) {
           <AlbumItem item={item} onClickItem={handleClickAlbum} onEdit={edit} />
         )}
       />
-    </div>
+    </Workspace>
   );
 }
 

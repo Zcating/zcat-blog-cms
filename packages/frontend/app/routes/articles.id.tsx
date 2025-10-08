@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArticlesApi } from '@cms/api';
-import { ArticleEditor, ArticleViewer } from '@cms/core/modules';
+import { ArticleEditor, ArticleViewer, Workspace } from '@cms/core/modules';
 import type { Route } from './+types/articles.id';
 import { useLoadingFn } from '@cms/components';
 import { useNavigate } from 'react-router';
@@ -58,7 +58,7 @@ export default function Article({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <React.Fragment>
+    <Workspace title="文章详情">
       {isEditing ? (
         <ArticleEditor
           article={article}
@@ -69,6 +69,6 @@ export default function Article({ loaderData }: Route.ComponentProps) {
       ) : (
         <ArticleViewer article={article} onEdit={handleEdit} />
       )}
-    </React.Fragment>
+    </Workspace>
   );
 }
