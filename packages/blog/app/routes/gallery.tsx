@@ -5,6 +5,7 @@ import {
   Grid,
   IconPhoto,
   Image,
+  ImagePreload,
   Skeleton,
   View,
   Waterfall,
@@ -71,20 +72,14 @@ interface PhotoItemProps {
 function PhotoItem({ value, onClick }: PhotoItemProps) {
   const url = value.cover?.url;
   return (
-    <div className="flex flex-col items-center gap-4">
+    <View className="flex flex-col items-center gap-4">
       <Card
-        className="cursor-pointer !p-0 w-full h-full overflow-hidden"
+        className="cursor-pointer !p-0 aspect-square overflow-hidden w-full"
         onClick={() => onClick(value)}
       >
-        {url ? (
-          <Image contentMode="cover" className="" src={url} alt={value.name} />
-        ) : (
-          <div className="aspect-3/2 flex items-center justify-center">
-            <IconPhoto size="lg" />
-          </div>
-        )}
+        <ImagePreload src={url} />
       </Card>
-      <div className="text-3xl font-bold">{value.name}</div>
-    </div>
+      <View className="text-3xl font-bold">{value.name}</View>
+    </View>
   );
 }

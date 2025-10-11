@@ -5,6 +5,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev --port 5000",
+    "dev:prod": "dotenv -e .env.production react-router dev --port 5000",
     "start": "PORT=1024 react-router-serve ./build/server/index.js",
     "deploy": "pm2-deploy pnpm --name \"zcat-blog\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc",
