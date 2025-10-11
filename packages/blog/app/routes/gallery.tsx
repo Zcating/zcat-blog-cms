@@ -71,11 +71,12 @@ interface PhotoItemProps {
 }
 function PhotoItem({ value, onClick }: PhotoItemProps) {
   const url = value.cover?.url;
+  const click = () => onClick(value);
   return (
     <View className="flex flex-col items-center gap-4">
       <Card
         className="cursor-pointer !p-0 aspect-square overflow-hidden w-full"
-        onClick={() => onClick(value)}
+        onClick={click}
       >
         <ImagePreload src={url} />
       </Card>
