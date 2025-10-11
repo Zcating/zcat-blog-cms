@@ -45,7 +45,7 @@ export function Markdown({ content, className }: MarkdownProps) {
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]} // 渲染数学公式
         components={{
-          code: ({ node, className, children }) => {
+          code: ({ className, children }) => {
             const match = /language-(\w+)/.exec(className || '');
             if (!match || typeof children !== 'string') {
               return <code className={className}>{children}</code>;
@@ -54,7 +54,7 @@ export function Markdown({ content, className }: MarkdownProps) {
             return (
               <SyntaxHighlighter
                 customStyle={{ background: 'transparent' }}
-                PreTag={React.Fragment}
+                PreTag={({ children }) => children}
                 language={match[1]}
                 wrapLongLines
                 wrapLines

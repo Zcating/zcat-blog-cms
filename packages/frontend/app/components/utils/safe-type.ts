@@ -8,6 +8,13 @@ export function safeParse<T>(data: string, defaultValue: T): T {
   }
 }
 
+export function safeArray<T>(array: unknown, defaultValue: T[] = []): T[] {
+  if (Array.isArray(array)) {
+    return array;
+  }
+  return defaultValue;
+}
+
 const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 export function safeDateString(date: unknown, defaultValue?: string) {

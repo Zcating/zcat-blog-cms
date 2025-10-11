@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArticlesApi } from '@cms/api';
 import { ArticleEditor, ArticleViewer, Workspace } from '@cms/core/modules';
 import type { Route } from './+types/articles.id';
@@ -27,24 +27,25 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function Article({ loaderData }: Route.ComponentProps) {
-  const [article, setArticle] = useState(loaderData.article);
-  const [isEditing, setIsEditing] = useState(!article.id);
+  const [article, setArticle] = React.useState(loaderData.article);
+  const [isEditing, setIsEditing] = React.useState(!article.id);
 
   const navigate = useNavigate();
+
   // 保存文章
   const handleSave = useLoadingFn(async (article: ArticlesApi.Article) => {
     if (!article.id) {
-      article = await ArticlesApi.createArticle(article);
+      const result = await ArticlesApi.createArticle(article);
+      navigate(`/articles/${result.id}`);
     } else {
-      article = await ArticlesApi.updateArticle(article.id, {
+      const updated = await ArticlesApi.updateArticle(article.id, {
         title: article.title,
         excerpt: article.excerpt,
         content: article.content,
       });
+      setArticle(updated);
+      setIsEditing(false);
     }
-    setIsEditing(false);
-    setArticle(article);
-    navigate(`/articles/${article.id}`);
   });
 
   // 取消编辑
