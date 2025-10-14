@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useRouteError } from 'react-router';
+import { Outlet, useLocation, useNavigate, useRouteError } from 'react-router';
 import { Navbar, Sidebar } from '@cms/components';
 import { isRouteErrorResponse } from 'react-router';
 import React from 'react';
@@ -89,6 +89,9 @@ interface LayoutProps {
 }
 
 function Layout(props: LayoutProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   return (
     <div className="h-screen bg-base-200">
       {/* 主内容区域 */}
@@ -101,7 +104,10 @@ function Layout(props: LayoutProps) {
           <Sidebar
             className="w-40 h-full"
             items={menuItems}
-            currentHref={window.location.pathname}
+            isSelected={(item) => location.pathname.startsWith(item.href)}
+            onClickItem={(item) => {
+              navigate(item.href);
+            }}
           />
           <main className="flex-1 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto p-6">

@@ -109,13 +109,6 @@ export default function GuestHome() {
                 {isLoading ? '登录中...' : '登录'}
               </Button>
             </div>
-
-            {/* 忘记密码链接 */}
-            <div className="text-center">
-              <a href="#" className="link link-primary text-sm">
-                忘记密码？
-              </a>
-            </div>
           </form>
         </div>
       </div>

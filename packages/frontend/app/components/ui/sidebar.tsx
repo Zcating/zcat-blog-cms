@@ -1,41 +1,44 @@
-import { useNavigate } from 'react-router';
 import { classnames } from '../utils';
 
 export interface SiderBarItemValues {
   name: string;
   icon: React.ReactNode;
-  href: string;
 }
 
-export interface SiderbarProps {
-  currentHref?: string;
-  items: SiderBarItemValues[];
+export interface SiderbarProps<T extends SiderBarItemValues> {
   className?: string;
+  items: T[];
+  onClickItem?: (item: T) => void;
+  isSelected: (item: T) => boolean;
 }
 
-export function Sidebar(props: SiderbarProps) {
-  const selected = (item: SiderBarItemValues) =>
-    props.currentHref?.startsWith(item.href);
+export function Sidebar<T extends SiderBarItemValues>(props: SiderbarProps<T>) {
+  const selected = (item: T) => props.isSelected?.(item) || false;
   return (
     <nav className={classnames('shadow-sm', props.className)}>
       <ul className="menu p-4">
         {props.items.map((item, index) => (
-          <Item key={index.toString()} data={item} selected={selected(item)} />
+          <Item
+            key={index.toString()}
+            data={item}
+            selected={selected(item)}
+            onClick={props.onClickItem}
+          />
         ))}
       </ul>
     </nav>
   );
 }
 
-interface SiderBarItemProps {
-  data: SiderBarItemValues;
+interface SiderBarItemProps<T extends SiderBarItemValues> {
+  data: T;
   selected?: boolean;
+  onClick?: (item: T) => void;
 }
 
-function Item(props: SiderBarItemProps) {
-  const navigate = useNavigate();
+function Item<T extends SiderBarItemValues>(props: SiderBarItemProps<T>) {
   const handleClick = () => {
-    navigate(props.data.href);
+    props.onClick?.(props.data);
   };
   return (
     <li>

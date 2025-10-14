@@ -6,13 +6,15 @@ import { useLoadingFn } from '@cms/components';
 import { useNavigate } from 'react-router';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  if (params.id === 'create') {
+  const isCreating = params.id === 'create';
+  if (isCreating) {
     return {
       article: {
         title: '',
         excerpt: '',
         content: '',
-      } satisfies ArticlesApi.Article,
+      } as ArticlesApi.Article,
+      isCreating,
     };
   }
   const id = Number(params.id);
@@ -23,6 +25,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const article = await ArticlesApi.getArticle(id);
   return {
     article,
+    isCreating,
   };
 }
 
@@ -44,12 +47,16 @@ export default function Article({ loaderData }: Route.ComponentProps) {
         content: article.content,
       });
       setArticle(updated);
-      setIsEditing(false);
     }
+    setIsEditing(false);
   });
 
   // 取消编辑
   const handleCancel = () => {
+    if (loaderData.isCreating) {
+      navigate('/articles');
+      return;
+    }
     setIsEditing(false);
   };
 

@@ -30,7 +30,7 @@ export function ArticleEditor({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="w-full p-6">
       {/* 文章标题和操作按钮 */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -43,7 +43,7 @@ export function ArticleEditor({
               placeholder="请输入文章标题"
             />
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-5">
             <Button onClick={handleSave} loading={loading} variant="primary">
               {loading ? '保存中...' : '保存'}
             </Button>

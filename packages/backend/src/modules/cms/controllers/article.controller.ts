@@ -138,7 +138,7 @@ export class ArticleController {
   async update(
     @Param('id') id: string,
     @Body() updateArticleDto: UpdateArticleDto,
-  ): Promise<ResultData<void>> {
+  ): Promise<ResultData<Article | void>> {
     try {
       this.logger.log(
         `开始更新ID为 ${id} 的文章: ${updateArticleDto.title || '未提供标题'}`,
@@ -158,6 +158,7 @@ export class ArticleController {
       return createResult({
         code: ResultCode.Success,
         message: '成功',
+        data: result,
       });
     } catch (error) {
       this.logger.error(`更新ID为 ${id} 的文章失败`, error);
