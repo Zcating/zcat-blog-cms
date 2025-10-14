@@ -7,9 +7,11 @@ interface MenuItemProps {
 }
 export function MenuItem(props: MenuItemProps) {
   return (
-    <NavigationMenuItem className="flex-1">
+    <NavigationMenuItem>
       <NavigationMenuLink asChild>
-        <Link reloadDocument to={props.to}>{props.title}</Link>
+        <Link reloadDocument to={props.to}>
+          {props.title}
+        </Link>
       </NavigationMenuLink>
     </NavigationMenuItem>
   );

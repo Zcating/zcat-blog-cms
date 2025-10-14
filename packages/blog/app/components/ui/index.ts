@@ -13,3 +13,6 @@ export * from "./markdown";
 export * from "./button";
 export * from "./waterfall";
 export * from "./aspect-ratio";
+export * from "./sidebar";
+export * from "./separator";
+export * from "./tooltip";
