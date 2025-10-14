@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { classnames } from '../utils';
 
 export interface SiderBarItemValues {
@@ -32,19 +33,23 @@ interface SiderBarItemProps {
 }
 
 function Item(props: SiderBarItemProps) {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(props.data.href);
+  };
   return (
     <li>
-      <a
-        href={props.data.href}
+      <div
         className={classnames(
           'flex items-center gap-3 text-base-content rounded-lg p-3',
           'hover:bg-gray-300',
           props.selected && 'bg-gray-200',
         )}
+        onClick={handleClick}
       >
         <span className="text-lg">{props.data.icon}</span>
         <span>{props.data.name}</span>
-      </a>
+      </div>
     </li>
   );
 }
