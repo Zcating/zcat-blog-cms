@@ -12,11 +12,10 @@ import {
   type UseFormWatch,
 } from 'react-hook-form';
 
-import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import useConstant from 'use-constant';
-import { Label } from './label';
+import { Label, type LabelSpan } from './label';
 import { useLoadingFn } from '../hooks';
 import { classnames } from '../utils';
 import { LoadingOutlined } from '@ant-design/icons';
@@ -84,6 +83,7 @@ interface FormItemProps<
   form: FormInstance<TFieldValues, TTransformedValues>;
   name: TName;
   label: string;
+  span?: LabelSpan;
   children: FormItemChildren<TFieldValues, TName>;
 }
 
@@ -124,7 +124,11 @@ function FormItem<
       control={form.control}
       name={name}
       render={(renderProps) => {
-        return <Label label={label}>{render(renderProps)}</Label>;
+        return (
+          <Label label={label} span={props.span}>
+            {render(renderProps)}
+          </Label>
+        );
       }}
     />
   );
