@@ -30,11 +30,12 @@ export default function GuestHome() {
   };
 
   const navigate = useNavigate();
+
   const handleSubmit = useLoadingFn(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       await AuthApi.login(formData);
-      navigate('/dashboard');
+      await navigate('/dashboard');
     },
   );
 
