@@ -90,7 +90,7 @@ export default function Photos(props: Route.ComponentProps) {
       }
     >
       <Grid
-        cols={5}
+        columns={5}
         items={photos}
         renderItem={(item) => (
           <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />

@@ -12,7 +12,6 @@ export namespace OssAction {
    */
   export interface CreatePhotoParams {
     name: string;
-    albumId?: number;
     image: Blob;
   }
 
@@ -33,6 +32,36 @@ export namespace OssAction {
       name: values.name,
       url,
       thumbnailUrl,
+    });
+  }
+
+  /**
+   * 创建照片参数
+   */
+  export interface CreateAlbumPhotoParams {
+    name: string;
+    image: Blob;
+    albumId: number;
+  }
+
+  /**
+   * 创建相册照片
+   * @param params 创建参数
+   * @param  {string} params.name 照片名称
+   * @param  {Blob} params.image 照片
+   * @param  {number} [params.albumId] 相册id
+   * @returns 照片
+   */
+  export async function createAlbumPhoto(
+    params: CreateAlbumPhotoParams,
+  ): Promise<PhotosApi.Photo> {
+    const { url, thumbnailUrl } = await uploadPhoto(params.image);
+
+    return PhotosApi.createAlbumPhoto({
+      name: params.name,
+      url,
+      thumbnailUrl,
+      albumId: params.albumId,
     });
   }
 
@@ -203,10 +232,9 @@ export namespace OssAction {
     return new Promise<void>((resolve, reject) => {
       observer.subscribe({
         next(res) {
-          console.log(res);
+          // console.log(res);
         },
         error(err) {
-          console.log(err);
           reject(err);
         },
         complete(res) {

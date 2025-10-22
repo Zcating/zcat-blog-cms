@@ -1,5 +1,14 @@
 import type { PhotosApi } from '@cms/api';
-import { Button, Card, Checkbox, Image, Modal, Row } from '@cms/components';
+import {
+  Button,
+  Card,
+  Checkbox,
+  classnames,
+  Grid,
+  Image,
+  Modal,
+  Row,
+} from '@cms/components';
 import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
@@ -130,8 +139,11 @@ export function PhotoSelector(props: PhotoSelectorProps) {
       )}
 
       {/* 照片网格 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-        {photos.map((photo) => (
+      <Grid
+        columns={5}
+        gap="md"
+        items={photos}
+        renderItem={(photo) => (
           <PhotoSelectorCard
             key={photo.id}
             photo={photo}
@@ -139,8 +151,8 @@ export function PhotoSelector(props: PhotoSelectorProps) {
             onSelect={(selected) => handlePhotoSelect(photo.id, selected)}
             onFullscreen={() => handleFullscreen(photo)}
           />
-        ))}
-      </div>
+        )}
+      />
 
       {/* 空状态 */}
       {photos.length === 0 && (
@@ -163,12 +175,13 @@ interface PhotoSelectorCardProps {
 function PhotoSelectorCard(props: PhotoSelectorCardProps) {
   const { photo, selected, onSelect, onFullscreen } = props;
   const [isHovered, setIsHovered] = React.useState(false);
-
+  const className = classnames(
+    'relative cursor-pointer transition-all duration-200',
+    selected ? 'ring-2 ring-blue-500 ring-offset-2' : '',
+  );
   return (
     <Card
-      className={`relative cursor-pointer transition-all duration-200 ${
-        selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-      }`}
+      className={className}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onSelect(!selected)}
@@ -214,7 +227,7 @@ export async function showPhotoSelector(props: PhotoSelectorModalProps) {
   return Modal.open<PhotosApi.Photo[]>((resolve) => ({
     contentContainerClassName: 'min-h-[70vh] min-w-[70vw]',
     children: (
-      <div className="space-y-5">
+      <div className="space-y-5 p-1">
         <h2 className="text-xl font-semibold mb-4">选择照片</h2>
         <div className="max-h-[60vh] overflow-y-auto">
           <PhotoSelector

@@ -44,6 +44,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const { album, albumPhotos, reminderPhotos } = props.loaderData;
   const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
 
+  // 编辑相册
   const editAlbum = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
@@ -63,7 +64,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     },
   });
 
-  // 新增照片
+  // 新增相册照片
   const addPhoto = usePhotoForm({
     title: '新增照片',
     map: () => ({
@@ -76,7 +77,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
       if (!data || !(data.image instanceof Blob)) {
         return;
       }
-      const photo = await OssAction.createPhoto({
+      const photo = await OssAction.createAlbumPhoto({
         name: data.name,
         image: data.image,
         albumId: data.albumId,
@@ -93,7 +94,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
       name: data.name,
       image: data.url,
       albumId: album.id,
-      isCover: data.isCover || false,
     }),
     async onSubmit(data) {
       const photo = await OssAction.updatePhoto({
@@ -163,7 +163,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     >
       <Grid
         items={photos}
-        cols={5}
+        columns={5}
         renderItem={(item) => (
           <PhotoCard
             data={item}
@@ -177,6 +177,9 @@ export default function AlbumsId(props: Route.ComponentProps) {
   );
 }
 
+/**
+ * 照片编辑表单
+ */
 const usePhotoForm = createSchemaForm({
   fields: {
     id: createConstNumber(),
@@ -187,7 +190,7 @@ const usePhotoForm = createSchemaForm({
   schema: zod.object({
     id: zod.number().int(),
     name: zod.string().min(1, '照片名称不能为空'),
-    image: zod.instanceof(Blob),
+    image: zod.instanceof(Blob).nullable(),
     albumId: zod.number().int(),
   }),
 });

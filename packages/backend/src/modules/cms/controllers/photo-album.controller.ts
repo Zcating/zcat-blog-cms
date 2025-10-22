@@ -3,8 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Put,
-  Delete,
   Param,
   UseGuards,
   Logger,
@@ -122,25 +120,24 @@ export class PhotoAlbumController {
    * @param updatePhotoAlbumDto 更新相册DTO
    * @returns
    */
-  @Put(':id')
+  @Post('update')
   @ApiOperation({ summary: '更新相册' })
   @ApiParam({ name: 'id', description: '相册ID' })
   @ApiResponse({ status: 200, description: '相册更新成功' })
   async update(
-    @Param('id') id: string,
-    @Body() updatePhotoAlbumDto: UpdateAlbumDto,
+    @Body() dto: UpdateAlbumDto,
   ): Promise<ResultData<PhotoAlbum | null>> {
     try {
       this.logger.log(
-        `开始更新ID为 ${id} 的相册: ${updatePhotoAlbumDto.name || '未提供名称'}`,
+        `开始更新ID为 ${dto.id} 的相册: ${dto.name || '未提供名称'}`,
       );
 
       const result = await this.prismaService.photoAlbum.update({
-        where: { id: parseInt(id) },
-        data: updatePhotoAlbumDto,
+        where: { id: dto.id },
+        data: dto,
       });
 
-      this.logger.log(`成功更新ID为 ${id} 的相册`);
+      this.logger.log(`成功更新ID为 ${dto.id} 的相册`);
 
       return createResult({
         code: ResultCode.Success,
@@ -148,16 +145,16 @@ export class PhotoAlbumController {
         data: result,
       });
     } catch (error) {
-      this.logger.error(`更新ID为 ${id} 的相册失败`, error);
+      this.logger.error(`更新ID为 ${dto.id} 的相册失败`, error);
       throw error;
     }
   }
 
-  @Delete(':id')
+  @Post('delete')
   @ApiOperation({ summary: '删除相册' })
   @ApiParam({ name: 'id', description: '相册ID' })
   @ApiResponse({ status: 200, description: '相册删除成功' })
-  async remove(@Param('id') id: string): Promise<ResultData<void>> {
+  async remove(@Body('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的相册`);
 

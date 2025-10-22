@@ -57,7 +57,8 @@ export namespace AlbumsApi {
   export function updatePhotoAlbum(
     params: UpdatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return HttpClient.put(`cms/photo-albums/${params.id}`, {
+    return HttpClient.post('cms/photo-albums/update', {
+      id: params.id,
       name: params.name,
       description: params.description,
       available: params.available,
@@ -65,7 +66,7 @@ export namespace AlbumsApi {
   }
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
-    return await HttpClient.del(`cms/photo-albums/${id}`);
+    return await HttpClient.post(`cms/photo-albums/delete`, { id });
   }
 
   export interface SetPhotoAlbumCoverParams {

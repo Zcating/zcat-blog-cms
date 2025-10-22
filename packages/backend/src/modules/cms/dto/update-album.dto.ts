@@ -10,6 +10,14 @@ import {
 
 export class UpdateAlbumDto {
   @ApiPropertyOptional({
+    description: '相册ID',
+    example: 1,
+  })
+  @IsOptional()
+  @IsNumber()
+  id?: number;
+
+  @ApiPropertyOptional({
     description: '相册名称',
     example: '相册（已更新）',
   })

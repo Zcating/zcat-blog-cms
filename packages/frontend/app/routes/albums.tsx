@@ -81,7 +81,7 @@ export default function Albums(props: Route.ComponentProps) {
     >
       <Grid
         items={albums}
-        cols={3}
+        columns={3}
         renderItem={(item) => (
           <AlbumItem item={item} onClickItem={handleClickAlbum} onEdit={edit} />
         )}

@@ -1,9 +1,28 @@
 import React from 'react';
 import { classnames } from '../utils';
+import { tv } from 'tailwind-variants';
+
+const gridTv = tv({
+  variants: {
+    gap: {
+      xs: 'gap-1',
+      sm: 'gap-2',
+      md: 'gap-4',
+      lg: 'gap-6',
+      xl: 'gap-8',
+    },
+  },
+  defaultVariants: {
+    gap: 'md',
+  },
+});
+
 interface GridProps<T> {
   columnClassName?: string;
   rowClassName?: string;
-  cols: number;
+  className?: string;
+  columns: number;
+  gap?: 'sm' | 'lg' | 'md' | 'xs' | 'xl';
   items: T[];
   renderItem: (item: T) => React.ReactNode;
   renderEmpty?: () => React.ReactNode;
@@ -12,7 +31,7 @@ interface GridProps<T> {
 export function Grid<T>(props: GridProps<T>) {
   const renderEmpty = props.renderEmpty ?? defaultRenderEmpty;
 
-  const cols = props.cols ?? 2;
+  const cols = props.columns ?? 2;
   const groups = useGroups(props.items, cols);
   const filling = React.useCallback(
     (items: T[]) => {
@@ -26,14 +45,21 @@ export function Grid<T>(props: GridProps<T>) {
   );
 
   const columnClassName = classnames(
-    'flex w-full px-4 gap-5',
+    'flex w-full',
+    gridTv({ gap: props.gap }),
     props.columnClassName,
   );
 
   const rowClassName = classnames('flex-1', props.rowClassName);
 
+  const className = classnames(
+    'flex flex-col p-2',
+    props.className,
+    gridTv({ gap: props.gap }),
+  );
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className={className}>
       {props.items.length === 0 && renderEmpty()}
       {groups.map((items, index) => (
         <div key={`col-${index}`} className={columnClassName}>
