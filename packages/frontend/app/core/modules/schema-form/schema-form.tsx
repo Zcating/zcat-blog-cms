@@ -43,7 +43,7 @@ function SchemaForm<Fields extends FieldsRecord>(
   });
 
   return (
-    <Form form={instance} className="space-y-5">
+    <Form form={instance}>
       {entries.map(([key, field]) => {
         const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
         if (!componentRenderer) {
@@ -60,6 +60,7 @@ function SchemaForm<Fields extends FieldsRecord>(
             label={field.label}
             name={key}
             key={`form-${key}`}
+            span={3}
           >
             {component}
           </Form.Item>

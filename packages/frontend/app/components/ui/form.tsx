@@ -27,7 +27,8 @@ interface FormProps<TFieldValues extends FieldValues = FieldValues> {
 }
 
 /**
- *
+ * 表单
+ * @template TFieldValues
  * @param props
  * @returns
  */
@@ -39,7 +40,10 @@ export function Form<TFieldValues extends FieldValues = FieldValues>(
   const submit = useLoadingFn(form.submit);
 
   return (
-    <form className={classnames('relative', props.className)} onSubmit={submit}>
+    <form
+      className={classnames('relative flex flex-col gap-5', props.className)}
+      onSubmit={submit}
+    >
       {children}
       {submit.loading ? (
         <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center">
@@ -51,7 +55,7 @@ export function Form<TFieldValues extends FieldValues = FieldValues>(
 }
 
 /**
- *
+ * 表单项子元素属性
  */
 interface FormItemChildrenProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -63,7 +67,7 @@ interface FormItemChildrenProps<
 }
 
 /**
- *
+ * 表单项子元素
  */
 type FormItemChildren<
   TFieldValues extends FieldValues = FieldValues,
@@ -73,7 +77,7 @@ type FormItemChildren<
   | React.ReactElement<any>;
 
 /**
- *
+ * 表单项属性
  */
 interface FormItemProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -88,7 +92,7 @@ interface FormItemProps<
 }
 
 /**
- *
+ * 表单项
  * @template TFieldValues
  * @template TName
  * @template TTransformedValues

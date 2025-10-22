@@ -89,6 +89,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   // 编辑照片
   const editPhoto = usePhotoForm({
     title: '编辑照片',
+    confirmText: '保存',
     map: (data: PhotosApi.Photo) => ({
       id: data.id,
       name: data.name,
