@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: '登录 - Blog CMS' },
+    { title: '登录 ZCAT-BLOG-CMS' },
     { name: 'description', content: '登录到博客内容管理系统' },
   ];
 }
