@@ -53,7 +53,7 @@ export function Grid<T>(props: GridProps<T>) {
   const rowClassName = classnames('flex-1', props.rowClassName);
 
   const className = classnames(
-    'flex flex-col p-2',
+    'flex flex-col',
     props.className,
     gridTv({ gap: props.gap }),
   );

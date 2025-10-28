@@ -1,4 +1,5 @@
 import { tv } from 'tailwind-variants';
+import { classnames } from '../utils';
 
 export type TextareaVariant =
   | 'neutral'
@@ -13,6 +14,7 @@ export type TextareaAppearance = 'default' | 'ghost';
 export type TextareaSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
 interface TextareaProps {
+  className?: string;
   variant?: TextareaVariant;
   appearance?: TextareaAppearance;
   size?: TextareaSize;
@@ -22,7 +24,7 @@ interface TextareaProps {
 }
 
 const textarea = tv({
-  base: 'textarea !outline-none',
+  base: 'w-full textarea !outline-none',
   variants: {
     variant: {
       neutral: 'textarea-neutral',
@@ -55,11 +57,14 @@ const textarea = tv({
 export function Textarea(props: TextareaProps) {
   return (
     <textarea
-      className={textarea({
-        variant: props.variant,
-        appearance: props.appearance,
-        size: props.size,
-      })}
+      className={classnames(
+        textarea({
+          variant: props.variant,
+          appearance: props.appearance,
+          size: props.size,
+        }),
+        props.className,
+      )}
       rows={3}
       placeholder={props.placeholder}
       value={props.value}

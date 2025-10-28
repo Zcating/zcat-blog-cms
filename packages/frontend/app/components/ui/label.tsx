@@ -60,7 +60,7 @@ export function Label(props: LabelProps) {
   return (
     <div className="flex gap-4 items-center" onClick={click}>
       <span className={labelSpanTv({ span: props.span })}>{props.label}</span>
-      {props.children}
+      <div className="flex-1">{props.children}</div>
     </div>
   );
 }

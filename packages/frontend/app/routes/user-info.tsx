@@ -32,7 +32,7 @@ export default function UserInfo(props: Route.ComponentProps) {
 
   return (
     <Workspace title="个人资料">
-      <Form form={form} className="space-y-5">
+      <Form form={form} className="space-y-5 w-xl">
         <Form.Item form={form} name="avatar" label="头像">
           <ImageUpload />
         </Form.Item>

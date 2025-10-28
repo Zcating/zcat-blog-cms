@@ -1,6 +1,6 @@
 import React from 'react';
 import { tv } from 'tailwind-variants';
-import { isString } from '@cms/components/utils';
+import { classnames, isString } from '@cms/components/utils';
 import { PlusOutlined } from '@ant-design/icons';
 import { Image } from './image';
 
@@ -32,27 +32,29 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
   };
 
   return (
-    <div
-      className="cursor-pointer w-32 h-32 p-1 border border-dashed rounded-sm flex items-center justify-center"
-      onClick={() => fileRef.current?.click()}
-    >
-      <input
-        ref={fileRef}
-        type="file"
-        className="hidden cursor-pointer"
-        onChange={handleChange}
-        onBlur={props.onBlur}
-      />
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt="上传图片"
-          contentMode="cover"
-          className="aspect-square"
+    <div className={props.className}>
+      <div
+        className="cursor-pointer w-32 h-32 p-1 border border-dashed rounded-sm flex items-center justify-center"
+        onClick={() => fileRef.current?.click()}
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden cursor-pointer"
+          onChange={handleChange}
+          onBlur={props.onBlur}
         />
-      ) : (
-        <PlusOutlined className="text-3xl" />
-      )}
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt="上传图片"
+            contentMode="cover"
+            className="aspect-square"
+          />
+        ) : (
+          <PlusOutlined className="text-3xl" />
+        )}
+      </div>
     </div>
   );
 };
