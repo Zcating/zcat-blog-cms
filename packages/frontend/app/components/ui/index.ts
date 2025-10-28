@@ -17,5 +17,6 @@ export * from './dialog';
 export * from './list';
 export * from './col';
 export * from './markdown';
+export * from './avatar';
 
 export { UiProvider } from './ui-provider';

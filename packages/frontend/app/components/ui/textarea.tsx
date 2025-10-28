@@ -19,6 +19,7 @@ interface TextareaProps {
   appearance?: TextareaAppearance;
   size?: TextareaSize;
   placeholder?: string;
+  disabled?: boolean;
   value?: string;
   onChange?: (value: string) => void;
 }
@@ -65,6 +66,7 @@ export function Textarea(props: TextareaProps) {
         }),
         props.className,
       )}
+      disabled={props.disabled}
       rows={3}
       placeholder={props.placeholder}
       value={props.value}
