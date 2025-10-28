@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import { ArticlesApi } from '@cms/api';
-import { Button, Input, Markdown, Textarea } from '@cms/components';
+import { Button, Input, Markdown, Row, Textarea } from '@cms/components';
 
 import 'react-markdown-editor-lite/lib/index.css';
 
@@ -30,24 +30,26 @@ export function ArticleEditor({
   };
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full">
       {/* 文章标题和操作按钮 */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">
-            <Input
-              value={article.title}
-              onChange={(e) =>
-                setArticle((prev) => ({ ...prev, title: e.target.value }))
-              }
-              placeholder="请输入文章标题"
-            />
-          </h1>
-          <div className="flex gap-5">
-            <Button onClick={handleSave} loading={loading} variant="primary">
-              {loading ? '保存中...' : '保存'}
-            </Button>
-            <Button onClick={onCancel}>取消</Button>
+        <div className="flex justify-between items-center mb-4 gap-5">
+          <Textarea
+            className="max-w-80"
+            weight="bold"
+            size="lg"
+            value={article.title}
+            onChange={(e) => setArticle((prev) => ({ ...prev, title: e }))}
+            placeholder="请输入文章标题"
+            maxLength={84}
+          />
+          <div className="flex-1">
+            <Row justify="end" gap="5">
+              <Button onClick={handleSave} loading={loading} variant="primary">
+                {loading ? '保存中...' : '保存'}
+              </Button>
+              <Button onClick={onCancel}>取消</Button>
+            </Row>
           </div>
         </div>
 

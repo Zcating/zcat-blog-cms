@@ -20,6 +20,8 @@ interface TextareaProps {
   size?: TextareaSize;
   placeholder?: string;
   disabled?: boolean;
+  maxLength?: number;
+  weight?: 'normal' | 'bold';
   value?: string;
   onChange?: (value: string) => void;
 }
@@ -48,10 +50,15 @@ const textarea = tv({
       xl: 'textarea-xl',
       xs: 'textarea-xs',
     },
+    weight: {
+      normal: 'font-normal',
+      bold: 'font-bold',
+    },
   },
   defaultVariants: {
     appearance: 'default',
     size: 'md',
+    weight: 'normal',
   },
 });
 
@@ -63,6 +70,7 @@ export function Textarea(props: TextareaProps) {
           variant: props.variant,
           appearance: props.appearance,
           size: props.size,
+          weight: props.weight,
         }),
         props.className,
       )}
@@ -71,6 +79,7 @@ export function Textarea(props: TextareaProps) {
       placeholder={props.placeholder}
       value={props.value}
       onChange={(e) => props.onChange?.(e.target.value)}
+      maxLength={props.maxLength}
     />
   );
 }

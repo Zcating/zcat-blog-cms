@@ -49,7 +49,7 @@ export default function Articles(props: Route.ComponentProps) {
     >
       <List
         data={articles}
-        contentContainerClassName="px-10 gap-5"
+        contentContainerClassName="gap-5"
         renderItem={(article) => (
           <Card>
             <Card.Body>
