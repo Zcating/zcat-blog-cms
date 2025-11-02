@@ -12,3 +12,10 @@ export class PaginateQueryDto {
   @Transform(({ value }) => safeNumber(value, 10))
   pageSize: number = 10;
 }
+
+export interface PaginateResult<T> {
+  data: T[];
+  totalPages: number;
+  page: number;
+  pageSize: number;
+}

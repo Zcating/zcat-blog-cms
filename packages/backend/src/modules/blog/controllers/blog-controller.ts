@@ -64,12 +64,14 @@ export class BlogController {
       },
     });
 
+    const total = await this.prisma.article.count();
+
     return createResult({
       code: ResultCode.Success,
       message: 'success',
       data: {
         data: articles,
-        total: articles.length,
+        totalPages: Math.ceil(total / query.pageSize),
         page: query.page,
         pageSize: query.pageSize,
       },

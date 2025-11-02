@@ -39,9 +39,11 @@ export default function Article({ loaderData }: Route.ComponentProps) {
   const handleSave = useLoadingFn(async (article: ArticlesApi.Article) => {
     if (!article.id) {
       const result = await ArticlesApi.createArticle(article);
-      navigate(`/articles/${result.id}`);
+      await navigate(`/articles/${result.id}`);
+      setArticle(result);
     } else {
-      const updated = await ArticlesApi.updateArticle(article.id, {
+      const updated = await ArticlesApi.updateArticle({
+        id: article.id,
         title: article.title,
         excerpt: article.excerpt,
         content: article.content,
@@ -52,9 +54,9 @@ export default function Article({ loaderData }: Route.ComponentProps) {
   });
 
   // 取消编辑
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (loaderData.isCreating) {
-      navigate('/articles');
+      await navigate('/articles');
       return;
     }
     setIsEditing(false);

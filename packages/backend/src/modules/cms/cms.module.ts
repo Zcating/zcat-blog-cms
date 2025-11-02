@@ -10,6 +10,7 @@ import { ArticleTagController } from './controllers/article-tag.controller';
 import { ArticleController } from './controllers/article.controller';
 import { PhotoAlbumController } from './controllers/photo-album.controller';
 import { PhotoController } from './controllers/photo.controller';
+import { ArticleService } from './services/article.service';
 import { PhotoService } from './services/photo.service';
 
 //
@@ -24,6 +25,6 @@ import { PhotoService } from './services/photo.service';
     StatisticsController,
     UserInfoController,
   ],
-  providers: [PhotoService],
+  providers: [PhotoService, ArticleService],
 })
 export class CmsModule {}

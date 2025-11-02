@@ -21,6 +21,6 @@ export class ReturnArticleDto {
   // @ApiProperty({ description: '创建用户' })
   // createByUser: UserInfo;
 
-  @ApiProperty({ description: '文章标签' })
-  tags: ArticleTag[];
+  // @ApiProperty({ description: '文章标签' })
+  // tags: ArticleTag[];
 }

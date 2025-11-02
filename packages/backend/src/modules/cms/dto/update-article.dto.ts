@@ -4,6 +4,13 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateArticleDto {
   @ApiPropertyOptional({
+    description: '文章ID',
+    example: 1,
+  })
+  @IsNumber()
+  id: number;
+
+  @ApiPropertyOptional({
     description: '文章标题',
     example: '我的第一篇文章（已更新）',
   })

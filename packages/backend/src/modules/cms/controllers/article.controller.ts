@@ -3,20 +3,25 @@ import {
   Get,
   Post,
   Body,
-  Put,
-  Delete,
-  Param,
   UseGuards,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
 import { PrismaService } from '@backend/common';
-import { createResult, ResultCode, ResultData } from '@backend/model';
+import {
+  createResult,
+  PaginateQueryDto,
+  PaginateResult,
+  ResultCode,
+  ResultData,
+} from '@backend/model';
 import { Article } from '@backend/prisma';
 
 import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { ArticleService } from '../services/article.service';
 
 @ApiTags('文章管理')
 @Controller('api/cms/articles')
@@ -24,7 +29,10 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 export class ArticleController {
   private readonly logger = new Logger(ArticleController.name);
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private articleService: ArticleService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: '获取所有文章' })
@@ -33,45 +41,20 @@ export class ArticleController {
     description: '成功获取文章列表',
     type: [ReturnArticleDto],
   })
-  async findAll(): Promise<ResultData<ReturnArticleDto[]>> {
+  async findAll(
+    @Query() dto: PaginateQueryDto,
+  ): Promise<ResultData<PaginateResult<ReturnArticleDto>>> {
     try {
       this.logger.log('开始获取所有文章');
 
-      const articles = await this.prismaService.article.findMany({
-        select: {
-          id: true,
-          title: true,
-          excerpt: true,
-          createdAt: true,
-          updatedAt: true,
-          createByUserId: true,
-          articleAndArticleTags: {
-            select: {
-              articleTag: {
-                select: {
-                  id: true,
-                  name: true,
-                  createdAt: true,
-                  updatedAt: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      this.logger.log(`成功获取 ${articles.length} 篇文章`);
+      const pagination = await this.articleService.findArticles(dto);
+
+      this.logger.log(`成功获取 ${pagination.data.length} 篇文章`);
 
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: articles.map((article) => ({
-          id: article.id,
-          title: article.title,
-          excerpt: article.excerpt,
-          createdAt: article.createdAt,
-          updatedAt: article.updatedAt,
-          tags: article.articleAndArticleTags.map((item) => item.articleTag),
-        })),
+        data: pagination,
       });
     } catch (error) {
       this.logger.error('获取文章列表失败', error);
@@ -79,11 +62,11 @@ export class ArticleController {
     }
   }
 
-  @Get(':id')
+  @Get('detail')
   @ApiOperation({ summary: '根据ID获取文章' })
   @ApiParam({ name: 'id', description: '文章ID' })
   @ApiResponse({ status: 200, description: '成功获取文章详情' })
-  async findOne(@Param('id') id: string): Promise<ResultData<Article | null>> {
+  async findOne(@Query('id') id: string): Promise<ResultData<Article | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的文章`);
       const article = await this.prismaService.article.findUnique({
@@ -101,7 +84,7 @@ export class ArticleController {
     }
   }
 
-  @Post()
+  @Post('create')
   @ApiOperation({ summary: '创建文章' })
   @ApiResponse({ status: 201, description: '文章创建成功' })
   async create(
@@ -131,37 +114,36 @@ export class ArticleController {
     }
   }
 
-  @Put(':id')
+  @Post('update')
   @ApiOperation({ summary: '更新文章' })
   @ApiParam({ name: 'id', description: '文章ID' })
   @ApiResponse({ status: 200, description: '文章更新成功' })
   async update(
-    @Param('id') id: string,
-    @Body() updateArticleDto: UpdateArticleDto,
+    @Body() dto: UpdateArticleDto,
   ): Promise<ResultData<Article | void>> {
     try {
       this.logger.log(
-        `开始更新ID为 ${id} 的文章: ${updateArticleDto.title || '未提供标题'}`,
+        `开始更新ID为 ${dto.id} 的文章: ${dto.title || '未提供标题'}`,
       );
       const result = await this.prismaService.article.update({
-        where: { id: parseInt(id) },
-        data: updateArticleDto,
+        where: { id: dto.id },
+        data: dto,
       });
       if (!result) {
-        this.logger.warn(`更新ID为 ${id} 的文章失败：未找到记录`);
+        this.logger.warn(`更新ID为 ${dto.id} 的文章失败：未找到记录`);
         return createResult({
           code: ResultCode.DatabaseError,
           message: '更新失败',
         });
       }
-      this.logger.log(`成功更新ID为 ${id} 的文章`);
+      this.logger.log(`成功更新ID为 ${dto.id} 的文章`);
       return createResult({
         code: ResultCode.Success,
         message: '成功',
         data: result,
       });
     } catch (error) {
-      this.logger.error(`更新ID为 ${id} 的文章失败`, error);
+      this.logger.error(`更新ID为 ${dto.id} 的文章失败`, error);
       return createResult({
         code: ResultCode.UnknownError,
         message: '更新失败',
@@ -169,11 +151,11 @@ export class ArticleController {
     }
   }
 
-  @Delete(':id')
+  @Post('delete')
   @ApiOperation({ summary: '删除文章' })
   @ApiParam({ name: 'id', description: '文章ID' })
   @ApiResponse({ status: 200, description: '文章删除成功' })
-  async remove(@Param('id') id: string): Promise<ResultData<void>> {
+  async remove(@Body('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的文章`);
       const result = await this.prismaService.article.delete({

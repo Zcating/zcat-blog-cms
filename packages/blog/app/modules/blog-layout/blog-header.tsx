@@ -10,7 +10,7 @@ export function BlogHeader() {
           <MenuItem to="/post-board" title="文章" />
           {/* <MenuItem to="/moments" title="说说" /> */}
           <MenuItem to="/gallery" title="相册" />
-          <MenuItem to="/toolbox" title="工具箱" />
+          {/* <MenuItem to="/toolbox" title="工具箱" /> */}
           <MenuItem to="/about" title="关于" />
         </NavigationMenuList>
       </NavigationMenu>

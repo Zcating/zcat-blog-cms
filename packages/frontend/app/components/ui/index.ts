@@ -18,5 +18,6 @@ export * from './list';
 export * from './col';
 export * from './markdown';
 export * from './avatar';
+export * from './pagination';
 
 export { UiProvider } from './ui-provider';

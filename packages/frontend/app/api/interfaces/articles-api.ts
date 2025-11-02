@@ -1,4 +1,5 @@
 import { HttpClient } from '../http/http-client';
+import type { PaginateResult } from './types';
 
 export namespace ArticlesApi {
   export interface ArticleTag {
@@ -31,32 +32,39 @@ export namespace ArticlesApi {
   }
 
   export interface UpdateArticleParams {
+    id: number;
     title?: string;
     excerpt?: string;
     content?: string;
   }
 
+  export interface GetArticlesParams {
+    page?: number;
+    pageSize?: number;
+  }
+
   // Article API functions
-  export async function getArticles(): Promise<Article[]> {
-    return await HttpClient.get('cms/articles');
+  export async function getArticles(
+    params: GetArticlesParams,
+  ): Promise<PaginateResult<Article>> {
+    return await HttpClient.get('cms/articles', params);
   }
 
   export async function getArticle(id: number): Promise<Article> {
-    return await HttpClient.get(`cms/articles/${id}`);
+    return await HttpClient.get(`cms/articles/detail`, { id });
   }
 
   export async function createArticle(params: Article): Promise<Article> {
-    return await HttpClient.post('cms/articles', params);
+    return await HttpClient.post('cms/articles/create', params);
   }
 
   export async function updateArticle(
-    id: number,
     params: UpdateArticleParams,
   ): Promise<Article> {
-    return await HttpClient.put(`cms/articles/${id}`, params);
+    return await HttpClient.post(`cms/articles/update`, params);
   }
 
   export async function deleteArticle(id: number): Promise<void> {
-    return await HttpClient.del(`cms/articles/${id}`);
+    return await HttpClient.post(`cms/articles/delete`, { id });
   }
 }

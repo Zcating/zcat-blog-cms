@@ -6,12 +6,22 @@ interface ListProps<T> {
   contentContainerClassName?: string;
   data: T[];
   renderItem: (item: T) => React.ReactNode;
+  HeaderComponent?: React.ReactNode;
+  FooterComponent?: React.ReactNode;
 }
 
 export function List<T>(props: ListProps<T>) {
-  const { className, contentContainerClassName, data, renderItem } = props;
+  const {
+    className,
+    contentContainerClassName,
+    data,
+    renderItem,
+    HeaderComponent,
+    FooterComponent,
+  } = props;
   return (
     <div className={className}>
+      {HeaderComponent}
       <div
         className={classnames(contentContainerClassName, 'flex flex-col gap-5')}
       >
@@ -19,6 +29,7 @@ export function List<T>(props: ListProps<T>) {
           <React.Fragment key={index}>{renderItem(item)}</React.Fragment>
         ))}
       </div>
+      {FooterComponent}
     </div>
   );
 }
