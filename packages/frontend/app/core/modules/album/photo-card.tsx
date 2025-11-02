@@ -35,7 +35,7 @@ export function PhotoCard(props: PhotoCardProps) {
       <Card.Body>
         <Card.Title>{props.data.name}</Card.Title>
         <Card.Actions>
-          <Button variant="info" onClick={() => props.onEdit(props.data)}>
+          <Button variant="primary" onClick={() => props.onEdit(props.data)}>
             编辑
           </Button>
           <Button variant="error" onClick={() => props.onDelete(props.data)}>

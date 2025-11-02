@@ -153,10 +153,10 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="primary" onClick={() => editAlbum(album)}>
             编辑相册
           </Button>
-          <Button variant="neutral" onClick={addPhoto}>
+          <Button variant="info" onClick={addPhoto}>
             添加照片
           </Button>
-          <Button variant="neutral" onClick={selectPhoto}>
+          <Button variant="default" onClick={selectPhoto}>
             选择照片
           </Button>
         </>
