@@ -1,7 +1,4 @@
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Card,
   CardContent,
   CardHeader,
@@ -11,6 +8,7 @@ import {
 } from "@blog/components";
 import type { Route } from "./+types/about";
 import { UserApi } from "@blog/apis";
+import { Avatar } from "@blog/modules";
 
 export function meta() {
   return [{ title: "关于" }, { name: "description", content: "个人技术博客" }];
@@ -27,15 +25,14 @@ export default function AboutPage(props: Route.ComponentProps) {
   const userInfo = props.loaderData.userInfo;
   return (
     <div className="w-full h-full flex flex-col items-center gap-10">
-      <Card className="w-2xl flex items-center">
-        <Avatar className="w-32 h-32">
-          <AvatarImage src={userInfo.avatar} />
-          <AvatarFallback>{userInfo.name}</AvatarFallback>
-        </Avatar>
+      <Card className="w-2xl">
+        <CardHeader className="flex justify-center">
+          <Avatar src={userInfo.avatar} fallback={userInfo.name} />
+        </CardHeader>
         <CardContent className="flex flex-col gap-4 items-center">
           <p className="text-5xl font-bold">{userInfo.name}</p>
           <p className="text-lg">{userInfo.occupation}</p>
-          <p className="text-sm">{userInfo.abstract}</p>
+          <p className="text-sm break-all">{userInfo.abstract}</p>
           <p className="text-sm">欢迎来到我的博客！</p>
         </CardContent>
       </Card>

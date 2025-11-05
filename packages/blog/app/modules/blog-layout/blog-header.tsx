@@ -3,7 +3,7 @@ import { MenuItem } from "./menu-item";
 
 export function BlogHeader() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b mb-3 bg-white h-20 flex">
+    <header className="sticky top-0 z-50 w-full border-b bg-white h-20 flex">
       <NavigationMenu>
         <NavigationMenuList className="gap-3 flex">
           <MenuItem to="/" title="首页" />
