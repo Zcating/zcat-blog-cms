@@ -13,18 +13,18 @@ import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
 import React from "react";
 
-export function meta() {
-  return [
-    { title: "我的博客" },
-    { name: "description", content: "个人技术博客" },
-  ];
-}
-
 export async function loader() {
   return {
     userInfo: await UserApi.getUserInfo(),
     pagination: await ArticleApi.getArticleList(),
   };
+}
+
+export function meta() {
+  return [
+    { title: "ZCAT - 我知道你在看" },
+    { name: "description", content: "个人技术博客" },
+  ];
 }
 
 const SORT_OPTIONS = [
@@ -34,9 +34,19 @@ const SORT_OPTIONS = [
 
 // 首页文章列表实现
 export default function HomePage(props: Route.ComponentProps) {
-  const articles = props.loaderData.pagination.data;
-  const userInfo = props.loaderData.userInfo;
+  const loaderData = props.loaderData;
+  const userInfo = loaderData.userInfo;
+  const [articles, setArticles] = React.useState(loaderData.pagination.data);
   const [sort, setSort] = React.useState("latest");
+  const handleSortChange = (value: string) => {
+    setSort(value);
+    if (value === "latest") {
+      setArticles(loaderData.pagination.data);
+    } else {
+      setArticles(loaderData.pagination.data.reverse());
+    }
+  };
+
   return (
     <View className="px-4 flex gap-12">
       <View className="sticky top-24 flex flex-col gap-3 self-start">
@@ -58,7 +68,7 @@ export default function HomePage(props: Route.ComponentProps) {
               className="w-full"
               options={SORT_OPTIONS}
               value={sort}
-              onChange={setSort}
+              onChange={handleSortChange}
             />
           </CardContent>
         </Card>

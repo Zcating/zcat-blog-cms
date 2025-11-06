@@ -1,9 +1,9 @@
-export function BlogFooter() {
+export function ToolboxFooter() {
   return (
     <footer className="z-50 w-full border-t bg-white h-(--footer-height)">
       <div className="flex justify-center items-center h-full">
         <span className="text-sm text-gray-500">
-          © 2025 zcat. All rights reserved.
+          © 2025 Zcat. All rights reserved.
         </span>
       </div>
     </footer>

@@ -1,85 +1,42 @@
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  View,
-} from "@blog/components";
+import { View } from "@blog/components";
+import { ToolboxSidebar } from "@blog/modules";
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { Outlet } from "react-router";
 
 const items = [
   {
     title: "Home",
-    url: "#",
+    to: "/toolbox",
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
+    title: "Base64 to Image",
+    to: "/toolbox/base64-to-image",
     icon: Inbox,
   },
   {
     title: "Calendar",
-    url: "#",
+    to: "/calendar",
     icon: Calendar,
   },
   {
     title: "Search",
-    url: "#",
+    to: "/search",
     icon: Search,
   },
   {
     title: "Settings",
-    url: "#",
+    to: "/settings",
     icon: Settings,
   },
 ];
 
-interface ToolboxLayoutProps {
-  children: React.ReactNode;
-}
-export default function ToolboxLayout({ children }: ToolboxLayoutProps) {
+export default function ToolboxLayout() {
   return (
-    <View className="h-full w-full">
-      <SidebarProvider>
-        <ToolboxSidebar />
-        <View className="flex flex-row items-center justify-center">
-          <SidebarTrigger />
-          {children}
-        </View>
-      </SidebarProvider>
+    <View className="h-full w-full [--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]">
+      <ToolboxSidebar items={items}>
+        <Outlet />
+      </ToolboxSidebar>
     </View>
-  );
-}
-
-function ToolboxSidebar() {
-  return (
-    <Sidebar variant="inset" className="z-100">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
   );
 }

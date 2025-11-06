@@ -3,8 +3,12 @@ import { PostContentView } from "@blog/modules";
 import { ArticleApi } from "@blog/apis";
 import type { Route } from "./+types/post-board.id";
 
-export function meta() {
-  return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];
+export function meta(args: Route.MetaArgs) {
+  const article = args.loaderData.article;
+  return [
+    { title: article.title },
+    { name: "description", content: article.excerpt },
+  ];
 }
 
 export async function loader({ params }: Route.LoaderArgs) {

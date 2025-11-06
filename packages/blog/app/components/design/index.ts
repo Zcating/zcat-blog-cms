@@ -1,5 +1,7 @@
 export * from "./z-select";
 export * from "./z-avatar";
+export * from "./z-navigation-menu";
+export * from "./z-sticky-header";
 
 export {};
 
