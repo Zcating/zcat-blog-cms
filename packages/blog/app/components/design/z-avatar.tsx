@@ -2,7 +2,7 @@ import * as Shadcn from "@blog/components/ui/avatar";
 import type React from "react";
 import { tv } from "tailwind-variants";
 
-interface AvatarProps {
+interface ZAvatarProps {
   size?: "sm" | "md" | "lg";
   src?: string;
   fallback?: React.ReactNode;
@@ -19,7 +19,7 @@ const avatar = tv({
   },
 });
 
-export function Avatar(props: AvatarProps) {
+export function ZAvatar(props: ZAvatarProps) {
   return (
     <Shadcn.Avatar className={avatar({ size: props.size })}>
       <Shadcn.AvatarImage src={props.src} />

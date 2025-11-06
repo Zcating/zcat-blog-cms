@@ -1,5 +1,5 @@
-export * from "./select";
-export * from "./avatar";
+export * from "./z-select";
+export * from "./z-avatar";
 
 export {};
 

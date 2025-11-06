@@ -60,7 +60,7 @@ export default function ToolboxLayout({ children }: ToolboxLayoutProps) {
 
 function ToolboxSidebar() {
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="inset" className="z-100">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>

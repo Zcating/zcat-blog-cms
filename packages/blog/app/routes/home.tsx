@@ -4,11 +4,13 @@ import {
   CardHeader,
   CardTitle,
   View,
+  ZAvatar,
+  ZSelect,
 } from "@blog/components";
 import { ArticleApi, UserApi } from "@blog/apis";
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
-import { Avatar, PostExcerptCard, Select } from "@blog/modules";
+import { PostExcerptCard } from "@blog/modules";
 import React from "react";
 
 export function meta() {
@@ -40,7 +42,7 @@ export default function HomePage(props: Route.ComponentProps) {
       <View className="sticky top-24 flex flex-col gap-3 self-start">
         <Card className="w-xs">
           <CardHeader className="flex justify-center">
-            <Avatar src={userInfo.avatar} fallback={userInfo.name} />
+            <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
           </CardHeader>
           <CardContent className="flex flex-col gap-4 items-center">
             <p className="text-2xl font-bold">{userInfo.name}</p>
@@ -52,7 +54,7 @@ export default function HomePage(props: Route.ComponentProps) {
             <CardTitle>文章排序</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 items-center">
-            <Select
+            <ZSelect
               className="w-full"
               options={SORT_OPTIONS}
               value={sort}

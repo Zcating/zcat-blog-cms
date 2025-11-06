@@ -5,10 +5,10 @@ import {
   CardTitle,
   IconEnvelope,
   IconGithub,
+  ZAvatar,
 } from "@blog/components";
 import type { Route } from "./+types/about";
 import { UserApi } from "@blog/apis";
-import { Avatar } from "@blog/modules";
 
 export function meta() {
   return [{ title: "关于" }, { name: "description", content: "个人技术博客" }];
@@ -27,7 +27,7 @@ export default function AboutPage(props: Route.ComponentProps) {
     <div className="w-full h-full flex flex-col items-center gap-10">
       <Card className="w-2xl">
         <CardHeader className="flex justify-center">
-          <Avatar src={userInfo.avatar} fallback={userInfo.name} />
+          <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4 items-center">
           <p className="text-5xl font-bold">{userInfo.name}</p>

@@ -1,6 +1,6 @@
 import * as Shadcn from "@blog/components/ui/select";
 
-interface SelectProps {
+interface ZSelectProps {
   className?: string;
   placeholder?: string;
   options: CommonOption[];
@@ -8,13 +8,13 @@ interface SelectProps {
   onChange: (value: string) => void;
 }
 
-export function Select({
+export function ZSelect({
   className,
   placeholder,
   options,
   value,
   onChange,
-}: SelectProps) {
+}: ZSelectProps) {
   return (
     <Shadcn.Select value={value} onValueChange={onChange}>
       <Shadcn.SelectTrigger className={className}>
