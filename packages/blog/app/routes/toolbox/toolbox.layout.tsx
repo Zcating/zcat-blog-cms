@@ -1,39 +1,44 @@
-import { View } from "@blog/components";
+import { cn, View } from "@blog/components";
 import { ToolboxSidebar } from "@blog/modules";
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 import { Outlet } from "react-router";
 
 const items = [
   {
-    title: "Home",
-    to: "/toolbox",
-    icon: Home,
+    title: "常用",
+    items: [
+      {
+        title: "图片和 Base64 互转",
+        to: "/toolbox/base64-to-image",
+      },
+      {
+        title: "身份证生成",
+        to: "/id-card-generator",
+      },
+    ],
   },
   {
-    title: "Base64 to Image",
-    to: "/toolbox/base64-to-image",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    to: "/calendar",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    to: "/search",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    to: "/settings",
-    icon: Settings,
+    title: "算法可视化",
+    items: [
+      {
+        title: "排序可视化",
+        to: "/toolbox/sort-visualizer",
+      },
+      {
+        title: "最短路径",
+        to: "/toolbox/shortest-path-visualizer",
+      },
+    ],
   },
 ];
 
 export default function ToolboxLayout() {
+  const classNames = cn(
+    "h-full w-full",
+    "[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]",
+  );
   return (
-    <View className="h-full w-full [--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]">
+    <View className={classNames}>
       <ToolboxSidebar items={items}>
         <Outlet />
       </ToolboxSidebar>
