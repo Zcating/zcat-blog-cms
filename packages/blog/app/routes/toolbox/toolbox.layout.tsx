@@ -13,7 +13,7 @@ const items = [
       },
       {
         title: "身份证生成",
-        to: "/id-card-generator",
+        to: "/toolbox/id-card-generator",
       },
     ],
   },
