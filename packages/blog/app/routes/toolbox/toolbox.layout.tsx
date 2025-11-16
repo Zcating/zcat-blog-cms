@@ -21,7 +21,7 @@ const items = [
     title: "算法可视化",
     items: [
       {
-        title: "排序可视化",
+        title: "排序",
         to: "/toolbox/sort-visualizer",
       },
       {

@@ -5,7 +5,7 @@ interface ZSelectProps {
   placeholder?: string;
   options: CommonOption[];
   value?: string;
-  onChange: (value: string) => void;
+  onValueChange?: (value: string) => void;
 }
 
 export function ZSelect({
@@ -13,10 +13,10 @@ export function ZSelect({
   placeholder,
   options,
   value,
-  onChange,
+  onValueChange,
 }: ZSelectProps) {
   return (
-    <Shadcn.Select value={value} onValueChange={onChange}>
+    <Shadcn.Select value={value} onValueChange={onValueChange}>
       <Shadcn.SelectTrigger className={className}>
         <Shadcn.SelectValue placeholder={placeholder} />
       </Shadcn.SelectTrigger>

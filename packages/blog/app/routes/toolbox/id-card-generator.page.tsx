@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View } from "@blog/components";
+import { View, ZSelect } from "@blog/components";
 import { Input } from "@blog/components/ui/input";
 import { Button } from "@blog/components/ui/button";
 import { Label } from "@blog/components/ui/label";
@@ -24,6 +24,11 @@ const AREA_CODES: { label: string; code: string }[] = [
   { label: "江苏省 苏州市 吴中区", code: "320506" },
   { label: "湖北省 武汉市 洪山区", code: "420111" },
   { label: "陕西省 西安市 雁塔区", code: "610113" },
+];
+
+const GENDER_OPTIONS = [
+  { label: "男（顺序码奇数）", value: "male" },
+  { label: "女（顺序码偶数）", value: "female" },
 ];
 
 // 校验位权重与映射
@@ -58,7 +63,10 @@ function isValidDate(yyyyMMdd: string): boolean {
 function validateIdNumber(id: string): { ok: boolean; reason?: string } {
   const upper = id.trim().toUpperCase();
   if (!/^\d{17}[\dX]$/.test(upper)) {
-    return { ok: false, reason: "格式不正确，应为17位数字+1位校验码（0-9或X）" };
+    return {
+      ok: false,
+      reason: "格式不正确，应为17位数字+1位校验码（0-9或X）",
+    };
   }
   const area = upper.slice(0, 6);
   const birth = upper.slice(6, 14);
@@ -85,7 +93,7 @@ export default function IdCardGeneratorPage() {
   // 选项
   const [areaCode, setAreaCode] = useState<string>(AREA_CODES[0].code);
   const [birthDate, setBirthDate] = useState<string>(""); // yyyy-MM-dd
-  const [gender, setGender] = useState<"male" | "female">("male");
+  const [gender, setGender] = useState("male");
   const [seqInput, setSeqInput] = useState<string>(""); // 可选 001-999
 
   // 结果
@@ -106,7 +114,7 @@ export default function IdCardGeneratorPage() {
     setAreaCode(AREA_CODES[idx].code);
   };
 
-  const randomSeq = (sex: "male" | "female") => {
+  const randomSeq = (sex: string) => {
     // 001-999，奇数男，偶数女
     let n = Math.floor(Math.random() * 999) + 1; // 1..999
     // 调整奇偶性
@@ -211,20 +219,22 @@ export default function IdCardGeneratorPage() {
 
           <div className="space-y-2">
             <Label htmlFor="birth">生日</Label>
-            <Input id="birth" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+            <Input
+              id="birth"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="gender">性别</Label>
-            <select
-              id="gender"
+            <ZSelect
               className="h-10 w-full rounded-md border bg-background px-3 text-sm"
               value={gender}
-              onChange={(e) => setGender(e.target.value as "male" | "female")}
-            >
-              <option value="male">男（顺序码奇数）</option>
-              <option value="female">女（顺序码偶数）</option>
-            </select>
+              onValueChange={setGender}
+              options={GENDER_OPTIONS}
+            />
           </div>
 
           <div className="space-y-2">
@@ -242,7 +252,11 @@ export default function IdCardGeneratorPage() {
           <Button variant="secondary" onClick={copyResult} disabled={!resultId}>
             复制结果
           </Button>
-          <Button variant="outline" onClick={validateCurrent} disabled={!resultId}>
+          <Button
+            variant="outline"
+            onClick={validateCurrent}
+            disabled={!resultId}
+          >
             校验
           </Button>
           <Button variant="ghost" onClick={clearAll}>
@@ -256,7 +270,12 @@ export default function IdCardGeneratorPage() {
           <CardTitle>生成结果</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Textarea value={resultId} readOnly rows={3} placeholder="点击生成后显示身份证号" />
+          <Textarea
+            value={resultId}
+            readOnly
+            rows={3}
+            placeholder="点击生成后显示身份证号"
+          />
           {validateMsg ? (
             <p className="text-sm text-muted-foreground">{validateMsg}</p>
           ) : null}

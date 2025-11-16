@@ -203,7 +203,7 @@ export default function Base64ToImagePage() {
                     { label: "image/svg+xml", value: "image/svg+xml" },
                   ]}
                   value={mimeType}
-                  onChange={setMimeType}
+                  onValueChange={setMimeType}
                 />
               </div>
             ) : null}

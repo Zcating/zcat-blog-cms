@@ -68,7 +68,7 @@ export default function HomePage(props: Route.ComponentProps) {
               className="w-full"
               options={SORT_OPTIONS}
               value={sort}
-              onChange={handleSortChange}
+              onValueChange={handleSortChange}
             />
           </CardContent>
         </Card>
