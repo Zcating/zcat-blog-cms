@@ -145,8 +145,8 @@ export class PhotoService {
 
     // 删除 oss 的数据
     await Promise.allSettled([
-      this.ossService.deleteFile(photo.url),
-      this.ossService.deleteFile(photo.thumbnailUrl),
+      this.ossService.deleteFile('photos', photo.url),
+      this.ossService.deleteFile('photos', photo.thumbnailUrl),
     ]);
 
     // 删除数据库记录
@@ -197,8 +197,8 @@ export class PhotoService {
   transformPhoto(photo: Photo): Photo {
     return {
       ...photo,
-      url: this.ossService.getPrivateUrl(photo.url),
-      thumbnailUrl: this.ossService.getPrivateUrl(photo.thumbnailUrl),
+      url: this.ossService.getPrivateUrl('photos', photo.url),
+      thumbnailUrl: this.ossService.getPrivateUrl('photos', photo.thumbnailUrl),
     };
   }
 }

@@ -263,7 +263,7 @@ export class BlogController {
         occupation: userInfo?.occupation || '',
         abstract: userInfo?.abstract || '',
         aboutMe: userInfo?.aboutMe || '',
-        avatar: this.ossService.getPrivateUrl(userInfo?.avatar || ''),
+        avatar: this.ossService.getPrivateUrl('user', userInfo?.avatar || ''),
         contact: safeParse<Record<string, string>>(userInfo?.contact, {}),
       },
     });
@@ -275,8 +275,8 @@ export class BlogController {
     const photos = await this.prisma.photo.findMany(...args);
     return photos.map((photo) => ({
       ...photo,
-      url: this.ossService.getPrivateUrl(photo.url),
-      thumbnailUrl: this.ossService.getPrivateUrl(photo.thumbnailUrl),
+      url: this.ossService.getPrivateUrl('photos', photo.url),
+      thumbnailUrl: this.ossService.getPrivateUrl('photos', photo.thumbnailUrl),
     }));
   };
 }

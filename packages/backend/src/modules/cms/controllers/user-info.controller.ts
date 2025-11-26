@@ -71,7 +71,10 @@ export class UserInfoController {
     }
 
     if (result.avatar) {
-      result.avatar = this.ossService.getPrivateUrl(result.avatar || '');
+      result.avatar = this.ossService.getPrivateUrl(
+        'user',
+        result.avatar || '',
+      );
     }
 
     this.logger.log(`用户信息获取成功，用户ID: ${userId}`);
@@ -110,7 +113,10 @@ export class UserInfoController {
     });
 
     if (result.avatar) {
-      result.avatar = this.ossService.getPrivateUrl(result.avatar || '');
+      result.avatar = this.ossService.getPrivateUrl(
+        'user',
+        result.avatar || '',
+      );
     }
 
     this.logger.log(`用户信息更新成功，用户ID: ${userId}`);
