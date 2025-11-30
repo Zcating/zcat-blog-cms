@@ -1,6 +1,5 @@
 import { cn, View } from "@blog/components";
 import { ToolboxSidebar } from "@blog/modules";
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 import { Outlet } from "react-router";
 
 const items = [
@@ -14,19 +13,6 @@ const items = [
       {
         title: "身份证生成",
         to: "/toolbox/id-card-generator",
-      },
-    ],
-  },
-  {
-    title: "算法可视化",
-    items: [
-      {
-        title: "排序",
-        to: "/toolbox/sort-visualizer",
-      },
-      {
-        title: "最短路径",
-        to: "/toolbox/shortest-path-visualizer",
       },
     ],
   },

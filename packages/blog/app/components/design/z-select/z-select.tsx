@@ -15,8 +15,17 @@ export function ZSelect({
   value,
   onValueChange,
 }: ZSelectProps) {
+  const handleChange = (v: string) => {
+    if (v === "") {
+      return;
+    }
+    if (typeof onValueChange !== "function") {
+      return;
+    }
+    onValueChange(v);
+  };
   return (
-    <Shadcn.Select value={value} onValueChange={onValueChange}>
+    <Shadcn.Select value={value} onValueChange={handleChange}>
       <Shadcn.SelectTrigger className={className}>
         <Shadcn.SelectValue placeholder={placeholder} />
       </Shadcn.SelectTrigger>

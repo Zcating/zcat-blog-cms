@@ -4,7 +4,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from "../ui";
+} from "@blog/components/ui/navigation-menu";
 
 interface LinkOption {
   to: string;

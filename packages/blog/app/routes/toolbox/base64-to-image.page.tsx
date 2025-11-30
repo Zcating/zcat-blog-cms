@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, ZSelect } from "@blog/components";
+import { View, ZCascader, ZSelect } from "@blog/components";
 import { Input } from "@blog/components/ui/input";
 import { Textarea } from "@blog/components/ui/textarea";
 import { Button } from "@blog/components/ui/button";
@@ -11,6 +11,14 @@ import {
   CardContent,
   CardFooter,
 } from "@blog/components/ui/card";
+
+const MIME_TYPE_OPTIONS = [
+  { label: "image/png", value: "image/png" },
+  { label: "image/jpeg", value: "image/jpeg" },
+  { label: "image/webp", value: "image/webp" },
+  { label: "image/gif", value: "image/gif" },
+  { label: "image/svg+xml", value: "image/svg+xml" },
+];
 
 export default function Base64ToImagePage() {
   // 图片 -> Base64
@@ -195,13 +203,7 @@ export default function Base64ToImagePage() {
                 </Label>
                 <ZSelect
                   className="w-full"
-                  options={[
-                    { label: "image/png", value: "image/png" },
-                    { label: "image/jpeg", value: "image/jpeg" },
-                    { label: "image/webp", value: "image/webp" },
-                    { label: "image/gif", value: "image/gif" },
-                    { label: "image/svg+xml", value: "image/svg+xml" },
-                  ]}
+                  options={MIME_TYPE_OPTIONS}
                   value={mimeType}
                   onValueChange={setMimeType}
                 />
