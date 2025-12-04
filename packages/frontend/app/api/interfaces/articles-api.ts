@@ -10,7 +10,7 @@ export namespace ArticlesApi {
   }
 
   export interface Article {
-    id?: number;
+    id: number;
     title: string;
     excerpt: string;
     content: string;

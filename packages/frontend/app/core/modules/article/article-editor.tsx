@@ -9,14 +9,12 @@ interface ArticleEditorProps {
   article: ArticlesApi.Article;
   onSave: (article: ArticlesApi.Article) => Promise<void>;
   onCancel: () => void;
-  loading?: boolean;
 }
 
 export function ArticleEditor({
   article: initialArticle,
   onSave,
   onCancel,
-  loading = false,
 }: ArticleEditorProps) {
   const [article, setArticle] = useState(initialArticle);
 
@@ -45,8 +43,8 @@ export function ArticleEditor({
           />
           <div className="flex-1">
             <Row justify="end" gap="5">
-              <Button onClick={handleSave} loading={loading} variant="primary">
-                {loading ? '保存中...' : '保存'}
+              <Button onClick={handleSave} variant="primary">
+                保存
               </Button>
               <Button onClick={onCancel}>取消</Button>
             </Row>
