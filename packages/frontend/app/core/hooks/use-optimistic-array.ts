@@ -1,20 +1,16 @@
 import React from 'react';
 import { removeArray, updateArray } from '../utils';
 
-interface StateActionMap<T> {
-  remove: [T];
-  update: [T];
-  rollback: [];
+interface StateActionTypes<T> {
+  remove: T;
+  update: T;
+  rollback: never;
 }
 
-type UseOptimisticArray<T, U = unknown> = [
-  T[],
-  React.Dispatch<U>,
-  <K extends keyof StateActionMap<T>>(
-    removeOrUpdate: K,
-    ...args: StateActionMap<T>[K]
-  ) => void,
-];
+type ArrayStateDispatch<T> = <K extends keyof StateActionTypes<T>>(
+  removeOrUpdate: K,
+  ...args: [StateActionTypes<T>[K]]
+) => void;
 
 export function useOptimisticArray<T, U = unknown>(
   initialValue: T[],
@@ -27,7 +23,7 @@ export function useOptimisticArray<T, U = unknown>(
   );
   //
   const commitState = React.useCallback(
-    (removeOrUpdate: keyof StateActionMap<T>, value: T) => {
+    (removeOrUpdate: keyof StateActionTypes<T>, value: T) => {
       switch (removeOrUpdate) {
         case 'remove':
           return setState((prev) => removeArray(prev, value));
@@ -38,11 +34,7 @@ export function useOptimisticArray<T, U = unknown>(
       }
     },
     [],
-  );
+  ) as ArrayStateDispatch<T>;
 
-  return [
-    optimisticState,
-    setOptimisticState,
-    commitState,
-  ] as unknown as UseOptimisticArray<T, U>;
+  return [optimisticState, setOptimisticState, commitState] as const;
 }
