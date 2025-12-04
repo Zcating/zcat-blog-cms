@@ -1,15 +1,14 @@
 import React from 'react';
 import { removeArray, updateArray } from '../utils';
 
-interface StateActionTypes<T> {
-  remove: T;
-  update: T;
-  rollback: never;
+interface StateActionTypes<T = unknown> {
+  remove: ['remove', T];
+  update: ['update', T];
+  rollback: ['rollback'];
 }
 
 type ArrayStateDispatch<T> = <K extends keyof StateActionTypes<T>>(
-  removeOrUpdate: K,
-  ...args: [StateActionTypes<T>[K]]
+  ...args: StateActionTypes<T>[K]
 ) => void;
 
 export function useOptimisticArray<T, U = unknown>(
@@ -22,19 +21,16 @@ export function useOptimisticArray<T, U = unknown>(
     reduce,
   );
   //
-  const commitState = React.useCallback<ArrayStateDispatch<T>>(
-    (type, value) => {
-      switch (type) {
-        case 'remove':
-          return setState((prev) => removeArray(prev, value));
-        case 'update':
-          return setState((prev) => updateArray(prev, value));
-        case 'rollback':
-          return setState((prev) => [...prev]);
-      }
-    },
-    [],
-  );
+  const commitState = React.useCallback<ArrayStateDispatch<T>>((...args) => {
+    switch (args[0]) {
+      case 'remove':
+        return setState((prev) => removeArray(prev, args[1]));
+      case 'update':
+        return setState((prev) => updateArray(prev, args[1]));
+      case 'rollback':
+        return setState((prev) => [...prev]);
+    }
+  }, []);
 
   return [optimisticState, setOptimisticState, commitState] as const;
 }
