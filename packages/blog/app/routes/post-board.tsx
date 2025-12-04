@@ -19,8 +19,12 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
   return (
     <View className="max-w-4xl mx-auto space-y-4">
       <h1>博客文章</h1>
-      {articles.map((article) => (
-        <Link to={`/post-board/${article.id}`} className="block">
+      {articles.map((article, index) => (
+        <Link
+          key={index.toString()}
+          to={`/post-board/${article.id}`}
+          className="block"
+        >
           <PostExcerptCard value={article} />
         </Link>
       ))}
