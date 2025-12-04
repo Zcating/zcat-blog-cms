@@ -9,12 +9,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import { OssService, PrismaService } from '@backend/common';
 import { createResult, ResultCode } from '@backend/model';
 
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { UserInfoService } from '../services/user-info.service';
 
 interface UpdateUserInfoDto {
   name?: string;
@@ -30,10 +30,7 @@ interface UpdateUserInfoDto {
 export class UserInfoController {
   private readonly logger = new Logger(UserInfoController.name);
 
-  constructor(
-    private prismaService: PrismaService,
-    private ossService: OssService,
-  ) {}
+  constructor(private userInfoService: UserInfoService) {}
 
   @Get()
   @ApiOperation({ summary: '获取用户信息' })
@@ -49,33 +46,7 @@ export class UserInfoController {
     }
 
     this.logger.log(`获取用户信息，用户ID: ${userId}`);
-
-    let result = await this.prismaService.userInfo.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!result) {
-      result = await this.prismaService.userInfo.create({
-        data: {
-          name: '',
-          contact: '{}',
-          occupation: '',
-          avatar: '',
-          aboutMe: '',
-          abstract: '',
-          userId: userId,
-        },
-      });
-    }
-
-    if (result.avatar) {
-      result.avatar = this.ossService.getPrivateUrl(
-        'user',
-        result.avatar || '',
-      );
-    }
+    const result = await this.userInfoService.getUserInfo(userId);
 
     this.logger.log(`用户信息获取成功，用户ID: ${userId}`);
 
@@ -98,26 +69,7 @@ export class UserInfoController {
       });
     }
 
-    const result = await this.prismaService.userInfo.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        name: body.name,
-        contact: body.contact,
-        occupation: body.occupation,
-        avatar: body.avatar,
-        aboutMe: body.aboutMe,
-        abstract: body.abstract,
-      },
-    });
-
-    if (result.avatar) {
-      result.avatar = this.ossService.getPrivateUrl(
-        'user',
-        result.avatar || '',
-      );
-    }
+    const result = await this.userInfoService.updateUserInfo(userId, body);
 
     this.logger.log(`用户信息更新成功，用户ID: ${userId}`);
 

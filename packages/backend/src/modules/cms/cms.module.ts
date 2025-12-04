@@ -12,6 +12,7 @@ import { PhotoAlbumController } from './controllers/photo-album.controller';
 import { PhotoController } from './controllers/photo.controller';
 import { ArticleService } from './services/article.service';
 import { PhotoService } from './services/photo.service';
+import { UserInfoService } from './services/user-info.service';
 
 //
 @Module({
@@ -25,6 +26,6 @@ import { PhotoService } from './services/photo.service';
     StatisticsController,
     UserInfoController,
   ],
-  providers: [PhotoService, ArticleService],
+  providers: [PhotoService, ArticleService, UserInfoService],
 })
 export class CmsModule {}
