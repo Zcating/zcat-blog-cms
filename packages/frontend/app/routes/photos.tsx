@@ -35,11 +35,30 @@ export default function Photos(props: Route.ComponentProps) {
       if (!(data.image instanceof Blob)) {
         return;
       }
-      const photo = await OssAction.createPhoto({
+
+      const tempId = -Date.now();
+      const tempUrl = URL.createObjectURL(data.image);
+      const tempPhoto: PhotosApi.Photo = {
+        id: tempId,
         name: data.name,
-        image: data.image,
-      });
-      setPhotos([photo, ...photos]);
+        url: tempUrl,
+        thumbnailUrl: tempUrl,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setPhotos((prev) => [tempPhoto, ...prev]);
+
+      try {
+        const photo = await OssAction.createPhoto({
+          name: data.name,
+          image: data.image,
+        });
+        setPhotos((prev) => prev.map((p) => (p.id === tempId ? photo : p)));
+      } catch (error) {
+        setPhotos((prev) => prev.filter((p) => p.id !== tempId));
+        console.error(error);
+      }
     },
   });
 

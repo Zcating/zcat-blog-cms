@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, use, useState } from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import { ArticlesApi } from '@cms/api';
 import { Button, Input, Markdown, Row, Textarea } from '@cms/components';
@@ -21,7 +21,7 @@ export function ArticleEditor({
   const [article, setArticle] = useState(initialArticle);
 
   // 处理编辑器内容变化
-  const handleEditorChange = ({ text }: { text: string }) => {
+  const handleEditorChange = (text: string) => {
     setArticle((prev) => ({ ...prev, content: text }));
   };
 
@@ -63,25 +63,9 @@ export function ArticleEditor({
 
       {/* Markdown 编辑器 */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <MdEditor
+        <MarkdownEditor
           value={article.content || ''}
-          style={{ height: '600px' }}
-          renderHTML={(text) => <Markdown content={text} />}
           onChange={handleEditorChange}
-          config={{
-            view: {
-              menu: true,
-              md: true,
-              html: true,
-            },
-            canView: {
-              menu: true,
-              md: true,
-              html: true,
-              fullScreen: true,
-              hideMenu: true,
-            },
-          }}
         />
       </div>
 
@@ -101,5 +85,49 @@ export function ArticleEditor({
         </p>
       </div>
     </div>
+  );
+}
+
+interface MarkdownEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+async function getMdEditor() {
+  return (await import('react-markdown-editor-lite')).default;
+}
+
+// import MdEditor from 'react-markdown-editor-lite';
+
+function MarkdownEditor({ value, onChange }: MarkdownEditorProps) {
+  // const MdEditor = use(getMdEditor());
+
+  const handleEditorChange = ({ text }: { text: string }) => {
+    onChange(text);
+  };
+
+  return (
+    <Suspense fallback={<div>加载中...</div>}>
+      <MdEditor
+        value={value}
+        style={{ height: '600px' }}
+        renderHTML={(text) => <Markdown content={text} />}
+        onChange={handleEditorChange}
+        config={{
+          view: {
+            menu: true,
+            md: true,
+            html: true,
+          },
+          canView: {
+            menu: true,
+            md: true,
+            html: true,
+            fullScreen: true,
+            hideMenu: true,
+          },
+        }}
+      />
+    </Suspense>
   );
 }

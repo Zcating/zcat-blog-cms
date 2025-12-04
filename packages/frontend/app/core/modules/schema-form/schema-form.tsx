@@ -17,7 +17,7 @@ interface SchemaFormProps<Fields extends FieldsRecord> {
   confirmText?: string;
   cancelText?: string;
 
-  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void>;
+  onSubmit: (data: SchemaFieldsData<Fields>) => void;
   onCancel: () => void;
 }
 
@@ -34,12 +34,11 @@ function SchemaForm<Fields extends FieldsRecord>(
     SchemaField,
   ][];
 
-  const submit = useLoadingFn(props.onSubmit);
 
   const instance = Form.useForm<SchemaFieldsData<Fields>>({
     initialValues: props.initialValues,
     schema: props.schema,
-    onSubmit: submit,
+    onSubmit: props.onSubmit,
   });
 
   return (
@@ -67,10 +66,10 @@ function SchemaForm<Fields extends FieldsRecord>(
         );
       })}
       <Row gap="5" justify="end">
-        <Button variant="primary" type="submit" loading={submit.loading}>
+        <Button variant="primary" type="submit">
           {props.confirmText || '创建'}
         </Button>
-        <Button onClick={props.onCancel} disabled={submit.loading}>
+        <Button onClick={props.onCancel}>
           {props.cancelText || '取消'}
         </Button>
       </Row>
@@ -83,7 +82,7 @@ interface UseSchemaFormParams<U, Fields extends FieldsRecord> {
   confirmText?: string;
   cancelText?: string;
   map: (data: U) => SchemaFieldsData<Fields>;
-  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void>;
+  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void> | void;
 }
 
 interface CreateSchemaFormParams<Fields extends FieldsRecord> {

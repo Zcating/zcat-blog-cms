@@ -23,7 +23,7 @@ export namespace Dialog {
         children: (
           <div className="space-y-5">
             <div className="text-xl font-bold">{title}</div>
-            <p>{content}</p>
+            <div>{content}</div>
             <Row gap="5" justify="end">
               <Button variant="primary" onClick={onConfirm}>
                 {confirmText}

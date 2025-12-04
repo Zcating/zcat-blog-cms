@@ -5,18 +5,18 @@ export namespace FormDialog {
     initialValues: T;
     confirmText?: string;
     cancelText?: string;
-    onSubmit: (data: T) => Promise<void>;
+    onSubmit: (data: T) => void;
     onCancel: () => void;
   }
 
   type TheFormComponentType<T> = React.FC<FormComponentProps<T>>;
 
   interface TheFormProps<T> {
+    initialValues: T;
     title: string;
     confirmText?: string;
     cancelText?: string;
-    initialValues: T;
-    onSubmit: (data: T) => Promise<void>;
+    onSubmit: (data: T) => void;
   }
 
   export type TheFormOpener<T> = (props: TheFormProps<T>) => Promise<void>;
@@ -32,8 +32,8 @@ export namespace FormDialog {
         };
 
         const submit = async (data: T) => {
-          await onSubmit(data);
           resolve();
+          onSubmit(data);
         };
         return {
           backdropClose: false,
