@@ -29,3 +29,15 @@ export function safeDateString(date: unknown, defaultValue?: string) {
 
   return defaultValue;
 }
+
+export function safeObjectURL(data: unknown, defaultValue: string = '') {
+  if (data instanceof Blob) {
+    return URL.createObjectURL(data);
+  }
+
+  if (typeof data === 'string') {
+    return data;
+  }
+
+  return defaultValue;
+}

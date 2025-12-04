@@ -1,6 +1,6 @@
 import { PhotosApi } from '@cms/api';
 import type { Route } from './+types/photos';
-import { Button, Dialog, Grid } from '@cms/components';
+import { Button, Dialog, Grid, safeObjectURL } from '@cms/components';
 import {
   createConstNumber,
   createImageUpload,
@@ -8,20 +8,51 @@ import {
   createSchemaForm,
   OssAction,
   PhotoCard,
-  updateArray,
   Workspace,
+  useOptimisticArray,
+  type PhotoCardData,
 } from '@cms/core';
 import React from 'react';
 
+interface PhotoFormData {
+  id: number;
+  name: string;
+  image: string | Blob | null;
+}
+
+const useSchemeForm = createSchemaForm({
+  fields: {
+    id: createConstNumber(),
+    name: createInput('名称'),
+    image: createImageUpload('图片'),
+  },
+});
+
 export async function clientLoader() {
   return {
-    photos: await PhotosApi.getPhotos(),
+    photos: (await PhotosApi.getPhotos()) as PhotoCardData[],
   };
 }
 
 export default function Photos(props: Route.ComponentProps) {
-  const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(
+  const [photos, setOptimisticPhotos, commitPhotos] = useOptimisticArray(
     props.loaderData.photos,
+    (prev, data: PhotoFormData) => {
+      const tempUrl = safeObjectURL(data.image);
+      const tempPhoto: PhotoCardData = {
+        id: data.id || -Date.now(),
+        name: data.name,
+        url: tempUrl,
+        thumbnailUrl: tempUrl,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        loading: true,
+      };
+      if (data.id) {
+        return prev.map((p) => (p.id === data.id ? tempPhoto : p));
+      }
+      return [...prev, tempPhoto];
+    },
   );
 
   const create = useSchemeForm({
@@ -31,34 +62,25 @@ export default function Photos(props: Route.ComponentProps) {
       name: '新照片',
       image: null,
     }),
-    onSubmit: async (data) => {
-      if (!(data.image instanceof Blob)) {
-        return;
-      }
+    onSubmit: (data) => {
+      React.startTransition(async () => {
+        if (!(data.image instanceof Blob)) {
+          return;
+        }
+        // 先添加到 optimisticState 中，等待服务器返回结果
+        setOptimisticPhotos(data);
 
-      const tempId = -Date.now();
-      const tempUrl = URL.createObjectURL(data.image);
-      const tempPhoto: PhotosApi.Photo = {
-        id: tempId,
-        name: data.name,
-        url: tempUrl,
-        thumbnailUrl: tempUrl,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setPhotos((prev) => [tempPhoto, ...prev]);
-
-      try {
-        const photo = await OssAction.createPhoto({
-          name: data.name,
-          image: data.image,
-        });
-        setPhotos((prev) => prev.map((p) => (p.id === tempId ? photo : p)));
-      } catch (error) {
-        setPhotos((prev) => prev.filter((p) => p.id !== tempId));
-        console.error(error);
-      }
+        try {
+          const photo = await OssAction.createPhoto({
+            name: data.name,
+            image: data.image,
+          });
+          commitPhotos('update', photo);
+        } catch (error) {
+          console.error(error);
+          commitPhotos('rollback');
+        }
+      });
     },
   });
 
@@ -72,12 +94,21 @@ export default function Photos(props: Route.ComponentProps) {
       image: data.thumbnailUrl,
     }),
     onSubmit: async (data) => {
-      const photo = await OssAction.updatePhoto(data);
-      if (!photo) {
-        return;
-      }
+      React.startTransition(async () => {
+        setOptimisticPhotos(data);
+        try {
+          const photo = await OssAction.updatePhoto(data);
+          if (!photo) {
+            commitPhotos('rollback');
+            return;
+          }
 
-      setPhotos(updateArray(photos, photo));
+          commitPhotos('update', photo);
+        } catch (error) {
+          console.log(error);
+          commitPhotos('rollback');
+        }
+      });
     },
   });
 
@@ -94,9 +125,15 @@ export default function Photos(props: Route.ComponentProps) {
     if (!confirm) {
       return;
     }
-
-    await PhotosApi.deletePhoto(data.id);
-    setPhotos(photos.filter((item) => item.id !== data.id));
+    React.startTransition(async () => {
+      setOptimisticPhotos({
+        id: data.id,
+        name: data.name,
+        image: data.thumbnailUrl,
+      });
+      await PhotosApi.deletePhoto(data.id);
+      commitPhotos('remove', data);
+    });
   };
 
   return (
@@ -118,11 +155,3 @@ export default function Photos(props: Route.ComponentProps) {
     </Workspace>
   );
 }
-
-const useSchemeForm = createSchemaForm({
-  fields: {
-    id: createConstNumber(),
-    name: createInput('名称'),
-    image: createImageUpload('图片'),
-  },
-});

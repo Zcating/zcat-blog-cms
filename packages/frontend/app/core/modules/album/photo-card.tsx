@@ -1,10 +1,14 @@
-import { FullscreenOutlined } from '@ant-design/icons';
+import { FullscreenOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { PhotosApi } from '@cms/api';
 import { Button, Card, Image, Modal, Row } from '@cms/components';
 import React from 'react';
 
+export interface PhotoCardData extends PhotosApi.Photo {
+  loading?: boolean;
+}
+
 interface PhotoCardProps {
-  data: PhotosApi.Photo;
+  data: PhotoCardData;
   onEdit: (data: PhotosApi.Photo) => void;
   onDelete: (data: PhotosApi.Photo) => void;
   hoverComponent?: React.ReactNode;
@@ -30,7 +34,11 @@ export function PhotoCard(props: PhotoCardProps) {
   };
 
   return (
-    <Card className="relative" onMouseOver={hover} onMouseLeave={leave}>
+    <Card
+      className="relative overflow-hidden"
+      onMouseOver={hover}
+      onMouseLeave={leave}
+    >
       <Card.Figure src={srcUrl} alt={props.data.name} />
       <Card.Body>
         <Card.Title>{props.data.name}</Card.Title>
@@ -57,6 +65,11 @@ export function PhotoCard(props: PhotoCardProps) {
             </Button>
             {props.hoverComponent}
           </Row>
+        </div>
+      )}
+      {props.data.loading && (
+        <div className="absolute top-0 right-0 left-0 bottom-0 flex items-center justify-center bg-white/50 cursor-wait">
+          <LoadingOutlined className="text-2xl" />
         </div>
       )}
     </Card>
