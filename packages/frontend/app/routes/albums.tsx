@@ -1,5 +1,5 @@
 import React from 'react';
-import zod from 'zod';
+import zod, { boolean } from 'zod';
 import { useNavigate } from 'react-router';
 
 import { Grid, Button } from '@cms/components';
@@ -11,14 +11,23 @@ import {
   createInput,
   createSchemaForm,
   createTextArea,
+  useOptimisticArray,
   Workspace,
+  type PhotoAlbumData,
 } from '@cms/core';
 
 import type { Route } from './+types/albums';
 
+interface AlbumFormValues {
+  id: number;
+  name: string;
+  available: boolean;
+  description: string;
+}
+
 export async function clientLoader() {
   return {
-    albums: await AlbumsApi.getPhotoAlbums(),
+    albums: (await AlbumsApi.getPhotoAlbums()) as PhotoAlbumData[],
   };
 }
 
@@ -28,7 +37,38 @@ export async function clientLoader() {
  * @returns
  */
 export default function Albums(props: Route.ComponentProps) {
-  const [albums, setAlbums] = React.useState(props.loaderData.albums);
+  const [albums, setOptimisticAlbums, commitAlbums] = useOptimisticArray(
+    props.loaderData.albums,
+    (state, values: AlbumFormValues) => {
+      if (values.id !== 0) {
+        return state.map((album) => {
+          if (album.id === values.id) {
+            return {
+              ...album,
+              name: values.name,
+              available: values.available,
+              description: values.description,
+              loading: true,
+            };
+          }
+          return album;
+        });
+      }
+
+      return [
+        ...state,
+        {
+          id: -Date.now(),
+          name: values.name,
+          available: values.available,
+          description: values.description,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          loading: true,
+        },
+      ];
+    },
+  );
   const navigate = useNavigate();
 
   const create = useAlbumForm({
@@ -42,8 +82,20 @@ export default function Albums(props: Route.ComponentProps) {
       };
     },
     onSubmit: async (data) => {
-      const result = await AlbumsApi.createPhotoAlbum(data);
-      setAlbums([result, ...albums]);
+      React.startTransition(async () => {
+        setOptimisticAlbums(data);
+        try {
+          const result = await AlbumsApi.createPhotoAlbum(data);
+          if (!result) {
+            commitAlbums('rollback');
+            return;
+          }
+          commitAlbums('update', result);
+        } catch (error) {
+          console.log(error);
+          commitAlbums('rollback');
+        }
+      });
     },
   });
 
@@ -51,7 +103,6 @@ export default function Albums(props: Route.ComponentProps) {
     title: '编辑相册',
     confirmText: '保存',
     map(item: AlbumsApi.PhotoAlbum) {
-      console.log(item);
       return {
         id: item.id,
         name: item.name ?? '',
@@ -60,9 +111,20 @@ export default function Albums(props: Route.ComponentProps) {
       };
     },
     onSubmit: async (data) => {
-      console.log(data);
-      const result = await AlbumsApi.updatePhotoAlbum(data);
-      setAlbums(albums.map((album) => (album.id === data.id ? result : album)));
+      React.startTransition(async () => {
+        setOptimisticAlbums(data);
+        try {
+          const result = await AlbumsApi.updatePhotoAlbum(data);
+          if (!result) {
+            commitAlbums('rollback');
+            return;
+          }
+          commitAlbums('update', result);
+        } catch (error) {
+          console.log(error);
+          commitAlbums('rollback');
+        }
+      });
     },
   });
 
@@ -83,29 +145,14 @@ export default function Albums(props: Route.ComponentProps) {
         items={albums}
         columns={3}
         renderItem={(item) => (
-          <AlbumItem item={item} onClickItem={handleClickAlbum} onEdit={edit} />
+          <AlbumImageCard
+            data={item}
+            onClickItem={handleClickAlbum}
+            onEdit={edit}
+          />
         )}
       />
     </Workspace>
-  );
-}
-
-interface AlbumItemProps {
-  item: AlbumsApi.PhotoAlbum;
-  onEdit: (item: AlbumsApi.PhotoAlbum) => void;
-  onClickItem: (item: AlbumsApi.PhotoAlbum) => void;
-}
-
-function AlbumItem(props: AlbumItemProps) {
-  const { item, onClickItem, onEdit } = props;
-  return (
-    <AlbumImageCard
-      source={item.cover?.url ?? ''}
-      title={item.name}
-      content={item.description}
-      onClick={() => onClickItem(item)}
-      onEdit={() => onEdit(item)}
-    />
   );
 }
 

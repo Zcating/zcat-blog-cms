@@ -6,8 +6,8 @@ export namespace AlbumsApi {
   export interface PhotoAlbum {
     id: number;
     name: string;
-    description?: string;
-    available?: boolean;
+    description: string;
+    available: boolean;
     cover?: PhotosApi.Photo;
     createdAt?: string;
     updatedAt?: string;

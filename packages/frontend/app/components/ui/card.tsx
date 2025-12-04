@@ -29,7 +29,7 @@ export function Card(props: CardProps) {
 }
 
 interface CardFigureProps {
-  src: string;
+  src?: string;
   alt: string;
 }
 
