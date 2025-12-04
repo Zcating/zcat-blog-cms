@@ -20,7 +20,7 @@ export class OssService {
     this.bucketName = this.configService.get<string>('OSS_BUCKET') ?? '';
   }
 
-  getPrivateUrl(directoryName: string, filename: string) {
+  getPrivateUrl(filename: string) {
     if (!filename) {
       return '';
     }
@@ -28,17 +28,14 @@ export class OssService {
     const deadline = Math.floor(Date.now() / 1000) + 3600;
     return this.bucketManager.privateDownloadUrl(
       this.domain,
-      `${directoryName}/${filename}`,
+      filename,
       deadline,
     );
   }
 
-  async deleteFile(directoryName: string, filename: string) {
+  async deleteFile(filename: string) {
     try {
-      await this.bucketManager.delete(
-        this.bucketName,
-        `${directoryName}/${filename}`,
-      );
+      await this.bucketManager.delete(this.bucketName, filename);
       return true;
     } catch {
       return false;
