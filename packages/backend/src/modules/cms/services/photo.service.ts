@@ -20,6 +20,11 @@ export class PhotoService {
     private ossService: OssService,
   ) {}
 
+  /**
+   * 获取相册照片
+   * @param albumId 相册ID
+   * @returns 相册照片列表
+   */
   async getPhotos(albumId?: number | null) {
     if (isNumber(albumId) && albumId <= 0) {
       return [];
@@ -34,6 +39,11 @@ export class PhotoService {
     return photos.map((photo) => this.transformPhoto(photo));
   }
 
+  /**
+   * 获取照片详情
+   * @param id 照片ID
+   * @returns 照片详情
+   */
   async getPhoto(id: number) {
     const photo = await this.prisma.photo.findUnique({
       where: { id },

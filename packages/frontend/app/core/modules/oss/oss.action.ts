@@ -163,8 +163,8 @@ export namespace OssAction {
       quality: 0.6,
     });
 
-    const url = `${filename}.${extension}`;
-    const thumbnailUrl = `${filename}.thumbnail.${extension}`;
+    const url = `photos/${filename}.${extension}`;
+    const thumbnailUrl = `photos/${filename}.thumbnail.${extension}`;
 
     await Promise.all([
       promiseFrom(qiniu.upload(imageFile, url, token)),
@@ -175,7 +175,7 @@ export namespace OssAction {
 
     return {
       url,
-      thumbnailUrl: url,
+      thumbnailUrl,
     };
   }
 
@@ -192,7 +192,7 @@ export namespace OssAction {
       maxHeight: 300,
       quality: 0.6,
     });
-    const url = `${filename}.${extension}`;
+    const url = `user/${filename}.${extension}`;
     const urlObserver = qiniu.upload(compressedImage.dist as File, url, token);
     await promiseFrom(urlObserver);
     return url;
