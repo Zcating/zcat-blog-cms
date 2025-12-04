@@ -22,9 +22,9 @@ export function useOptimisticArray<T, U = unknown>(
     reduce,
   );
   //
-  const commitState = React.useCallback(
-    (removeOrUpdate: keyof StateActionTypes<T>, value: T) => {
-      switch (removeOrUpdate) {
+  const commitState = React.useCallback<ArrayStateDispatch<T>>(
+    (type, value) => {
+      switch (type) {
         case 'remove':
           return setState((prev) => removeArray(prev, value));
         case 'update':
@@ -34,7 +34,7 @@ export function useOptimisticArray<T, U = unknown>(
       }
     },
     [],
-  ) as ArrayStateDispatch<T>;
+  );
 
   return [optimisticState, setOptimisticState, commitState] as const;
 }
