@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArticlesApi } from '@cms/api';
-import { ArticleEditor, ArticleViewer, Workspace } from '@cms/core/modules';
+import { ArticleEditor, ArticleViewer, Workspace } from '@cms/core';
 import type { Route } from './+types/articles.id';
 import { useLoadingFn } from '@cms/components';
 import { useNavigate } from 'react-router';
