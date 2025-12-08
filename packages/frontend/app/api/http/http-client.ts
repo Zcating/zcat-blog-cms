@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { createQueryPath } from './http-utils';
+import { createCookie } from 'react-router';
 
 export namespace HttpClient {
   export const STATIC_URL: string = import.meta.env.VITE_STATIC_URL;
@@ -43,7 +44,7 @@ export namespace HttpClient {
     return result.data;
   }
 
-  export async function get<T>(
+  export async function get<T = any>(
     path: string,
     body?: Record<string, any>,
   ): Promise<T> {

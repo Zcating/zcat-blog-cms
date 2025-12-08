@@ -19,4 +19,5 @@ export default [
     route('user-info', 'routes/user-info.tsx'),
     route('settings', 'routes/settings.tsx'),
   ]),
+  route('articles/edit', 'routes/articles.edit.tsx'),
 ] satisfies RouteConfig;

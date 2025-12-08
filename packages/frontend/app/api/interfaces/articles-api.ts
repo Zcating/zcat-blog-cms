@@ -1,3 +1,4 @@
+import { safeDateString, safeNumber, safeString } from '@cms/components';
 import { HttpClient } from '../http/http-client';
 import type { PaginateResult } from './types';
 
@@ -51,7 +52,13 @@ export namespace ArticlesApi {
   }
 
   export async function getArticle(id: number): Promise<Article> {
-    return await HttpClient.get(`cms/articles/detail`, { id });
+    const result = await HttpClient.get(`cms/articles/detail`, { id });
+    return {
+      id: safeNumber(result?.id),
+      title: safeString(result?.title),
+      excerpt: safeString(result?.excerpt),
+      content: safeString(result?.content),
+    };
   }
 
   export async function createArticle(params: Article): Promise<Article> {

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { isNumber, isString } from './is-type';
 
 export function safeParse<T>(data: string, defaultValue: T): T {
   try {
@@ -6,6 +7,20 @@ export function safeParse<T>(data: string, defaultValue: T): T {
   } catch (e) {
     return defaultValue;
   }
+}
+
+export function safeNumber(value: unknown, defaultValue: number = 0) {
+  if (isNumber(value)) {
+    return value;
+  }
+  return defaultValue;
+}
+
+export function safeString(value: unknown, defaultValue: string = '') {
+  if (isString(value)) {
+    return value;
+  }
+  return defaultValue;
 }
 
 export function safeArray<T>(array: unknown, defaultValue: T[] = []): T[] {

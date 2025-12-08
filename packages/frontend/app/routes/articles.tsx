@@ -31,7 +31,7 @@ export default function Articles(props: Route.ComponentProps) {
 
   const navigate = useNavigate();
   const handleClick = () => {
-    navigate('/articles/create');
+    navigate('/articles/edit');
   };
   const deleteArticles = useLoadingFn(async (article: ArticlesApi.Article) => {
     if (!article.id) {
