@@ -16,10 +16,10 @@ export namespace HttpClient {
     Cookies.set('token', `Bearer ${token}`);
   }
 
-  export async function post(
+  export async function post<T = any>(
     path: string,
     body: Record<string, any> | FormData,
-  ): Promise<any> {
+  ): Promise<T> {
     const headers = new Headers({
       Authorization: Cookies.get('token') || '',
     });

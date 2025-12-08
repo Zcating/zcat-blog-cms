@@ -6,20 +6,35 @@ import {
   Form,
   ImageUpload,
   Input,
+  safeObjectURL,
   Textarea,
-  useLoadingFn,
 } from '@cms/components';
-import { OssAction, Workspace } from '@cms/core';
+import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
 import React from 'react';
+import { Label } from '@cms/components/ui/label';
+import { LoadingOutlined } from '@ant-design/icons';
+
+interface UserInfoValues extends UserApi.UserInfo {
+  loading?: boolean;
+}
 
 export async function clientLoader() {
   return {
-    userInfo: await UserApi.userInfo(),
+    userInfo: (await UserApi.userInfo()) as UserInfoValues,
   };
 }
 
 export default function UserInfo(props: Route.ComponentProps) {
-  const { userInfo } = props.loaderData;
+  const [userInfo, setOptimisticUserInfo, commitUserInfo] = UseOptimisticObject(
+    props.loaderData.userInfo,
+    (prev, data: UserInfoValues) => {
+      return {
+        ...prev,
+        avatar: safeObjectURL(data.avatar),
+        loading: true,
+      };
+    },
+  );
 
   const [editable, setEditable] = React.useState(false);
 
@@ -37,14 +52,31 @@ export default function UserInfo(props: Route.ComponentProps) {
       abstract: userInfo.abstract,
     },
     async onSubmit(values) {
-      await OssAction.updateUserInfo(values);
+      React.startTransition(async () => {
+        try {
+          setOptimisticUserInfo(values);
+          const res = await OssAction.updateUserInfo(values);
+          console.log('updateUserInfo', values, res);
+          commitUserInfo('update', res);
+        } catch (error) {
+          console.error(error);
+          commitUserInfo('rollback');
+        }
+      });
     },
   });
 
-  const submit = useLoadingFn(async () => {
-    await form.submit();
+  React.useEffect(() => {
+    const { unsubscribe } = form.watch((value) => {
+      console.log(value);
+    });
+    return () => unsubscribe();
+  }, [form.watch]);
+
+  const submit = async () => {
     setEditable(false);
-  });
+    form.submit();
+  };
 
   return (
     <Workspace
@@ -52,7 +84,7 @@ export default function UserInfo(props: Route.ComponentProps) {
       operation={
         editable ? (
           <React.Fragment>
-            <Button variant="accent" onClick={submit} loading={submit.loading}>
+            <Button variant="accent" onClick={submit}>
               保存
             </Button>
             <Button variant="error" onClick={() => setEditable(false)}>
@@ -91,29 +123,34 @@ export default function UserInfo(props: Route.ComponentProps) {
           </Form.Item>
         </Form>
       ) : (
-        <Form form={form} className="space-y-5 w-lg mb-40">
-          <Form.Item form={form} name="avatar" label="头像">
-            <ImageField />
-          </Form.Item>
-          <Form.Item form={form} name="name" label="用户名">
-            <TextField />
-          </Form.Item>
-          <Form.Item form={form} name="contact.email" label="Email">
-            <TextField />
-          </Form.Item>
-          <Form.Item form={form} name="contact.github" label="Github">
-            <TextField />
-          </Form.Item>
-          <Form.Item form={form} name="occupation" label="职业">
-            <TextField />
-          </Form.Item>
-          <Form.Item form={form} name="abstract" label="一句话描述自己">
-            <TextField />
-          </Form.Item>
-          <Form.Item form={form} name="aboutMe" label="关于我">
-            <TextField />
-          </Form.Item>
-        </Form>
+        <div className="space-y-5 w-lg mb-40 relative">
+          <Label label="头像">
+            <Avatar src={userInfo.avatar} />
+          </Label>
+          <Label label="用户名">
+            <TextField value={userInfo.name} />
+          </Label>
+          <Label label="Email">
+            <TextField value={userInfo.contact.email} />
+          </Label>
+          <Label label="Github">
+            <TextField value={userInfo.contact.github} />
+          </Label>
+          <Label label="职业">
+            <TextField value={userInfo.occupation} />
+          </Label>
+          <Label label="一句话描述自己">
+            <TextField value={userInfo.abstract} />
+          </Label>
+          <Label label="关于我">
+            <TextField value={userInfo.aboutMe} />
+          </Label>
+          {userInfo.loading ? (
+            <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center">
+              <LoadingOutlined className="text-xl" />
+            </div>
+          ) : null}
+        </div>
       )}
     </Workspace>
   );
@@ -129,8 +166,4 @@ function TextField(props: TextFieldProps) {
       {props.value}
     </p>
   );
-}
-
-function ImageField(props: TextFieldProps) {
-  return <Avatar src={props.value} />;
 }

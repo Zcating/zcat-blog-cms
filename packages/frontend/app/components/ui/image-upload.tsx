@@ -1,6 +1,6 @@
 import React from 'react';
 import { tv } from 'tailwind-variants';
-import { classnames, isString } from '@cms/components/utils';
+import { classnames, isString, safeObjectURL } from '@cms/components/utils';
 import { PlusOutlined } from '@ant-design/icons';
 import { Image } from './image';
 
@@ -17,10 +17,7 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
 
   const [imageUrl, setImageUrl] = React.useState<string>('');
   React.useEffect(() => {
-    if (!isString(props.value)) {
-      return;
-    }
-    setImageUrl(props.value);
+    setImageUrl(safeObjectURL(props.value));
   }, [props.value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

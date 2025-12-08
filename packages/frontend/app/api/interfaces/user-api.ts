@@ -35,9 +35,19 @@ export namespace UserApi {
   export interface UpdateUserInfoParams extends Partial<UserInfo> {}
 
   export async function updateUserInfo(data: UpdateUserInfoParams) {
-    return await HttpClient.post('cms/user-info/update', {
+    const result = await HttpClient.post('cms/user-info/update', {
       ...data,
       contact: JSON.stringify(data.contact),
     });
+
+    return {
+      id: result.id,
+      name: result.name,
+      contact: safeParse<Contact>(result.contact, { email: '', github: '' }),
+      occupation: result.occupation,
+      avatar: result.avatar,
+      aboutMe: result.aboutMe,
+      abstract: result.abstract,
+    };
   }
 }
