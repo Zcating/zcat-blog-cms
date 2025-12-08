@@ -4,6 +4,7 @@ import { classnames, isString } from '@cms/components/utils';
 import { PlusOutlined } from '@ant-design/icons';
 import { Image } from './image';
 
+const types = ['image/png', 'image/jpeg'];
 interface ImageUploadProps {
   className?: string;
   value?: string | Blob | null;
@@ -27,6 +28,11 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
     if (!file) {
       return;
     }
+    // 判断是否为合法的图片，只支持 png 和 jpeg
+    if (!types.includes(file.type)) {
+      return;
+    }
+
     props.onChange?.(file);
     setImageUrl(URL.createObjectURL(file));
   };
@@ -40,6 +46,7 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
         <input
           ref={fileRef}
           type="file"
+          accept="image/*"
           className="hidden cursor-pointer"
           onChange={handleChange}
           onBlur={props.onBlur}
