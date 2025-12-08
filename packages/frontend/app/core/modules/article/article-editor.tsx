@@ -1,9 +1,10 @@
-import { Suspense, use, useState } from 'react';
 import MdEditor from 'react-markdown-editor-lite';
 import { ArticlesApi } from '@cms/api';
-import { Button, Input, Markdown, Row, Textarea } from '@cms/components';
+import { Button, Markdown, Row, Textarea, useLoadingFn } from '@cms/components';
 
 import 'react-markdown-editor-lite/lib/index.css';
+import React from 'react';
+import { LoadingOutlined } from '@ant-design/icons';
 
 interface ArticleEditorProps {
   article: ArticlesApi.Article;
@@ -16,24 +17,24 @@ export function ArticleEditor({
   onSave,
   onCancel,
 }: ArticleEditorProps) {
-  const [article, setArticle] = useState(initialArticle);
+  const [article, setArticle] = React.useState(initialArticle);
 
   // 处理编辑器内容变化
   const handleEditorChange = (text: string) => {
     setArticle((prev) => ({ ...prev, content: text }));
   };
 
-  const handleSave = () => {
-    onSave(article);
-  };
+  const handleSave = useLoadingFn(async () => {
+    await onSave(article);
+  });
 
   return (
-    <div className="w-full">
+    <div className="w-full h-screen flex flex-col">
       {/* 文章标题和操作按钮 */}
-      <div className="mb-6">
+      <div className="m-6">
         <div className="flex justify-between items-center mb-4 gap-5">
           <Textarea
-            className="max-w-80"
+            className="flex-1"
             weight="bold"
             size="lg"
             value={article.title}
@@ -41,7 +42,7 @@ export function ArticleEditor({
             placeholder="请输入文章标题"
             maxLength={84}
           />
-          <div className="flex-1">
+          <div className="">
             <Row justify="end" gap="5">
               <Button onClick={handleSave} variant="primary">
                 保存
@@ -60,28 +61,17 @@ export function ArticleEditor({
       </div>
 
       {/* Markdown 编辑器 */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 rounded-lg overflow-hidden flex-1">
         <MarkdownEditor
           value={article.content || ''}
           onChange={handleEditorChange}
         />
       </div>
-
-      {/* 文章信息 */}
-      <div className="mt-6 text-sm text-gray-500">
-        <p>
-          创建时间:{' '}
-          {article.createdAt
-            ? new Date(article.createdAt).toLocaleString()
-            : '未知'}
-        </p>
-        <p>
-          更新时间:{' '}
-          {article.updatedAt
-            ? new Date(article.updatedAt).toLocaleString()
-            : '未知'}
-        </p>
-      </div>
+      {handleSave.loading && (
+        <div className="absolute top-0 left-0 right-0 flex justify-center items-center">
+          <LoadingOutlined className="text-5xl" />
+        </div>
+      )}
     </div>
   );
 }
@@ -91,41 +81,31 @@ interface MarkdownEditorProps {
   onChange: (value: string) => void;
 }
 
-async function getMdEditor() {
-  return (await import('react-markdown-editor-lite')).default;
-}
-
-// import MdEditor from 'react-markdown-editor-lite';
-
 function MarkdownEditor({ value, onChange }: MarkdownEditorProps) {
-  // const MdEditor = use(getMdEditor());
-
   const handleEditorChange = ({ text }: { text: string }) => {
     onChange(text);
   };
 
   return (
-    <Suspense fallback={<div>加载中...</div>}>
-      <MdEditor
-        value={value}
-        style={{ height: '600px' }}
-        renderHTML={(text) => <Markdown content={text} />}
-        onChange={handleEditorChange}
-        config={{
-          view: {
-            menu: true,
-            md: true,
-            html: true,
-          },
-          canView: {
-            menu: true,
-            md: true,
-            html: true,
-            fullScreen: true,
-            hideMenu: true,
-          },
-        }}
-      />
-    </Suspense>
+    <MdEditor
+      value={value}
+      onChange={handleEditorChange}
+      style={{ height: '100%' }}
+      renderHTML={(text) => <Markdown content={text} />}
+      config={{
+        view: {
+          menu: true,
+          md: true,
+          html: true,
+        },
+        canView: {
+          menu: true,
+          md: true,
+          html: true,
+          fullScreen: true,
+          hideMenu: true,
+        },
+      }}
+    />
   );
 }

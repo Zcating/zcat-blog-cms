@@ -35,17 +35,20 @@ export default function ArticleEdit({ loaderData }: Route.ComponentProps) {
 
   // 保存文章
   const handleSave = async (article: ArticlesApi.Article) => {
-    React.startTransition(async () => {
-      await ArticlesApi.updateArticle(article);
-      navigate(`/articles/${article.id}`);
-    });
+    let result: ArticlesApi.Article;
+    if (article.id === 0) {
+      result = await ArticlesApi.createArticle(article);
+    } else {
+      result = await ArticlesApi.updateArticle(article);
+    }
+    navigate(`/articles/${result.id}`);
   };
 
   return (
     <ArticleEditor
       article={article}
       onSave={handleSave}
-      onCancel={() => navigate(-1)}
+      onCancel={() => navigate('/articles')}
     />
   );
 }
