@@ -6,7 +6,6 @@
     "build": "react-router build --mode production",
     "dev": "react-router dev --mode development",
     "start": "react-router-serve ./build/server/index.js",
-    "deploy": "pm2-deploy pnpm --name \"cms-frontend\"  -- run \"start\"",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -45,7 +44,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.2.0",
-    "script": "../scripts",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
