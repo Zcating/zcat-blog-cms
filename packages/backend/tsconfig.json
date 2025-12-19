@@ -11,12 +11,8 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@backend/*": [
-        "./src/*"
-      ],
-      "@backend/prisma": [
-        "./generated/prisma"
-      ]
+      "@backend/*": ["./src/*"],
+      "@backend/prisma": ["./generated/prisma/client"]
     },
     "incremental": true,
     "skipLibCheck": true,
