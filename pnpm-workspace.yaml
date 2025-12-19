@@ -17,5 +17,4 @@ ignoredBuiltDependencies:
   - core-js
   - esbuild
   - prisma
-  - sharp
   - unrs-resolver
