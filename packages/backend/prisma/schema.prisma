@@ -4,15 +4,16 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
+  // provider = "mysql"
 }
 
 model Article {
   id                    Int                     @id @default(autoincrement())
   title                 String                  @db.VarChar(255)
   excerpt               String                  @db.Text
-  createdAt             DateTime                @default(now()) @db.DateTime(6)
-  updatedAt             DateTime                @default(now()) @db.DateTime(6)
+  createdAt             DateTime                @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime                @default(now()) @db.Timestamp(6)
   createByUserId        Int?
   content               String                  @db.Text
   articleAndArticleTags ArticleAndArticleTags[]
@@ -35,8 +36,8 @@ model ArticleAndArticleTags {
 model ArticleTag {
   id                    Int                     @id @default(autoincrement())
   name                  String                  @unique(map: "IDX_c043c7daa8e5141e909e1cd841") @db.VarChar(255)
-  createdAt             DateTime                @default(now()) @db.DateTime(6)
-  updatedAt             DateTime                @default(now()) @db.DateTime(6)
+  createdAt             DateTime                @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime                @default(now()) @db.Timestamp(6)
   articleAndArticleTags ArticleAndArticleTags[]
 
   @@map("article_tag")
@@ -46,8 +47,8 @@ model Photo {
   id           Int      @id @default(autoincrement())
   name         String   @db.VarChar(255)
   url          String   @db.VarChar(255)
-  createdAt    DateTime @default(now()) @db.DateTime(6)
-  updatedAt    DateTime @default(now()) @db.DateTime(6)
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @db.Timestamp(6)
   albumId      Int?
   thumbnailUrl String   @db.VarChar(255)
 
@@ -57,8 +58,8 @@ model Photo {
 model PhotoAlbum {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(255)
-  createdAt   DateTime @default(now()) @db.DateTime(6)
-  updatedAt   DateTime @default(now()) @db.DateTime(6)
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @db.Timestamp(6)
   coverId     Int?
   description String   @db.VarChar(255)
   available  Boolean  @default(false)
@@ -71,8 +72,8 @@ model User {
   username  String   @unique(map: "IDX_78a916df40e02a9deb1c4b75ed") @db.VarChar(255)
   password  String   @db.VarChar(255)
   email     String   @unique(map: "IDX_e12875dfb3b1d92d7d7c5377e2") @db.VarChar(255)
-  createdAt DateTime @default(now()) @db.DateTime(6)
-  updatedAt DateTime @default(now()) @db.DateTime(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
   salt      String   @db.VarChar(64)
 
   @@map("user")
@@ -86,9 +87,9 @@ model UserInfo {
   avatar     String?  @db.VarChar(255)
   aboutMe    String?  @db.Text
   contact    String?  @db.Text
-  createdAt  DateTime @default(now()) @db.DateTime(6)
-  updatedAt  DateTime @default(now()) @db.DateTime(6)
-  userId     Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @db.Timestamp(6)
+  userId     Int?     @unique(map: "REL_user_info_userId")
 
   @@map("user_info")
 }
@@ -96,16 +97,16 @@ model UserInfo {
 
 model SystemSetting {
   id        Int      @id @default(autoincrement())
-  userId    Int?     @unique(map: "REL_3a7fa0c3809d19eaf2fb4f6594")
-  createdAt DateTime @default(now()) @db.DateTime(6)
-  updatedAt DateTime @default(now()) @db.DateTime(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
+  userId    Int?     @unique(map: "REL_system_setting_userId")
 
   @@map("system_setting")
 }
 
 model Statistic {
   id        Int      @id @default(autoincrement())
-  time      DateTime @default(now()) @db.DateTime(6)
+  time      DateTime @default(now()) @db.Timestamp(6)
   browser   String?  @db.VarChar(255)
   os        String?  @db.VarChar(255)
   device    String?  @db.VarChar(255)
@@ -114,8 +115,8 @@ model Statistic {
   pagePath  String?  @db.VarChar(500)
   pageTitle String?  @db.VarChar(255)
   referrer  String?  @db.VarChar(500)
-  createdAt DateTime @default(now()) @db.DateTime(6)
-  updatedAt DateTime @default(now()) @db.DateTime(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
 
   @@index([time])
   @@index([pagePath])

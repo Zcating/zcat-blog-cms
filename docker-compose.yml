@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  cms_pg:
+    image: postgres:16.1-alpine
+    hostname: cms_pg
+    container_name: cms_pg
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=zcat_blog_cms
+      - POSTGRES_USER=blog_cms_user
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - '5432:5432'
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: backend
+    image: cms_backend:latest
+    container_name: cms_backend
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    ports:
+      - '9090:9090'
+    env_file:
+      - ./packages/backend/.env.production
+    depends_on:
+      cms_pg:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge
+
+volumes:
+  cms_pg:

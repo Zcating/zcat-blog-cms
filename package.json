@@ -12,8 +12,10 @@
     "build:frontend": "pnpm run -C packages/frontend build",
     "build:blog": "pnpm run -C packages/blog build",
     "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\" \"pnpm run build:blog\"",
-    "migrate:dev": "pnpm run -C packages/backend prisma:migrate:dev",
-    "migrate:prod": "pnpm run -C packages/backend prisma:migrate:prod && pnpm run -C packages/backend prisma:generate:prod"
+    "deploy:backend": "pnpm run -C packages/backend start",
+    "db:deploy:dev": "pnpm run -C packages/backend db:deploy:dev",
+    "db:deploy:prod": "pnpm run -C packages/backend db:deploy:prod",
+    "docker:build": "docker compose -f docker-compose.yml up -d --build"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +36,7 @@
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "tsx": "^4.21.0"
   }
 }
