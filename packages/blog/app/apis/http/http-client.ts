@@ -1,7 +1,6 @@
 import { createQueryPath } from "./http-utils";
 
 export namespace HttpClient {
-  export const STATIC_URL: string = import.meta.env.VITE_STATIC_URL;
   const API_URL: string = import.meta.env.VITE_API_URL;
   const SERVER_URL: string = import.meta.env.VITE_SERVER_URL;
 

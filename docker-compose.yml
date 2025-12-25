@@ -40,6 +40,25 @@ services:
     networks:
       - app-network
 
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: frontend
+    image: cms_frontend:latest
+    container_name: cms_frontend
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./packages/frontend/.env.production
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
 networks:
   app-network:
     name: app-network

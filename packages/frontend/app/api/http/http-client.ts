@@ -3,8 +3,6 @@ import { createQueryPath } from './http-utils';
 import { createCookie } from 'react-router';
 
 export namespace HttpClient {
-  export const STATIC_URL: string = import.meta.env.VITE_STATIC_URL;
-
   const API_URL: string = import.meta.env.VITE_API_URL;
 
   interface ResponseResult {

@@ -10,10 +10,18 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm --filter=backend run build
+RUN pnpm --filter=frontend run build
 RUN pnpm deploy --filter=backend --prod /prod/backend
+RUN pnpm deploy --filter=frontend --prod /prod/frontend
 
 FROM base AS backend
 COPY --from=build /prod/backend /prod/backend
 WORKDIR /prod/backend
 EXPOSE 9090
 CMD [ "sh", "-c", "pnpm run db:deploy:prod && pnpm run start" ]
+
+FROM base AS frontend
+COPY --from=build /prod/frontend /prod/frontend
+WORKDIR /prod/frontend
+EXPOSE 3000
+CMD [ "sh", "-c", "pnpm run start" ]

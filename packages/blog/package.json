@@ -1,15 +1,18 @@
 {
-  "name": "zcat-blog",
+  "name": "blog",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build --mode production",
     "dev": "react-router dev --port 5000",
     "dev:prod": "react-router dev --port 5000 --mode production",
     "start": "PORT=1024 react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
   },
+  "files": [
+    "build"
+  ],
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@hookform/resolvers": "^5.2.1",
@@ -37,6 +40,7 @@
     "embla-carousel-react": "^8.6.0",
     "es-toolkit": "^1.39.8",
     "isbot": "^5.1.27",
+    "katex": "^0.16.23",
     "lucide-react": "^0.515.0",
     "react": "^19.1.0",
     "react-day-picker": "^9.11.1",
@@ -45,7 +49,9 @@
     "react-markdown": "^9.0.1",
     "react-router": "^7.9.1",
     "react-syntax-highlighter": "^15.6.1",
-    "remark-gfm": "^4.0.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "spark-md5": "^3.0.2",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^2.1.0",
