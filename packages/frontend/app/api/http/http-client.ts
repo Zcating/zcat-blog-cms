@@ -1,10 +1,10 @@
 import Cookies from 'js-cookie';
 import { createQueryPath } from './http-utils';
-import { createCookie } from 'react-router';
+import { HttpClientEventCenter } from './http-client-event-center';
 
 export namespace HttpClient {
   const API_URL: string = import.meta.env.VITE_API_URL;
-
+  const SERVER_URL: string = import.meta.env.SERVER_URL;
   interface ResponseResult {
     code: string;
     message: string;
@@ -30,15 +30,11 @@ export namespace HttpClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(`${API_URL}/${path}`, {
+    const result = await fetchFrom(`${API_URL}/${path}`, {
       method: 'POST',
       body: bodyData,
       headers: headers,
     });
-    const result = (await response.json()) as ResponseResult;
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
     return result.data;
   }
 
@@ -47,16 +43,13 @@ export namespace HttpClient {
     body?: Record<string, any>,
   ): Promise<T> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetch(`${API_URL}/${queryPath}`, {
+    const result = await fetchFrom(`${API_URL}/${queryPath}`, {
       method: 'GET',
       headers: {
         Authorization: Cookies.get('token') || '',
       },
     });
-    const result = (await response.json()) as ResponseResult;
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
+
     return result.data;
   }
 
@@ -64,7 +57,7 @@ export namespace HttpClient {
     path: string,
     body: Record<string, any>,
   ): Promise<any> {
-    const response = await fetch(`${API_URL}/${path}`, {
+    const result = await fetchFrom(`${API_URL}/${path}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -72,10 +65,7 @@ export namespace HttpClient {
         Authorization: Cookies.get('token') || '',
       },
     });
-    const result = (await response.json()) as ResponseResult;
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
+
     return result.data;
   }
 
@@ -84,16 +74,12 @@ export namespace HttpClient {
     body?: Record<string, any>,
   ): Promise<any> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetch(`${API_URL}/${queryPath}`, {
+    const result = await fetchFrom(`${API_URL}/${queryPath}`, {
       method: 'DELETE',
       headers: {
         Authorization: Cookies.get('token') || '',
       },
     });
-    const result = (await response.json()) as ResponseResult;
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
     return result.data;
   }
 
@@ -102,16 +88,37 @@ export namespace HttpClient {
     body?: Record<string, any>,
   ): Promise<T> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetch(`localhost:9090/${queryPath}`, {
+    const result = await fetchFrom(`${SERVER_URL}/${queryPath}`, {
       method: 'GET',
       headers: {
         Authorization: Cookies.get('token') || '',
       },
     });
+    return result.data;
+  }
+
+  export function subscribeUnauthEvent(callback: () => void) {
+    return HttpClientEventCenter.subscribe('UNAUTH', callback);
+  }
+
+  export function subscribeErrorEvent(callback: () => void) {
+    return HttpClientEventCenter.subscribe('ERROR', callback);
+  }
+
+  async function fetchFrom(
+    input: string | URL | Request,
+    init?: RequestInit | undefined,
+  ) {
+    const response = await fetch(input, init);
+    if (response.status === 401) {
+      HttpClientEventCenter.emitEvent('UNAUTH');
+    }
     const result = (await response.json()) as ResponseResult;
     if (result.code !== '0000') {
+      HttpClientEventCenter.emitEvent('ERROR');
       throw new Error(result.message);
     }
-    return result.data;
+
+    return result;
   }
 }

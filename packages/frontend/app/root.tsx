@@ -5,11 +5,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigate,
 } from 'react-router';
 
 import type { Route } from './+types/root';
 import './app.css';
 import { UiProvider } from './components';
+import { HttpClient } from './api';
+import React from 'react';
 
 export function meta() {
   return [
@@ -21,6 +24,22 @@ export function meta() {
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    const subs = [
+      HttpClient.subscribeUnauthEvent(() => {
+        navigate('/login');
+      }),
+      HttpClient.subscribeErrorEvent(() => {
+        // TODO: 处理错误
+        // navigate('/error');
+      }),
+    ];
+    return () => {
+      subs.forEach((sub) => sub());
+    };
+  }, []);
+
   return (
     <html lang="en" data-theme="light">
       <head>
