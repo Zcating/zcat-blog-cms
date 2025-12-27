@@ -1,5 +1,3 @@
-"use client";
-
 import { SidebarIcon } from "lucide-react";
 
 import { Button } from "@blog/components/ui/button";

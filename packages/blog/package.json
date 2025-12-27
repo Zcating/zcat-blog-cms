@@ -6,7 +6,7 @@
     "build": "react-router build --mode production",
     "dev": "react-router dev --port 5000",
     "dev:prod": "react-router dev --port 5000 --mode production",
-    "start": "PORT=1024 react-router-serve ./build/server/index.js",
+    "start": "cross-env PORT=1024 react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
   },
@@ -51,6 +51,7 @@
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
+    "cross-env": "^10.1.0",
     "remark-math": "^6.0.0",
     "spark-md5": "^3.0.2",
     "tailwind-merge": "^3.3.1",
