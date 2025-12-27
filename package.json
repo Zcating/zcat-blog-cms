@@ -15,6 +15,7 @@
     "deploy:backend": "pnpm run -C packages/backend start",
     "db:deploy:dev": "pnpm run -C packages/backend db:deploy:dev",
     "db:deploy:prod": "pnpm run -C packages/backend db:deploy:prod",
+    "docker:build:db": "docker compose -f docker-compose.yml up -d --build cms_pg",
     "docker:build": "docker compose -f docker-compose.yml up -d --build"
   },
   "keywords": [],
