@@ -31,7 +31,7 @@ services:
     ports:
       - '9090:9090'
     env_file:
-      - .env.backend.prod
+      - ./backend/.env.production
     depends_on:
       cms_pg:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - .env.frontend.prod
+      - ./frontend/.env.production
     depends_on:
       - backend
     networks:
@@ -70,7 +70,7 @@ services:
     ports:
       - '1024:1024'
     env_file:
-      - .env.blog.prod
+      - ./blog/.env.production
     depends_on:
       - backend
     networks:

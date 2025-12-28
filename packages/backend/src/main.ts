@@ -15,8 +15,6 @@ async function bootstrap() {
   // 配置CORS
   app.enableCors({
     origin: [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
       configService.get('FRONTEND_URL') ?? '',
       configService.get('BLOG_URL') ?? '',
     ],

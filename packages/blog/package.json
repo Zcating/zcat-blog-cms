@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev --port 1024",
-    "dev:prod": "react-router dev --port 1024 --mode production",
+    "dev": "react-router dev",
+    "dev:prod": "react-router dev  --mode production",
     "build": "react-router build --mode production",
-    "start": "cross-env PORT=1024 react-router-serve ./build/server/index.js",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
   },
