@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 // @ts-ignore
 import importPlugin from 'eslint-plugin-import';
 import reactPlugin from 'eslint-plugin-react';
-import globals from 'globals'
+import globals from 'globals';
 
 export default tseslint.config(
   {
@@ -24,8 +24,8 @@ export default tseslint.config(
       sourceType: 'module',
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         ...globals.browser,
@@ -52,11 +52,6 @@ export default tseslint.config(
             'type',
           ],
           pathGroups: [
-            {
-              pattern: '@nestjs/*',
-              group: 'builtin',
-              position: 'before',
-            },
             {
               pattern: '@backend/*',
               group: 'builtin',
