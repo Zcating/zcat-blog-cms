@@ -14,18 +14,10 @@ import { PostExcerptCard } from "@blog/modules";
 import React from "react";
 
 export async function loader() {
-  try {
-    return {
-      userInfo: await UserApi.getUserInfo(),
-      pagination: await ArticleApi.getArticleList(),
-    };
-  } catch (error) {
-    return {
-      userInfo: null,
-      pagination: null,
-      error: error,
-    };
-  }
+  return {
+    userInfo: await UserApi.getUserInfo(),
+    pagination: await ArticleApi.getArticleList(),
+  };
 }
 
 export function meta() {
@@ -40,7 +32,10 @@ const SORT_OPTIONS = [
   { value: "oldest", label: "最早" },
 ];
 
-// 首页文章列表实现
+/**
+ * 首页文章列表实现
+ *
+ */
 export default function HomePage(props: Route.ComponentProps) {
   const loaderData = props.loaderData;
   const userInfo = loaderData.userInfo;
@@ -56,9 +51,8 @@ export default function HomePage(props: Route.ComponentProps) {
       setArticles(loaderData.pagination?.data?.reverse() || []);
     }
   };
-  console.log(loaderData);
 
-  return userInfo ? (
+  return (
     <View className="px-4 flex gap-12">
       <View className="sticky top-24 flex flex-col gap-3 self-start">
         <Card className="w-xs">
@@ -91,12 +85,6 @@ export default function HomePage(props: Route.ComponentProps) {
           </Link>
         ))}
       </View>
-    </View>
-  ) : (
-    <View className="h-full p-4 space-y-6">
-      <div className="text-2xl font-bold">
-        {JSON.stringify(loaderData.error)}
-      </div>
     </View>
   );
 }
