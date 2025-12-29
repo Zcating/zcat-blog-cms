@@ -6,8 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "create:env": "tsx ./scripts/env",
-    "build": "nest build",
+    "build": "pnpm run db:generate:prod && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
@@ -20,7 +19,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate:dev": "dotenv -e .env.development -- pnpm exec prisma generate",
     "db:deploy:dev": "dotenv -e .env.development -- pnpm exec prisma migrate dev",
-    "db:generate:prod": "pnpm exec prisma generate",
+    "db:generate:prod": "dotenv -e .env.production -- pnpm exec prisma generate",
     "db:deploy:prod": "pnpm exec prisma migrate deploy",
     "db:status:prod": "pnpm exec prisma migrate status"
   },
