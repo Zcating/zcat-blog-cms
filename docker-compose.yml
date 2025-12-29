@@ -30,6 +30,8 @@ services:
     tty: true
     ports:
       - '9090:9090'
+    env_file:
+      - ./packages/backend/.env.production
     depends_on:
       cms_pg:
         condition: service_healthy
@@ -48,6 +50,8 @@ services:
     tty: true
     ports:
       - '3000:3000'
+    env_file:
+      - ./packages/frontend/.env.production
     depends_on:
       - backend
     networks:
@@ -63,6 +67,8 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
+    env_file:
+      - ./packages/blog/.env.production
     ports:
       - '1024:1024'
     depends_on:
