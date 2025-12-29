@@ -6,7 +6,7 @@
     "dev": "react-router dev",
     "dev:prod": "react-router dev  --mode production",
     "build": "react-router build --mode production",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "--PORT=1024 react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
   },
