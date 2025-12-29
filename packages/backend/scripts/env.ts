@@ -7,7 +7,7 @@ import * as path from 'path';
 // create .env file
 const envContent = `
 # 数据库配置
-DATABASE_URL="mysql://root:123456@127.0.0.1:3306/zcat_blog_cms"
+DATABASE_URL=postgresql://blog_cms_user:123456@127.0.0.1:5432/zcat_blog_cms?connect_timeout=300
 
 # dev 环境
 FRONTEND_URL=http://localhost:5173
