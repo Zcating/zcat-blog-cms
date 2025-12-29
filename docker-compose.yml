@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./packages/backend/Dockerfile
       target: backend
     image: cms_backend:latest
     container_name: cms_backend
@@ -41,7 +41,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./packages/frontend/Dockerfile
       target: frontend
     image: cms_frontend:latest
     container_name: cms_frontend
@@ -60,7 +60,7 @@ services:
   blog:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./packages/blog/Dockerfile
       target: blog
     image: cms_blog:latest
     container_name: blog
