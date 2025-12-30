@@ -7,6 +7,7 @@ export * from "./z-form/z-form";
 export * from "./z-address/z-address";
 export * from "./z-date-picker/z-date-picker";
 export * from "./z-cascader/z-cascader";
+export * from "./z-pagination/z-pagination";
 
 export {};
 

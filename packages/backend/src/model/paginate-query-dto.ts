@@ -3,14 +3,16 @@ import { safeNumber } from '@backend/utils';
 import { Transform } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
-const SORT_OPTIONS = ['desc', 'asc'] as const;
+const SORT_OPTIONS = ['latest', 'oldest'] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number];
 
 function safeSortOption(value: unknown): SortOption {
-  return SORT_OPTIONS.includes(value as SortOption)
-    ? (value as SortOption)
-    : 'desc';
+  if (SORT_OPTIONS.includes(value as SortOption)) {
+    return value as SortOption;
+  }
+
+  return 'latest';
 }
 
 export class PaginateQueryDto {
@@ -24,7 +26,7 @@ export class PaginateQueryDto {
 
   @IsOptional()
   @Transform(({ value }) => safeSortOption(value))
-  sort: SortOption = 'desc';
+  sort: SortOption = 'latest';
 }
 
 export interface PaginateResult<T> {

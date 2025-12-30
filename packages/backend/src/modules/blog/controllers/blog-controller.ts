@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Query, Post, Body, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Post,
+  Body,
+  Req,
+  Logger,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 
 import { OssService, PrismaService, StatisticService } from '@backend/common';
@@ -25,6 +34,8 @@ import {
   zipWith,
 } from 'rxjs';
 
+import { BlogService } from '../services/blog.service';
+
 // 博客访客记录DTO
 interface BlogVisitorDto {
   pagePath: string;
@@ -40,41 +51,28 @@ interface BlogVisitorDto {
 @ApiTags('文章对外接口')
 @Controller('api/blog')
 export class BlogController {
+  private readonly logger = new Logger(BlogController.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly ossService: OssService,
     private readonly statisticService: StatisticService,
+    private readonly blogService: BlogService,
   ) {}
 
   @ApiOperation({ summary: '获取文章列表' })
   @Get('article/list')
   async getArticles(@Query() query: PaginateQueryDto) {
-    const articles = await this.prisma.article.findMany({
-      ...createPaginate(query.page, query.pageSize),
-      orderBy: {
-        createdAt: query.sort,
-      },
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        createdAt: true,
-        updatedAt: true,
-        articleAndArticleTags: true,
-      },
-    });
+    this.logger.log('获取文章列表, query:', query);
 
-    const total = await this.prisma.article.count();
+    const data = await this.blogService.getArticleList(query);
+
+    this.logger.log('获取文章列表成功, data:', data);
 
     return createResult({
       code: ResultCode.Success,
       message: 'success',
-      data: {
-        data: articles,
-        totalPages: Math.ceil(total / query.pageSize),
-        page: query.page,
-        pageSize: query.pageSize,
-      },
+      data: data,
     });
   }
 

@@ -5,22 +5,30 @@ import {
   CardTitle,
   View,
   ZAvatar,
+  ZPagination,
   ZSelect,
 } from "@blog/components";
 import { ArticleApi, UserApi } from "@blog/apis";
-import { Link } from "react-router";
+import { createSearchParams, Link, useNavigate } from "react-router";
 import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
-import React from "react";
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page") ?? "1");
+  const sort = (url.searchParams.get("sort") ?? "latest") as
+    | "latest"
+    | "oldest";
+
   return {
     userInfo: await UserApi.getUserInfo(),
     pagination: await ArticleApi.getArticleList({
-      page: 1,
+      page: Number.isFinite(page) && page > 0 ? page : 1,
       pageSize: 10,
-      sort: "desc",
+      sort: sort,
     }),
+    page: Number.isFinite(page) && page > 0 ? page : 1,
+    sort,
   };
 }
 
@@ -44,25 +52,23 @@ export default function HomePage(props: Route.ComponentProps) {
   const loaderData = props.loaderData;
   const userInfo = loaderData.userInfo;
   const pagination = loaderData.pagination;
-  const [currentPagination, setCurrentPagination] = React.useState(pagination);
-  const [sort, setSort] = React.useState("latest");
-  const handleSortChange = async (value: string) => {
-    setSort(value);
-    if (value === "latest") {
-      const res = await ArticleApi.getArticleList({
-        page: 1,
-        pageSize: 10,
-        sort: "desc",
-      });
-      setCurrentPagination(res);
-    } else {
-      const res = await ArticleApi.getArticleList({
-        page: 1,
-        pageSize: 10,
-        sort: "asc",
-      });
-      setCurrentPagination(res);
-    }
+  const currentPage = loaderData.page;
+  const sort = loaderData.sort;
+  const navigate = useNavigate();
+
+  const toSearch = (nextPage: number, nextSort: "latest" | "oldest") =>
+    `?${createSearchParams({
+      page: String(nextPage),
+      sort: nextSort,
+    })}`;
+
+  const goToPage = (page: number) => {
+    navigate(toSearch(page, sort));
+  };
+
+  const handleSortChange = (value: string) => {
+    const nextSort = value === "oldest" ? "oldest" : "latest";
+    navigate(toSearch(1, nextSort));
   };
 
   return (
@@ -92,11 +98,17 @@ export default function HomePage(props: Route.ComponentProps) {
         </Card>
       </View>
       <View className="flex-1 flex flex-col gap-5">
-        {currentPagination.data.map((article, index) => (
+        {pagination.data.map((article, index) => (
           <Link to={`/post-board/${article.id}`} className="block" key={index}>
             <PostExcerptCard value={article} />
           </Link>
         ))}
+        <ZPagination
+          currentPage={currentPage}
+          totalPages={pagination.totalPages}
+          getHref={(page) => toSearch(page, sort)}
+          onPageChange={goToPage}
+        />
       </View>
     </View>
   );

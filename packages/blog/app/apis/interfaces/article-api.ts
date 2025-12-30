@@ -22,7 +22,7 @@ export namespace ArticleApi {
   export interface ArticleParams {
     page: number;
     pageSize: number;
-    sort: "desc" | "asc";
+    sort: "latest" | "oldest";
   }
 
   export async function getArticleList(
