@@ -1,13 +1,42 @@
 import * as Shadcn from "@blog/components/ui/pagination";
 
+/**
+ * 统一封装的分页组件：
+ * - 基于 shadcn/ui 的 Pagination 组件族实现
+ * - 支持页码省略号（ellipsis）展示
+ * - 支持两种用法：
+ *   1) 纯链接：仅传 getHref，让 <a href> 自然跳转
+ *   2) 受控跳转：传 onPageChange；组件会阻止默认跳转并回调页码
+ */
 export interface ZPaginationProps {
+  /**
+   * 额外样式类名，会透传到最外层 Pagination 容器
+   */
   className?: string;
+  /**
+   * 当前页码（从 1 开始）
+   */
   currentPage: number;
+  /**
+   * 总页数（从 1 开始）
+   */
   totalPages: number;
+  /**
+   * 根据页码生成链接地址，用于渲染 href
+   */
   getHref?: (page: number) => string;
+  /**
+   * 页码改变回调；传入时组件会 e.preventDefault() 并调用该回调
+   */
   onPageChange?: (page: number) => void;
 }
 
+/**
+ * 生成要渲染的页码序列（包含省略号标记）。
+ * 规则：
+ * - 总页数 <= 7：展示全部
+ * - 否则：展示首尾页 + 当前页附近页 + 头部/尾部补齐，并在断档处插入 ellipsis
+ */
 function getPageItems(
   totalPages: number,
   currentPage: number,
@@ -50,12 +79,20 @@ function getPageItems(
   return items;
 }
 
+/**
+ * 将当前页码归一化到合法范围：
+ * - 非法值返回 1
+ * - 超出范围则 clamp 到 [1, totalPages]
+ */
 function safePage(page: number, totalPages: number) {
   if (!Number.isFinite(page) || page <= 0) return 1;
   if (!Number.isFinite(totalPages) || totalPages <= 0) return 1;
   return Math.min(totalPages, Math.max(1, page));
 }
 
+/**
+ * ZPagination：渲染分页栏（上一页 / 页码 / 下一页）
+ */
 export function ZPagination({
   className,
   currentPage,
@@ -63,16 +100,29 @@ export function ZPagination({
   getHref,
   onPageChange,
 }: ZPaginationProps) {
+  /**
+   * 单页无需渲染分页
+   */
   if (totalPages <= 1) return null;
 
+  /**
+   * 基础页码计算
+   */
   const page = safePage(currentPage, totalPages);
   const prevPage = Math.max(1, page - 1);
   const nextPage = Math.min(totalPages, page + 1);
   const isFirst = page === 1;
   const isLast = page === totalPages;
 
+  /**
+   * 生成链接；不提供时给一个占位，避免 <a> 缺少 href
+   */
   const hrefOf = (p: number) =>
     typeof getHref === "function" ? getHref(p) : "#";
+
+  /**
+   * 触发页码跳转回调（如果提供）
+   */
   const jump = (p: number) => {
     if (typeof onPageChange !== "function") return;
     onPageChange(p);
@@ -85,6 +135,9 @@ export function ZPagination({
           <Shadcn.PaginationPrevious
             href={hrefOf(prevPage)}
             onClick={(e) => {
+              /**
+               * 如果由外部接管跳转，则阻止默认跳转
+               */
               if (typeof onPageChange === "function") e.preventDefault();
               if (isFirst) return;
               jump(prevPage);
@@ -110,6 +163,9 @@ export function ZPagination({
                 href={hrefOf(p)}
                 isActive={isActive}
                 onClick={(e) => {
+                  /**
+                   * 如果由外部接管跳转，则阻止默认跳转
+                   */
                   if (typeof onPageChange === "function") e.preventDefault();
                   if (isActive) return;
                   jump(p);
@@ -125,6 +181,9 @@ export function ZPagination({
           <Shadcn.PaginationNext
             href={hrefOf(nextPage)}
             onClick={(e) => {
+              /**
+               * 如果由外部接管跳转，则阻止默认跳转
+               */
               if (typeof onPageChange === "function") e.preventDefault();
               if (isLast) return;
               jump(nextPage);
