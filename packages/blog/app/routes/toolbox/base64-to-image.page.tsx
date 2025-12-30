@@ -130,7 +130,6 @@ export default function Base64ToImagePage() {
             {imagePreviewUrl ? (
               <div className="space-y-2">
                 <Label>预览</Label>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imagePreviewUrl}
                   alt="预览图片"
@@ -213,7 +212,6 @@ export default function Base64ToImagePage() {
             {base64PreviewUrl ? (
               <div className="space-y-2">
                 <Label>预览</Label>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={base64PreviewUrl}
                   alt="预览图片"
