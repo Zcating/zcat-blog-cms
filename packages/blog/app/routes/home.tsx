@@ -16,9 +16,8 @@ import { PostExcerptCard } from "@blog/modules";
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get("page") ?? "1");
-  const sort = (url.searchParams.get("sort") ?? "latest") as
-    | "latest"
-    | "oldest";
+  const sort = (url.searchParams.get("sort") ??
+    "latest") as ArticleApi.SortEnum;
 
   return {
     userInfo: await UserApi.getUserInfo(),
@@ -56,7 +55,7 @@ export default function HomePage(props: Route.ComponentProps) {
   const sort = loaderData.sort;
   const navigate = useNavigate();
 
-  const toSearch = (nextPage: number, nextSort: "latest" | "oldest") =>
+  const toSearch = (nextPage: number, nextSort: ArticleApi.SortEnum) =>
     `?${createSearchParams({
       page: String(nextPage),
       sort: nextSort,
