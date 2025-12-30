@@ -32,7 +32,7 @@ export class BlogService {
     const total = await this.prisma.article.count();
 
     return {
-      articles,
+      data: articles,
       totalPages: Math.ceil(total / query.pageSize),
       page: query.page,
       pageSize: query.pageSize,
