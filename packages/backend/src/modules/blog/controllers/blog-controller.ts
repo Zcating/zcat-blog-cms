@@ -52,7 +52,7 @@ export class BlogController {
     const articles = await this.prisma.article.findMany({
       ...createPaginate(query.page, query.pageSize),
       orderBy: {
-        createdAt: 'desc',
+        createdAt: query.sort,
       },
       select: {
         id: true,

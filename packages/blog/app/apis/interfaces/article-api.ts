@@ -19,8 +19,16 @@ export namespace ArticleApi {
     updatedAt: string;
   }
 
-  export async function getArticleList(): Promise<Pagination<Article>> {
-    return HttpClient.serverSideGet<Pagination>("blog/article/list");
+  export interface ArticleParams {
+    page: number;
+    pageSize: number;
+    sort: "desc" | "asc";
+  }
+
+  export async function getArticleList(
+    params: ArticleParams,
+  ): Promise<Pagination<Article>> {
+    return HttpClient.serverSideGet<Pagination>("blog/article/list", params);
   }
 
   export async function getArticleDetail(id: string) {

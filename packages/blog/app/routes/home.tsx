@@ -16,7 +16,11 @@ import React from "react";
 export async function loader() {
   return {
     userInfo: await UserApi.getUserInfo(),
-    pagination: await ArticleApi.getArticleList(),
+    pagination: await ArticleApi.getArticleList({
+      page: 1,
+      pageSize: 10,
+      sort: "desc",
+    }),
   };
 }
 
@@ -39,16 +43,25 @@ const SORT_OPTIONS = [
 export default function HomePage(props: Route.ComponentProps) {
   const loaderData = props.loaderData;
   const userInfo = loaderData.userInfo;
-  const [articles, setArticles] = React.useState(
-    loaderData.pagination?.data || [],
-  );
+  const pagination = loaderData.pagination;
+  const [currentPagination, setCurrentPagination] = React.useState(pagination);
   const [sort, setSort] = React.useState("latest");
-  const handleSortChange = (value: string) => {
+  const handleSortChange = async (value: string) => {
     setSort(value);
     if (value === "latest") {
-      setArticles(loaderData.pagination?.data || []);
+      const res = await ArticleApi.getArticleList({
+        page: 1,
+        pageSize: 10,
+        sort: "desc",
+      });
+      setCurrentPagination(res);
     } else {
-      setArticles(loaderData.pagination?.data?.reverse() || []);
+      const res = await ArticleApi.getArticleList({
+        page: 1,
+        pageSize: 10,
+        sort: "asc",
+      });
+      setCurrentPagination(res);
     }
   };
 
@@ -79,7 +92,7 @@ export default function HomePage(props: Route.ComponentProps) {
         </Card>
       </View>
       <View className="flex-1 flex flex-col gap-5">
-        {articles.map((article, index) => (
+        {currentPagination.data.map((article, index) => (
           <Link to={`/post-board/${article.id}`} className="block" key={index}>
             <PostExcerptCard value={article} />
           </Link>

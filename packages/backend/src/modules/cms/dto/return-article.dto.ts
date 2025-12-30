@@ -1,7 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { ArticleTag } from '@backend/prisma';
-
 export class ReturnArticleDto {
   @ApiProperty({ description: '文章ID' })
   id: number;

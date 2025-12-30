@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "dev:prod": "react-router dev  --mode production",
+    "dev:prod": "react-router dev --mode production",
     "build": "react-router build --mode production",
     "start": "PORT=1024 npx react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
