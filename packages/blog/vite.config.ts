@@ -10,6 +10,13 @@ export default defineConfig(({ mode }) => {
     plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
     server: {
       port: Number(env.VITE_PORT),
+      proxy: {
+        "/api": {
+          target: env.VITE_SERVER_URL,
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
   };
 });
