@@ -33,7 +33,7 @@ export function meta() {
 
 export default function Base64ToImagePage() {
   // 图片 -> Base64
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  // const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
 
@@ -55,10 +55,12 @@ export default function Base64ToImagePage() {
     e,
   ) => {
     const file = e.target.files?.[0] ?? null;
-    setImageFile(file);
+    if (!file) {
+      return;
+    }
+
     setImageBase64("");
     setImagePreviewUrl("");
-    if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -72,7 +74,9 @@ export default function Base64ToImagePage() {
   };
 
   const copyImageBase64 = async () => {
-    if (!imageBase64) return;
+    if (!imageBase64) {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(imageBase64);
       // 可以接入 toast：复制成功
@@ -82,15 +86,19 @@ export default function Base64ToImagePage() {
   };
 
   const clearImageSide = () => {
-    setImageFile(null);
+    // setImageFile(null);
     setImageBase64("");
     setImagePreviewUrl("");
   };
 
   const buildDataUrlFromBase64 = () => {
     const trimmed = base64Input.trim();
-    if (!trimmed) return "";
-    if (isDataUrl) return trimmed; // 已经是 data URL
+    if (!trimmed) {
+      return "";
+    }
+    if (isDataUrl) {
+      return trimmed;
+    } // 已经是 data URL
     return `data:${mimeType};base64,${trimmed}`; // 纯 base64 包装成 data URL
   };
 
@@ -100,7 +108,9 @@ export default function Base64ToImagePage() {
   };
 
   const downloadFromDataUrl = (dataUrl: string, filename: string) => {
-    if (!dataUrl) return;
+    if (!dataUrl) {
+      return;
+    }
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = filename;
@@ -171,22 +181,17 @@ export default function Base64ToImagePage() {
           <CardFooter className="flex gap-2">
             <Button
               variant="default"
-              onClick={copyImageBase64}
               disabled={!imageBase64}
+              onClick={copyImageBase64}
             >
               复制 Base64
             </Button>
             <Button
               variant="secondary"
-              onClick={() =>
-                downloadFromDataUrl(
-                  imageBase64,
-                  imageFile?.name
-                    ? `base64-${imageFile.name}.txt`
-                    : "image-base64.txt",
-                )
-              }
               disabled={!imageBase64}
+              onClick={() => {
+                downloadFromDataUrl(imageBase64, "image-base64.txt");
+              }}
             >
               下载为文本
             </Button>
