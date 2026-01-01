@@ -16,6 +16,7 @@ import { PostExcerptCard } from "@blog/modules";
 import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
+import { StaggerReveal } from "@blog/components";
 
 gsap.registerPlugin(useGSAP);
 
@@ -69,50 +70,6 @@ export default function HomePage(props: Route.ComponentProps) {
   const order = loaderData.order;
   const navigate = useNavigate();
 
-  const leftCardRef = React.useRef<HTMLDivElement>(null);
-  useGSAP(
-    () => {
-      const cards = gsap.utils.toArray<HTMLElement>(
-        '[data-home-left-card="true"]',
-      );
-      if (cards.length === 0) return;
-
-      gsap.to(cards, {
-        opacity: 1,
-        x: 0,
-        duration: 0.55,
-        ease: "power2.out",
-        stagger: 0.06,
-        overwrite: "auto",
-      });
-    },
-    { scope: leftCardRef },
-  );
-
-  const articleListRef = React.useRef<HTMLDivElement>(null);
-  useGSAP(
-    () => {
-      const cards = gsap.utils.toArray<HTMLElement>(
-        '[data-home-article-card="true"]',
-      );
-      if (cards.length === 0) return;
-
-      gsap.to(cards, {
-        opacity: 1,
-        x: 0,
-        duration: 0.55,
-        ease: "power2.out",
-        stagger: 0.06,
-        overwrite: "auto",
-      });
-    },
-    {
-      scope: articleListRef,
-      dependencies: [currentPage, order],
-      revertOnUpdate: true,
-    },
-  );
-
   const toSearch = (nextPage: number, nextOrder: ArticleApi.OrderEnum) =>
     `?${createSearchParams({
       page: String(nextPage),
@@ -128,57 +85,63 @@ export default function HomePage(props: Route.ComponentProps) {
   };
 
   return (
-    <View className="px-4 flex gap-12">
-      <View
-        ref={leftCardRef}
-        className="sticky top-24 flex flex-col gap-3 self-start"
-      >
-        <Card
-          data-home-left-card="true"
-          className="w-xs opacity-0 -translate-x-6"
+    <View className="flex flex-col gap-5 ">
+      <View className="px-4 flex gap-12 overflow-x-hidden">
+        <StaggerReveal
+          selector='[data-home-left-card="true"]'
+          className="sticky flex flex-col gap-3 self-start"
         >
-          <CardHeader className="flex justify-center">
-            <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 items-center">
-            <p className="text-2xl font-bold">{userInfo.name}</p>
-            <p className="text-lg">噢！你来了！</p>
-          </CardContent>
-        </Card>
-        <Card
-          data-home-left-card="true"
-          className="w-xs opacity-0 -translate-x-6"
-        >
-          <CardHeader>
-            <CardTitle>文章排序</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 items-center">
-            <ZSelect
-              className="w-full"
-              options={SORT_OPTIONS}
-              value={order}
-              onValueChange={handleOrderChange}
-            />
-          </CardContent>
-        </Card>
-      </View>
-      <View ref={articleListRef} className="flex-1 flex flex-col gap-5">
-        {pagination.data.map((article, index) => (
-          <Link
-            data-home-article-card="true"
-            to={`/post-board/${article.id}`}
-            className="block opacity-0 translate-x-6"
-            key={index}
+          <Card
+            data-home-left-card="true"
+            className="w-xs opacity-0 -translate-x-6"
           >
-            <PostExcerptCard value={article} />
-          </Link>
-        ))}
-        <ZPagination
-          page={currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={goToPage}
-        />
+            <CardHeader className="flex justify-center">
+              <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 items-center">
+              <p className="text-2xl font-bold">{userInfo.name}</p>
+              <p className="text-lg">噢！你来了！</p>
+            </CardContent>
+          </Card>
+          <Card
+            data-home-left-card="true"
+            className="w-xs opacity-0 -translate-x-6"
+          >
+            <CardHeader>
+              <CardTitle>文章排序</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 items-center">
+              <ZSelect
+                className="w-full"
+                options={SORT_OPTIONS}
+                value={order}
+                onValueChange={handleOrderChange}
+              />
+            </CardContent>
+          </Card>
+        </StaggerReveal>
+        <StaggerReveal
+          className="flex-1 flex flex-col gap-5"
+          selector='[data-home-article-card="true"]'
+          dependencies={[pagination]}
+        >
+          {pagination.data.map((article, index) => (
+            <Link
+              data-home-article-card="true"
+              to={`/post-board/${article.id}`}
+              className="block opacity-0 translate-x-6"
+              key={index}
+            >
+              <PostExcerptCard value={article} />
+            </Link>
+          ))}
+        </StaggerReveal>
       </View>
+      <ZPagination
+        page={currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={goToPage}
+      />
     </View>
   );
 }

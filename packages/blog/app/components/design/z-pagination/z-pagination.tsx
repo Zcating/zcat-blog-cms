@@ -1,4 +1,5 @@
 import * as Shadcn from "@blog/components/ui/pagination";
+import { cn } from "@blog/components/utils";
 
 /**
  * 统一封装的分页组件：
@@ -168,7 +169,7 @@ export function ZPagination({
   };
 
   return (
-    <Shadcn.Pagination className={className}>
+    <Shadcn.Pagination className={cn("!mx-[unset] !w-[unset]", className)}>
       <Shadcn.PaginationContent>
         <Shadcn.PaginationItem>
           <Shadcn.PaginationPrevious
