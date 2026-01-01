@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   createZFormMaker,
   View,
@@ -70,11 +70,37 @@ function randomSeqDigits(sex: "male" | "female"): string {
   return seqDigits.toString().padStart(3, "0");
 }
 
-const FormMaker = createZFormMaker({
+const schema = z.object({
   areaCode: z.string().min(0).max(6),
   birthDate: z.custom<dayjs.Dayjs>(dayjs.isDayjs, "Invalid date"),
   gender: z.enum(["male", "female"]),
 });
+
+const FormMaker = createZFormMaker(schema);
+
+function generateUniqueIdNumbers(
+  data: z.infer<typeof schema>,
+  count: number = 10,
+) {
+  const safeCount =
+    Number.isFinite(count) && count > 0 ? Math.floor(count) : 10;
+  const result = new Set<string>();
+  const maxAttempts = safeCount * 200;
+
+  for (
+    let attempts = 0;
+    result.size < safeCount && attempts < maxAttempts;
+    attempts++
+  ) {
+    const seqDigits = randomSeqDigits(data.gender);
+    const prefix = `${data.areaCode}${data.birthDate.format("YYYYMMDD")}${seqDigits}`;
+    const checkDigit = computeCheckDigit(prefix);
+
+    result.add(`${prefix}${checkDigit}`);
+  }
+
+  return Array.from(result);
+}
 
 export default function IdCardGeneratorPage() {
   const form = FormMaker.useForm({
@@ -84,23 +110,20 @@ export default function IdCardGeneratorPage() {
       gender: "male",
     },
     onSubmit: (data) => {
-      const seqDigits = randomSeqDigits(data.gender);
-      const prefix = `${data.areaCode}${data.birthDate.format("YYYYMMDD")}${seqDigits}`;
-      const checkDigit = computeCheckDigit(prefix);
-      const idNumber = `${prefix}${checkDigit}`;
-      setIdNumber(idNumber);
+      const idNumbers = generateUniqueIdNumbers(data, 10);
+      setIdNumbers(idNumbers);
       setValidateMsg("");
     },
   });
 
   // 结果
-  const [idNumber, setIdNumber] = useState<string>("");
+  const [idNumbers, setIdNumbers] = useState<string[]>([]);
   const [validateMsg, setValidateMsg] = useState<string>("");
 
   const copyResult = async () => {
     try {
-      if (!idNumber) return;
-      await navigator.clipboard.writeText(idNumber);
+      if (idNumbers.length === 0) return;
+      await navigator.clipboard.writeText(idNumbers.join("\n"));
       setValidateMsg("已复制到剪贴板");
     } catch (e) {
       setValidateMsg("复制失败");
@@ -125,7 +148,7 @@ export default function IdCardGeneratorPage() {
               <Button
                 variant="secondary"
                 onClick={copyResult}
-                disabled={!idNumber}
+                disabled={idNumbers.length === 0}
               >
                 复制结果
               </Button>
@@ -151,9 +174,9 @@ export default function IdCardGeneratorPage() {
         <CardContent className="space-y-2">
           <Textarea
             className="cursor-default"
-            value={idNumber}
+            value={idNumbers.join("\n")}
             readOnly
-            rows={3}
+            rows={10}
             placeholder="点击生成后显示身份证号"
           />
           {validateMsg ? (

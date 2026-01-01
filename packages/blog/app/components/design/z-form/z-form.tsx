@@ -47,10 +47,7 @@ type UseZFormProps<T extends FieldValues> = UseReactFormProps<T> & {
  * @template TTransformedValues 表单字段的转换值类型
  * @param {zod.ZodObject<T>} schema 表单字段的校验 schema
  */
-function createUseZForm<
-  T extends FieldValues,
-  TTransformedValues = FieldValues,
->(schema: zod.ZodObject<T>) {
+function createUseZForm<T extends FieldValues>(schema: zod.ZodObject<T>) {
   return ({ onSubmit, ...props }: UseZFormProps<ZodInferValues<T>>) => {
     const form = useForm<ZodInferValues<T>>({
       resolver: zodResolver(schema) as any,
@@ -65,7 +62,7 @@ function createUseZForm<
 
 // 基于 zod 校验的表单 maker
 interface ZFormMaker<T extends FieldValues> {
-  useForm: ReturnType<typeof createUseZForm<T, T>>;
+  useForm: ReturnType<typeof createUseZForm<T>>;
 
   Form: typeof ZForm<ZodInferValues<T>>;
 
@@ -79,19 +76,22 @@ interface ZFormMaker<T extends FieldValues> {
 /**
  * 创建一个基于 zod 校验的表单 maker
  * @template T 表单字段的校验 schema 类型
- * @template TTransformedValues 表单字段的转换值类型
  * @param {T} shape 表单字段的校验 schema
- * @returns {ZFormMaker<T, TTransformedValues>}一个基于 zod 校验的表单 maker
+ * @returns {ZFormMaker<T>}一个基于 zod 校验的表单 maker
  */
-export function createZFormMaker<
-  T extends FieldValues,
-  TTransformedValues = FieldValues,
->(shape: T): ZFormMaker<T> {
-  //
-  const schema = zod.object(shape);
+export function createZFormMaker<T extends FieldValues>(
+  shape: T | zod.ZodObject<T>,
+): ZFormMaker<T> {
+  // normalize schema
+  let schema: zod.ZodObject<T>;
+  if (shape instanceof zod.ZodObject) {
+    schema = shape;
+  } else {
+    schema = zod.object(shape);
+  }
 
   //
-  const useZForm = createUseZForm<T, TTransformedValues>(schema);
+  const useZForm = createUseZForm(schema);
 
   return {
     useForm: useZForm,
