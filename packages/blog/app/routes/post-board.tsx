@@ -1,5 +1,5 @@
 import { ArticleApi } from "@blog/apis";
-import { createSearchParams, Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { View, ZPagination } from "@blog/components";
 import { PostExcerptCard } from "@blog/modules/post";
 import type { Route } from "./+types/post-board";
