@@ -1,6 +1,6 @@
 import { ArticleApi } from "@blog/apis";
 import { Link, useNavigate } from "react-router";
-import { View, ZPagination } from "@blog/components";
+import { safePositiveNumber, View, ZPagination } from "@blog/components";
 import { PostExcerptCard } from "@blog/modules/post";
 import type { Route } from "./+types/post-board";
 
@@ -10,14 +10,15 @@ export function meta() {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = Number(url.searchParams.get("page") ?? "1");
+  const page = safePositiveNumber(url.searchParams.get("page"), 1);
+
   return {
     pagination: await ArticleApi.getArticleList({
-      page: Number.isFinite(page) && page > 0 ? page : 1,
+      page: page,
       pageSize: 10,
       order: "latest",
     }),
-    page: Number.isFinite(page) && page > 0 ? page : 1,
+    page,
   };
 }
 
@@ -47,9 +48,8 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
       ))}
 
       <ZPagination
-        currentPage={currentPage}
+        page={currentPage}
         totalPages={pagination.totalPages}
-        getHref={toSearch}
         onPageChange={goToPage}
       />
     </View>

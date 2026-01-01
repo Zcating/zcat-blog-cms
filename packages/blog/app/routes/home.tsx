@@ -3,6 +3,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  safePositiveNumber,
   View,
   ZAvatar,
   ZPagination,
@@ -13,9 +14,22 @@ import { createSearchParams, Link, useNavigate } from "react-router";
 import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
 
+/**
+ * 排序选项
+ */
+const SORT_OPTIONS = [
+  { value: "latest", label: "最新" },
+  { value: "oldest", label: "最早" },
+] as CommonOption<ArticleApi.OrderEnum>[];
+
+/**
+ * 首页文章列表加载器
+ * @param {Route.LoaderArgs} params
+ * @returns
+ */
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = Number(url.searchParams.get("page") ?? "1");
+  const page = safePositiveNumber(url.searchParams.get("page"), 1);
   const order = (url.searchParams.get("order") ??
     "latest") as ArticleApi.OrderEnum;
 
@@ -37,11 +51,6 @@ export function meta() {
     { name: "description", content: "个人技术博客" },
   ];
 }
-
-const SORT_OPTIONS = [
-  { value: "latest", label: "最新" },
-  { value: "oldest", label: "最早" },
-];
 
 /**
  * 首页文章列表实现
@@ -65,9 +74,8 @@ export default function HomePage(props: Route.ComponentProps) {
     navigate(toSearch(page, order));
   };
 
-  const handleOrderChange = (value: string) => {
-    const nextSort = value === "oldest" ? "oldest" : "latest";
-    navigate(toSearch(1, nextSort));
+  const handleOrderChange = (value: ArticleApi.OrderEnum) => {
+    navigate(toSearch(1, value));
   };
 
   return (
@@ -103,7 +111,7 @@ export default function HomePage(props: Route.ComponentProps) {
           </Link>
         ))}
         <ZPagination
-          currentPage={currentPage}
+          page={currentPage}
           totalPages={pagination.totalPages}
           getHref={(page) => toSearch(page, order)}
           onPageChange={goToPage}

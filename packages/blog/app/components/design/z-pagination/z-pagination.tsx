@@ -16,7 +16,7 @@ export interface ZPaginationProps {
   /**
    * 当前页码（从 1 开始）
    */
-  currentPage: number;
+  page: number;
   /**
    * 总页数（从 1 开始）
    */
@@ -95,30 +95,26 @@ function safePage(page: number, totalPages: number) {
  */
 export function ZPagination({
   className,
-  currentPage,
+  page,
   totalPages,
   getHref,
   onPageChange,
 }: ZPaginationProps) {
   /**
-   * 单页无需渲染分页
-   */
-  if (totalPages <= 1) return null;
-
-  /**
    * 基础页码计算
    */
-  const page = safePage(currentPage, totalPages);
-  const prevPage = Math.max(1, page - 1);
-  const nextPage = Math.min(totalPages, page + 1);
-  const isFirst = page === 1;
-  const isLast = page === totalPages;
+  const currentPage = safePage(page, totalPages);
+  const prevPage = Math.max(1, currentPage - 1);
+  const nextPage = Math.min(totalPages, currentPage + 1);
+  const isFirst = currentPage === 1;
+  const isLast = currentPage === totalPages;
 
   /**
    * 生成链接；不提供时给一个占位，避免 <a> 缺少 href
    */
-  const hrefOf = (p: number) =>
-    typeof getHref === "function" ? getHref(p) : "#";
+  const hrefOf = (p: number) => {
+    return typeof getHref === "function" ? getHref(p) : "#";
+  };
 
   /**
    * 触发页码跳转回调（如果提供）
@@ -128,20 +124,56 @@ export function ZPagination({
     onPageChange(p);
   };
 
+  /**
+   * 处理上一页点击事件
+   * @param {React.MouseEvent} e 点击事件对象
+   * @returns void
+   */
+  const handlePrevious = (e: React.MouseEvent) => {
+    /**
+     * 如果由外部接管跳转，则阻止默认跳转
+     */
+    if (typeof onPageChange === "function") e.preventDefault();
+    if (isFirst) return;
+    jump(prevPage);
+  };
+
+  /**
+   * 处理下一页点击事件
+   * @param {React.MouseEvent} e 点击事件对象
+   * @returns void
+   */
+  const handleNext = (e: React.MouseEvent) => {
+    /**
+     * 如果由外部接管跳转，则阻止默认跳转
+     */
+    if (typeof onPageChange === "function") e.preventDefault();
+    if (isLast) return;
+    jump(nextPage);
+  };
+
+  /**
+   * 处理页码点击事件
+   * @param {React.MouseEvent} e 点击事件对象
+   * @param {number} target 点击的页码
+   * @returns void
+   */
+  const handleClickPage = (e: React.MouseEvent, target: number) => {
+    /**
+     * 如果由外部接管跳转，则阻止默认跳转
+     */
+    if (typeof onPageChange === "function") e.preventDefault();
+    if (target === currentPage) return;
+    jump(target);
+  };
+
   return (
     <Shadcn.Pagination className={className}>
       <Shadcn.PaginationContent>
         <Shadcn.PaginationItem>
           <Shadcn.PaginationPrevious
             href={hrefOf(prevPage)}
-            onClick={(e) => {
-              /**
-               * 如果由外部接管跳转，则阻止默认跳转
-               */
-              if (typeof onPageChange === "function") e.preventDefault();
-              if (isFirst) return;
-              jump(prevPage);
-            }}
+            onClick={handlePrevious}
             className={isFirst ? "pointer-events-none opacity-50" : ""}
           />
         </Shadcn.PaginationItem>
@@ -155,23 +187,15 @@ export function ZPagination({
             );
           }
 
-          const p = item;
-          const isActive = p === page;
+          const isActive = item === currentPage;
           return (
-            <Shadcn.PaginationItem key={p.toString()}>
+            <Shadcn.PaginationItem key={item.toString()}>
               <Shadcn.PaginationLink
-                href={hrefOf(p)}
+                href={hrefOf(item)}
                 isActive={isActive}
-                onClick={(e) => {
-                  /**
-                   * 如果由外部接管跳转，则阻止默认跳转
-                   */
-                  if (typeof onPageChange === "function") e.preventDefault();
-                  if (isActive) return;
-                  jump(p);
-                }}
+                onClick={(e) => handleClickPage(e, item)}
               >
-                {p}
+                {item}
               </Shadcn.PaginationLink>
             </Shadcn.PaginationItem>
           );
@@ -180,14 +204,7 @@ export function ZPagination({
         <Shadcn.PaginationItem>
           <Shadcn.PaginationNext
             href={hrefOf(nextPage)}
-            onClick={(e) => {
-              /**
-               * 如果由外部接管跳转，则阻止默认跳转
-               */
-              if (typeof onPageChange === "function") e.preventDefault();
-              if (isLast) return;
-              jump(nextPage);
-            }}
+            onClick={handleNext}
             className={isLast ? "pointer-events-none opacity-50" : ""}
           />
         </Shadcn.PaginationItem>

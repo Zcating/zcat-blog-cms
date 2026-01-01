@@ -1,21 +1,21 @@
 import * as Shadcn from "@blog/components/ui/select";
 
-interface ZSelectProps {
+interface ZSelectProps<T extends string = string> {
   className?: string;
   placeholder?: string;
-  options: CommonOption[];
-  value?: string;
-  onValueChange?: (value: string) => void;
+  options: CommonOption<T>[];
+  value?: T;
+  onValueChange?: (value: T) => void;
 }
 
-export function ZSelect({
+export function ZSelect<T extends string = string>({
   className,
   placeholder,
   options,
   value,
   onValueChange,
-}: ZSelectProps) {
-  const handleChange = (v: string) => {
+}: ZSelectProps<T>) {
+  const handleChange = (v: T) => {
     if (v === "") {
       return;
     }
