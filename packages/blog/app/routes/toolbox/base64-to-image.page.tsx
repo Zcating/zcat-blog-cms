@@ -21,6 +21,16 @@ const MIME_TYPE_OPTIONS = [
   { label: "image/svg+xml", value: "image/svg+xml" },
 ];
 
+export function meta() {
+  return [
+    { title: "图片和 Base64 互转" },
+    {
+      name: "description",
+      content: "将图片转换为 Base64 编码，或将 Base64 编码转换为图片",
+    },
+  ];
+}
+
 export default function Base64ToImagePage() {
   // 图片 -> Base64
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -31,6 +41,7 @@ export default function Base64ToImagePage() {
   const [base64Input, setBase64Input] = useState<string>("");
   const [mimeType, setMimeType] = useState<string>("image/png");
   const [base64PreviewUrl, setBase64PreviewUrl] = useState<string>("");
+  const [dialogIsOpen, setDialogIsOpen] = useState<boolean>(false);
   const [fullscreenSrc, setFullscreenSrc] = useState<string | null>(null);
 
   const isDataUrl = useMemo(
@@ -103,6 +114,11 @@ export default function Base64ToImagePage() {
     setBase64PreviewUrl("");
   };
 
+  const handleOpenDialog = (src: string) => {
+    setFullscreenSrc(src);
+    setDialogIsOpen(true);
+  };
+
   return (
     <View className="container mx-auto p-4 space-y-6">
       <div className="space-y-2">
@@ -136,7 +152,7 @@ export default function Base64ToImagePage() {
                   src={imagePreviewUrl}
                   alt="预览图片"
                   className="h-48 w-full rounded-md object-contain border cursor-zoom-in"
-                  onClick={() => setFullscreenSrc(imagePreviewUrl)}
+                  onClick={() => handleOpenDialog(imagePreviewUrl)}
                 />
               </div>
             ) : null}
@@ -220,7 +236,7 @@ export default function Base64ToImagePage() {
                   alt="预览图片"
                   contentMode="contain"
                   className="h-48 w-full rounded-md border cursor-zoom-in"
-                  onClick={() => setFullscreenSrc(base64PreviewUrl)}
+                  onClick={() => handleOpenDialog(base64PreviewUrl)}
                 />
               </div>
             ) : null}
@@ -249,19 +265,14 @@ export default function Base64ToImagePage() {
         </Card>
       </div>
 
-      <Dialog
-        open={fullscreenSrc != null}
-        onOpenChange={(open) => {
-          if (!open) setFullscreenSrc(null);
-        }}
-      >
-        <DialogContent className="max-w-none w-[calc(100vw-2rem)] h-screen p-0 bg-transparent border-none shadow-none place-items-center sm:max-w-none">
+      <Dialog open={dialogIsOpen} onOpenChange={setDialogIsOpen}>
+        <DialogContent className="w-[90vw] h-[90vh] sm:max-w-auto flex items-center justify-center">
           {fullscreenSrc ? (
             <Image
               src={fullscreenSrc}
               alt="全屏预览"
               contentMode="contain"
-              className="w-xl h-xl"
+              className="w-full h-auto"
             />
           ) : null}
         </DialogContent>
