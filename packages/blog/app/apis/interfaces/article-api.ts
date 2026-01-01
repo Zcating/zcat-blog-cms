@@ -19,11 +19,11 @@ export namespace ArticleApi {
     updatedAt: string;
   }
 
-  export type SortEnum = "latest" | "oldest";
+  export type OrderEnum = "latest" | "oldest";
   export interface ArticleParams {
     page: number;
     pageSize: number;
-    sort: SortEnum;
+    order: OrderEnum;
   }
 
   export async function getArticleList(

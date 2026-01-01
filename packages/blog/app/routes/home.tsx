@@ -16,18 +16,18 @@ import { PostExcerptCard } from "@blog/modules";
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get("page") ?? "1");
-  const sort = (url.searchParams.get("sort") ??
-    "latest") as ArticleApi.SortEnum;
+  const order = (url.searchParams.get("order") ??
+    "latest") as ArticleApi.OrderEnum;
 
   return {
     userInfo: await UserApi.getUserInfo(),
     pagination: await ArticleApi.getArticleList({
       page: Number.isFinite(page) && page > 0 ? page : 1,
       pageSize: 10,
-      sort: sort,
+      order: order,
     }),
     page: Number.isFinite(page) && page > 0 ? page : 1,
-    sort,
+    order,
   };
 }
 
@@ -52,20 +52,20 @@ export default function HomePage(props: Route.ComponentProps) {
   const userInfo = loaderData.userInfo;
   const pagination = loaderData.pagination;
   const currentPage = loaderData.page;
-  const sort = loaderData.sort;
+  const order = loaderData.order;
   const navigate = useNavigate();
 
-  const toSearch = (nextPage: number, nextSort: ArticleApi.SortEnum) =>
+  const toSearch = (nextPage: number, nextOrder: ArticleApi.OrderEnum) =>
     `?${createSearchParams({
       page: String(nextPage),
-      sort: nextSort,
+      order: nextOrder,
     })}`;
 
   const goToPage = (page: number) => {
-    navigate(toSearch(page, sort));
+    navigate(toSearch(page, order));
   };
 
-  const handleSortChange = (value: string) => {
+  const handleOrderChange = (value: string) => {
     const nextSort = value === "oldest" ? "oldest" : "latest";
     navigate(toSearch(1, nextSort));
   };
@@ -90,8 +90,8 @@ export default function HomePage(props: Route.ComponentProps) {
             <ZSelect
               className="w-full"
               options={SORT_OPTIONS}
-              value={sort}
-              onValueChange={handleSortChange}
+              value={order}
+              onValueChange={handleOrderChange}
             />
           </CardContent>
         </Card>
@@ -105,7 +105,7 @@ export default function HomePage(props: Route.ComponentProps) {
         <ZPagination
           currentPage={currentPage}
           totalPages={pagination.totalPages}
-          getHref={(page) => toSearch(page, sort)}
+          getHref={(page) => toSearch(page, order)}
           onPageChange={goToPage}
         />
       </View>

@@ -3,13 +3,13 @@ import { safeNumber } from '@backend/utils';
 import { Transform } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
-const SORT_OPTIONS = ['latest', 'oldest'] as const;
+const ORDER_OPTIONS = ['latest', 'oldest'] as const;
 
-type SortOption = (typeof SORT_OPTIONS)[number];
+export type OrderEnum = (typeof ORDER_OPTIONS)[number];
 
-function safeSortOption(value: unknown): SortOption {
-  if (SORT_OPTIONS.includes(value as SortOption)) {
-    return value as SortOption;
+function safeOrderEnum(value: unknown): OrderEnum {
+  if (ORDER_OPTIONS.includes(value as OrderEnum)) {
+    return value as OrderEnum;
   }
 
   return 'latest';
@@ -25,8 +25,8 @@ export class PaginateQueryDto {
   pageSize: number = 10;
 
   @IsOptional()
-  @Transform(({ value }) => safeSortOption(value))
-  sort: SortOption = 'latest';
+  @Transform(({ value }) => safeOrderEnum(value))
+  order: OrderEnum = 'latest';
 }
 
 export interface PaginateResult<T> {

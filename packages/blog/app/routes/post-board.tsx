@@ -10,7 +10,11 @@ export function meta() {
 
 export async function loader() {
   return {
-    pagination: await ArticleApi.getArticleList(),
+    pagination: await ArticleApi.getArticleList({
+      page: 1,
+      pageSize: 10,
+      order: "latest",
+    }),
   };
 }
 

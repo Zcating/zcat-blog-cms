@@ -8,7 +8,7 @@ import { createPaginate } from '@backend/utils';
 export class BlogService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly SORT_MAP = {
+  private readonly ORDER_MAP = {
     latest: 'desc',
     oldest: 'asc',
   } as const;
@@ -17,7 +17,7 @@ export class BlogService {
     const articles = await this.prisma.article.findMany({
       ...createPaginate(query.page, query.pageSize),
       orderBy: {
-        createdAt: this.SORT_MAP[query.sort],
+        createdAt: this.ORDER_MAP[query.order],
       },
       select: {
         id: true,
