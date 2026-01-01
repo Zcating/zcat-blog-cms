@@ -13,6 +13,11 @@ import { ArticleApi, UserApi } from "@blog/apis";
 import { createSearchParams, Link, useNavigate } from "react-router";
 import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
+import React from "react";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(useGSAP);
 
 /**
  * 排序选项
@@ -64,6 +69,50 @@ export default function HomePage(props: Route.ComponentProps) {
   const order = loaderData.order;
   const navigate = useNavigate();
 
+  const leftCardRef = React.useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const cards = gsap.utils.toArray<HTMLElement>(
+        '[data-home-left-card="true"]',
+      );
+      if (cards.length === 0) return;
+
+      gsap.to(cards, {
+        opacity: 1,
+        x: 0,
+        duration: 0.55,
+        ease: "power2.out",
+        stagger: 0.06,
+        overwrite: "auto",
+      });
+    },
+    { scope: leftCardRef },
+  );
+
+  const articleListRef = React.useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const cards = gsap.utils.toArray<HTMLElement>(
+        '[data-home-article-card="true"]',
+      );
+      if (cards.length === 0) return;
+
+      gsap.to(cards, {
+        opacity: 1,
+        x: 0,
+        duration: 0.55,
+        ease: "power2.out",
+        stagger: 0.06,
+        overwrite: "auto",
+      });
+    },
+    {
+      scope: articleListRef,
+      dependencies: [currentPage, order],
+      revertOnUpdate: true,
+    },
+  );
+
   const toSearch = (nextPage: number, nextOrder: ArticleApi.OrderEnum) =>
     `?${createSearchParams({
       page: String(nextPage),
@@ -80,8 +129,14 @@ export default function HomePage(props: Route.ComponentProps) {
 
   return (
     <View className="px-4 flex gap-12">
-      <View className="sticky top-24 flex flex-col gap-3 self-start">
-        <Card className="w-xs">
+      <View
+        ref={leftCardRef}
+        className="sticky top-24 flex flex-col gap-3 self-start"
+      >
+        <Card
+          data-home-left-card="true"
+          className="w-xs opacity-0 -translate-x-6"
+        >
           <CardHeader className="flex justify-center">
             <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
           </CardHeader>
@@ -90,7 +145,10 @@ export default function HomePage(props: Route.ComponentProps) {
             <p className="text-lg">噢！你来了！</p>
           </CardContent>
         </Card>
-        <Card className="w-xs">
+        <Card
+          data-home-left-card="true"
+          className="w-xs opacity-0 -translate-x-6"
+        >
           <CardHeader>
             <CardTitle>文章排序</CardTitle>
           </CardHeader>
@@ -104,16 +162,20 @@ export default function HomePage(props: Route.ComponentProps) {
           </CardContent>
         </Card>
       </View>
-      <View className="flex-1 flex flex-col gap-5">
+      <View ref={articleListRef} className="flex-1 flex flex-col gap-5">
         {pagination.data.map((article, index) => (
-          <Link to={`/post-board/${article.id}`} className="block" key={index}>
+          <Link
+            data-home-article-card="true"
+            to={`/post-board/${article.id}`}
+            className="block opacity-0 translate-x-6"
+            key={index}
+          >
             <PostExcerptCard value={article} />
           </Link>
         ))}
         <ZPagination
           page={currentPage}
           totalPages={pagination.totalPages}
-          getHref={(page) => toSearch(page, order)}
           onPageChange={goToPage}
         />
       </View>

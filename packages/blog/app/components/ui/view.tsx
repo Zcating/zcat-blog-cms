@@ -1,10 +1,14 @@
-import type React from "react";
+import React from "react";
 
 interface ViewProps extends React.HTMLAttributes<HTMLDivElement> {
   backgroundColor?: string;
 }
 
-export function View(props: ViewProps) {
-  const { backgroundColor, ...rest } = props;
-  return <div {...rest} style={{ backgroundColor, ...rest.style }} />;
-}
+export const View = React.forwardRef<HTMLDivElement, ViewProps>(
+  function View(props, ref) {
+    const { backgroundColor, ...rest } = props;
+    return (
+      <div {...rest} ref={ref} style={{ backgroundColor, ...rest.style }} />
+    );
+  },
+);

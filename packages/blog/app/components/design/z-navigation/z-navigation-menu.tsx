@@ -22,9 +22,7 @@ export function ZNavigationMenu(props: ZNavigationMenuProps) {
         {props.options.map((item, index) => (
           <NavigationMenuItem key={index.toString()}>
             <NavigationMenuLink asChild>
-              <Link reloadDocument to={item.to}>
-                {item.title}
-              </Link>
+              <Link to={item.to}>{item.title}</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
         ))}
