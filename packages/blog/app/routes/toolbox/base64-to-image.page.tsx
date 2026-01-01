@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { View, ZCascader, ZSelect } from "@blog/components";
+import { Image, View, ZSelect } from "@blog/components";
 import { Input } from "@blog/components/ui/input";
 import { Textarea } from "@blog/components/ui/textarea";
 import { Button } from "@blog/components/ui/button";
 import { Label } from "@blog/components/ui/label";
+import { Dialog, DialogContent } from "@blog/components/ui/dialog";
 import {
   Card,
   CardHeader,
@@ -30,6 +31,7 @@ export default function Base64ToImagePage() {
   const [base64Input, setBase64Input] = useState<string>("");
   const [mimeType, setMimeType] = useState<string>("image/png");
   const [base64PreviewUrl, setBase64PreviewUrl] = useState<string>("");
+  const [fullscreenSrc, setFullscreenSrc] = useState<string | null>(null);
 
   const isDataUrl = useMemo(
     () =>
@@ -133,7 +135,8 @@ export default function Base64ToImagePage() {
                 <img
                   src={imagePreviewUrl}
                   alt="预览图片"
-                  className="h-48 w-full rounded-md object-contain border"
+                  className="h-48 w-full rounded-md object-contain border cursor-zoom-in"
+                  onClick={() => setFullscreenSrc(imagePreviewUrl)}
                 />
               </div>
             ) : null}
@@ -212,10 +215,12 @@ export default function Base64ToImagePage() {
             {base64PreviewUrl ? (
               <div className="space-y-2">
                 <Label>预览</Label>
-                <img
+                <Image
                   src={base64PreviewUrl}
                   alt="预览图片"
-                  className="h-48 w-full rounded-md object-contain border"
+                  contentMode="contain"
+                  className="h-48 w-full rounded-md border cursor-zoom-in"
+                  onClick={() => setFullscreenSrc(base64PreviewUrl)}
                 />
               </div>
             ) : null}
@@ -243,6 +248,24 @@ export default function Base64ToImagePage() {
           </CardFooter>
         </Card>
       </div>
+
+      <Dialog
+        open={fullscreenSrc != null}
+        onOpenChange={(open) => {
+          if (!open) setFullscreenSrc(null);
+        }}
+      >
+        <DialogContent className="max-w-none w-[calc(100vw-2rem)] h-screen p-0 bg-transparent border-none shadow-none place-items-center sm:max-w-none">
+          {fullscreenSrc ? (
+            <Image
+              src={fullscreenSrc}
+              alt="全屏预览"
+              contentMode="contain"
+              className="w-xl h-xl"
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </View>
   );
 }
