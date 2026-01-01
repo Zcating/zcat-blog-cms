@@ -2,6 +2,7 @@ import { cva } from "class-variance-authority";
 import React from "react";
 import { cn } from "../utils";
 import { useGroups } from "../hooks/use-groups";
+import { View } from "./view";
 
 const waterfallGap = cva("flex gap-4", {
   variants: {
@@ -18,7 +19,7 @@ const waterfallGap = cva("flex gap-4", {
 });
 type WaterfallGap = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
-interface WaterfallProps<T> {
+interface WaterfallProps<T> extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   data: T[];
   columns: number;
@@ -27,27 +28,24 @@ interface WaterfallProps<T> {
   renderItem: (item: T, index: number) => React.ReactNode;
 }
 export function Waterfall<T>(props: WaterfallProps<T>) {
-  const groups = useWaterfallGroup(props.data, props.columns);
+  const { className, data, columns, columnGap, rowGap, renderItem, ...rest } =
+    props;
+  const groups = useWaterfallGroup(data, columns);
   return (
-    <div
-      className={cn(props.className, waterfallGap({ gap: props.columnGap }))}
-    >
+    <View className={cn(className, waterfallGap({ gap: columnGap }))} {...rest}>
       {groups.map((group, index) => (
-        <div
+        <View
           key={index}
-          className={cn(
-            "flex flex-col flex-1",
-            waterfallGap({ gap: props.rowGap }),
-          )}
+          className={cn("flex flex-col flex-1", waterfallGap({ gap: rowGap }))}
         >
           {group.map((item, index) => (
-            <div key={index} className="">
-              {props.renderItem(item, index)}
-            </div>
+            <View key={index} className="">
+              {renderItem(item, index)}
+            </View>
           ))}
-        </div>
+        </View>
       ))}
-    </div>
+    </View>
   );
 }
 

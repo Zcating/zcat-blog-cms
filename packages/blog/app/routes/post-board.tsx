@@ -45,7 +45,9 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
       selector='[data-post-excerpt-card="true"]'
       direction="right"
     >
-      <h1 data-post-excerpt-card="true">博客文章</h1>
+      <View data-post-excerpt-card="true" className="text-2xl font-bold">
+        博客文章
+      </View>
       {articles.map((article, index) => (
         <Link
           data-post-excerpt-card="true"

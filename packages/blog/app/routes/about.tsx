@@ -5,6 +5,8 @@ import {
   CardTitle,
   IconEnvelope,
   IconGithub,
+  StaggerReveal,
+  View,
   ZAvatar,
 } from "@blog/components";
 import type { Route } from "./+types/about";
@@ -24,8 +26,12 @@ export async function loader() {
 export default function AboutPage(props: Route.ComponentProps) {
   const userInfo = props.loaderData.userInfo;
   return (
-    <div className="w-full h-full flex flex-col items-center gap-10">
-      <Card className="w-2xl">
+    <StaggerReveal
+      selector='[data-about-card="true"]'
+      className="w-full h-full flex flex-col items-center gap-10"
+      direction="top"
+    >
+      <Card data-about-card="true" className="w-2xl">
         <CardHeader className="flex justify-center">
           <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
         </CardHeader>
@@ -36,7 +42,7 @@ export default function AboutPage(props: Route.ComponentProps) {
           <p className="text-sm">欢迎来到我的博客！</p>
         </CardContent>
       </Card>
-      <Card className="w-2xl">
+      <Card data-about-card="true" className="w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">关于我</CardTitle>
         </CardHeader>
@@ -44,13 +50,13 @@ export default function AboutPage(props: Route.ComponentProps) {
           <p className="text-sm">{userInfo.aboutMe}</p>
         </CardContent>
       </Card>
-      <Card className="w-2xl">
+      <Card data-about-card="true" className="w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">联系我</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           很高兴能与你交流！你可以通过以下方式找到我：
-          <div className="flex flex-col gap-4">
+          <View className="flex flex-col gap-4">
             <ContactItem
               icon={<IconEnvelope size="lg" />}
               text={userInfo.contact.email}
@@ -60,10 +66,10 @@ export default function AboutPage(props: Route.ComponentProps) {
               icon={<IconGithub size="lg" />}
               text={userInfo.contact.github}
             />
-          </div>
+          </View>
         </CardContent>
       </Card>
-    </div>
+    </StaggerReveal>
   );
 }
 
