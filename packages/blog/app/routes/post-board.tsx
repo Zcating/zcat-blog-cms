@@ -1,6 +1,11 @@
 import { ArticleApi } from "@blog/apis";
 import { Link, useNavigate } from "react-router";
-import { safePositiveNumber, View, ZPagination } from "@blog/components";
+import {
+  safePositiveNumber,
+  StaggerReveal,
+  View,
+  ZPagination,
+} from "@blog/components";
 import { PostExcerptCard } from "@blog/modules/post";
 import type { Route } from "./+types/post-board";
 
@@ -35,10 +40,15 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
 
   const articles = pagination.data;
   return (
-    <View className="max-w-4xl mx-auto space-y-4">
-      <h1>博客文章</h1>
+    <StaggerReveal
+      className="max-w-4xl mx-auto space-y-4"
+      selector='[data-post-excerpt-card="true"]'
+      direction="right"
+    >
+      <h1 data-post-excerpt-card="true">博客文章</h1>
       {articles.map((article, index) => (
         <Link
+          data-post-excerpt-card="true"
           key={index.toString()}
           to={`/post-board/${article.id}`}
           className="block"
@@ -52,6 +62,6 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
         totalPages={pagination.totalPages}
         onPageChange={goToPage}
       />
-    </View>
+    </StaggerReveal>
   );
 }

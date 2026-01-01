@@ -20,8 +20,14 @@ const NEGATIVE_MAP = {
 
 type StaggerRevealDirection = keyof typeof DIRECTION_MAP;
 
-function transformFrom(direction: StaggerRevealDirection): string {
-  return `${DIRECTION_MAP[direction]}(${NEGATIVE_MAP[direction]})`;
+function translateValueFrom(
+  direction: StaggerRevealDirection,
+): "translateX" | "translateY" {
+  return DIRECTION_MAP[direction];
+}
+
+function transformValueFrom(direction: StaggerRevealDirection): string {
+  return `${translateValueFrom(direction)}(${NEGATIVE_MAP[direction]})`;
 }
 
 export interface StaggerRevealProps
@@ -56,18 +62,19 @@ export const StaggerReveal = React.forwardRef<
   useGSAP(
     () => {
       const items = gsap.utils.toArray<HTMLElement>(selector);
-      items.forEach((item) => {
-        item.style.transform = transformFrom(direction);
-        item.style.opacity = "0";
-      });
       if (items.length === 0) {
         return;
       }
 
+      // 初始化 transform
+      items.forEach((item) => {
+        item.style.transform = transformValueFrom(direction);
+        item.style.opacity = "0";
+      });
+
       gsap.to(items, {
         opacity: 1,
-        x: 0,
-        translateX: 0,
+        [translateValueFrom(direction)]: 0,
         duration: duration ?? DEFAULT_DURATION,
         ease: ease ?? DEFAULT_EASE,
         stagger: stagger ?? DEFAULT_STAGGER,

@@ -13,7 +13,6 @@ import { ArticleApi, UserApi } from "@blog/apis";
 import { createSearchParams, Link, useNavigate } from "react-router";
 import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
-import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { StaggerReveal } from "@blog/components";
