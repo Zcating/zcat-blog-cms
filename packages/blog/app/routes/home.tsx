@@ -91,10 +91,7 @@ export default function HomePage(props: Route.ComponentProps) {
           selector='[data-home-left-card="true"]'
           className="sticky flex flex-col gap-3 self-start"
         >
-          <Card
-            data-home-left-card="true"
-            className="w-xs opacity-0 -translate-x-6"
-          >
+          <Card data-home-left-card="true" className="w-xs">
             <CardHeader className="flex justify-center">
               <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
             </CardHeader>
@@ -103,10 +100,7 @@ export default function HomePage(props: Route.ComponentProps) {
               <p className="text-lg">噢！你来了！</p>
             </CardContent>
           </Card>
-          <Card
-            data-home-left-card="true"
-            className="w-xs opacity-0 -translate-x-6"
-          >
+          <Card data-home-left-card="true" className="w-xs">
             <CardHeader>
               <CardTitle>文章排序</CardTitle>
             </CardHeader>
@@ -123,13 +117,14 @@ export default function HomePage(props: Route.ComponentProps) {
         <StaggerReveal
           className="flex-1 flex flex-col gap-5"
           selector='[data-home-article-card="true"]'
+          direction="right"
           dependencies={[pagination]}
         >
           {pagination.data.map((article, index) => (
             <Link
               data-home-article-card="true"
               to={`/post-board/${article.id}`}
-              className="block opacity-0 translate-x-6"
+              className="block"
               key={index}
             >
               <PostExcerptCard value={article} />
