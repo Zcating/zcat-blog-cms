@@ -1,4 +1,6 @@
-export function isFunction<T>(value: T): value is T & Function {
+type FunctionType = (...args: unknown[]) => unknown;
+
+export function isFunction(value: unknown): value is FunctionType {
   return typeof value === "function";
 }
 
