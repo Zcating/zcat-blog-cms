@@ -7,6 +7,10 @@ const items = [
     title: "常用",
     items: [
       {
+        title: "导航",
+        to: "/toolbox",
+      },
+      {
         title: "图片和 Base64 互转",
         to: "/toolbox/base64-to-image",
       },
