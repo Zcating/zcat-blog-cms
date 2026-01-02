@@ -4,8 +4,10 @@ import reactPlugin from "eslint-plugin-react";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-export default tseslint.config(
+export default defineConfig([
+  globalIgnores(["build"]),
   {
     ignores: ["eslint.config.js"],
   },
@@ -65,4 +67,4 @@ export default tseslint.config(
       ],
     },
   },
-);
+]);
