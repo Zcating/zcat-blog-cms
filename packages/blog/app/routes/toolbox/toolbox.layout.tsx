@@ -1,15 +1,15 @@
 import { cn, View } from "@blog/components";
-import { ToolboxSidebar } from "@blog/modules";
+import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
 import { Outlet } from "react-router";
 
 const items = [
   {
+    title: "导航",
+    to: "/toolbox",
+  },
+  {
     title: "常用",
     items: [
-      {
-        title: "导航",
-        to: "/toolbox",
-      },
       {
         title: "图片和 Base64 互转",
         to: "/toolbox/base64-to-image",

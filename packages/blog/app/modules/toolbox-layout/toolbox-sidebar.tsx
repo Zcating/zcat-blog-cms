@@ -25,14 +25,24 @@ import {
   Collapsible,
 } from "@blog/components/ui/collapsible";
 
-interface ToolboxSidebarMenuItemProps {
+interface ZSidebarMenuItemProps {
   title: string;
-  to: string;
   icon?: React.FC<any>;
+  to: string;
+  items?: never;
 }
 
+interface ZCollapsibleItemProps {
+  title: string;
+  icon?: React.FC<any>;
+  to?: never;
+  items: ZSidebarMenuItemProps[];
+}
+
+export type ZSidebarItemProps = ZSidebarMenuItemProps | ZCollapsibleItemProps;
+
 interface ToolboxSidebarProps {
-  items: ZCollapsibleProps[];
+  items: ZSidebarItemProps[];
   children: React.ReactNode;
 }
 
@@ -53,9 +63,12 @@ export function ToolboxSidebar(props: ToolboxSidebarProps) {
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            {items.map((item, index) => (
-              <ZCollapsible key={index.toString()} {...item} />
-            ))}
+            {items.map((item, index) => {
+              if (item.items) {
+                return <ZCollapsible key={index.toString()} {...item} />;
+              }
+              return <ZSidebarMenuItem key={index.toString()} {...item} />;
+            })}
           </SidebarContent>
           <SidebarFooter></SidebarFooter>
         </Sidebar>
@@ -73,7 +86,7 @@ export function ToolboxSidebar(props: ToolboxSidebarProps) {
 interface ZCollapsibleProps {
   title: string;
   icon?: React.FC<any>;
-  items: ToolboxSidebarMenuItemProps[];
+  items: ZSidebarMenuItemProps[];
 }
 
 function ZCollapsible(props: ZCollapsibleProps) {
@@ -95,19 +108,26 @@ function ZCollapsible(props: ZCollapsibleProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.to}>
-                      {item.icon ? <item.icon /> : null}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <ZSidebarMenuItem key={item.title} {...item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>
       </SidebarGroup>
     </Collapsible>
+  );
+}
+
+function ZSidebarMenuItem(props: ZSidebarMenuItemProps) {
+  const { title, to, icon: Icon } = props;
+  return (
+    <SidebarMenuItem className="pl-2">
+      <SidebarMenuButton asChild>
+        <Link to={to}>
+          {Icon ? <Icon /> : null}
+          <span>{title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
