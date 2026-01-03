@@ -12,17 +12,31 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
+  const allowedOrigins = [
+    configService.get('FRONTEND_URL') ?? '',
+    configService.get('BLOG_URL') ?? '',
+  ];
+  const nodeEnv: string = configService.get('NODE_ENV') || 'develop';
+
   // 配置CORS
   app.enableCors({
-    origin: [
-      configService.get('FRONTEND_URL') ?? '',
-      configService.get('BLOG_URL') ?? '',
-    ],
+    origin: (origin, callback) => {
+      if (nodeEnv === 'develop') {
+        callback(null, true);
+        return;
+      }
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Data-Hash'],
     credentials: true,
   });
 
+  // 全局管道
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -41,6 +55,7 @@ async function bootstrap() {
     prefix: '/static/uploads/',
   });
 
+  // 配置 Swagger
   const config = new DocumentBuilder()
     .setTitle('cms 后台管理系统')
     .setDescription('cms 后台管理系统 API 描述')
@@ -50,6 +65,7 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
+  // 启动应用
   await app.listen(configService.get('PORT') ?? 3000);
 }
 
