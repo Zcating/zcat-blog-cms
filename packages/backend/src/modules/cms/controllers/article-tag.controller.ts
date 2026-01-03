@@ -15,8 +15,8 @@ import { PrismaService } from '@backend/common';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { ArticleTag } from '@backend/prisma';
 
-import { CreateArticleTagDto, UpdateArticleTagDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { CreateArticleTagDto, UpdateArticleTagDto } from '../schemas';
 
 @ApiTags('文章标签管理')
 @Controller('api/cms/article-tags')

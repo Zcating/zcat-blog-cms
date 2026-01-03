@@ -19,8 +19,12 @@ import {
 } from '@backend/model';
 import { Article } from '@backend/prisma';
 
-import { CreateArticleDto, UpdateArticleDto, ReturnArticleDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import {
+  CreateArticleDto,
+  ReturnArticleDto,
+  UpdateArticleDto,
+} from '../schemas';
 import { ArticleService } from '../services/article.service';
 
 @ApiTags('文章管理')
@@ -39,7 +43,6 @@ export class ArticleController {
   @ApiResponse({
     status: 200,
     description: '成功获取文章列表',
-    type: [ReturnArticleDto],
   })
   async findAll(
     @Query() dto: PaginateQueryDto,

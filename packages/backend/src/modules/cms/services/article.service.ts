@@ -4,7 +4,7 @@ import { PrismaService } from '@backend/common';
 import { PaginateQueryDto, PaginateResult } from '@backend/model';
 import { createPaginate } from '@backend/utils';
 
-import { ReturnArticleDto } from '../dto';
+import { ReturnArticleDto } from '../schemas';
 
 @Injectable()
 export class ArticleService {

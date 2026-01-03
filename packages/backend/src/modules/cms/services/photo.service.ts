@@ -11,7 +11,7 @@ import {
   UpdateAlbumPhotoDto,
   UpdateAlbumPhotoResultDto,
   UpdatePhotoDto,
-} from '../dto';
+} from '../schemas';
 
 @Injectable()
 export class PhotoService {

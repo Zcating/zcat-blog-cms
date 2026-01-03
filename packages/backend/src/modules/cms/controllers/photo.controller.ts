@@ -19,14 +19,14 @@ import {
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Photo } from '@backend/prisma';
 
+import { JwtAuthGuard } from '../jwt-auth.guard';
 import {
   CreateAlbumPhotoDto,
   CreatePhotoDto,
   UpdateAlbumPhotoDto,
   UpdateAlbumPhotoResultDto,
   UpdatePhotoDto,
-} from '../dto';
-import { JwtAuthGuard } from '../jwt-auth.guard';
+} from '../schemas';
 import { PhotoService } from '../services/photo.service';
 
 @ApiTags('照片管理')

@@ -13,11 +13,14 @@ import { PrismaService } from '@backend/common';
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { PhotoAlbum } from '@backend/prisma';
 
-import { CreatePhotoAlbumDto, UpdateAlbumDto } from '../dto';
-import { AddPhotosDto } from '../dto/add-photos.dto';
-import { ReturnPhotoAlbumDto } from '../dto/return-photo-album.dto';
-import { SetCoverDto } from '../dto/set-cover.dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import {
+  AddPhotosDto,
+  CreatePhotoAlbumDto,
+  ReturnPhotoAlbumDto,
+  SetCoverDto,
+  UpdateAlbumDto,
+} from '../schemas';
 import { PhotoService } from '../services/photo.service';
 
 @ApiTags('相册管理')
@@ -36,8 +39,6 @@ export class PhotoAlbumController {
    * @returns 相册列表
    */
   @Get()
-  @ApiOperation({ summary: '获取所有相册' })
-  @ApiResponse({ status: 200, description: '成功获取相册列表' })
   async findAll(): Promise<ResultData<ReturnPhotoAlbumDto[]>> {
     try {
       this.logger.log('开始获取所有相册');
@@ -173,9 +174,12 @@ export class PhotoAlbumController {
     }
   }
 
+  /**
+   * 设置相册封面
+   * @param setCoverDto 设置封面DTO
+   * @returns 操作结果
+   */
   @Post('cover')
-  @ApiOperation({ summary: '设置相册封面' })
-  @ApiResponse({ status: 200, description: '设置成功' })
   async setCover(@Body() setCoverDto: SetCoverDto): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始设置ID为 ${setCoverDto.albumId} 的相册封面`);
@@ -201,9 +205,12 @@ export class PhotoAlbumController {
     }
   }
 
+  /**
+   * 批量添加照片到相册
+   * @param batchAddDto 批量添加照片DTO
+   * @returns 操作结果
+   */
   @Post('add-photos')
-  @ApiOperation({ summary: '批量添加照片到相册' })
-  @ApiResponse({ status: 200, description: '批量添加成功' })
   async batchAddPhotos(
     @Body() batchAddDto: AddPhotosDto,
   ): Promise<ResultData<void>> {

@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-// import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_PIPE } from '@nestjs/core';
 
 import { CommonModule } from '@backend/common';
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
+
+import { ZodValidationPipe } from 'nestjs-zod';
 
 // import * as path from 'path';
 
@@ -30,6 +32,12 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
     AuthModule,
     CmsModule,
     BlogModule,
+  ],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ZodValidationPipe,
+    },
   ],
 })
 export class AppModule {}

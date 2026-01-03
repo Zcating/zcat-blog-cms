@@ -9,8 +9,8 @@ import {
 import { createResult, ResultCode, ResultData } from '@backend/model';
 import { Statistic } from '@backend/prisma';
 
-import { StatisticQueryDto } from '../dto';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { StatisticQueryDto } from '../schemas';
 
 @ApiTags('访问统计管理')
 @Controller('api/cms/statistics')
