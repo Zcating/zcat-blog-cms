@@ -1,6 +1,6 @@
 export function safeNumber(value: unknown, defaultValue: number = 0) {
   const num = parseFloat(value as string);
-  if (isNaN(num)) {
+  if (Number.isNaN(num) || !Number.isFinite(num)) {
     return defaultValue;
   }
   return num;

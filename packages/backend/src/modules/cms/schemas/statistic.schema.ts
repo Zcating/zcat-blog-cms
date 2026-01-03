@@ -17,19 +17,19 @@ export const StatisticQueryDtoSchema = z.object({
     .optional(),
   page: z
     .preprocess((v) => {
-      if (v === '' || v === undefined) return undefined;
-      if (typeof v !== 'string' && typeof v !== 'number') return undefined;
+      if (v === '' || v === undefined) return 1;
+      if (typeof v !== 'string' && typeof v !== 'number') return 1;
       const n = Number.parseInt(v.toString(), 10);
-      return Number.isNaN(n) ? undefined : n;
+      return Number.isNaN(n) ? 1 : n;
     }, z.number().int().min(1))
     .optional()
     .default(1),
   limit: z
     .preprocess((v) => {
-      if (v === '' || v === undefined) return undefined;
-      if (typeof v !== 'string' && typeof v !== 'number') return undefined;
+      if (v === '' || v === undefined) return 10;
+      if (typeof v !== 'string' && typeof v !== 'number') return 10;
       const n = Number.parseInt(v.toString(), 10);
-      return Number.isNaN(n) ? undefined : n;
+      return Number.isNaN(n) ? 10 : n;
     }, z.number().int().min(1))
     .optional()
     .default(10),

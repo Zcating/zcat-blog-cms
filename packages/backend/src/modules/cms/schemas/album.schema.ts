@@ -1,4 +1,4 @@
-import { Photo, PhotoAlbum } from '@backend/prisma';
+import type { Photo, PhotoAlbum } from '@backend/prisma';
 
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
