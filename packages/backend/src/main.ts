@@ -3,8 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-import { join } from 'path';
-
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -12,13 +10,19 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  // 配置CORS
+  app.enableCors({
+    origin: [
+      configService.get('FRONTEND_URL') ?? '',
+      configService.get('BLOG_URL') ?? '',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Data-Hash'],
+    credentials: true,
+  });
+
   // 配置解析器的最大大小
   app.useBodyParser('json', { limit: '10mb' });
-
-  // 配置静态文件服务
-  app.useStaticAssets(join(__dirname, '../', 'uploads'), {
-    prefix: '/static/uploads/',
-  });
 
   // 配置 Swagger
   const config = new DocumentBuilder()
@@ -31,7 +35,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   // 启动应用
-  await app.listen(configService.get('PORT') ?? 3000);
+  await app.listen(configService.get('PORT') ?? 9090);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

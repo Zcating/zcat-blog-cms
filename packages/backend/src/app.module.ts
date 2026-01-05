@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
-import { CommonModule } from '@backend/common';
+import { CommonModule, HttpExceptionFilter } from '@backend/common';
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
 
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -37,6 +37,10 @@ import { ZodValidationPipe } from 'nestjs-zod';
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
 })
