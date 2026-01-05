@@ -19,9 +19,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate:dev": "dotenv -e .env.development -- pnpm exec prisma generate",
     "db:deploy:dev": "dotenv -e .env.development -- pnpm exec prisma migrate dev",
+    "db:status:dev": "dotenv -e .env.development -- pnpm exec prisma migrate status",
     "db:generate:prod": "dotenv -e .env.production -- pnpm exec prisma generate",
-    "db:deploy:prod": "pnpm exec prisma migrate deploy",
-    "db:status:prod": "pnpm exec prisma migrate status"
+    "db:deploy:prod": "dotenv -e .env.production -- pnpm exec prisma migrate deploy",
+    "db:status:prod": "dotenv -e .env.production -- pnpm exec prisma migrate status"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
