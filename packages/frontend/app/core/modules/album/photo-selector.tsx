@@ -102,10 +102,10 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   const hasSelection = internalSelectedIds.length > 0;
 
   return (
-    <div className={className}>
+    <div className={classnames('flex flex-col gap-4 h-full', className)}>
       {/* 操作栏 */}
       {showActions && (
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {mode === 'multiple' && (
               <Button variant="accent" size="sm" onClick={handleSelectAll}>
@@ -138,28 +138,29 @@ export function PhotoSelector(props: PhotoSelectorProps) {
         </div>
       )}
 
-      {/* 照片网格 */}
-      <Grid
-        columns={5}
-        gap="md"
-        items={photos}
-        renderItem={(photo) => (
-          <PhotoSelectorCard
-            key={photo.id}
-            photo={photo}
-            selected={internalSelectedIds.includes(photo.id)}
-            onSelect={(selected) => handlePhotoSelect(photo.id, selected)}
-            onFullscreen={() => handleFullscreen(photo)}
-          />
-        )}
-      />
-
-      {/* 空状态 */}
-      {photos.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          <p>暂无照片</p>
-        </div>
-      )}
+      <div className="flex-1 overflow-auto">
+        {/* 照片网格 */}
+        <Grid
+          columns={5}
+          gap="md"
+          items={photos}
+          columnClassName="p-1"
+          renderItem={(photo) => (
+            <PhotoSelectorCard
+              key={photo.id}
+              photo={photo}
+              selected={internalSelectedIds.includes(photo.id)}
+              onSelect={(selected) => handlePhotoSelect(photo.id, selected)}
+              onFullscreen={() => handleFullscreen(photo)}
+            />
+          )}
+          renderEmpty={() => (
+            <div className="text-center py-12 text-gray-500">
+              <p>暂无照片</p>
+            </div>
+          )}
+        />
+      </div>
     </div>
   );
 }
@@ -223,20 +224,24 @@ function PhotoSelectorCard(props: PhotoSelectorCardProps) {
 interface PhotoSelectorModalProps
   extends Omit<PhotoSelectorProps, 'showActions'> {}
 
+/**
+ * 照片选择器弹窗组件
+ * @param props
+ * @returns
+ */
 export async function showPhotoSelector(props: PhotoSelectorModalProps) {
   return Modal.open<PhotosApi.Photo[]>((resolve) => ({
-    contentContainerClassName: 'min-h-[70vh] min-w-[70vw]',
+    contentContainerClassName: 'h-[70vh] min-w-[70vw] overflow-hidden',
     children: (
-      <div className="space-y-5 p-1">
-        <h2 className="text-xl font-semibold mb-4">选择照片</h2>
-        <div className="max-h-[60vh] overflow-y-auto">
-          <PhotoSelector
-            {...props}
-            onConfirm={resolve}
-            onCancel={() => resolve([])}
-            showActions={true}
-          />
-        </div>
+      <div className="space-y-5 p-1 h-full flex flex-col">
+        <h2 className="text-xl font-semibold">选择照片</h2>
+        <PhotoSelector
+          {...props}
+          className="flex-1 overflow-auto"
+          onConfirm={resolve}
+          onCancel={() => resolve([])}
+          showActions={true}
+        />
       </div>
     ),
   }));
