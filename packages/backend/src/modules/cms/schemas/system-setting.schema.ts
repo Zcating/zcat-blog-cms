@@ -20,6 +20,10 @@ export const SystemSettingUpdateDtoSchema = z.object({
   ossConfig: OssConfigSchema.optional(),
 });
 
+export const UploadTokenDtoSchema = z.object({
+  type: z.enum(['article', 'photo']),
+});
+
 export interface SystemSetting {
   ossConfig: OssConfig;
 }
@@ -30,6 +34,6 @@ export class SystemSettingDto extends createZodDto(SystemSettingDtoSchema) {
 
 export class SystemSettingUpdateDto extends createZodDto(
   SystemSettingUpdateDtoSchema,
-) {
-  ossConfig?: OssConfig;
-}
+) {}
+
+export class UploadTokenDto extends createZodDto(UploadTokenDtoSchema) {}

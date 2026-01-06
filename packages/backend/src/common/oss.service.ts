@@ -8,11 +8,16 @@ const TTL = 3600;
 // 缓存上限（按 key 数量计），避免进程长期运行时无限增长。
 const MAX_CACHE_SIZE = 2000;
 
+type OssType = 'article' | 'photo';
+interface OssInfo {
+  bucket: string;
+  domain: string;
+}
+
 @Injectable()
 export class OssService {
   private readonly bucketManager: qiniu.rs.BucketManager;
-  private readonly domain: string;
-  private readonly bucketName: string;
+  private readonly ossInfoMap = new Map<OssType, OssInfo>();
   // 缓存 filename -> 私有下载链接，保证同一资源在 TTL 内返回稳定 URL，减少前端重复请求。
   private readonly privateUrlCache = new Cache<string>(MAX_CACHE_SIZE, TTL);
 
@@ -23,11 +28,63 @@ export class OssService {
     const config = new qiniu.conf.Config();
     this.bucketManager = new qiniu.rs.BucketManager(mac, config);
 
-    this.domain = this.configService.get<string>('OSS_DOMAIN') ?? '';
-    this.bucketName = this.configService.get<string>('OSS_BUCKET') ?? '';
+    this.ossInfoMap.set('photo', {
+      bucket: this.configService.get<string>('OSS_PHOTO_BUCKET') ?? '',
+      domain: this.configService.get<string>('OSS_PHOTO_DOMAIN') ?? '',
+    });
+
+    this.ossInfoMap.set('article', {
+      bucket: this.configService.get<string>('OSS_ARTICLE_BUCKET') ?? '',
+      domain: this.configService.get<string>('OSS_ARTICLE_DOMAIN') ?? '',
+    });
   }
 
   getPrivateUrl(filename: string) {
+    const ossInfo = this.ossInfoMap.get('photo');
+    if (!ossInfo) {
+      return '';
+    }
+    return this.generateUrl(ossInfo.domain, filename);
+  }
+
+  async deleteFile(filename: string) {
+    const ossInfo = this.ossInfoMap.get('photo');
+    if (!ossInfo) {
+      return false;
+    }
+    return this.deleteOssFile(ossInfo.bucket, filename);
+  }
+
+  getArticleUrl(filename: string) {
+    const ossInfo = this.ossInfoMap.get('article');
+    if (!ossInfo) {
+      return '';
+    }
+    // 文章文件的私有下载链接与普通文件不同，需要使用不同的域名和存储桶。
+    return this.generateUrl(ossInfo.domain, filename, 'public');
+  }
+
+  async deleteArticleFile(filename: string) {
+    const ossInfo = this.ossInfoMap.get('article');
+    if (!ossInfo) {
+      return false;
+    }
+    return this.deleteOssFile(ossInfo.bucket, filename);
+  }
+
+  getBucket(type: 'article' | 'photo') {
+    const ossInfo = this.ossInfoMap.get(type);
+    if (!ossInfo) {
+      return '';
+    }
+    return ossInfo.bucket;
+  }
+
+  private generateUrl(
+    domain: string,
+    filename: string,
+    type: 'private' | 'public' = 'private',
+  ) {
     if (!filename) {
       return '';
     }
@@ -39,21 +96,24 @@ export class OssService {
     }
 
     // 生成私有下载链接：deadline 是 Unix 秒级时间戳，超过后链接失效。
-    const deadline = now + TTL;
-    const url = this.bucketManager.privateDownloadUrl(
-      this.domain,
-      filename,
-      deadline,
-    );
-
-    this.privateUrlCache.set(filename, url);
-
-    return url;
+    switch (type) {
+      case 'public':
+        return this.bucketManager.publicDownloadUrl(domain, filename);
+      case 'private':
+      default: {
+        const deadline = now + TTL;
+        return this.bucketManager.privateDownloadUrl(
+          domain,
+          filename,
+          deadline,
+        );
+      }
+    }
   }
 
-  async deleteFile(filename: string) {
+  private async deleteOssFile(bucketName: string, filename: string) {
     try {
-      await this.bucketManager.delete(this.bucketName, filename);
+      await this.bucketManager.delete(bucketName, filename);
       return true;
     } catch {
       return false;

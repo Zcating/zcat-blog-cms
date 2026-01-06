@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { isNumber, isString } from './is-type';
+import { number } from 'zod';
 
 export function safeParse<T>(data: string, defaultValue: T): T {
   try {
@@ -13,7 +14,11 @@ export function safeNumber(value: unknown, defaultValue: number = 0) {
   if (isNumber(value)) {
     return value;
   }
-  return defaultValue;
+  const num = parseFloat(value as string);
+  if (!isNumber(num)) {
+    return defaultValue;
+  }
+  return num;
 }
 
 export function safeString(value: unknown, defaultValue: string = '') {

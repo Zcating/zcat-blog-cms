@@ -1,14 +1,19 @@
 import React from 'react';
 import { tv } from 'tailwind-variants';
-import { classnames, isString, safeObjectURL } from '@cms/components/utils';
+import {
+  classnames,
+  isFunction,
+  isString,
+  safeObjectURL,
+} from '@cms/components/utils';
 import { PlusOutlined } from '@ant-design/icons';
 import { Image } from './image';
 
 const types = ['image/png', 'image/jpeg'];
 interface ImageUploadProps {
   className?: string;
-  value?: string | Blob | null;
-  onChange?: (blob: Blob) => void;
+  value?: string;
+  onChange?: (blob: string) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
@@ -29,9 +34,12 @@ export const ImageUpload = function ImageUpload(props: ImageUploadProps) {
     if (!types.includes(file.type)) {
       return;
     }
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
 
-    props.onChange?.(file);
-    setImageUrl(URL.createObjectURL(file));
+    if (isFunction(props.onChange)) {
+      props.onChange(url);
+    }
   };
 
   return (

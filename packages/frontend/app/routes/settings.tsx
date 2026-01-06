@@ -1,6 +1,7 @@
 import { SystemSettingApi } from '@cms/api';
-import { Button, Form, Input } from '@cms/components';
+import { Button, Form, ImageUpload, Input } from '@cms/components';
 import type { Route } from './+types/settings';
+import React from 'react';
 
 export function clientLoader() {
   // return SystemSettingApi.getSystemSetting();
@@ -34,4 +35,17 @@ export default function Settings(props: Route.ComponentProps) {
   //     </Form>
   //   </div>
   // );
+  const [imageUrl, setImageUrl] = React.useState<string>('');
+
+  React.useEffect(() => {
+    console.log(imageUrl);
+    if (!imageUrl) {
+      return;
+    }
+    fetch(imageUrl).then(console.log);
+    return () => {
+      URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
+  return <ImageUpload value={imageUrl} onChange={setImageUrl} />;
 }

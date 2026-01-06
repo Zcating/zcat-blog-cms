@@ -1,4 +1,9 @@
-import { safeDateString, safeNumber, safeString } from '@cms/components';
+import {
+  safeArray,
+  safeDateString,
+  safeNumber,
+  safeString,
+} from '@cms/components';
 import { HttpClient } from '../http/http-client';
 import type { PaginateResult } from './types';
 
@@ -18,12 +23,6 @@ export namespace ArticlesApi {
     createdAt?: string;
     updatedAt?: string;
     tags?: ArticleTag[];
-  }
-
-  export interface CreateArticleParams {
-    title: string;
-    excerpt: string;
-    contentUrl: string;
   }
 
   export interface CreateArticleWithFileParams {
@@ -52,13 +51,7 @@ export namespace ArticlesApi {
   }
 
   export async function getArticle(id: number): Promise<Article> {
-    const result = await HttpClient.get(`cms/articles/detail`, { id });
-    return {
-      id: safeNumber(result?.id),
-      title: safeString(result?.title),
-      excerpt: safeString(result?.excerpt),
-      content: safeString(result?.content),
-    };
+    return await HttpClient.get(`cms/articles/detail`, { id });
   }
 
   export async function createArticle(params: Article): Promise<Article> {
@@ -73,5 +66,11 @@ export namespace ArticlesApi {
 
   export async function deleteArticle(id: number): Promise<void> {
     return await HttpClient.post(`cms/articles/delete`, { id });
+  }
+
+  export async function uploadArticleImages(
+    images: string[],
+  ): Promise<string[]> {
+    return await HttpClient.post('cms/articles/upload-images', { images });
   }
 }

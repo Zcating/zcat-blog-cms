@@ -1,14 +1,22 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '@backend/common';
+import { OssService, PrismaService } from '@backend/common';
 import { PaginateQueryDto, PaginateResult } from '@backend/model';
-import { createPaginate } from '@backend/utils';
+import { Article } from '@backend/prisma';
+import { createPaginate, safeNumber } from '@backend/utils';
 
-import { ReturnArticleDto } from '../schemas';
+import {
+  CreateArticleDto,
+  ReturnArticleDto,
+  UpdateArticleDto,
+} from '../schemas';
 
 @Injectable()
 export class ArticleService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly ossService: OssService,
+  ) {}
 
   async findArticles(
     dto: PaginateQueryDto,
@@ -41,5 +49,52 @@ export class ArticleService {
       page: dto.page,
       pageSize: dto.pageSize,
     };
+  }
+
+  async getArticle(id: string): Promise<Article | null> {
+    const safeId = safeNumber(id, 0);
+    if (!safeId) {
+      return null;
+    }
+
+    return await this.prismaService.article.findUnique({
+      where: { id: safeId },
+    });
+  }
+
+  async createArticle(createArticleDto: CreateArticleDto): Promise<Article> {
+    const article = await this.prismaService.article.create({
+      data: createArticleDto,
+    });
+
+    return article;
+  }
+
+  async updateArticle(
+    updateArticleDto: UpdateArticleDto,
+  ): Promise<Article | null> {
+    const article = await this.prismaService.article.update({
+      where: { id: updateArticleDto.id },
+      data: updateArticleDto,
+    });
+
+    return article;
+  }
+
+  async removeArticle(id: string): Promise<boolean> {
+    const safeId = safeNumber(id, 0);
+    if (!safeId) {
+      return false;
+    }
+
+    const result = await this.prismaService.article.delete({
+      where: { id: safeId },
+    });
+
+    return !result;
+  }
+
+  uploadArticleImages(images: string[] = []) {
+    return images.map((image) => this.ossService.getArticleUrl(image));
   }
 }

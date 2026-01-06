@@ -4,22 +4,25 @@ function defaultKeyFrom<T>(item: T) {
 
 export function updateArray<T>(
   array: T[],
-  item: T,
+  itemOrItems: T | T[],
   keyFrom: (item: T) => string | number | symbol = defaultKeyFrom,
 ) {
   const updatedArray = [...array];
-  const itemKey = keyFrom(item);
-  let hasUpdate = false;
-  for (let i = 0; i < array.length; i += 1) {
-    if (keyFrom(array[i]) === itemKey) {
-      updatedArray[i] = item;
-      hasUpdate = true;
-      break;
+  const items = Array.isArray(itemOrItems) ? itemOrItems : [itemOrItems];
+  for (const item of items) {
+    const itemKey = keyFrom(item);
+    let hasUpdate = false;
+    for (let i = 0; i < array.length; i += 1) {
+      if (keyFrom(array[i]) === itemKey) {
+        updatedArray[i] = item;
+        hasUpdate = true;
+        break;
+      }
     }
-  }
 
-  if (!hasUpdate) {
-    updatedArray.push(item);
+    if (!hasUpdate) {
+      updatedArray.push(item);
+    }
   }
 
   return updatedArray;

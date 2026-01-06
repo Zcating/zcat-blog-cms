@@ -16,12 +16,15 @@ type InputAppearance = 'default' | 'ghost';
 
 type InputSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
+type InputWeight = 'bold' | 'normal';
+
 interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'> {
   variant?: InputVariant;
   appearance?: InputAppearance;
   size?: InputSize;
   className?: string;
+  weight?: InputWeight;
 }
 
 const inputClassVariant = tv({
@@ -48,22 +51,29 @@ const inputClassVariant = tv({
       xl: 'input-xl',
       xs: 'input-xs',
     },
+
+    weight: {
+      bold: 'font-bold',
+      normal: 'font-normal',
+    },
   },
   defaultVariants: {
     variant: 'primary',
     appearance: 'default',
     size: 'md',
+    weight: 'normal',
   },
 });
 
 export function Input(props: InputProps) {
-  const { size, variant, appearance, className, ...rest } = props;
+  const { size, variant, appearance, className, weight, ...rest } = props;
 
   const classname = classnames(
     inputClassVariant({
       variant,
       size,
       appearance,
+      weight,
     }),
     props.className,
   );

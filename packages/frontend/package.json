@@ -25,6 +25,8 @@
     "isbot": "^5.1.27",
     "jotai": "^2.12.5",
     "js-cookie": "^3.0.5",
+    "markdown-it-ts": "^0.0.3",
+    "md-editor-rt": "^6.3.1",
     "qiniu-js": "^3.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

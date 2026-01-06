@@ -72,9 +72,17 @@ export class ArticleController {
   async findOne(@Query('id') id: string): Promise<ResultData<Article | null>> {
     try {
       this.logger.log(`开始获取ID为 ${id} 的文章`);
-      const article = await this.prismaService.article.findUnique({
-        where: { id: parseInt(id) },
-      });
+
+      const article = await this.articleService.getArticle(id);
+
+      if (!article) {
+        this.logger.warn(`未找到ID为 ${id} 的文章`);
+        return createResult({
+          code: ResultCode.DatabaseError,
+          message: '未找到文章',
+        });
+      }
+
       this.logger.log(`${article ? '成功' : '未找到'}获取ID为 ${id} 的文章`);
       return createResult({
         code: ResultCode.Success,
@@ -96,9 +104,7 @@ export class ArticleController {
     try {
       this.logger.log(`开始创建文章: ${createArticleDto.title}`);
 
-      const article = await this.prismaService.article.create({
-        data: createArticleDto,
-      });
+      const article = await this.articleService.createArticle(createArticleDto);
 
       this.logger.log(
         `成功创建文章，ID: ${article.id}, 标题: ${article.title}`,
@@ -128,10 +134,8 @@ export class ArticleController {
       this.logger.log(
         `开始更新ID为 ${dto.id} 的文章: ${dto.title || '未提供标题'}`,
       );
-      const result = await this.prismaService.article.update({
-        where: { id: dto.id },
-        data: dto,
-      });
+      const result = await this.articleService.updateArticle(dto);
+
       if (!result) {
         this.logger.warn(`更新ID为 ${dto.id} 的文章失败：未找到记录`);
         return createResult({
@@ -139,6 +143,7 @@ export class ArticleController {
           message: '更新失败',
         });
       }
+
       this.logger.log(`成功更新ID为 ${dto.id} 的文章`);
       return createResult({
         code: ResultCode.Success,
@@ -161,9 +166,9 @@ export class ArticleController {
   async remove(@Body('id') id: string): Promise<ResultData<void>> {
     try {
       this.logger.log(`开始删除ID为 ${id} 的文章`);
-      const result = await this.prismaService.article.delete({
-        where: { id: parseInt(id) },
-      });
+
+      const result = await this.articleService.removeArticle(id);
+
       if (!result) {
         this.logger.warn(`删除ID为 ${id} 的文章失败：未找到记录`);
         return createResult({
@@ -181,6 +186,30 @@ export class ArticleController {
       return createResult({
         code: ResultCode.UnknownError,
         message: '删除失败',
+      });
+    }
+  }
+
+  @Post('upload-images')
+  @ApiOperation({ summary: '上传文章图片' })
+  @ApiResponse({ status: 200, description: '图片上传成功' })
+  uploadImages(@Body('images') images: string[] = []): ResultData<string[]> {
+    try {
+      this.logger.log(`开始上传 ${images.length} 张文章图片`);
+
+      const urls = this.articleService.uploadArticleImages(images);
+
+      this.logger.log(`成功上传 ${urls.length} 张文章图片`);
+      return createResult({
+        code: ResultCode.Success,
+        message: '成功',
+        data: urls,
+      });
+    } catch (error) {
+      this.logger.error('上传文章图片失败', error);
+      return createResult({
+        code: ResultCode.UnknownError,
+        message: '上传失败',
       });
     }
   }

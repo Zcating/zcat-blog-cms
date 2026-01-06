@@ -17,7 +17,7 @@ import React from 'react';
 interface PhotoFormData {
   id: number;
   name: string;
-  image: string | Blob | null;
+  image: string;
 }
 
 const useSchemeForm = createSchemaForm({
@@ -38,12 +38,11 @@ export default function Photos(props: Route.ComponentProps) {
   const [photos, setOptimisticPhotos, commitPhotos] = useOptimisticArray(
     props.loaderData.photos,
     (prev, data: PhotoFormData) => {
-      const tempUrl = safeObjectURL(data.image);
       const tempPhoto: PhotoCardData = {
         id: data.id || -Date.now(),
         name: data.name,
-        url: tempUrl,
-        thumbnailUrl: tempUrl,
+        url: data.image,
+        thumbnailUrl: data.image,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         loading: true,
@@ -60,13 +59,10 @@ export default function Photos(props: Route.ComponentProps) {
     map: () => ({
       id: 0,
       name: '新照片',
-      image: null,
+      image: '',
     }),
     onSubmit: (data) => {
       React.startTransition(async () => {
-        if (!(data.image instanceof Blob)) {
-          return;
-        }
         // 先添加到 optimisticState 中，等待服务器返回结果
         setOptimisticPhotos(data);
 
@@ -75,6 +71,10 @@ export default function Photos(props: Route.ComponentProps) {
             name: data.name,
             image: data.image,
           });
+          if (!photo) {
+            commitPhotos('rollback');
+            return;
+          }
           commitPhotos('update', photo);
         } catch (error) {
           console.error(error);

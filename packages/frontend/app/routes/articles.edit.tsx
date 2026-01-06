@@ -1,17 +1,13 @@
 import { ArticlesApi } from '@cms/api';
-import { ArticleEditor, Workspace } from '@cms/core';
-import React from 'react';
+import { ArticleEditor, OssAction } from '@cms/core';
 import type { Route } from './+types/articles.edit';
-import { createSearchParams, useNavigate, useNavigation } from 'react-router';
+import { useNavigate } from 'react-router';
+import { safeNumber } from '@cms/components';
 
 export async function clientLoader(props: Route.ClientLoaderArgs) {
-  // const id = Number(params.id);
-  // if (isNaN(id)) {
-  //   throw new Error('文章ID无效');
-  // }
-  const searchParams = new URLSearchParams(props.request.url.split('?')[1]);
-  const id = Number(searchParams.get('id'));
-  if (isNaN(id)) {
+  const url = new URL(props.request.url);
+  const id = safeNumber(url.searchParams.get('id'));
+  if (!id) {
     return {
       article: {
         id: 0,
@@ -37,9 +33,9 @@ export default function ArticleEdit({ loaderData }: Route.ComponentProps) {
   const handleSave = async (article: ArticlesApi.Article) => {
     let result: ArticlesApi.Article;
     if (article.id === 0) {
-      result = await ArticlesApi.createArticle(article);
+      result = await OssAction.createArticle(article);
     } else {
-      result = await ArticlesApi.updateArticle(article);
+      result = await OssAction.updateArticle(article);
     }
     navigate(`/articles/${result.id}`);
   };

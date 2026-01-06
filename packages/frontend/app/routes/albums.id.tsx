@@ -15,8 +15,17 @@ import {
   PhotoCard,
   showPhotoSelector,
   updateArray,
+  useOptimisticArray,
   Workspace,
+  type PhotoCardData,
 } from '@cms/core';
+
+interface AlbumPhotoFormData {
+  id: number;
+  name: string;
+  image: string;
+  albumId: number;
+}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const id = Number(params.id);
@@ -42,7 +51,25 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function AlbumsId(props: Route.ComponentProps) {
   const { album, albumPhotos, reminderPhotos } = props.loaderData;
-  const [photos, setPhotos] = React.useState<PhotosApi.Photo[]>(albumPhotos);
+  const [photos, addOptimisticPhoto, commitPhoto] = useOptimisticArray(
+    albumPhotos,
+    (prev, data: AlbumPhotoFormData) => {
+      const tempPhoto: PhotoCardData = {
+        id: data.id || -Date.now(),
+        name: data.name,
+        url: data.image,
+        thumbnailUrl: data.image,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        loading: true,
+        albumId: data.albumId,
+      };
+      if (data.id) {
+        return prev.map((p) => (p.id === data.id ? tempPhoto : p));
+      }
+      return [...prev, tempPhoto];
+    },
+  );
 
   // 编辑相册
   const editAlbum = useAlbumForm({
@@ -70,19 +97,28 @@ export default function AlbumsId(props: Route.ComponentProps) {
     map: () => ({
       id: 0,
       name: '',
-      image: null,
+      image: '',
       albumId: album.id,
     }),
     async onSubmit(data) {
-      if (!data || !(data.image instanceof Blob)) {
-        return;
+      // 先添加到 optimisticState 中，等待服务器返回结果
+      addOptimisticPhoto(data);
+
+      try {
+        const photo = await OssAction.createAlbumPhoto({
+          name: data.name,
+          image: data.image,
+          albumId: data.albumId,
+        });
+        if (!photo) {
+          commitPhoto('rollback');
+          return;
+        }
+        commitPhoto('update', photo);
+      } catch (error) {
+        console.error(error);
+        commitPhoto('rollback');
       }
-      const photo = await OssAction.createAlbumPhoto({
-        name: data.name,
-        image: data.image,
-        albumId: data.albumId,
-      });
-      setPhotos([photo, ...photos]);
     },
   });
 
@@ -97,13 +133,25 @@ export default function AlbumsId(props: Route.ComponentProps) {
       albumId: album.id,
     }),
     async onSubmit(data) {
-      const photo = await OssAction.updatePhoto({
-        id: data.id,
-        name: data.name,
-        image: data.image,
-        albumId: data.albumId,
-      });
-      setPhotos(updateArray(photos, photo));
+      // 先添加到 optimisticState 中，等待服务器返回结果
+      addOptimisticPhoto(data);
+
+      try {
+        const photo = await OssAction.updatePhoto({
+          id: data.id,
+          name: data.name,
+          image: data.image,
+          albumId: data.albumId,
+        });
+        if (!photo) {
+          commitPhoto('rollback');
+          return;
+        }
+        commitPhoto('update', photo);
+      } catch (error) {
+        console.error(error);
+        commitPhoto('rollback');
+      }
     },
   });
 
@@ -120,7 +168,8 @@ export default function AlbumsId(props: Route.ComponentProps) {
       albumId: album.id,
       photoIds: selectedPhotos.map((photo) => photo.id),
     });
-    setPhotos([...photos, ...selectedPhotos]);
+
+    commitPhoto('batchUpdate', selectedPhotos);
   };
 
   // 删除照片
@@ -138,7 +187,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
     }
 
     await OssAction.deletePhoto(photo.id);
-    setPhotos(photos.filter((item) => item.id !== photo.id));
+    commitPhoto('remove', photo);
   };
 
   // 设为封面

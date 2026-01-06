@@ -4,6 +4,7 @@ import { removeArray, updateArray } from '../utils';
 interface StateActionTypes<T = unknown> {
   remove: ['remove', T];
   update: ['update', T];
+  batchUpdate: ['batchUpdate', T[]];
   rollback: ['rollback'];
 }
 
@@ -29,6 +30,8 @@ export function useOptimisticArray<T, U = unknown>(
         return setState((prev) => updateArray(prev, args[1]));
       case 'rollback':
         return setState((prev) => [...prev]);
+      case 'batchUpdate':
+        return setState((prev) => updateArray(prev, args[1]));
     }
   }, []);
 

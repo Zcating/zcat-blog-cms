@@ -60,7 +60,7 @@ interface ValueMap {
   string: string;
   number: number;
   boolean: boolean;
-  file: string | Blob | null;
+  file: string;
 }
 
 export type SchemaFieldsData<Fields extends FieldsRecord> = {
