@@ -256,28 +256,31 @@ export namespace OssAction {
     const blobStrings = Array.from(rawStrings)
       .map((item) => item[2] ?? '')
       .filter((item) => item.startsWith('blob:'));
-    const images = (
-      await Promise.all(
-        blobStrings.map(async (item) => {
-          const imageFile = await fetchImageFile(item);
-          if (!imageFile) {
-            return undefined;
-          }
 
-          const info = await generateImageInfo('article', imageFile);
-          const compressedImage = await qiniu.compressImage(imageFile as File, {
-            maxWidth: 300,
-            maxHeight: 300,
-            quality: 0.6,
-          });
-          return await uploadToOss({
-            file: compressedImage.dist as File,
-            url: `articles/${info.filename}.${info.extension}`,
-            token: info.token,
-          });
-        }),
-      )
-    ).filter(isString);
+    // 并行上传图片
+    const promises = blobStrings.map(async (item) => {
+      const imageFile = await fetchImageFile(item);
+      if (!imageFile) {
+        return undefined;
+      }
+
+      const info = await generateImageInfo('article', imageFile);
+      const compressedImage = await qiniu.compressImage(imageFile as File, {
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.6,
+      });
+      return await uploadToOss({
+        file: compressedImage.dist as File,
+        url: `articles/${info.filename}.${info.extension}`,
+        token: info.token,
+      });
+    });
+    // 并行上传图片并过滤失败的
+    const images = (await Promise.allSettled(promises))
+      .filter((item) => item.status === 'fulfilled')
+      .map((item) => item.value)
+      .filter(isString);
 
     const imageurls = await ArticlesApi.uploadArticleImages(images);
 
@@ -334,47 +337,47 @@ export namespace OssAction {
       token: data.uploadToken,
     };
   }
+}
 
-  interface UploadToOssParams {
-    file: File | Blob;
-    url: string;
-    token: string;
-  }
-  /**
-   * 上传图片到OSS
-   * @param {UploadToOssParams} params 上传参数
-   * @param {File | Blob} params.file 图片文件
-   * @param {string} params.url 目标文件名
-   * @param {string} params.token 上传凭证
-   * @returns 图片url
-   */
-  async function uploadToOss({
-    file,
-    url,
-    token,
-  }: UploadToOssParams): Promise<string> {
-    await promiseFrom(qiniu.upload(file as File, url, token));
-    return url;
-  }
+interface UploadToOssParams {
+  file: File | Blob;
+  url: string;
+  token: string;
+}
+/**
+ * 上传图片到OSS
+ * @param {UploadToOssParams} params 上传参数
+ * @param {File | Blob} params.file 图片文件
+ * @param {string} params.url 目标文件名
+ * @param {string} params.token 上传凭证
+ * @returns 图片url
+ */
+async function uploadToOss({
+  file,
+  url,
+  token,
+}: UploadToOssParams): Promise<string> {
+  await promiseFrom(qiniu.upload(file as File, url, token));
+  return url;
+}
 
-  /**
-   * 从可观察对象创建Promise
-   * @param observer 可观察对象
-   * @returns {Promise<void>} 当可观察对象完成时解析，否则拒绝
-   */
-  function promiseFrom(observer: Observable<any, any, any>): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      observer.subscribe({
-        next(res) {
-          // console.log(res);
-        },
-        error(err) {
-          reject(err);
-        },
-        complete(res) {
-          resolve(res);
-        },
-      });
+/**
+ * 从可观察对象创建Promise
+ * @param observer 可观察对象
+ * @returns {Promise<void>} 当可观察对象完成时解析，否则拒绝
+ */
+function promiseFrom(observer: Observable<any, any, any>): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    observer.subscribe({
+      next(res) {
+        // console.log(res);
+      },
+      error(err) {
+        reject(err);
+      },
+      complete(res) {
+        resolve(res);
+      },
     });
-  }
+  });
 }
