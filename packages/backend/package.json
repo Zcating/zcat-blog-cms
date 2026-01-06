@@ -17,12 +17,12 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:generate:dev": "dotenv -e .env.development -- pnpm exec prisma generate",
-    "db:deploy:dev": "dotenv -e .env.development -- pnpm exec prisma migrate dev",
-    "db:status:dev": "dotenv -e .env.development -- pnpm exec prisma migrate status",
-    "db:generate:prod": "dotenv -e .env.production -- pnpm exec prisma generate",
-    "db:deploy:prod": "dotenv -e .env.production -- pnpm exec prisma migrate deploy",
-    "db:status:prod": "dotenv -e .env.production -- pnpm exec prisma migrate status"
+    "db:generate:dev": "npx dotenv -e .env.development -- pnpm exec prisma generate",
+    "db:deploy:dev": "npx dotenv -e .env.development -- pnpm exec prisma migrate dev",
+    "db:status:dev": "npx dotenv -e .env.development -- pnpm exec prisma migrate status",
+    "db:generate:prod": "npx dotenv -e .env.production -- pnpm exec prisma generate",
+    "db:deploy:prod": "npx dotenv -e .env.production -- pnpm exec prisma migrate deploy",
+    "db:status:prod": "npx dotenv -e .env.production -- pnpm exec prisma migrate status"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -65,7 +65,6 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
-    "dotenv-cli": "^10.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-import": "^2.31.0",
