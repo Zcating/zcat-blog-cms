@@ -20,9 +20,9 @@
     "db:generate:dev": "npx dotenv -e .env.development -- pnpm exec prisma generate",
     "db:deploy:dev": "npx dotenv -e .env.development -- pnpm exec prisma migrate dev",
     "db:status:dev": "npx dotenv -e .env.development -- pnpm exec prisma migrate status",
-    "db:generate:prod": "npx dotenv -e .env.production -- pnpm exec prisma generate",
-    "db:deploy:prod": "npx dotenv -e .env.production -- pnpm exec prisma migrate deploy",
-    "db:status:prod": "npx dotenv -e .env.production -- pnpm exec prisma migrate status"
+    "db:generate:prod": "pnpm exec prisma generate",
+    "db:deploy:prod": "pnpm exec prisma migrate deploy",
+    "db:status:prod": "pnpm exec prisma migrate status"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
