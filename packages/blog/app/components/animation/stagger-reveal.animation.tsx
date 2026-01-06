@@ -2,7 +2,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import React from "react";
 import { View } from "../ui";
-import { composeRefs } from "../utils";
+import { cn, composeRefs } from "../utils";
 
 const DIRECTION_MAP = {
   left: "translateX",
@@ -55,10 +55,21 @@ export const StaggerReveal = React.forwardRef<
     stagger,
     dependencies = [],
     direction = "left",
+    className,
     ...rest
   } = props;
 
   const scopeRef = React.useRef<HTMLDivElement | null>(null);
+  useGSAP(() => {
+    const scope = scopeRef.current;
+    if (!scope) {
+      return;
+    }
+    gsap.to(scope, {
+      opacity: 1,
+    });
+  }, []);
+
   useGSAP(
     () => {
       const items = gsap.utils.toArray<HTMLElement>(selector);
@@ -88,5 +99,11 @@ export const StaggerReveal = React.forwardRef<
     },
   );
 
-  return <View ref={composeRefs(ref, scopeRef)} {...rest} />;
+  return (
+    <View
+      ref={composeRefs(ref, scopeRef)}
+      className={cn("opacity-0", className)}
+      {...rest}
+    />
+  );
 });

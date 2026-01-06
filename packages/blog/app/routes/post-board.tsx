@@ -40,30 +40,32 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
 
   const articles = pagination.data;
   return (
-    <StaggerReveal
-      className="max-w-4xl mx-auto space-y-4"
-      selector='[data-post-excerpt-card="true"]'
-      direction="right"
-    >
-      <View data-post-excerpt-card="true" className="text-2xl font-bold">
-        博客文章
-      </View>
-      {articles.map((article, index) => (
-        <Link
-          data-post-excerpt-card="true"
-          key={index.toString()}
-          to={`/post-board/${article.id}`}
-          className="block"
-        >
-          <PostExcerptCard value={article} />
-        </Link>
-      ))}
+    <View className="flex flex-col items-center overflow-x-hidden">
+      <StaggerReveal
+        className="max-w-4xl space-y-4"
+        selector='[data-post-excerpt-card="true"]'
+        direction="right"
+      >
+        <View data-post-excerpt-card="true" className="text-2xl font-bold">
+          博客文章
+        </View>
+        {articles.map((article, index) => (
+          <Link
+            data-post-excerpt-card="true"
+            key={index.toString()}
+            to={`/post-board/${article.id}`}
+            className="block"
+          >
+            <PostExcerptCard value={article} />
+          </Link>
+        ))}
 
-      <ZPagination
-        page={currentPage}
-        totalPages={pagination.totalPages}
-        onPageChange={goToPage}
-      />
-    </StaggerReveal>
+        <ZPagination
+          page={currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={goToPage}
+        />
+      </StaggerReveal>
+    </View>
   );
 }

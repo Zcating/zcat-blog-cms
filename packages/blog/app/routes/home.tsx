@@ -84,7 +84,7 @@ export default function HomePage(props: Route.ComponentProps) {
   };
 
   return (
-    <View className="flex flex-col gap-5 ">
+    <View className="flex flex-col gap-5">
       <View className="px-4 flex gap-12 overflow-x-hidden">
         <StaggerReveal
           selector='[data-home-left-card="true"]'
