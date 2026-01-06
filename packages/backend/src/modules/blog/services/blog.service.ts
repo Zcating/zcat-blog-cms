@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@backend/common';
 import { PaginateQueryDto } from '@backend/model';
-import { createPaginate } from '@backend/utils';
+import { createPaginate, safeNumber } from '@backend/utils';
 
 @Injectable()
 export class BlogService {
@@ -37,5 +37,27 @@ export class BlogService {
       page: query.page,
       pageSize: query.pageSize,
     };
+  }
+
+  async getArticleDetail(id: string) {
+    const safeId = safeNumber(id);
+    if (!safeId) {
+      return null;
+    }
+
+    const article = await this.prisma.article.findUnique({
+      where: { id: safeId },
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        articleAndArticleTags: true,
+      },
+    });
+
+    return article;
   }
 }

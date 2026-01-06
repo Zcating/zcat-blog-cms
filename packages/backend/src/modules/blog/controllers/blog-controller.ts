@@ -78,20 +78,14 @@ export class BlogController {
 
   @ApiOperation({ summary: '获取文章详情' })
   @Get('article/:id')
-  async getArticleDetail(@Param('id') id: number) {
-    const article = await this.prisma.article.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-        articleAndArticleTags: true,
-      },
-    });
-
+  async getArticleDetail(@Param('id') id: string) {
+    const article = await this.blogService.getArticleDetail(id);
+    if (!article) {
+      return createResult({
+        code: ResultCode.DatabaseError,
+        message: '文章不存在',
+      });
+    }
     return createResult({
       code: ResultCode.Success,
       message: 'success',
