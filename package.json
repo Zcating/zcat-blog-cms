@@ -19,12 +19,13 @@
     "docker:build:backend": "docker compose -f docker-compose.yml up -d --build backend",
     "docker:build:frontend": "docker compose -f docker-compose.yml up -d --build frontend",
     "docker:build:blog": "docker compose -f docker-compose.yml up -d --build blog",
-    "docker:build": "docker compose -f docker-compose.yml up -d --build"
+    "docker:build": "docker compose -f docker-compose.yml up -d --build",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.2",
+  "packageManager": "pnpm@10.27.0",
   "devDependencies": {
     "@types/react-syntax-highlighter": "^15.5.13",
     "concurrently": "^9.1.2",
@@ -45,7 +46,7 @@
   },
   "engines": {
     "node": ">=22.4.0",
-    "pnpm": ">=10.15.1",
+    "pnpm": ">=10.5.1",
     "npm": ">=10.9.2"
   }
 }
