@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: ./packages/backend/Dockerfile
+      dockerfile: ./apps/backend/Dockerfile
       target: backend
     image: cms_backend:latest
     container_name: cms_backend
@@ -31,7 +31,7 @@ services:
     ports:
       - '9090:9090'
     env_file:
-      - ./packages/backend/.env.production
+      - ./apps/backend/.env.production
     depends_on:
       cms_pg:
         condition: service_healthy
@@ -41,7 +41,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./packages/frontend/Dockerfile
+      dockerfile: ./apps/frontend/Dockerfile
       target: frontend
     image: cms_frontend:latest
     container_name: cms_frontend
@@ -51,7 +51,7 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - ./packages/frontend/.env.production
+      - ./apps/frontend/.env.production
     depends_on:
       - backend
     networks:
@@ -60,7 +60,7 @@ services:
   blog:
     build:
       context: .
-      dockerfile: ./packages/blog/Dockerfile
+      dockerfile: ./apps/blog/Dockerfile
       target: blog
     image: cms_blog:latest
     container_name: blog
@@ -68,7 +68,7 @@ services:
     stdin_open: true
     tty: true
     env_file:
-      - ./packages/blog/.env.production
+      - ./apps/blog/.env.production
     ports:
       - '1024:1024'
     depends_on:
