@@ -6,8 +6,9 @@ import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import reactPlugin from 'eslint-plugin-react';
 import globals from 'globals';
+import { defineConfig } from 'eslint/config';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: ['eslint.config.ts'],
   },
@@ -26,6 +27,9 @@ export default tseslint.config(
         ecmaFeatures: {
           jsx: true,
         },
+        projectService: true,
+        // @ts-ignore
+        tsconfigRootDir: import.meta.dirname,
       },
       globals: {
         ...globals.browser,

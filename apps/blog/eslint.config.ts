@@ -9,7 +9,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 export default defineConfig([
   globalIgnores(["build"]),
   {
-    ignores: ["eslint.config.js"],
+    ignores: ["eslint.config.ts"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -25,6 +25,9 @@ export default defineConfig([
         ecmaFeatures: {
           jsx: true,
         },
+        projectService: true,
+        // @ts-ignore
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     settings: {
