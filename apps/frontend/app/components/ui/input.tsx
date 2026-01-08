@@ -1,5 +1,7 @@
 import { tv } from 'tailwind-variants';
+
 import { classnames } from '../utils';
+
 import type { InputHTMLAttributes } from 'react';
 
 type InputVariant =
@@ -18,14 +20,16 @@ type InputSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
 type InputWeight = 'bold' | 'normal';
 
-interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'> {
+export type InputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'size' | 'type'
+> & {
   variant?: InputVariant;
   appearance?: InputAppearance;
   size?: InputSize;
   className?: string;
   weight?: InputWeight;
-}
+};
 
 const inputClassVariant = tv({
   base: 'w-full input !outline-none',
@@ -66,16 +70,16 @@ const inputClassVariant = tv({
 });
 
 export function Input(props: InputProps) {
-  const { size, variant, appearance, className, weight, ...rest } = props;
+  const { size, variant, appearance, weight, className, ...rest } = props;
 
-  const classname = classnames(
+  const cls = classnames(
     inputClassVariant({
       variant,
       size,
       appearance,
       weight,
     }),
-    props.className,
+    className,
   );
-  return <input className={classname} type="text" {...rest} />;
+  return <input className={cls} type="text" {...rest} />;
 }

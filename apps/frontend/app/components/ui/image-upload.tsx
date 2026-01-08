@@ -1,16 +1,18 @@
+import { PlusOutlined } from '@ant-design/icons';
 import React from 'react';
 import { tv } from 'tailwind-variants';
+
 import {
   classnames,
   isFunction,
   isString,
   safeObjectURL,
 } from '@cms/components/utils';
-import { PlusOutlined } from '@ant-design/icons';
+
 import { Image } from './image';
 
 const types = ['image/png', 'image/jpeg'];
-interface ImageUploadProps {
+export interface ImageUploadProps {
   className?: string;
   value?: string;
   onChange?: (blob: string) => void;

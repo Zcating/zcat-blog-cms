@@ -1,4 +1,5 @@
 import { tv } from 'tailwind-variants';
+
 import { classnames } from '../utils';
 
 export type TextareaVariant =
@@ -13,7 +14,7 @@ export type TextareaVariant =
 export type TextareaAppearance = 'default' | 'ghost';
 export type TextareaSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';
 
-interface TextareaProps {
+export interface TextareaProps {
   className?: string;
   variant?: TextareaVariant;
   appearance?: TextareaAppearance;
