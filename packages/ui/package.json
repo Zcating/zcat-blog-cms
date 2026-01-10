@@ -10,12 +10,10 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite build --watch",
-    "dev:ts": "tsup --watch",
-    "build:types": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "lint": "eslint ./src --fix",
-    "preview": "vite preview"
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "lint": "eslint --ext .ts,.tsx ./src --max-warnings 0 --fix"
   },
   "peerDependencies": {
     "react": "^19.2.0",
