@@ -41,6 +41,9 @@ export default defineConfig(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
       'import/no-dynamic-require': 'warn',
       'import/order': [
         'error',

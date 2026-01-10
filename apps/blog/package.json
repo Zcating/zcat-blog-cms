@@ -8,7 +8,7 @@
     "build": "react-router build --mode production",
     "start": "PORT=1024 npx react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0"
+    "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0 --fix"
   },
   "files": [
     "build"
@@ -44,9 +44,9 @@
     "isbot": "^5.1.27",
     "katex": "^0.16.23",
     "lucide-react": "^0.515.0",
-    "react": "^19.1.0",
+    "react": "^19.2.3",
     "react-day-picker": "^9.11.1",
-    "react-dom": "^19.1.0",
+    "react-dom": "^19.2.3",
     "react-hook-form": "^7.58.1",
     "react-markdown": "^9.0.1",
     "react-router": "^7.9.1",
