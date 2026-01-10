@@ -9,6 +9,7 @@ import {
 
 import type { Route } from './+types/root';
 import './app.css';
+import '@zcat/ui/dist/index.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

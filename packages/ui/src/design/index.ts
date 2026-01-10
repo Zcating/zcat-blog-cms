@@ -18,6 +18,4 @@ declare global {
     label: string;
     value: T;
   }
-
-  type Teardown = () => void;
 }

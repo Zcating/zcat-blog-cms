@@ -3,52 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "./dist/cjs/index.cjs",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs"
-    },
-    "./ui": {
-      "types": "./dist/types/components/ui/index.d.ts",
-      "import": "./dist/esm/components/ui/index.js",
-      "require": "./dist/cjs/components/ui/index.cjs"
-    },
-    "./ui/*": {
-      "types": "./dist/types/components/ui/*.d.ts",
-      "import": "./dist/esm/components/ui/*.js",
-      "require": "./dist/cjs/components/ui/*.cjs"
-    },
-    "./hooks": {
-      "types": "./dist/types/components/hooks/index.d.ts",
-      "import": "./dist/esm/components/hooks/index.js",
-      "require": "./dist/cjs/components/hooks/index.cjs"
-    },
-    "./hooks/*": {
-      "types": "./dist/types/components/hooks/*.d.ts",
-      "import": "./dist/esm/components/hooks/*.js",
-      "require": "./dist/cjs/components/hooks/*.cjs"
-    },
-    "./lib/*": {
-      "types": "./dist/types/components/lib/*.d.ts",
-      "import": "./dist/esm/components/lib/*.js",
-      "require": "./dist/cjs/components/lib/*.cjs"
-    },
-    "./design": {
-      "types": "./dist/types/design/index.d.ts",
-      "import": "./dist/esm/design/index.js",
-      "require": "./dist/cjs/design/index.cjs"
-    },
-    "./design/*": {
-      "types": "./dist/types/design/*.d.ts",
-      "import": "./dist/esm/design/*.js",
-      "require": "./dist/cjs/design/*.cjs"
-    },
-    "./style.css": "./dist/style.css"
-  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -57,7 +14,7 @@
     "build:types": "tsc -p tsconfig.build.json",
     "build": "pnpm run clean && pnpm run build:types && rollup -c",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint ./src --fix",
     "preview": "vite preview"
   },
   "peerDependencies": {
@@ -81,9 +38,8 @@
     "lucide-react": "^0.515.0",
     "react-day-picker": "^9.13.0",
     "react-hook-form": "^7.58.1",
-    "tailwind-merge": "^3.3.1",
-    "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.10",
+    "tailwind-merge": "^3.3.1",
     "tsup": "^8.5.1",
     "tw-animate-css": "^1.3.7",
     "zod": "^4.0.17"

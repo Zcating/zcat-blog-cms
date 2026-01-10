@@ -4,6 +4,10 @@
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "baseUrl": ".",
     "jsx": "react-jsx",
+    "composite": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist",
 
     "paths": {
       "@zcat/ui": ["./src/index.ts"],
@@ -11,5 +15,6 @@
       "@zcat/ui/shadcn": ["./src/shadcn/index.ts"],
       "@zcat/ui/shadcn/*": ["./src/shadcn/*"]
     }
-  }
+  },
+  "include": ["src/**/*"]
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Form } from '@zcat-cms/z-components/ui/form';
+import { Form } from '@zcat/ui/shadcn/ui/form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import zod from 'zod';

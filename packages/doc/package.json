@@ -15,7 +15,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "7.10.1",
-    "@zcat-cms/z-components": "workspace:*"
+    "@zcat/ui": "workspace:*"
   },
   "devDependencies": {
     "@react-router/dev": "7.10.1",

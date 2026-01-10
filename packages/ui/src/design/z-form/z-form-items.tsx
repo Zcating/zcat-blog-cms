@@ -4,7 +4,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@zcat-cms/z-components/ui/card';
+} from '@zcat/ui/shadcn/ui/card';
 import React from 'react';
 
 export type ZFormItemsProps = React.ComponentProps<'div'> & {

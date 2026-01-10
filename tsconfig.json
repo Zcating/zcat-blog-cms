@@ -20,7 +20,6 @@
     /* 编译输出控制 */
     "declaration": true,
     "sourceMap": true,
-    "incremental": true,
     "skipLibCheck": true,
     "isolatedModules": true
   },
