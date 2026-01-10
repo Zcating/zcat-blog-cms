@@ -5,6 +5,7 @@ export default defineConfig({
   outDir: 'dist',
   format: ['esm'],
   external: ['react', 'react-dom', 'tailwindcss'],
+  injectStyle: false,
   // dts: true,
   sourcemap: true,
   clean: true,

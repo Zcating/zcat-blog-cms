@@ -1,4 +1,4 @@
-import { ZAvatar, ZButton } from '@zcat/ui';
+import { ArrowUpIcon, ZAvatar, ZButton, ZDatePicker, ZInput } from '@zcat/ui';
 import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {
@@ -16,7 +16,11 @@ export default function Home() {
         <p className="text-muted-foreground">
           这里展示了 z-ui 库中的常用组件。
         </p>
-        <ZButton>默认按钮</ZButton>
+        <ZButton variant="outline" aria-label="Submit">
+          test
+        </ZButton>
+        <ZInput />
+        <ZDatePicker />
       </div>
     </div>
   );

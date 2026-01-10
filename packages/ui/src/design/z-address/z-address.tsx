@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import addressOptions from './address-options.json';
+// import addressOptions from './address-options.json';
 import { ZSelect } from '@zcat/ui/design/z-select/z-select';
 import { useMount, usePropsValue } from '@zcat/ui/hooks';
 
@@ -13,7 +13,7 @@ interface ProvinceOption extends CommonOption<string> {
   children: CityOption[];
 }
 
-const PROVINCE_OPTIONS = addressOptions as ProvinceOption[];
+const PROVINCE_OPTIONS = [] as ProvinceOption[];
 
 export interface ZAddressProps {
   value?: string;
