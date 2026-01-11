@@ -66,6 +66,7 @@ export const StaggerReveal = React.forwardRef<
     if (!scope) {
       return;
     }
+
     gsap.to(scope, {
       opacity: 1,
     });

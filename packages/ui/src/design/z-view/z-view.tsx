@@ -1,8 +1,14 @@
+import React from 'react';
+
 export type ZViewProps = React.ComponentProps<'div'> & {
   backgroundColor?: string;
 };
 
-export function ZView(props: ZViewProps) {
-  const { backgroundColor, ...rest } = props;
-  return <div {...rest} style={{ backgroundColor }} />;
-}
+export const ZView = React.forwardRef<HTMLDivElement, ZViewProps>(
+  (props: ZViewProps, ref) => {
+    const { backgroundColor, ...rest } = props;
+    return <div ref={ref} {...rest} style={{ backgroundColor }} />;
+  },
+);
+
+ZView.displayName = 'ZView';

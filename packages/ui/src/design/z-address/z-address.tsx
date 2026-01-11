@@ -3,17 +3,13 @@ import React, { useState } from 'react';
 import { ZSelect } from '@zcat/ui/design/z-select/z-select';
 import { useMount, usePropsValue } from '@zcat/ui/hooks';
 
-type DistrictOption = CommonOption<string>;
+import { CommonOption } from '../types';
 
-interface CityOption extends CommonOption<string> {
-  children: CommonOption<string>[];
+export interface CascadeOption<T = string> {
+  value: T;
+  label: string;
+  children?: CascadeOption<T>[];
 }
-
-interface ProvinceOption extends CommonOption<string> {
-  children: CityOption[];
-}
-
-const PROVINCE_OPTIONS = [] as ProvinceOption[];
 
 export interface ZAddressProps {
   value?: string;
@@ -22,10 +18,18 @@ export interface ZAddressProps {
   className?: string;
   style?: React.CSSProperties;
   loading?: boolean;
+  options?: CascadeOption[];
 }
 
 export function ZAddress(props: ZAddressProps) {
-  const { value, defaultValue, onValueChange, className, style } = props;
+  const {
+    value,
+    defaultValue,
+    onValueChange,
+    className,
+    style,
+    options = [],
+  } = props;
 
   const [inner, setInner] = usePropsValue({
     value,
@@ -38,9 +42,9 @@ export function ZAddress(props: ZAddressProps) {
     },
   });
 
-  const [provList, setProvList] = React.useState<ProvinceOption[]>([]);
-  const [cityList, setCityList] = React.useState<CityOption[]>([]);
-  const [distList, setDistList] = React.useState<DistrictOption[]>([]);
+  const [provList, setProvList] = React.useState<CascadeOption[]>([]);
+  const [cityList, setCityList] = React.useState<CascadeOption[]>([]);
+  const [distList, setDistList] = React.useState<CommonOption[]>([]);
 
   const [current, setCurrent] = useState({
     provinceCode: '',
@@ -56,13 +60,13 @@ export function ZAddress(props: ZAddressProps) {
   }, [current, inner]);
 
   useMount(() => {
-    const firstProvince = PROVINCE_OPTIONS[0];
+    const firstProvince = options[0];
     if (!firstProvince) {
       return;
     }
 
     const cityOptions = firstProvince.children;
-    if (!cityOptions) {
+    if (!Array.isArray(cityOptions)) {
       return;
     }
 
@@ -72,7 +76,7 @@ export function ZAddress(props: ZAddressProps) {
     }
 
     const distOptions = firstCity.children;
-    if (!distOptions) {
+    if (!Array.isArray(distOptions)) {
       return;
     }
 
@@ -81,7 +85,7 @@ export function ZAddress(props: ZAddressProps) {
       return;
     }
 
-    setProvList(PROVINCE_OPTIONS);
+    setProvList(options);
     setCityList(cityOptions);
     setDistList(distOptions);
     setCurrent({
@@ -93,18 +97,21 @@ export function ZAddress(props: ZAddressProps) {
 
   const onProvinceChange = (v: string) => {
     const province = provList.find((item) => item.value === v);
-    if (!province) {
+    const cities = province?.children;
+    if (!Array.isArray(cities)) {
       return;
     }
-    setCityList(province.children);
+    setCityList(cities);
 
-    const firstCity = province.children[0];
-    if (!firstCity) {
+    const firstCity = cities[0];
+    const dists = firstCity?.children;
+    if (!Array.isArray(dists)) {
       return;
     }
-    setDistList(firstCity.children);
 
-    const firstDist = firstCity.children[0];
+    setDistList(dists);
+
+    const firstDist = dists[0];
     if (!firstDist) {
       return;
     }
@@ -119,12 +126,14 @@ export function ZAddress(props: ZAddressProps) {
 
   const onCityChange = (v: string) => {
     const city = cityList.find((item) => item.value === v);
-    if (!city) {
+    const dists = city?.children;
+    if (!Array.isArray(dists)) {
       return;
     }
-    setDistList(city.children);
 
-    const firstDist = city.children[0];
+    setDistList(dists);
+
+    const firstDist = dists[0];
     if (!firstDist) {
       return;
     }

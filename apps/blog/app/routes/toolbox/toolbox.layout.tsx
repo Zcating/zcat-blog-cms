@@ -1,4 +1,4 @@
-import { cn, View } from "@zcat/ui";
+import { cn, ZView } from "@zcat/ui";
 import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
 import { Outlet } from "react-router";
 
@@ -28,10 +28,10 @@ export default function ToolboxLayout() {
     "[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]",
   );
   return (
-    <View className={classNames}>
+    <ZView className={classNames}>
       <ToolboxSidebar items={items}>
         <Outlet />
       </ToolboxSidebar>
-    </View>
+    </ZView>
   );
 }

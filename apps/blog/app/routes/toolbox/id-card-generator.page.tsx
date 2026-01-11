@@ -16,6 +16,8 @@ import {
 import { z } from "zod";
 import dayjs from "dayjs";
 
+import ADDRESS_OPTIONS from "@blog/modules/toolbox/address-options.json";
+
 /**
  * 性别选项
  */
@@ -165,7 +167,7 @@ export default function IdCardGeneratorPage() {
           }
         >
           <FormMaker.FormItem name="areaCode" label="省市区">
-            <ZAddress />
+            <ZAddress options={ADDRESS_OPTIONS} />
           </FormMaker.FormItem>
           <FormMaker.FormItem name="birthDate" label="生日">
             <ZDatePicker />

@@ -10,9 +10,11 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import "./app.css";
-import { useMount } from "@zcat/ui";
 import { StatisticsApi } from "@blog/apis";
+import { useMount } from "@zcat/ui";
+
+import "./app.css";
+import "@zcat/ui/dist/index.css";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
