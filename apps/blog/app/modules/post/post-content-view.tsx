@@ -1,5 +1,5 @@
 import type { ArticleApi } from "@blog/apis";
-import { View, Markdown } from "@blog/components";
+import { ZMarkdown, ZView } from "@zcat/ui";
 
 export interface PostContentViewProps {
   value: ArticleApi.ArticleDetail;
@@ -7,10 +7,10 @@ export interface PostContentViewProps {
 export function PostContentView(props: PostContentViewProps) {
   // TODO: Parse content which format is markdown
   return (
-    <View className="container mx-auto">
-      <div className="mt-4">
-        <Markdown content={props.value.content} />
-      </div>
-    </View>
+    <ZView className="container mx-auto">
+      <ZView className="mt-4">
+        <ZMarkdown content={props.value.content} />
+      </ZView>
+    </ZView>
   );
 }

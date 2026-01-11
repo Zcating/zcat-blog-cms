@@ -1,9 +1,12 @@
+import {
+  Button,
+  ZNavigationMenu,
+  ZStickyHeader,
+  Separator,
+  useSidebar,
+} from "@zcat/ui";
 import { SidebarIcon } from "lucide-react";
-
-import { Button } from "@blog/components/ui/button";
-import { Separator } from "@blog/components/ui/separator";
-import { useSidebar } from "@blog/components/ui/sidebar";
-import { ZNavigationMenu, ZStickyHeader } from "@blog/components";
+import { Link } from "react-router";
 
 export function ToolbarHeader() {
   const { toggleSidebar } = useSidebar();
@@ -28,6 +31,11 @@ export function ToolbarHeader() {
             { to: "/toolbox", title: "工具箱" },
             { to: "/about", title: "关于" },
           ]}
+          renderItem={(option, index) => (
+            <Link key={index.toString()} to={option.to}>
+              {option.title}
+            </Link>
+          )}
         />
       </div>
     </ZStickyHeader>

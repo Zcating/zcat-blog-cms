@@ -3,21 +3,17 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  safePositiveNumber,
-  View,
+  ZView,
   ZAvatar,
   ZPagination,
   ZSelect,
-} from "@blog/components";
+  StaggerReveal,
+} from "@zcat/ui";
 import { ArticleApi, UserApi } from "@blog/apis";
 import { createSearchParams, Link, useNavigate } from "react-router";
 import type { Route } from "./+types/home";
 import { PostExcerptCard } from "@blog/modules";
-import { gsap } from "gsap";
-import { useGSAP } from "@gsap/react";
-import { StaggerReveal } from "@blog/components";
-
-gsap.registerPlugin(useGSAP);
+import { safePositiveNumber } from "@blog/utils";
 
 /**
  * 排序选项
@@ -84,15 +80,19 @@ export default function HomePage(props: Route.ComponentProps) {
   };
 
   return (
-    <View className="flex flex-col gap-5">
-      <View className="px-4 flex gap-12 overflow-x-hidden">
+    <ZView className="flex flex-col gap-5">
+      <ZView className="px-4 flex gap-12 overflow-x-hidden">
         <StaggerReveal
           selector='[data-home-left-card="true"]'
           className="sticky flex flex-col gap-3 self-start"
         >
           <Card data-home-left-card="true" className="w-xs">
             <CardHeader className="flex justify-center">
-              <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
+              <ZAvatar
+                alt={userInfo.name}
+                src={userInfo.avatar}
+                fallback={userInfo.name}
+              />
             </CardHeader>
             <CardContent className="flex flex-col gap-4 items-center">
               <p className="text-2xl font-bold">{userInfo.name}</p>
@@ -130,12 +130,12 @@ export default function HomePage(props: Route.ComponentProps) {
             </Link>
           ))}
         </StaggerReveal>
-      </View>
+      </ZView>
       <ZPagination
         page={currentPage}
         totalPages={pagination.totalPages}
         onPageChange={goToPage}
       />
-    </View>
+    </ZView>
   );
 }

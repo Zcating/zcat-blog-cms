@@ -1,13 +1,9 @@
 import { ArticleApi } from "@blog/apis";
 import { Link, useNavigate } from "react-router";
-import {
-  safePositiveNumber,
-  StaggerReveal,
-  View,
-  ZPagination,
-} from "@blog/components";
+import { StaggerReveal, ZView, ZPagination } from "@zcat/ui";
 import { PostExcerptCard } from "@blog/modules/post";
 import type { Route } from "./+types/post-board";
+import { safePositiveNumber } from "@blog/utils";
 
 export function meta() {
   return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];
@@ -40,15 +36,15 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
 
   const articles = pagination.data;
   return (
-    <View className="flex flex-col items-center overflow-x-hidden">
+    <ZView className="flex flex-col items-center overflow-x-hidden">
       <StaggerReveal
         className="max-w-4xl space-y-4"
         selector='[data-post-excerpt-card="true"]'
         direction="right"
       >
-        <View data-post-excerpt-card="true" className="text-2xl font-bold">
+        <ZView data-post-excerpt-card="true" className="text-2xl font-bold">
           博客文章
-        </View>
+        </ZView>
         {articles.map((article, index) => (
           <Link
             data-post-excerpt-card="true"
@@ -66,6 +62,6 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
           onPageChange={goToPage}
         />
       </StaggerReveal>
-    </View>
+    </ZView>
   );
 }

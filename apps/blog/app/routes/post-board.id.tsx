@@ -1,4 +1,4 @@
-import { View } from "@blog/components";
+import { ZView } from "@zcat/ui";
 import { PostContentView } from "@blog/modules";
 import { ArticleApi } from "@blog/apis";
 import type { Route } from "./+types/post-board.id";
@@ -34,8 +34,8 @@ export default function PostBoardDetailPage({
 }: Route.ComponentProps) {
   const article = loaderData.article;
   return (
-    <View>
+    <ZView>
       <PostContentView value={article} />
-    </View>
+    </ZView>
   );
 }

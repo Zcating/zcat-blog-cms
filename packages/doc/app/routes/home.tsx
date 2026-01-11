@@ -1,4 +1,4 @@
-import { ArrowUpIcon, ZAvatar, ZButton, ZDatePicker, ZInput } from '@zcat/ui';
+import { ZButton, ZDatePicker, ZInput } from '@zcat/ui';
 import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {

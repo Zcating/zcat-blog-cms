@@ -1,18 +1,20 @@
-import { useMemo, useState } from "react";
-import { Image, View, ZSelect } from "@blog/components";
-import { Input } from "@blog/components/ui/input";
-import { Textarea } from "@blog/components/ui/textarea";
-import { Button } from "@blog/components/ui/button";
-import { Label } from "@blog/components/ui/label";
-import { Dialog, DialogContent } from "@blog/components/ui/dialog";
 import {
+  Button,
   Card,
-  CardHeader,
-  CardTitle,
   CardContent,
   CardFooter,
-} from "@blog/components/ui/card";
-
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  Input,
+  Textarea,
+  ZImage,
+  ZSelect,
+  ZView,
+  Label,
+} from "@zcat/ui";
+import { useMemo, useState } from "react";
 const MIME_TYPE_OPTIONS = [
   { label: "image/png", value: "image/png" },
   { label: "image/jpeg", value: "image/jpeg" },
@@ -130,7 +132,7 @@ export default function Base64ToImagePage() {
   };
 
   return (
-    <View className="container mx-auto p-4 space-y-6">
+    <ZView className="container mx-auto p-4 space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">图片和 Base64 互转</h1>
         <p className="text-sm text-muted-foreground">
@@ -236,7 +238,7 @@ export default function Base64ToImagePage() {
             {base64PreviewUrl ? (
               <div className="space-y-2">
                 <Label>预览</Label>
-                <Image
+                <ZImage
                   src={base64PreviewUrl}
                   alt="预览图片"
                   contentMode="contain"
@@ -273,7 +275,7 @@ export default function Base64ToImagePage() {
       <Dialog open={dialogIsOpen} onOpenChange={setDialogIsOpen}>
         <DialogContent className="w-[90vw] h-[90vh] sm:max-w-auto flex items-center justify-center">
           {fullscreenSrc ? (
-            <Image
+            <ZImage
               src={fullscreenSrc}
               alt="全屏预览"
               contentMode="contain"
@@ -282,6 +284,6 @@ export default function Base64ToImagePage() {
           ) : null}
         </DialogContent>
       </Dialog>
-    </View>
+    </ZView>
   );
 }

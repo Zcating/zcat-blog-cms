@@ -1,4 +1,5 @@
-import { ZNavigationMenu, ZStickyHeader } from "@blog/components";
+import { ZNavigationMenu, ZStickyHeader } from "@zcat/ui";
+import { Link } from "react-router";
 
 export function BlogHeader() {
   return (
@@ -11,6 +12,11 @@ export function BlogHeader() {
           { to: "/toolbox", title: "工具箱" },
           { to: "/about", title: "关于" },
         ]}
+        renderItem={(item, index) => (
+          <Link key={index.toString()} to={item.to}>
+            {item.title}
+          </Link>
+        )}
       />
     </ZStickyHeader>
   );

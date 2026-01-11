@@ -1,3 +1,6 @@
+import {} from "@zcat/ui";
+import type { Route } from "./+types/about";
+import { UserApi } from "@blog/apis";
 import {
   Card,
   CardContent,
@@ -6,11 +9,9 @@ import {
   IconEnvelope,
   IconGithub,
   StaggerReveal,
-  View,
   ZAvatar,
-} from "@blog/components";
-import type { Route } from "./+types/about";
-import { UserApi } from "@blog/apis";
+  ZView,
+} from "@zcat/ui";
 
 export function meta() {
   return [{ title: "关于" }, { name: "description", content: "个人技术博客" }];
@@ -33,7 +34,11 @@ export default function AboutPage(props: Route.ComponentProps) {
     >
       <Card data-about-card="true" className="w-2xl">
         <CardHeader className="flex justify-center">
-          <ZAvatar src={userInfo.avatar} fallback={userInfo.name} />
+          <ZAvatar
+            alt={userInfo.name}
+            src={userInfo.avatar}
+            fallback={userInfo.name}
+          />
         </CardHeader>
         <CardContent className="flex flex-col gap-4 items-center">
           <p className="text-5xl font-bold">{userInfo.name}</p>
@@ -56,7 +61,7 @@ export default function AboutPage(props: Route.ComponentProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           很高兴能与你交流！你可以通过以下方式找到我：
-          <View className="flex flex-col gap-4">
+          <ZView className="flex flex-col gap-4">
             <ContactItem
               icon={<IconEnvelope size="lg" />}
               text={userInfo.contact.email}
@@ -66,7 +71,7 @@ export default function AboutPage(props: Route.ComponentProps) {
               icon={<IconGithub size="lg" />}
               text={userInfo.contact.github}
             />
-          </View>
+          </ZView>
         </CardContent>
       </Card>
     </StaggerReveal>

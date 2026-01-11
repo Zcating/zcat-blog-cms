@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "include": [
     "**/*",
     "**/.server/**/*",
@@ -23,8 +24,8 @@
       "@blog/routes/*": ["./app/routes/*"],
       "@blog/apis": ["./app/apis"],
       "@blog/apis/*": ["./app/apis/*"],
-      "@blog/assets": ["./app/assets"],
-      "@blog/assets/*": ["./app/assets/*"],
+      "@blog/utils": ["./app/utils"],
+      "@blog/utils/*": ["./app/utils/*"],
       "@root": ["./app/*"]
     },
     "esModuleInterop": true,
@@ -33,5 +34,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
-  }
+  },
+  "references": [{ "path": "../../packages/ui/tsconfig.build.json" }]
 }

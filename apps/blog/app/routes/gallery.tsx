@@ -2,15 +2,13 @@ import { GalleryApi } from "@blog/apis";
 import {
   Button,
   Card,
-  Grid,
-  IconPhoto,
-  Image,
+  ZGrid,
   ImagePreload,
   Skeleton,
   StaggerReveal,
-  View,
-  Waterfall,
-} from "@blog/components";
+  ZView,
+  ZWaterfall,
+} from "@zcat/ui";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/gallery";
 
@@ -37,12 +35,12 @@ export default function GalleryPage(props: Route.ComponentProps) {
   };
 
   return (
-    <View className="flex flex-row items-center justify-center">
-      <View className="flex flex-col items-center gap-20 lg:w-3xl md:w-2xl">
+    <ZView className="flex flex-row items-center justify-center">
+      <ZView className="flex flex-col items-center gap-20 lg:w-3xl md:w-2xl">
         <StaggerReveal selector="[data-gallery-title='true']" direction="top">
-          <View className="text-2xl font-bold" data-gallery-title="true">
+          <ZView className="text-2xl font-bold" data-gallery-title="true">
             一些我拍的照片
-          </View>
+          </ZView>
         </StaggerReveal>
         <StaggerReveal
           className="w-full h-full flex flex-col items-center gap-10"
@@ -50,7 +48,7 @@ export default function GalleryPage(props: Route.ComponentProps) {
           direction="bottom"
           dependencies={[pagination.data]}
         >
-          <Waterfall
+          <ZWaterfall
             data-gallery-item="true"
             columns={2}
             columnGap="xl"
@@ -64,14 +62,14 @@ export default function GalleryPage(props: Route.ComponentProps) {
             SHOW MORE
           </Button>
         </StaggerReveal>
-      </View>
-    </View>
+      </ZView>
+    </ZView>
   );
 }
 
 export function HydrateFallback() {
   return (
-    <Grid
+    <ZGrid
       cols={3}
       columnClassName="px-40"
       items={Array.from({ length: 9 }, (_, i) => i)}
@@ -88,14 +86,14 @@ function PhotoItem({ value, onClick }: PhotoItemProps) {
   const url = value.cover?.url;
   const click = () => onClick(value);
   return (
-    <View className="flex flex-col items-center gap-4">
+    <ZView className="flex flex-col items-center gap-4">
       <Card
-        className="cursor-pointer !p-0 aspect-square overflow-hidden w-full"
+        className="cursor-pointer p-0! aspect-square overflow-hidden w-full"
         onClick={click}
       >
         <ImagePreload src={url} />
       </Card>
-      <View className="text-3xl font-bold">{value.name}</View>
-    </View>
+      <ZView className="text-3xl font-bold">{value.name}</ZView>
+    </ZView>
   );
 }

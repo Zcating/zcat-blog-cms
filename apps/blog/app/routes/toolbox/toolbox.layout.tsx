@@ -1,4 +1,4 @@
-import { cn, View } from "@blog/components";
+import { cn, View } from "@zcat/ui";
 import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
 import { Outlet } from "react-router";
 

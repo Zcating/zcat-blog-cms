@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "@blog/components";
+import { ZView } from "@zcat/ui";
 import { StatisticsApi } from "@blog/apis";
 
 export function meta() {
@@ -70,7 +70,7 @@ export default function TestStatisticsPage() {
   };
 
   return (
-    <View className="max-w-4xl mx-auto p-6">
+    <ZView className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold mb-6">博客访客统计功能测试</h1>
 
@@ -147,6 +147,6 @@ export default function TestStatisticsPage() {
           </div>
         </div>
       </div>
-    </View>
+    </ZView>
   );
 }

@@ -5,15 +5,10 @@ import {
   ZAddress,
   ZDatePicker,
   ZSelect,
-} from "@blog/components";
-import { Button } from "@blog/components/ui/button";
-import { Textarea } from "@blog/components/ui/textarea";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@blog/components/ui/card";
+} from "@zcat/ui";
+import { Button } from "@zcat/ui/ui/button";
+import { Textarea } from "@zcat/ui/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent } from "@zcat/ui/ui/card";
 
 import { z } from "zod";
 import dayjs from "dayjs";

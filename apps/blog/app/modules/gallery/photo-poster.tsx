@@ -1,5 +1,5 @@
 import type { GalleryApi } from "@blog/apis";
-import { AspectRatio, Image, View } from "@blog/components";
+import { ZImage, ZView } from "@zcat/ui";
 
 interface PhotoPosterProps {
   photo: GalleryApi.Photo;
@@ -7,16 +7,16 @@ interface PhotoPosterProps {
 export function PhotoPoster(props: PhotoPosterProps) {
   const { photo } = props;
   return (
-    <View className="w-full h-full flex items-center justify-center">
-      <View className="flex items-center justify-center">
-        <Image
+    <ZView className="w-full h-full flex items-center justify-center">
+      <ZView className="flex items-center justify-center">
+        <ZImage
           contentMode="cover"
           className="max-h-[80vh]"
           src={photo.url}
           alt={photo.name}
         />
-      </View>
-    </View>
+      </ZView>
+    </ZView>
   );
 }
 
@@ -29,16 +29,16 @@ interface PhotoPosterCoverProps {
 PhotoPoster.Cover = function Cover(props: PhotoPosterCoverProps) {
   const { photo, name, description } = props;
   return (
-    <View className="w-full h-full flex flex-col items-center justify-center gap-20">
-      <Image
+    <ZView className="w-full h-full flex flex-col items-center justify-center gap-20">
+      <ZImage
         className="w-xl h-xl aspect-square"
         src={photo.url}
         alt={photo.name}
       />
-      <View className="w-full flex flex-col items-center justify-center gap-5">
-        <View className="text-white text-5xl font-bold">{name}</View>
-        <View className="text-white text-2xl">{description}</View>
-      </View>
-    </View>
+      <ZView className="w-full flex flex-col items-center justify-center gap-5">
+        <ZView className="text-white text-5xl font-bold">{name}</ZView>
+        <ZView className="text-white text-2xl">{description}</ZView>
+      </ZView>
+    </ZView>
   );
 };

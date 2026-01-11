@@ -1,17 +1,18 @@
+import React from "react";
+
 import { GalleryApi } from "@blog/apis";
 import {
   Button,
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPointer,
+  // CarouselPointer,
   IconClose,
-  View,
+  ZView,
   type CarouselApi,
-} from "@blog/components";
+} from "@zcat/ui";
 import type { Route } from "./+types/gallery.id";
 import { PhotoPoster } from "@blog/modules";
-import React from "react";
 import { useNavigate } from "react-router";
 
 export function meta() {
@@ -49,7 +50,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
   };
 
   return (
-    <View
+    <ZView
       className="h-screen overflow-hidden flex flex-row items-center justify-center"
       backgroundColor="oklch(0.3898 0.0523 28.3)"
     >
@@ -70,29 +71,29 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPointer />
+        {/* <CarouselPointer /> */}
       </Carousel>
       {current > 0 && (
-        <View className="absolute bottom-0 left-0 right-0 flex items-center h-20">
-          <View className="flex-1 text-center text-white">
+        <ZView className="absolute bottom-0 left-0 right-0 flex items-center h-20">
+          <ZView className="flex-1 text-center text-white">
             {gallery.photos[current - 1].name}
-          </View>
-          <View
+          </ZView>
+          <ZView
             className="flex-1 text-white text-center text-3xl font-bold"
             style={{ fontFamily: "'Times New Roman'" }}
           >
             {current} / {count}
-          </View>
-          <View className="flex-1 flex justify-end items-center">
+          </ZView>
+          <ZView className="flex-1 flex justify-end items-center">
             <Button className="mr-12" onClick={back}>
               返回相册
             </Button>
-          </View>
-        </View>
+          </ZView>
+        </ZView>
       )}
       <Button className="absolute top-4 right-4" variant="link" onClick={back}>
         <IconClose color="white" />
       </Button>
-    </View>
+    </ZView>
   );
 }

@@ -13,17 +13,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-} from "@blog/components/ui/sidebar";
-import { ToolbarHeader } from "./toolbox-header";
-import { ToolboxFooter } from "./toolbox-footer";
-import { View } from "@blog/components";
-import { Link } from "react-router";
-import { ChevronRight } from "lucide-react";
-import {
   CollapsibleContent,
   CollapsibleTrigger,
   Collapsible,
-} from "@blog/components/ui/collapsible";
+  ZView,
+} from "@zcat/ui";
+import { ToolbarHeader } from "./toolbox-header";
+import { ToolboxFooter } from "./toolbox-footer";
+import { Link } from "react-router";
+import { ChevronRight } from "lucide-react";
 
 interface ZSidebarMenuItemProps {
   title: string;
@@ -51,7 +49,7 @@ export function ToolboxSidebar(props: ToolboxSidebarProps) {
   return (
     <SidebarProvider className="flex flex-col">
       <ToolbarHeader />
-      <View className="flex flex-1">
+      <ZView className="flex flex-1">
         <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
           <SidebarHeader>
             <SidebarMenu>
@@ -73,12 +71,12 @@ export function ToolboxSidebar(props: ToolboxSidebarProps) {
           <SidebarFooter></SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <View className="min-h-[calc(100svh-var(--header-height)-var(--footer-height))]">
+          <ZView className="min-h-[calc(100svh-var(--header-height)-var(--footer-height))]">
             {children}
-          </View>
+          </ZView>
           <ToolboxFooter />
         </SidebarInset>
-      </View>
+      </ZView>
     </SidebarProvider>
   );
 }

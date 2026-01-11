@@ -5,8 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  View,
-} from "@blog/components";
+  ZView,
+} from "@zcat/ui";
 import { IdCard, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router";
 
@@ -29,13 +29,13 @@ export default function ToolboxHomePage() {
   ] as const;
 
   return (
-    <View className="h-full p-4 space-y-6">
-      <View className="space-y-1">
+    <ZView className="h-full p-4 space-y-6">
+      <ZView className="space-y-1">
         <h1 className="text-2xl font-bold">工具箱</h1>
         <p className="text-muted-foreground text-sm">常用功能入口</p>
-      </View>
+      </ZView>
 
-      <View className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ZView className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {items.map((item) => (
           <Link
             key={item.to}
@@ -51,12 +51,14 @@ export default function ToolboxHomePage() {
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <View className="text-muted-foreground text-sm">立即使用</View>
+                <ZView className="text-muted-foreground text-sm">
+                  立即使用
+                </ZView>
               </CardContent>
             </Card>
           </Link>
         ))}
-      </View>
-    </View>
+      </ZView>
+    </ZView>
   );
 }
