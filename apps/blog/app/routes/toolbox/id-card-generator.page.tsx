@@ -1,14 +1,17 @@
 import { useState } from "react";
 import {
   createZFormMaker,
-  View,
+  ZView,
   ZAddress,
   ZDatePicker,
   ZSelect,
+  Button,
+  Textarea,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
 } from "@zcat/ui";
-import { Button } from "@zcat/ui/ui/button";
-import { Textarea } from "@zcat/ui/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent } from "@zcat/ui/ui/card";
 
 import { z } from "zod";
 import dayjs from "dayjs";
@@ -137,7 +140,7 @@ export default function IdCardGeneratorPage() {
   };
 
   return (
-    <View className="container mx-auto p-4 space-y-6">
+    <ZView className="container mx-auto p-4 space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">中国大陆身份证号生成器</h1>
         <p className="text-sm text-muted-foreground">
@@ -149,7 +152,7 @@ export default function IdCardGeneratorPage() {
           className="max-w-xl"
           title="参数设置"
           footer={
-            <View className="flex gap-5">
+            <ZView className="flex gap-5">
               <Button type="submit">生成</Button>
               <Button
                 variant="secondary"
@@ -158,7 +161,7 @@ export default function IdCardGeneratorPage() {
               >
                 复制结果
               </Button>
-            </View>
+            </ZView>
           }
         >
           <FormMaker.FormItem name="areaCode" label="省市区">
@@ -190,6 +193,6 @@ export default function IdCardGeneratorPage() {
           ) : null}
         </CardContent>
       </Card>
-    </View>
+    </ZView>
   );
 }
