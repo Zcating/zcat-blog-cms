@@ -1,9 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-class OssConfig {
+interface OssConfig {
   accessKey: string;
-
   secretKey: string;
 }
 
@@ -28,9 +27,7 @@ export interface SystemSetting {
   ossConfig: OssConfig;
 }
 
-export class SystemSettingDto extends createZodDto(SystemSettingDtoSchema) {
-  ossConfig: OssConfig;
-}
+export class SystemSettingDto extends createZodDto(SystemSettingDtoSchema) {}
 
 export class SystemSettingUpdateDto extends createZodDto(
   SystemSettingUpdateDtoSchema,
