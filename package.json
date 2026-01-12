@@ -6,19 +6,19 @@
   "scripts": {
     "prepare": "husky",
     "lint": "pnpm -r run lint",
+    "dev": "pnpm -r run dev",
     "dev:backend": "pnpm --filter=backend run dev",
     "dev:frontend": "pnpm --filter=frontend run dev",
     "dev:blog": "pnpm --filter=blog run dev",
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:blog\"",
+    "build": "pnpm -r run build",
     "build:backend": "pnpm --filter=backend run build",
     "build:frontend": "pnpm --filter=frontend run build",
     "build:blog": "pnpm --filter=blog run build",
-    "build": "pnpm -r run build",
+    "docker:build": "docker compose up -d --build",
     "docker:build:db": "docker compose up -d --build cms_pg",
     "docker:build:backend": "docker compose up -d --build backend",
     "docker:build:frontend": "docker compose up -d --build frontend",
-    "docker:build:blog": "docker compose up -d --build blog",
-    "docker:build": "docker compose up -d --build"
+    "docker:build:blog": "docker compose up -d --build blog"
   },
   "keywords": [],
   "author": "",
