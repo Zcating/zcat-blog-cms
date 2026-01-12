@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
 import { access, writeFile } from 'fs/promises';
 import * as path from 'path';
 // mysql -u root -p < init.sql
