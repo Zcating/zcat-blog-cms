@@ -52,8 +52,6 @@ services:
       - '3000:3000'
     env_file:
       - ./apps/frontend/.env.production
-    depends_on:
-      - backend
     networks:
       - app-network
 
@@ -71,8 +69,6 @@ services:
       - ./apps/blog/.env.production
     ports:
       - '1024:1024'
-    depends_on:
-      - backend
     networks:
       - app-network
 

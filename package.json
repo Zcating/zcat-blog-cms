@@ -14,11 +14,11 @@
     "build:frontend": "pnpm --filter=frontend run build",
     "build:blog": "pnpm --filter=blog run build",
     "build": "pnpm -r run build",
-    "docker:build:db": "docker compose -f docker-compose.yml up -d --build cms_pg",
-    "docker:build:backend": "docker compose -f docker-compose.yml up -d --build backend",
-    "docker:build:frontend": "docker compose -f docker-compose.yml up -d --build frontend",
-    "docker:build:blog": "docker compose -f docker-compose.yml up -d --build blog",
-    "docker:build": "docker compose -f docker-compose.yml up -d --build"
+    "docker:build:db": "docker compose up -d --build cms_pg",
+    "docker:build:backend": "docker compose up -d --build backend",
+    "docker:build:frontend": "docker compose up -d --build frontend",
+    "docker:build:blog": "docker compose up -d --build blog",
+    "docker:build": "docker compose up -d --build"
   },
   "keywords": [],
   "author": "",

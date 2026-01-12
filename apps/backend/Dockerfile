@@ -7,7 +7,6 @@ ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 FROM base AS build
 ENV HUSKY=0
-ENV DATABASE_URL="postgresql://dummy:5432/dummy"
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=backend install --frozen-lockfile
