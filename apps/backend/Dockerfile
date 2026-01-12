@@ -4,6 +4,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack install --global pnpm@latest
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV HUSKY=0
 
 FROM base AS build
 COPY . /usr/src/app
