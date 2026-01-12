@@ -1,6 +1,8 @@
 import { ZView } from "@zcat/ui";
-import { PostContentView } from "@blog/modules";
+
 import { ArticleApi } from "@blog/apis";
+import { PostContentView } from "@blog/modules";
+
 import type { Route } from "./+types/post-board.id";
 
 export function meta(args: Route.MetaArgs) {

@@ -1,7 +1,9 @@
+import React from 'react';
+
 import { SystemSettingApi } from '@cms/api';
 import { Button, Form, ImageUpload, Input } from '@cms/components';
+
 import type { Route } from './+types/settings';
-import React from 'react';
 
 export function clientLoader() {
   // return SystemSettingApi.getSystemSetting();

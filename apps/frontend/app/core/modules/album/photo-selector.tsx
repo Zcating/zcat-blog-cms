@@ -1,4 +1,6 @@
-import type { PhotosApi } from '@cms/api';
+import { FullscreenOutlined } from '@ant-design/icons';
+import React from 'react';
+
 import {
   Button,
   Card,
@@ -9,8 +11,8 @@ import {
   Modal,
   Row,
 } from '@cms/components';
-import { FullscreenOutlined } from '@ant-design/icons';
-import React from 'react';
+
+import type { PhotosApi } from '@cms/api';
 
 interface PhotoSelectorProps {
   /** 照片列表 */
@@ -221,8 +223,10 @@ function PhotoSelectorCard(props: PhotoSelectorCardProps) {
 }
 
 // 照片选择器弹窗组件
-interface PhotoSelectorModalProps
-  extends Omit<PhotoSelectorProps, 'showActions'> {}
+interface PhotoSelectorModalProps extends Omit<
+  PhotoSelectorProps,
+  'showActions'
+> {}
 
 /**
  * 照片选择器弹窗组件

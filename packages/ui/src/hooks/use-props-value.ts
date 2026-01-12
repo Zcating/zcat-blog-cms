@@ -1,5 +1,6 @@
-import React from "react";
-import { useUpdate } from "./use-update";
+import React from 'react';
+
+import { useUpdate } from './use-update';
 
 interface Options<T> {
   value?: T;
@@ -17,7 +18,7 @@ export function usePropsValue<T>(options: Options<T>) {
   const update = useUpdate();
 
   const setState = (v: React.SetStateAction<T>) => {
-    if (typeof v === "function") {
+    if (typeof v === 'function') {
       stateRef.current = (v as (prev: T) => T)(stateRef.current);
     } else {
       stateRef.current = v;

@@ -1,8 +1,11 @@
-import type React from 'react';
-import { UiProviderContext } from './ui-provider';
 import { createPortal } from 'react-dom';
-import { classnames } from '../utils';
 import { tv } from 'tailwind-variants';
+
+import { classnames } from '../utils';
+
+import { UiProviderContext } from './ui-provider';
+
+import type React from 'react';
 
 export namespace Modal {
   let id = 0;

@@ -1,6 +1,7 @@
 import React from 'react';
-import { classnames } from '../utils';
 import { tv } from 'tailwind-variants';
+
+import { classnames } from '../utils';
 
 const gridTv = tv({
   variants: {

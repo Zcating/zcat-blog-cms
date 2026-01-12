@@ -1,9 +1,11 @@
-import { ArticleApi } from "@blog/apis";
-import { Link, useNavigate } from "react-router";
 import { StaggerReveal, ZView, ZPagination } from "@zcat/ui";
+import { Link, useNavigate } from "react-router";
+
+import { ArticleApi } from "@blog/apis";
 import { PostExcerptCard } from "@blog/modules/post";
-import type { Route } from "./+types/post-board";
 import { safePositiveNumber } from "@blog/utils";
+
+import type { Route } from "./+types/post-board";
 
 export function meta() {
   return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];

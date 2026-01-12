@@ -1,6 +1,7 @@
-import { BlogContent, BlogFooter, BlogHeader } from "@blog/modules";
 import { ZView } from "@zcat/ui";
 import { Outlet } from "react-router";
+
+import { BlogContent, BlogFooter, BlogHeader } from "@blog/modules";
 
 export default function BlogLayout() {
   return (

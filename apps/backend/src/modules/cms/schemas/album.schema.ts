@@ -1,7 +1,7 @@
-import type { Photo, PhotoAlbum } from '@backend/prisma';
-
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+
+import type { Photo, PhotoAlbum } from '@backend/prisma';
 
 export const CreatePhotoAlbumDtoSchema = z.object({
   name: z.string().min(1, '相册名称不能为空'),

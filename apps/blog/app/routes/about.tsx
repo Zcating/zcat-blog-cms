@@ -1,6 +1,3 @@
-import {} from "@zcat/ui";
-import type { Route } from "./+types/about";
-import { UserApi } from "@blog/apis";
 import {
   Card,
   CardContent,
@@ -12,6 +9,10 @@ import {
   ZAvatar,
   ZView,
 } from "@zcat/ui";
+
+import { UserApi } from "@blog/apis";
+
+import type { Route } from "./+types/about";
 
 export function meta() {
   return [{ title: "关于" }, { name: "description", content: "个人技术博客" }];

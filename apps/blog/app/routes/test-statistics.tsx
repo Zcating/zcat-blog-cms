@@ -1,5 +1,6 @@
-import React from "react";
 import { ZView } from "@zcat/ui";
+import React from "react";
+
 import { StatisticsApi } from "@blog/apis";
 
 export function meta() {
@@ -44,7 +45,7 @@ export default function TestStatisticsPage() {
       addLog("自动记录成功");
       setStatus("测试成功");
     } catch (error) {
-      addLog(`自动记录失败: ${error}`);
+      addLog(`自动记录失败: ${String(error)}`);
       setStatus("测试失败");
     }
   };

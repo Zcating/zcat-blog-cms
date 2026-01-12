@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   isRouteErrorResponse,
   Links,
@@ -8,11 +9,12 @@ import {
   useNavigate,
 } from 'react-router';
 
-import type { Route } from './+types/root';
-import './app.css';
-import { UiProvider } from './components';
 import { HttpClient } from './api';
-import React from 'react';
+import { UiProvider } from './components';
+
+import type { Route } from './+types/root';
+
+import './app.css';
 
 export function meta() {
   return [

@@ -1,7 +1,9 @@
 import { FullscreenOutlined, LoadingOutlined } from '@ant-design/icons';
-import type { PhotosApi } from '@cms/api';
-import { Button, Card, Image, Modal, Row } from '@cms/components';
 import React from 'react';
+
+import { Button, Card, Image, Modal, Row } from '@cms/components';
+
+import type { PhotosApi } from '@cms/api';
 
 export interface PhotoCardData extends PhotosApi.Photo {
   loading?: boolean;
@@ -25,8 +27,8 @@ export function PhotoCard(props: PhotoCardProps) {
     setVisible(false);
   };
 
-  const fullscreen = (photo: PhotosApi.Photo) => {
-    Modal.open({
+  const fullscreen = async (photo: PhotosApi.Photo) => {
+    await Modal.open({
       contentContainerClassName: 'max-w-3xl',
       children: <Image className="w-full" src={photo.url} alt={photo.name} />,
       backdropClose: true,

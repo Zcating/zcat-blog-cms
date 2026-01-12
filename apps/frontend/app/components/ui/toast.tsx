@@ -1,6 +1,8 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Modal } from './modal';
+
 import { classnames } from '../utils';
+
+import { Modal } from './modal';
 
 export namespace Toast {
   export interface ToastProps {
@@ -29,21 +31,21 @@ export namespace Toast {
             role="alert"
             className={classnames('alert shadow-lg/20', typeClass)}
           >
-            <InfoCircleOutlined className="text-xl !text-base-100" />
+            <InfoCircleOutlined className="text-xl text-base-100!" />
             <span className="text-base-100">{props.message}</span>
           </div>
           <div
             role="alert"
             className={classnames('alert shadow-lg/20', typeClass)}
           >
-            <InfoCircleOutlined className="text-xl !text-base-100" />
+            <InfoCircleOutlined className="text-xl text-base-100!" />
             <span className="text-base-100">{props.message}</span>
           </div>
           <div
             role="alert"
             className={classnames('alert shadow-lg/20', typeClass)}
           >
-            <InfoCircleOutlined className="text-xl !text-base-100" />
+            <InfoCircleOutlined className="text-xl text-base-100!" />
             <span className="text-base-100">{props.message}</span>
           </div>
         </div>

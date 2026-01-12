@@ -1,9 +1,9 @@
 import React from 'react';
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import 'katex/dist/katex.min.css'; // 引入 KaTeX 样式
 
 import { useMount } from '../hooks';

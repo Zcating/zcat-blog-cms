@@ -1,8 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "module": "commonjs",
+    "types": ["jest", "node"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,

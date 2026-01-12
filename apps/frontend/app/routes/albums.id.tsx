@@ -1,9 +1,8 @@
 import React from 'react';
 import zod from 'zod';
-import type { Route } from './+types/albums.id';
 
-import { Button, Dialog, Grid, useLoadingFn } from '@cms/components';
 import { AlbumsApi, PhotosApi } from '@cms/api';
+import { Button, Dialog, Grid, useLoadingFn } from '@cms/components';
 import {
   createCheckbox,
   createConstNumber,
@@ -19,6 +18,8 @@ import {
   Workspace,
   type PhotoCardData,
 } from '@cms/core';
+
+import type { Route } from './+types/albums.id';
 
 interface AlbumPhotoFormData {
   id: number;

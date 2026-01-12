@@ -1,7 +1,9 @@
 import React from 'react';
+
+import { classnames, isFunction, isRange } from '../utils';
+
 import { Button } from './button';
 import { Input } from './input';
-import { classnames, isFunction, isRange } from '../utils';
 
 interface PaginationProps {
   className?: string;

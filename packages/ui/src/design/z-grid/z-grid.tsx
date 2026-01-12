@@ -1,5 +1,6 @@
-import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import React from 'react';
+
 import { useGroups } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn';
 

@@ -1,5 +1,4 @@
-import type React from "react";
-
+import { useMount } from "@zcat/ui";
 import {
   isRouteErrorResponse,
   Links,
@@ -9,9 +8,10 @@ import {
   ScrollRestoration,
 } from "react-router";
 
-import type { Route } from "./+types/root";
 import { StatisticsApi } from "@blog/apis";
-import { useMount } from "@zcat/ui";
+
+import type { Route } from "./+types/root";
+import type React from "react";
 
 import "./app.css";
 import "@zcat/ui/dist/index.css";

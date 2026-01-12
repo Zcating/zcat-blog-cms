@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prepare": "husky",
     "lint": "pnpm -r run lint",
     "dev:backend": "pnpm --filter=backend run dev",
     "dev:frontend": "pnpm --filter=frontend run dev",
@@ -23,13 +24,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.5",
     "@types/react-syntax-highlighter": "^15.5.13",
     "concurrently": "^9.1.2",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.3",
     "eslint-plugin-check-file": "^3.3.0",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.0.0",
     "ts-node": "^10.9.2",
     "typescript-eslint": "^8.52.0"
   },

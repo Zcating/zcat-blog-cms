@@ -1,7 +1,9 @@
-import React from 'react';
 import { cva } from 'class-variance-authority';
-import { ZView } from '../z-view';
+import React from 'react';
+
 import { cn } from '@zcat/ui/shadcn';
+
+import { ZView } from '../z-view';
 
 const waterfallGap = cva('flex gap-4', {
   variants: {
@@ -18,8 +20,9 @@ const waterfallGap = cva('flex gap-4', {
 });
 type WaterfallGap = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 
-export interface ZWaterfallProps<T>
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface ZWaterfallProps<
+  T,
+> extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   data: T[];
   columns: number;

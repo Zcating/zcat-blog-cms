@@ -1,5 +1,6 @@
-import type React from 'react';
 import { Input } from '@zcat/ui/shadcn/ui/input';
+
+import type React from 'react';
 
 interface ZInputProps extends React.ComponentProps<'input'> {
   className?: string;

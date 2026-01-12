@@ -20,5 +20,6 @@ export * from './markdown';
 export * from './avatar';
 export * from './pagination';
 export * from './markdown-editor';
+export * from './label';
 
 export { UiProvider } from './ui-provider';

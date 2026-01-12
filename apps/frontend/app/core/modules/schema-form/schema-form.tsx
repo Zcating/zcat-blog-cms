@@ -1,13 +1,12 @@
-import { Button, Form, FormDialog, Row, useLoadingFn } from '@cms/components';
-import type { Path } from 'react-hook-form';
-import type {
-  FieldsRecord,
-  SchemaField,
-  SchemaFieldsData,
-} from './schema-field';
-// import zod from 'zod';
+import { useForm } from '@tanstack/react-form';
+
+import { Button, Form, FormDialog, Row, Label } from '@cms/components';
+
 import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
 
+// import zod from 'zod';
+
+import type { FieldsRecord, SchemaFieldsData } from './schema-field';
 import type { zodResolver } from '@hookform/resolvers/zod';
 
 interface SchemaFormProps<Fields extends FieldsRecord> {
@@ -29,49 +28,50 @@ interface SchemaFormProps<Fields extends FieldsRecord> {
 function SchemaForm<Fields extends FieldsRecord>(
   props: SchemaFormProps<Fields>,
 ): React.ReactElement {
-  const entries = Object.entries(props.fields) as [
-    Path<SchemaFieldsData<Fields>>,
-    SchemaField,
-  ][];
+  const entries = Object.entries(props.fields);
 
-
-  const instance = Form.useForm<SchemaFieldsData<Fields>>({
-    initialValues: props.initialValues,
-    schema: props.schema,
-    onSubmit: props.onSubmit,
+  const form = useForm({
+    defaultValues: props.initialValues,
+    onSubmit: ({ value }) => {
+      props.onSubmit(value);
+    },
   });
 
   return (
-    <Form form={instance}>
+    <Form form={form}>
       {entries.map(([key, field]) => {
         const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
         if (!componentRenderer) {
           return null;
         }
 
-        const component = componentRenderer(field);
-        if (!component) {
+        const Component = componentRenderer(field);
+        if (!Component) {
           return null;
         }
+
+        const label = field.label;
         return (
-          <Form.Item
-            form={instance}
-            label={field.label}
+          <form.Field
             name={key}
             key={`form-${key}`}
-            span={3}
-          >
-            {component}
-          </Form.Item>
+            children={(field) => (
+              <Label label={label} span={3}>
+                <Component
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                />
+              </Label>
+            )}
+          />
         );
       })}
       <Row gap="5" justify="end">
         <Button variant="primary" type="submit">
           {props.confirmText || '创建'}
         </Button>
-        <Button onClick={props.onCancel}>
-          {props.cancelText || '取消'}
-        </Button>
+        <Button onClick={props.onCancel}>{props.cancelText || '取消'}</Button>
       </Row>
     </Form>
   );

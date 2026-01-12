@@ -1,4 +1,5 @@
 import { safeParse } from '@cms/components';
+
 import { HttpClient } from '../http';
 
 export namespace UserApi {
@@ -18,9 +19,7 @@ export namespace UserApi {
   }
 
   export async function userInfo(): Promise<UserInfo> {
-    const result = await HttpClient.get<Record<string, string>>(
-      'cms/user-info',
-    );
+    const result = await HttpClient.get('cms/user-info');
     return {
       id: result.id,
       name: result.name,
@@ -32,13 +31,16 @@ export namespace UserApi {
     };
   }
 
-  export interface UpdateUserInfoParams extends Partial<UserInfo> {}
+  export type UpdateUserInfoParams = Partial<UserInfo>;
 
   export async function updateUserInfo(data: UpdateUserInfoParams) {
-    const result = await HttpClient.post('cms/user-info/update', {
-      ...data,
-      contact: JSON.stringify(data.contact),
-    });
+    const result = await HttpClient.post<Record<string, string>>(
+      'cms/user-info/update',
+      {
+        ...data,
+        contact: JSON.stringify(data.contact),
+      },
+    );
 
     return {
       id: result.id,

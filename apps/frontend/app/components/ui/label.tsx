@@ -1,5 +1,6 @@
-import type React from 'react';
 import { tv } from 'tailwind-variants';
+
+import type React from 'react';
 
 export type LabelSpan =
   | 1

@@ -1,5 +1,6 @@
-import type { IconProps } from "./variants";
-import { iconVariants } from "./variants";
+import { iconVariants } from './variants';
+
+import type { IconProps } from './variants';
 
 export function IconPhoto(props: IconProps) {
   return (

@@ -1,4 +1,5 @@
 import { tv } from 'tailwind-variants';
+
 import { classnames } from '../utils';
 
 type SelectVariant =
@@ -73,16 +74,16 @@ export function Select(props: SelectProps) {
     }),
     props.className,
   );
-  
+
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (props.onChange) {
       props.onChange(event.target.value);
     }
   };
-  
+
   return (
-    <select 
-      className={selectClassNames} 
+    <select
+      className={selectClassNames}
       disabled={props.disabled}
       value={props.value}
       onChange={handleChange}

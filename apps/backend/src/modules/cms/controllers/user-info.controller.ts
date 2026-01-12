@@ -8,10 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Request } from 'express';
 
 import { createResult, ResultCode } from '@backend/model';
-
-import { Request } from 'express';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { UserInfoService } from '../services/user-info.service';

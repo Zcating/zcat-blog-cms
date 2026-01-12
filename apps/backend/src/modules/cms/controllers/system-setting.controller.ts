@@ -1,10 +1,9 @@
 import { Controller, Get, Logger, Query, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as qiniu from 'qiniu';
 
 import { OssService } from '@backend/common';
 import { createResult, ResultCode } from '@backend/model';
-
-import * as qiniu from 'qiniu';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { UploadTokenDto } from '../schemas/system-setting.schema';

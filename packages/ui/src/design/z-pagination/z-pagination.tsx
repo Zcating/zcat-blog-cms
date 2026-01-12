@@ -1,5 +1,5 @@
-import * as Shadcn from '@zcat/ui/shadcn/ui/pagination';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
+import * as Shadcn from '@zcat/ui/shadcn/ui/pagination';
 
 /**
  * 统一封装的分页组件：
@@ -69,7 +69,7 @@ function getPageItems(
 
   const items: Array<number | 'ellipsis'> = [];
   for (let i = 0; i < sorted.length; i++) {
-    const p = sorted[i]!;
+    const p = sorted[i];
     const prev = sorted[i - 1];
     if (i > 0 && prev != null && p - prev > 1) {
       items.push('ellipsis');

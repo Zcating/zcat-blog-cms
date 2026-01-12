@@ -1,6 +1,7 @@
-import { ArticlesApi } from '@cms/api';
+import React from 'react';
 import { useNavigate } from 'react-router';
-import type { Route } from './+types/articles';
+
+import { ArticlesApi } from '@cms/api';
 import {
   Button,
   Card,
@@ -11,7 +12,8 @@ import {
   useLoadingFn,
 } from '@cms/components';
 import { Workspace } from '@cms/core';
-import React from 'react';
+
+import type { Route } from './+types/articles';
 
 export async function clientLoader() {
   const pagination = await ArticlesApi.getArticles({

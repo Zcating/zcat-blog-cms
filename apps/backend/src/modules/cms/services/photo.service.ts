@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { isNumber } from 'class-validator';
 
 import { OssService, PrismaService } from '@backend/common';
 import { Photo } from '@backend/prisma';
-
-import { isNumber } from 'class-validator';
 
 import {
   CreateAlbumPhotoDto,

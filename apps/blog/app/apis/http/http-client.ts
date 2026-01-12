@@ -10,7 +10,7 @@ export namespace HttpClient {
     data: any;
   }
 
-  export async function serverSideGet<T = any>(
+  export async function serverSideGet<T = Record<string, any>>(
     path: string,
     params?: Record<string, any>,
   ) {

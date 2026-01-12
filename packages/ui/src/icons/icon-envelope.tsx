@@ -1,4 +1,4 @@
-import { iconVariants, type IconProps } from "./variants";
+import { iconVariants, type IconProps } from './variants';
 
 export function IconEnvelope(props: IconProps) {
   return (
@@ -7,7 +7,7 @@ export function IconEnvelope(props: IconProps) {
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
-      stroke={props.color ?? "currentColor"}
+      stroke={props.color ?? 'currentColor'}
       className={iconVariants({ size: props.size })}
     >
       <path

@@ -1,5 +1,6 @@
-import type { GalleryApi } from "@blog/apis";
 import { ZImage, ZView } from "@zcat/ui";
+
+import type { GalleryApi } from "@blog/apis";
 
 interface PhotoPosterProps {
   photo: GalleryApi.Photo;

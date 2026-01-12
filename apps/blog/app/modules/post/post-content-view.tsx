@@ -1,5 +1,6 @@
-import type { ArticleApi } from "@blog/apis";
 import { ZMarkdown, ZView } from "@zcat/ui";
+
+import type { ArticleApi } from "@blog/apis";
 
 export interface PostContentViewProps {
   value: ArticleApi.ArticleDetail;

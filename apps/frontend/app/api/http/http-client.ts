@@ -1,10 +1,11 @@
 import Cookies from 'js-cookie';
-import { createQueryPath } from './http-utils';
+
 import { HttpClientEventCenter } from './http-client-event-center';
+import { createQueryPath } from './http-utils';
 
 export namespace HttpClient {
   const API_URL: string = import.meta.env.VITE_API_URL;
-  const SERVER_URL: string = import.meta.env.SERVER_URL;
+  const SERVER_URL: string = import.meta.env.VITE_SERVER_URL;
   interface ResponseResult {
     code: string;
     message: string;
@@ -15,7 +16,7 @@ export namespace HttpClient {
     Cookies.set('token', `Bearer ${token}`);
   }
 
-  export async function post<T = any>(
+  export async function post<T = Record<string, any>>(
     path: string,
     body: Record<string, any> | FormData,
   ): Promise<T> {
@@ -38,7 +39,7 @@ export namespace HttpClient {
     return result.data;
   }
 
-  export async function get<T = any>(
+  export async function get<T = Record<string, string>>(
     path: string,
     body?: Record<string, any>,
   ): Promise<T> {
@@ -105,10 +106,7 @@ export namespace HttpClient {
     return HttpClientEventCenter.subscribe('ERROR', callback);
   }
 
-  async function fetchFrom(
-    input: string | URL | Request,
-    init?: RequestInit | undefined,
-  ) {
+  async function fetchFrom(input: string | URL | Request, init?: RequestInit) {
     const response = await fetch(input, init);
     if (response.status === 401) {
       HttpClientEventCenter.emitEvent('UNAUTH');

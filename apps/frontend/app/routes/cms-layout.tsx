@@ -1,7 +1,3 @@
-import { Outlet, useLocation, useNavigate, useRouteError } from 'react-router';
-import { Navbar, Sidebar } from '@cms/components';
-import { isRouteErrorResponse } from 'react-router';
-import React from 'react';
 import {
   FormOutlined,
   PictureOutlined,
@@ -10,6 +6,16 @@ import {
   TagsOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import React from 'react';
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useRouteError,
+  isRouteErrorResponse,
+} from 'react-router';
+
+import { Navbar, Sidebar } from '@cms/components';
 
 export function ErrorBoundary() {
   const error = useRouteError();

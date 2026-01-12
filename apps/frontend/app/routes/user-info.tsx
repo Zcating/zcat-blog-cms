@@ -1,5 +1,7 @@
+import { LoadingOutlined } from '@ant-design/icons';
+import React from 'react';
+
 import { UserApi } from '@cms/api';
-import type { Route } from './+types/user-info';
 import {
   Avatar,
   Button,
@@ -9,10 +11,10 @@ import {
   safeObjectURL,
   Textarea,
 } from '@cms/components';
-import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
-import React from 'react';
 import { Label } from '@cms/components/ui/label';
-import { LoadingOutlined } from '@ant-design/icons';
+import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
+
+import type { Route } from './+types/user-info';
 
 interface UserInfoValues extends UserApi.UserInfo {
   loading?: boolean;

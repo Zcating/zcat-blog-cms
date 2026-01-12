@@ -1,8 +1,9 @@
+import * as qiniu from 'qiniu-js';
+
 import { ArticlesApi, PhotosApi, SystemSettingApi, UserApi } from '@cms/api';
 import { isString, safeArray } from '@cms/components';
 import { CommonRegex } from '@cms/core/utils';
 
-import * as qiniu from 'qiniu-js';
 import type { Observable } from 'qiniu-js/esm/utils';
 
 /**
@@ -306,7 +307,7 @@ export namespace OssAction {
       return undefined;
     }
     const response = await fetch(url);
-    return response.blob() as Promise<Blob>;
+    return response.blob();
   }
 
   /**
@@ -372,7 +373,7 @@ function promiseFrom(observer: Observable<any, any, any>): Promise<void> {
       next(res) {
         // console.log(res);
       },
-      error(err) {
+      error(err: Error) {
         reject(err);
       },
       complete(res) {

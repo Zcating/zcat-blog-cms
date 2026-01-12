@@ -1,4 +1,3 @@
-import { GalleryApi } from "@blog/apis";
 import {
   Button,
   Card,
@@ -10,6 +9,9 @@ import {
   ZWaterfall,
 } from "@zcat/ui";
 import { useNavigate } from "react-router";
+
+import { GalleryApi } from "@blog/apis";
+
 import type { Route } from "./+types/gallery";
 
 export function meta() {

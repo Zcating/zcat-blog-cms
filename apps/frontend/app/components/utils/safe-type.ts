@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
+
 import { isNumber, isString } from './is-type';
-import { number } from 'zod';
 
 export function safeParse<T>(data: string, defaultValue: T): T {
   try {

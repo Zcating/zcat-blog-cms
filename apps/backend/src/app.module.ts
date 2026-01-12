@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 import { CommonModule, HttpExceptionFilter } from '@backend/common';
 import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
-
-import { ZodValidationPipe } from 'nestjs-zod';
 
 // import * as path from 'path';
 

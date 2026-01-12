@@ -1,7 +1,9 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import type { AlbumsApi } from '@cms/api';
-import { Button, Card } from '@cms/components';
 import React from 'react';
+
+import { Button, Card } from '@cms/components';
+
+import type { AlbumsApi } from '@cms/api';
 
 export interface PhotoAlbumData extends AlbumsApi.PhotoAlbum {
   loading?: boolean;

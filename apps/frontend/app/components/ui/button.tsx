@@ -1,8 +1,10 @@
-import type { ButtonHTMLAttributes } from 'react';
-import type React from 'react';
-import { classnames } from '../utils';
 import { Loading3QuartersOutlined } from '@ant-design/icons';
 import { tv } from 'tailwind-variants';
+
+import { classnames } from '../utils';
+
+import type { ButtonHTMLAttributes } from 'react';
+import type React from 'react';
 
 type ButtonVariant =
   | 'default'

@@ -1,6 +1,8 @@
-import type React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@zcat/ui/shadcn';
 import { cva } from 'class-variance-authority';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@zcat/ui/shadcn';
+
+import type React from 'react';
 
 interface ZAvatarProps {
   size?: 'sm' | 'md' | 'lg';

@@ -1,2 +1,2 @@
-export * from "./article-editor";
-export * from "./article-viewer";
+export * from './article-editor';
+export * from './article-viewer';

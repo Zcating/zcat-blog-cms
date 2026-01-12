@@ -1,5 +1,6 @@
+import React from 'react';
+
 import { PhotosApi } from '@cms/api';
-import type { Route } from './+types/photos';
 import { Button, Dialog, Grid, safeObjectURL } from '@cms/components';
 import {
   createConstNumber,
@@ -12,7 +13,8 @@ import {
   useOptimisticArray,
   type PhotoCardData,
 } from '@cms/core';
-import React from 'react';
+
+import type { Route } from './+types/photos';
 
 interface PhotoFormData {
   id: number;

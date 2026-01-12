@@ -1,5 +1,6 @@
-import React from 'react';
 import { cva } from 'class-variance-authority';
+import React from 'react';
+
 import { cn } from '@zcat/ui/shadcn';
 
 type ContentMode = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';

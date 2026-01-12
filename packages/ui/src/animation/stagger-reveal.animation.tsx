@@ -1,8 +1,9 @@
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import React from 'react';
-import { cn } from '../shadcn';
+
 import { ZView } from '../design';
+import { cn } from '../shadcn';
 import { composeRefs } from '../utils/compose-ref';
 
 const DIRECTION_MAP = {
@@ -31,8 +32,7 @@ function transformValueFrom(direction: StaggerRevealDirection): string {
   return `${translateValueFrom(direction)}(${NEGATIVE_MAP[direction]})`;
 }
 
-export interface StaggerRevealProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface StaggerRevealProps extends React.HTMLAttributes<HTMLDivElement> {
   selector: string;
   duration?: number;
   ease?: string;

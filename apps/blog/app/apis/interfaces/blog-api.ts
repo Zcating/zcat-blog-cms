@@ -1,15 +1,16 @@
 import { HttpClient } from "../http/http-client";
 
 export namespace UserApi {
+  interface Contact {
+    email: string;
+    github: string;
+  }
   export interface UserInfo {
     name: string;
     occupation: string;
     abstract: string;
     aboutMe: string;
-    contact: {
-      email: string;
-      github: string;
-    };
+    contact: Contact;
     avatar: string;
     createdAt: string;
     updatedAt: string;
@@ -20,7 +21,8 @@ export namespace UserApi {
    * @returns {Promise<UserInfo>} 用户信息
    */
   export async function getUserInfo(): Promise<UserInfo> {
-    const userInfo = await HttpClient.serverSideGet("blog/user-info");
+    const userInfo = await HttpClient.serverSideGet<UserInfo>("blog/user-info");
+
     return {
       ...userInfo,
       contact: {

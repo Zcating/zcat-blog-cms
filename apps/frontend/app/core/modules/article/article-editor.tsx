@@ -1,3 +1,6 @@
+import { LoadingOutlined } from '@ant-design/icons';
+import React from 'react';
+
 import { ArticlesApi } from '@cms/api';
 import {
   Button,
@@ -7,9 +10,6 @@ import {
   Textarea,
   useLoadingFn,
 } from '@cms/components';
-
-import React from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
 import { CommonRegex } from '@cms/core/utils';
 
 interface ArticleEditorProps {

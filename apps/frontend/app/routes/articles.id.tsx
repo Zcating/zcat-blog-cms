@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router';
+
 import { ArticlesApi } from '@cms/api';
 import { ArticleViewer, Workspace } from '@cms/core';
+
 import type { Route } from './+types/articles.id';
-import { useNavigate } from 'react-router';
 
 export async function clientLoader(props: Route.ClientLoaderArgs) {
   const id = Number(props.params.id);

@@ -1,6 +1,8 @@
-import React from 'react';
 import { FileImageOutlined } from '@ant-design/icons';
+import React from 'react';
+
 import { classnames } from '../utils';
+
 import { Image } from './image';
 
 type CardSize = 'sm' | 'md' | 'lg' | 'xl' | 'xs';

@@ -1,5 +1,5 @@
 function defaultKeyFrom<T>(item: T) {
-  return (item as any).id;
+  return (item as { id: string | number | symbol }).id;
 }
 
 export function updateArray<T>(

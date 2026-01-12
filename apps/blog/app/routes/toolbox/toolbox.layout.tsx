@@ -1,6 +1,7 @@
 import { cn, ZView } from "@zcat/ui";
-import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
 import { Outlet } from "react-router";
+
+import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
 
 const items = [
   {

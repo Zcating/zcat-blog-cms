@@ -1,6 +1,3 @@
-import React from "react";
-
-import { GalleryApi } from "@blog/apis";
 import {
   Button,
   Carousel,
@@ -11,9 +8,13 @@ import {
   ZView,
   type CarouselApi,
 } from "@zcat/ui";
-import type { Route } from "./+types/gallery.id";
-import { PhotoPoster } from "@blog/modules";
+import React from "react";
 import { useNavigate } from "react-router";
+
+import { GalleryApi } from "@blog/apis";
+import { PhotoPoster } from "@blog/modules";
+
+import type { Route } from "./+types/gallery.id";
 
 export function meta() {
   return [{ title: "相册" }, { name: "description", content: "个人技术博客" }];

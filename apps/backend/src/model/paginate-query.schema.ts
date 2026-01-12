@@ -1,7 +1,7 @@
-import { safeNumber } from '@backend/utils';
-
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+
+import { safeNumber } from '@backend/utils';
 
 const ORDER_OPTIONS = ['latest', 'oldest'] as const;
 

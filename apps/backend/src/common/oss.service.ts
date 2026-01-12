@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
 import * as qiniu from 'qiniu';
 
 // 私有下载链接签名有效期（单位：秒）。

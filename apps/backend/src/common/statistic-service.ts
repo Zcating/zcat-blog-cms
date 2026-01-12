@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-
-import { Statistic } from '@backend/prisma';
-
 import { Request } from 'express';
 
+import { Statistic } from '@backend/prisma';
 import { hashTest } from '@backend/utils/hash';
 
 import { PrismaService } from './prisma.service';

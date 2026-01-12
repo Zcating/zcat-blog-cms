@@ -1,12 +1,13 @@
 import React from 'react';
-import remarkGfm from 'remark-gfm';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
 import ReactMarkdown from 'react-markdown';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 
 import 'katex/dist/katex.min.css'; // 引入 KaTeX 样式
 import { cn } from '@zcat/ui/shadcn';
+
 import { ZView } from '../z-view';
 
 export interface ZMarkdownProps {

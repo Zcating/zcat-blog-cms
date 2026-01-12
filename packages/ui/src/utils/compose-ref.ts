@@ -11,7 +11,7 @@ export function composeRefs<T>(
       if (typeof ref === 'function') {
         ref(node);
       } else {
-        (ref as React.RefObject<T | null>).current = node;
+        ref.current = node;
       }
     }
   };

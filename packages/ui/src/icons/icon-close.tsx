@@ -1,5 +1,6 @@
-import type { IconProps } from "./variants";
-import { iconVariants } from "./variants";
+import { iconVariants } from './variants';
+
+import type { IconProps } from './variants';
 
 export function IconClose(props: IconProps) {
   return (
@@ -9,7 +10,7 @@ export function IconClose(props: IconProps) {
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={1.5}
-      stroke={props.color ?? "currentColor"}
+      stroke={props.color ?? 'currentColor'}
       className={iconVariants({ size: props.size })}
     >
       <path

@@ -1,3 +1,4 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import {
   Controller,
@@ -11,14 +12,12 @@ import {
   type DefaultValues,
   type UseFormWatch,
 } from 'react-hook-form';
-
-import { zodResolver } from '@hookform/resolvers/zod';
-
 import useConstant from 'use-constant';
-import { Label, type LabelSpan } from './label';
+
 import { useLoadingFn } from '../hooks';
 import { classnames } from '../utils';
-import { LoadingOutlined } from '@ant-design/icons';
+
+import { Label, type LabelSpan } from './label';
 
 interface FormProps<TFieldValues extends FieldValues = FieldValues> {
   className?: string;
@@ -41,15 +40,10 @@ export function Form<TFieldValues extends FieldValues = FieldValues>(
 
   return (
     <form
-      className={classnames('relative flex flex-col gap-5', props.className)}
+      className={classnames('space-y-3', props.className)}
       onSubmit={submit}
     >
       {children}
-      {submit.loading ? (
-        <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center">
-          <LoadingOutlined style={{ fontSize: 36 }} />
-        </div>
-      ) : null}
     </form>
   );
 }

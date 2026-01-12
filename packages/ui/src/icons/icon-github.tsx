@@ -1,11 +1,11 @@
-import { iconVariants, type IconProps } from "./variants";
+import { iconVariants, type IconProps } from './variants';
 
 export function IconGithub(props: IconProps) {
   return (
     <svg
       viewBox="0 0 98 96"
       xmlns="http://www.w3.org/2000/svg"
-      stroke={props.color ?? "currentColor"}
+      stroke={props.color ?? 'currentColor'}
       className={iconVariants({ size: props.size })}
     >
       <path

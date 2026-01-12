@@ -1,4 +1,15 @@
+import {
+  LineChartOutlined,
+  SmileOutlined,
+  TagOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import { Line, Column } from '@ant-design/plots';
+import React from 'react';
 import { useLoaderData } from 'react-router';
+
+import { StatisticsApi } from '@cms/api';
 import {
   Card,
   Button,
@@ -9,17 +20,8 @@ import {
   Row,
   Col,
 } from '@cms/components';
-import { Line, Column } from '@ant-design/plots';
-import React from 'react';
+
 import type { Route } from './+types/dashboard';
-import { StatisticsApi } from '@cms/api';
-import {
-  LineChartOutlined,
-  SmileOutlined,
-  TagOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
 
 // 模拟API调用 - 实际项目中应该从API获取数据
 
@@ -174,7 +176,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
               },
             }}
             tooltip={{
-              formatter: (datum: any) => {
+              formatter: (datum: { pageTitle: string; visitCount: number }) => {
                 return {
                   name: '访问量',
                   value: datum.visitCount,

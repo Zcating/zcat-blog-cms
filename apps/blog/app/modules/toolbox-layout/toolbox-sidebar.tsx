@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import {
   Sidebar,
   SidebarContent,
@@ -18,10 +16,12 @@ import {
   Collapsible,
   ZView,
 } from "@zcat/ui";
-import { ToolbarHeader } from "./toolbox-header";
-import { ToolboxFooter } from "./toolbox-footer";
-import { Link } from "react-router";
 import { ChevronRight } from "lucide-react";
+import * as React from "react";
+import { Link } from "react-router";
+
+import { ToolboxFooter } from "./toolbox-footer";
+import { ToolbarHeader } from "./toolbox-header";
 
 interface ZSidebarMenuItemProps {
   title: string;
