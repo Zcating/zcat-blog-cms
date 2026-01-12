@@ -4,33 +4,40 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:backend": "pnpm run -C --filter=backend dev",
-    "dev:frontend": "pnpm run -C --filter=frontend dev",
-    "dev:blog": "pnpm run -C --filter=blog dev",
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:blog\"",
-    "build:backend": "pnpm run --filter=backend build",
-    "build:frontend": "pnpm run --filter=frontend build",
-    "build:blog": "pnpm run --filter=blog build",
-    "build": "concurrently \"pnpm run build:backend\" \"pnpm run build:frontend\" \"pnpm run build:blog\"",
-    "deploy:backend": "pnpm run -C packages/backend start",
-    "db:deploy:dev": "pnpm run -C packages/backend db:deploy:dev",
-    "db:deploy:prod": "pnpm run -C packages/backend db:deploy:prod",
-    "docker:build:db": "docker compose -f docker-compose.yml up -d --build cms_pg",
-    "docker:build:backend": "docker compose -f docker-compose.yml up -d --build backend",
-    "docker:build:frontend": "docker compose -f docker-compose.yml up -d --build frontend",
-    "docker:build:blog": "docker compose -f docker-compose.yml up -d --build blog",
-    "docker:build": "docker compose -f docker-compose.yml up -d --build"
+    "prepare": "husky",
+    "lint": "pnpm -r run lint",
+    "dev": "pnpm -r run dev",
+    "dev:backend": "pnpm --filter=backend run dev",
+    "dev:frontend": "pnpm --filter=frontend run dev",
+    "dev:blog": "pnpm --filter=blog run dev",
+    "build": "pnpm -r run build",
+    "build:backend": "pnpm --filter=backend run build",
+    "build:frontend": "pnpm --filter=frontend run build",
+    "build:blog": "pnpm --filter=blog run build",
+    "docker:build": "docker compose up -d --build",
+    "docker:build:db": "docker compose up -d --build cms_pg",
+    "docker:build:backend": "docker compose up -d --build backend",
+    "docker:build:frontend": "docker compose up -d --build frontend",
+    "docker:build:blog": "docker compose up -d --build blog"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.2",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.0.5",
     "@types/react-syntax-highlighter": "^15.5.13",
     "concurrently": "^9.1.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.3",
+    "eslint-plugin-check-file": "^3.3.0",
     "eslint-plugin-import": "^2.31.0",
-    "ts-node": "^10.9.2"
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.0.0",
+    "husky": "^9.1.7",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.52.0"
   },
   "dependencies": {
     "dayjs": "^1.11.13",
@@ -42,5 +49,10 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "tsx": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=22.4.0",
+    "pnpm": ">=10.5.1",
+    "npm": ">=10.9.2"
   }
 }

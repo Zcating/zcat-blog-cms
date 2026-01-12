@@ -1,7 +1,0 @@
-export * from "./ui";
-
-export * from "./utils";
-export * from "./icons";
-export * from "./hooks";
-export * from "./design";
-export * from "./animation";

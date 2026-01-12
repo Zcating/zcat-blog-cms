@@ -1,6 +1,6 @@
 # ZCAT BLOG CMS
 
-一个完整的 CMS 系统，用于管理博客的文章、照片、相册等内容。
+一个完整的 CMS，用于管理博客的文章、照片、相册等内容。
 
 ## 功能
 
@@ -15,7 +15,7 @@
 - Blog 前端：React + React Router
 - CMS 前端：React + React Router
 - 后端：Nest.js + Prisma
-- 数据库：MySQL
+- 数据库：PostgreSQL
 
 ## 安装与运行
 
@@ -24,4 +24,4 @@
 3. 安装依赖：`pnpm install`
 4. 运行项目：`pnpm run dev`
 5. 访问 CMS 前端：`http://localhost:5173`
-6. 访问博客：`localhost:5000`
+6. 访问博客：`http://localhost:3000`

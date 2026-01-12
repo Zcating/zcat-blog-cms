@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["node"],
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "composite": true,
+    "declaration": true,
+    "rootDir": ".",
+    "outDir": "dist",
+
+    "paths": {
+      "@zcat/ui": ["./src/index.ts"],
+      "@zcat/ui/*": ["./src/*"],
+      "@zcat/ui/shadcn": ["./src/shadcn/index.ts"],
+      "@zcat/ui/shadcn/*": ["./src/shadcn/*"]
+    }
+  },
+  "include": ["src/**/*", "tsup.config.ts"]
+}
