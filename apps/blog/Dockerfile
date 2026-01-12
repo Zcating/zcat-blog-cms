@@ -4,13 +4,14 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack install --global pnpm@latest
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-ENV HUSKY=0
 
 FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=blog install --frozen-lockfile
+ENV HUSKY=0
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=ui install --frozen-lockfile
 RUN pnpm --filter=ui run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=blog install --frozen-lockfile
 RUN pnpm --filter=blog run build
 RUN pnpm deploy --filter=blog --prod /prod/blog
 
