@@ -6,8 +6,6 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "jsx": "react-jsx",
-    "composite": true,
-    "declaration": true,
     "rootDir": ".",
     "outDir": "dist",
 

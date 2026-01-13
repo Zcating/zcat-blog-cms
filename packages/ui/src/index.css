@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@source "./../src";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -37,6 +39,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --cascader-selected-bg: #e6f4ff;
+  --cascader-hover-bg: rgba(0, 0, 0, 0.05);
 }
 
 .dark {
@@ -72,6 +76,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --cascader-selected-bg: #e6f4ff;
+  --cascader-hover-bg: rgba(0, 0, 0, 0.05);
 }
 
 @theme inline {
@@ -111,6 +117,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-cascader-selected-bg: var(--cascader-selected-bg);
+  --color-cascader-hover-bg: var(--cascader-hover-bg);
 }
 
 @layer base {

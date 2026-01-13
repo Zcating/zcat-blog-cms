@@ -1,4 +1,4 @@
-import { ZButton, ZDatePicker, ZInput } from '@zcat/ui';
+import { ZButton, ZInput, ZCascader } from '@zcat/ui';
 import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {
@@ -20,7 +20,7 @@ export default function Home() {
           test
         </ZButton>
         <ZInput />
-        <ZDatePicker />
+        <ZCascader />
       </div>
     </div>
   );

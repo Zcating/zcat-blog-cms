@@ -23,6 +23,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
-  },
-  "references": [{ "path": "../../packages/ui/tsconfig.build.json" }]
+  }
 }

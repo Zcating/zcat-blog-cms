@@ -2,11 +2,6 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
-syncInjectedDepsAfterScripts:
-  - build
-
-injectWorkspacePackages: true
-
 ignoredBuiltDependencies:
   - '@nestjs/core'
   - '@prisma/client'

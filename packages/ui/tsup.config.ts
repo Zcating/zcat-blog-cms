@@ -7,10 +7,10 @@ export default defineConfig({
   external: ['react', 'react-dom'],
   platform: 'neutral',
   injectStyle: false,
-  dts: false,
+  dts: true,
   sourcemap: true,
   clean: true,
   splitting: true,
   treeshake: true,
-  tsconfig: './tsconfig.build.json',
+  tsconfig: './tsconfig.json',
 });

@@ -1,7 +1,7 @@
 import {
   createZFormMaker,
   ZView,
-  ZAddress,
+  ZCascader,
   ZDatePicker,
   ZSelect,
   Button,
@@ -166,7 +166,7 @@ export default function IdCardGeneratorPage() {
           }
         >
           <FormMaker.FormItem name="areaCode" label="省市区">
-            <ZAddress options={ADDRESS_OPTIONS} />
+            <ZCascader options={ADDRESS_OPTIONS} />
           </FormMaker.FormItem>
           <FormMaker.FormItem name="birthDate" label="生日">
             <ZDatePicker />
