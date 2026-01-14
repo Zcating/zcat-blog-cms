@@ -3,7 +3,7 @@ import React from 'react';
 
 import { useMemoizedFn, usePropsValue } from '@zcat/ui/hooks';
 import { useWatch } from '@zcat/ui/hooks/use-watch';
-import { cn, Separator } from '@zcat/ui/shadcn';
+import { cn } from '@zcat/ui/shadcn';
 import { Button } from '@zcat/ui/shadcn/ui/button';
 import {
   Popover,
@@ -31,7 +31,7 @@ export function ZCascader<T extends string | number = string>({
   defaultValue = [],
   value,
   onValueChange,
-  placeholder,
+  placeholder = '请选择',
   options = [],
 }: ZCascaderProps<T>) {
   const [innerValue, setInnerValue] = usePropsValue({
@@ -49,18 +49,8 @@ export function ZCascader<T extends string | number = string>({
 
   //
   const display = React.useMemo(() => {
-    const labels: string[] = [];
-    let currentOptions: CascaderOption<T>[] = options;
-    for (const item of innerValue) {
-      const option = currentOptions.find((option) => option.value === item);
-      if (!option) {
-        break;
-      }
-      labels.push(option.label);
-      currentOptions = option.children || [];
-    }
-
-    return (labels.join(' / ') || placeholder) ?? '请选择';
+    const labels = getSelectedOptions(options, innerValue).map((o) => o.label);
+    return labels.join(' / ') || placeholder;
   }, [options, innerValue, placeholder]);
 
   // 检查当前项是否被选中
@@ -68,29 +58,19 @@ export function ZCascader<T extends string | number = string>({
     return item.value === activeValue[deepIndex];
   };
 
-  const [cascadeOptionsArray, setCascadeOptionsArray] = React.useState<
+  const [displayColumns, setDisplayColumns] = React.useState<
     CascaderOption<T>[][]
   >([options]);
 
   const onSelect = useMemoizedFn(
     (item: CascaderOption<T>, deepIndex: number) => {
-      const options = item.children;
       const nextValue = [...activeValue];
       nextValue.splice(deepIndex, nextValue.length - deepIndex);
       nextValue.push(item.value);
       setActiveValue(nextValue);
 
-      if (options) {
-        setCascadeOptionsArray((prev) => {
-          const newArray = [...prev];
-          if (deepIndex >= newArray.length - 1) {
-            newArray.push(options);
-          } else {
-            newArray.splice(deepIndex + 1, newArray.length - deepIndex);
-            newArray.push(options);
-          }
-          return newArray;
-        });
+      if (item.children) {
+        setDisplayColumns(getDisplayColumns(options, nextValue));
       } else {
         setOpen(false);
         setInnerValue(nextValue);
@@ -105,19 +85,7 @@ export function ZCascader<T extends string | number = string>({
       return;
     }
     setActiveValue(innerValue);
-
-    const newCascadeOptionsArray = [options];
-    let currentOptions = options;
-    for (const val of innerValue) {
-      const targetOption = currentOptions.find((opt) => opt.value === val);
-      if (targetOption && targetOption.children) {
-        newCascadeOptionsArray.push(targetOption.children);
-        currentOptions = targetOption.children;
-      } else {
-        break;
-      }
-    }
-    setCascadeOptionsArray(newCascadeOptionsArray);
+    setDisplayColumns(getDisplayColumns(options, innerValue));
   });
 
   return (
@@ -130,7 +98,7 @@ export function ZCascader<T extends string | number = string>({
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <ZView className="max-h-[300px] flex">
-          {cascadeOptionsArray.map((options, deepIndex) => (
+          {displayColumns.map((options, deepIndex) => (
             <CascaderColumn
               key={deepIndex.toString()}
               options={options}
@@ -202,4 +170,45 @@ function CascaderItem<T extends string | number = string>({
       {item.children && <ChevronRightIcon className="size-4 opacity-50" />}
     </ZView>
   );
+}
+
+// 获取级联选择器的显示列
+function getDisplayColumns<T extends string | number>(
+  options: CascaderOption<T>[],
+  valuePath: T[],
+): CascaderOption<T>[][] {
+  const columns: CascaderOption<T>[][] = [options];
+  let currentOptions = options;
+
+  for (const val of valuePath) {
+    const targetOption = currentOptions.find((opt) => opt.value === val);
+    const children = targetOption?.children;
+    if (children && children.length > 0) {
+      columns.push(children);
+      currentOptions = children;
+    } else {
+      break;
+    }
+  }
+  return columns;
+}
+
+// 获取级联选择器的选中项
+function getSelectedOptions<T extends string | number>(
+  options: CascaderOption<T>[],
+  valuePath: T[],
+): CascaderOption<T>[] {
+  const selected: CascaderOption<T>[] = [];
+  let currentOptions = options;
+
+  for (const val of valuePath) {
+    const targetOption = currentOptions.find((opt) => opt.value === val);
+    if (targetOption) {
+      selected.push(targetOption);
+      currentOptions = targetOption.children || [];
+    } else {
+      break;
+    }
+  }
+  return selected;
 }
