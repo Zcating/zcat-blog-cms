@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useMount } from '@zcat/ui/hooks';
-import { IconPhoto } from '@zcat/ui/icons';
+import { IconContainer, IconPhoto } from '@zcat/ui/icons';
 import { cn } from '@zcat/ui/shadcn';
 
 import { ZView } from '../z-view';
@@ -41,7 +41,7 @@ export function ImagePreload(props: ImagePreloadProps) {
           {...rest}
         />
       ) : (
-        <IconPhoto size="lg" />
+        <IconContainer Renderer={IconPhoto} size="lg" />
       )}
     </ZView>
   );
