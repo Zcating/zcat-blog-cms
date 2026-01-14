@@ -1,1 +1,2 @@
+pnpm run -r typecheck
 pnpm run -r lint
