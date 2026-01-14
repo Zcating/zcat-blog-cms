@@ -135,7 +135,7 @@ function CascaderColumn<T extends string | number = string>({
   isSelected,
 }: CascaderColumnProps<T>) {
   return (
-    <ZView className="flex flex-col overflow-auto gap-1">
+    <ZView className="flex flex-col overflow-auto gap-1 z-cascader-scrollbar">
       {options.map((item, index, arr) => (
         <CascaderItem
           key={index.toString()}

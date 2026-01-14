@@ -129,3 +129,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar */
+.z-cascader-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.z-cascader-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.z-cascader-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.z-cascader-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8);
+}
