@@ -26,7 +26,7 @@ import { ZView } from '../z-view';
 
 interface ZSidebarItemConfig {
   label: string;
-  value: string;
+  value?: string;
   icon?: React.ComponentType<any>;
 }
 
@@ -59,7 +59,6 @@ export function ZSidebar(props: ZSidebarProps) {
 
   return (
     <SidebarProvider className={cn('flex flex-col', className)}>
-      {header}
       <ZView className="flex flex-1">
         <Sidebar className="top-(--header-height,0px) h-[calc(100svh-var(--header-height,0px))]!">
           <SidebarHeader>{sidebarHeader}</SidebarHeader>
@@ -87,9 +86,10 @@ export function ZSidebar(props: ZSidebarProps) {
         </Sidebar>
         <SidebarInset>
           <ZView className="min-h-[calc(100svh-var(--header-height,0px)-var(--footer-height,0px))]">
+            {header}
             {children}
+            {footer}
           </ZView>
-          {footer}
         </SidebarInset>
       </ZView>
     </SidebarProvider>
