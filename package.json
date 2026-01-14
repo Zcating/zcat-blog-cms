@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "pnpm -r run typecheck",
     "prepare": "husky",
     "lint": "pnpm -r run lint",
     "dev": "pnpm -r run dev",
