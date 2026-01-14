@@ -60,11 +60,11 @@ export function ZSidebar(props: ZSidebarProps) {
         <Sidebar className="top-(--header-height,0px) h-[calc(100svh-var(--header-height,0px))]!">
           <SidebarHeader>{sidebarHeader}</SidebarHeader>
           <SidebarContent>
-            {options.map((item) => {
+            {options.map((item, index) => {
               if (item.children && item.children.length > 0) {
                 return (
                   <SidebarCollapsibleItem
-                    key={item.value}
+                    key={index.toString()}
                     item={item}
                     renderItem={renderItem}
                   />
@@ -72,7 +72,7 @@ export function ZSidebar(props: ZSidebarProps) {
               }
               return (
                 <ZSidebarMenuItem
-                  key={item.value}
+                  key={index.toString()}
                   item={item}
                   renderItem={renderItem}
                 />
@@ -124,9 +124,9 @@ function SidebarCollapsibleItem({
       >
         <SidebarGroupContent>
           <SidebarMenu>
-            {item.children?.map((subItem) => (
+            {item.children?.map((subItem, index) => (
               <ZSidebarMenuItem
-                key={subItem.value}
+                key={index.toString()}
                 item={subItem}
                 renderItem={renderItem}
               />
