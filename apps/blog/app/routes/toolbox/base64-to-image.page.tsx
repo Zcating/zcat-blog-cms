@@ -132,7 +132,7 @@ export default function Base64ToImagePage() {
   };
 
   return (
-    <ZView className="container mx-auto p-4 space-y-6">
+    <ZView className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">图片和 Base64 互转</h1>
         <p className="text-sm text-muted-foreground">

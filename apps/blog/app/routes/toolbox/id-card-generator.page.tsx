@@ -70,7 +70,7 @@ function randomSeqDigits(sex: "male" | "female"): string {
 }
 
 const schema = z.object({
-  areaCode: z.string().min(0).max(6),
+  areaCodes: z.array(z.string()),
   birthDate: z.custom<dayjs.Dayjs>(dayjs.isDayjs, "Invalid date"),
   gender: z.enum(["male", "female"]),
 });
@@ -85,6 +85,7 @@ function generateUniqueIdNumbers(
     Number.isFinite(count) && count > 0 ? Math.floor(count) : 10;
   const result = new Set<string>();
   const maxAttempts = safeCount * 200;
+  const areaCode = data.areaCodes[2];
 
   for (
     let attempts = 0;
@@ -92,7 +93,7 @@ function generateUniqueIdNumbers(
     attempts++
   ) {
     const seqDigits = randomSeqDigits(data.gender);
-    const prefix = `${data.areaCode}${data.birthDate.format("YYYYMMDD")}${seqDigits}`;
+    const prefix = `${areaCode}${data.birthDate.format("YYYYMMDD")}${seqDigits}`;
     const checkDigit = computeCheckDigit(prefix);
 
     result.add(`${prefix}${checkDigit}`);
@@ -115,7 +116,7 @@ export function meta() {
 export default function IdCardGeneratorPage() {
   const form = FormMaker.useForm({
     defaultValues: {
-      areaCode: "",
+      areaCodes: [],
       birthDate: dayjs(),
       gender: "male",
     },
@@ -141,7 +142,7 @@ export default function IdCardGeneratorPage() {
   };
 
   return (
-    <ZView className="container mx-auto p-4 space-y-6">
+    <ZView className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">中国大陆身份证号生成器</h1>
         <p className="text-sm text-muted-foreground">
@@ -165,7 +166,7 @@ export default function IdCardGeneratorPage() {
             </ZView>
           }
         >
-          <FormMaker.FormItem name="areaCode" label="省市区">
+          <FormMaker.FormItem name="areaCodes" label="省市区">
             <ZCascader options={ADDRESS_OPTIONS} />
           </FormMaker.FormItem>
           <FormMaker.FormItem name="birthDate" label="生日">
