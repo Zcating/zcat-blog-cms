@@ -1,13 +1,14 @@
-import { useForm } from '@tanstack/react-form';
-
-import { Button, Form, FormDialog, Row, Label } from '@cms/components';
+import { Button, Form, FormDialog, Row, useLoadingFn } from '@cms/components';
 
 import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
 
-// import zod from 'zod';
-
-import type { FieldsRecord, SchemaFieldsData } from './schema-field';
+import type {
+  FieldsRecord,
+  SchemaField,
+  SchemaFieldsData,
+} from './schema-field';
 import type { zodResolver } from '@hookform/resolvers/zod';
+import type { Path } from 'react-hook-form';
 
 interface SchemaFormProps<Fields extends FieldsRecord> {
   fields: Fields;
@@ -16,7 +17,7 @@ interface SchemaFormProps<Fields extends FieldsRecord> {
   confirmText?: string;
   cancelText?: string;
 
-  onSubmit: (data: SchemaFieldsData<Fields>) => void;
+  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -28,17 +29,21 @@ interface SchemaFormProps<Fields extends FieldsRecord> {
 function SchemaForm<Fields extends FieldsRecord>(
   props: SchemaFormProps<Fields>,
 ): React.ReactElement {
-  const entries = Object.entries(props.fields);
+  const entries = Object.entries(props.fields) as [
+    Path<SchemaFieldsData<Fields>>,
+    SchemaField,
+  ][];
 
-  const form = useForm({
-    defaultValues: props.initialValues,
-    onSubmit: ({ value }) => {
-      props.onSubmit(value);
-    },
+  const submit = useLoadingFn(props.onSubmit);
+
+  const instance = Form.useForm<SchemaFieldsData<Fields>>({
+    initialValues: props.initialValues,
+    schema: props.schema,
+    onSubmit: submit,
   });
 
   return (
-    <Form form={form}>
+    <Form form={instance}>
       {entries.map(([key, field]) => {
         const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
         if (!componentRenderer) {
@@ -49,29 +54,25 @@ function SchemaForm<Fields extends FieldsRecord>(
         if (!Component) {
           return null;
         }
-
-        const label = field.label;
         return (
-          <form.Field
+          <Form.Item
+            form={instance}
+            label={field.label}
             name={key}
             key={`form-${key}`}
-            children={(field) => (
-              <Label label={label} span={3}>
-                <Component
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                />
-              </Label>
-            )}
-          />
+            span={3}
+          >
+            <Component />
+          </Form.Item>
         );
       })}
       <Row gap="5" justify="end">
-        <Button variant="primary" type="submit">
+        <Button variant="primary" type="submit" loading={submit.loading}>
           {props.confirmText || '创建'}
         </Button>
-        <Button onClick={props.onCancel}>{props.cancelText || '取消'}</Button>
+        <Button onClick={props.onCancel} disabled={submit.loading}>
+          {props.cancelText || '取消'}
+        </Button>
       </Row>
     </Form>
   );
@@ -82,7 +83,7 @@ interface UseSchemaFormParams<U, Fields extends FieldsRecord> {
   confirmText?: string;
   cancelText?: string;
   map: (data: U) => SchemaFieldsData<Fields>;
-  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void> | void;
+  onSubmit: (data: SchemaFieldsData<Fields>) => void;
 }
 
 interface CreateSchemaFormParams<Fields extends FieldsRecord> {

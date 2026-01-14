@@ -19,7 +19,6 @@
     "@react-router/node": "^7.9.1",
     "@react-router/serve": "^7.9.1",
     "@tailwindcss/typography": "^0.5.16",
-    "@tanstack/react-form": "^1.27.7",
     "clsx": "^2.1.1",
     "cross-env": "^10.1.0",
     "dayjs": "^1.11.13",

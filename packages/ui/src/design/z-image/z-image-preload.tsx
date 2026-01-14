@@ -6,7 +6,7 @@ import { cn } from '@zcat/ui/shadcn';
 
 import { ZView } from '../z-view';
 
-import { ZImage, ZImageProps } from './z-image';
+import { ZImage, type ZImageProps } from './z-image';
 
 interface ImagePreloadProps extends ZImageProps {
   imageClassName?: string;

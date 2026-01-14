@@ -1,6 +1,6 @@
 import {
-  FieldPath,
-  FieldValues,
+  type FieldPath,
+  type FieldValues,
   type UseFormProps,
   type UseFormReturn,
 } from 'react-hook-form';

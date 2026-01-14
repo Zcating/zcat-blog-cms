@@ -5,7 +5,7 @@ export namespace FormDialog {
     initialValues: T;
     confirmText?: string;
     cancelText?: string;
-    onSubmit: (data: T) => void;
+    onSubmit: (data: T) => Promise<void>;
     onCancel: () => void;
   }
 

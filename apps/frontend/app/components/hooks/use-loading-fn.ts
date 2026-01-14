@@ -1,13 +1,12 @@
 import React from 'react';
 
-interface LoadingFn<T extends (...args: any[]) => Promise<any>> {
+type AwaitFunction = (...args: any[]) => Promise<any> | void;
+interface LoadingFn<T extends AwaitFunction> {
   (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>>;
   loading: boolean;
 }
 
-export function useLoadingFn<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-) {
+export function useLoadingFn<T extends AwaitFunction>(fn: T) {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const loadingFn = async (...args: Parameters<T>) => {

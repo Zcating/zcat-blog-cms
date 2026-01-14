@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { PhotosApi } from '@cms/api';
-import { Button, Dialog, Grid, safeObjectURL } from '@cms/components';
+import { Button, Dialog, Grid } from '@cms/components';
 import {
   createConstNumber,
   createImageUpload,

@@ -27,7 +27,7 @@ const checkbox = tv({
 });
 
 export interface CheckboxProps {
-  variant: CheckboxVariant;
+  variant?: CheckboxVariant;
   value?: boolean;
   onChange?: (value: boolean) => void;
 }

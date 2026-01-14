@@ -7,26 +7,58 @@
     ".react-router/types/**/*"
   ],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["node", "vite/client"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "rootDirs": [".", "./.react-router/types"],
+    "rootDirs": [
+      ".",
+      "./.react-router/types"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@blog/components": ["./app/components"],
-      "@blog/components/*": ["./app/components/*"],
-      "@blog/modules": ["./app/modules"],
-      "@blog/modules/*": ["./app/modules/*"],
-      "@blog/routes": ["./app/routes"],
-      "@blog/routes/*": ["./app/routes/*"],
-      "@blog/apis": ["./app/apis"],
-      "@blog/apis/*": ["./app/apis/*"],
-      "@blog/utils": ["./app/utils"],
-      "@blog/utils/*": ["./app/utils/*"],
-      "@root": ["./app/*"]
+      "@blog/components": [
+        "./app/components"
+      ],
+      "@blog/components/*": [
+        "./app/components/*"
+      ],
+      "@blog/modules": [
+        "./app/modules"
+      ],
+      "@blog/modules/*": [
+        "./app/modules/*"
+      ],
+      "@blog/routes": [
+        "./app/routes"
+      ],
+      "@blog/routes/*": [
+        "./app/routes/*"
+      ],
+      "@blog/apis": [
+        "./app/apis"
+      ],
+      "@blog/apis/*": [
+        "./app/apis/*"
+      ],
+      "@blog/utils": [
+        "./app/utils"
+      ],
+      "@blog/utils/*": [
+        "./app/utils/*"
+      ],
+      "@root": [
+        "./app/*"
+      ]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
@@ -34,5 +66,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
-  }
+  },
+  "references": [
+    {
+      "path": "../../packages/ui"
+    }
+  ]
 }

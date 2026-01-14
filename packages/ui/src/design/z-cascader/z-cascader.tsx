@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from '@zcat/ui/shadcn/ui/popover';
 
-import { CascadeOption } from '../types';
+import { type CascadeOption } from '../types';
 import { ZView } from '../z-view';
 
 interface ZCascaderProps {
