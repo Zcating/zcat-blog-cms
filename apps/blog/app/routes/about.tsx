@@ -3,12 +3,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  IconEnvelope,
+  IconContainer,
   IconGithub,
   StaggerReveal,
   ZAvatar,
   ZView,
 } from "@zcat/ui";
+import { Mail } from "lucide-react";
 
 import { UserApi } from "@blog/apis";
 
@@ -64,12 +65,12 @@ export default function AboutPage(props: Route.ComponentProps) {
           很高兴能与你交流！你可以通过以下方式找到我：
           <ZView className="flex flex-col gap-4">
             <ContactItem
-              icon={<IconEnvelope size="lg" />}
+              icon={<IconContainer Renderer={Mail} size="lg" />}
               text={userInfo.contact.email}
               prefix="mailto"
             />
             <ContactItem
-              icon={<IconGithub size="lg" />}
+              icon={<IconContainer Renderer={IconGithub} size="lg" />}
               text={userInfo.contact.github}
             />
           </ZView>

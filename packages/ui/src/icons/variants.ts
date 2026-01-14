@@ -14,7 +14,7 @@ export const iconVariants = cva('size-6', {
   },
 });
 
-export interface IconProps {
+export interface IconVariantsProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
 }
