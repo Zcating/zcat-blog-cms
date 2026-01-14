@@ -49,7 +49,11 @@ export function ZCascader<T extends string | number = string>({
 
   //
   const display = React.useMemo(() => {
-    const labels = getSelectedOptions(options, innerValue).map((o) => o.label);
+    const labels = traverseOptionsMap(
+      options,
+      innerValue,
+      (item) => item.label,
+    );
     return labels.join(' / ') || placeholder;
   }, [options, innerValue, placeholder]);
 
@@ -177,38 +181,31 @@ function getDisplayColumns<T extends string | number>(
   options: CascaderOption<T>[],
   valuePath: T[],
 ): CascaderOption<T>[][] {
-  const columns: CascaderOption<T>[][] = [options];
-  let currentOptions = options;
-
-  for (const val of valuePath) {
-    const targetOption = currentOptions.find((opt) => opt.value === val);
-    const children = targetOption?.children;
-    if (children && children.length > 0) {
-      columns.push(children);
-      currentOptions = children;
-    } else {
-      break;
-    }
-  }
-  return columns;
+  const childrenColumns = traverseOptionsMap(
+    options,
+    valuePath,
+    (item) => item.children || [],
+  );
+  return [options, ...childrenColumns];
 }
 
-// 获取级联选择器的选中项
-function getSelectedOptions<T extends string | number>(
+function traverseOptionsMap<T extends string | number, R>(
   options: CascaderOption<T>[],
   valuePath: T[],
-): CascaderOption<T>[] {
-  const selected: CascaderOption<T>[] = [];
+  callback: (item: CascaderOption<T>) => R,
+): R[] {
+  const selected: R[] = [];
   let currentOptions = options;
 
   for (const val of valuePath) {
     const targetOption = currentOptions.find((opt) => opt.value === val);
     if (targetOption) {
-      selected.push(targetOption);
+      selected.push(callback(targetOption));
       currentOptions = targetOption.children || [];
     } else {
       break;
     }
   }
+
   return selected;
 }
