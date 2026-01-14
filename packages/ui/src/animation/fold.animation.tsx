@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import React, { useRef, useState } from 'react';
 
 import { cn } from '@zcat/ui/shadcn/lib/utils';
+
 import { ZView } from '../design/z-view';
 
 export interface FoldAnimationProps {
