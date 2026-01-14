@@ -1,7 +1,8 @@
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import React from 'react';
 
-import { usePropsValue } from '@zcat/ui/hooks';
+import { useMemoizedFn, usePropsValue } from '@zcat/ui/hooks';
+import { useWatch } from '@zcat/ui/hooks/use-watch';
 import { cn, Separator } from '@zcat/ui/shadcn';
 import { Button } from '@zcat/ui/shadcn/ui/button';
 import {
@@ -44,6 +45,8 @@ export function ZCascader<T extends string | number = string>({
     },
   });
 
+  const [activeValue, setActiveValue] = React.useState<T[]>(innerValue);
+
   //
   const display = React.useMemo(() => {
     const labels: string[] = [];
@@ -62,39 +65,60 @@ export function ZCascader<T extends string | number = string>({
 
   // 检查当前项是否被选中
   const isSelected = (item: CascaderOption<T>, deepIndex: number) => {
-    return item.value === innerValue[deepIndex];
+    return item.value === activeValue[deepIndex];
   };
 
   const [cascadeOptionsArray, setCascadeOptionsArray] = React.useState<
     CascaderOption<T>[][]
   >([options]);
 
-  const onSelect = (item: CascaderOption<T>, deepIndex: number) => {
-    const options = item.children;
-    if (options) {
-      setCascadeOptionsArray((prev) => {
-        const newArray = [...prev];
-        if (deepIndex + 1 >= newArray.length) {
-          newArray.push(options);
-        } else {
-          newArray.splice(deepIndex + 1, newArray.length - deepIndex);
-          newArray.push(options);
-        }
-        return newArray;
-      });
-    } else {
-      setOpen(false);
-    }
-    setInnerValue((prev) => {
-      const newArray = [...prev];
-      newArray.splice(deepIndex, newArray.length - deepIndex);
-      newArray.push(item.value);
+  const onSelect = useMemoizedFn(
+    (item: CascaderOption<T>, deepIndex: number) => {
+      const options = item.children;
+      const nextValue = [...activeValue];
+      nextValue.splice(deepIndex, nextValue.length - deepIndex);
+      nextValue.push(item.value);
+      setActiveValue(nextValue);
 
-      return newArray;
-    });
-  };
+      if (options) {
+        setCascadeOptionsArray((prev) => {
+          const newArray = [...prev];
+          if (deepIndex >= newArray.length - 1) {
+            newArray.push(options);
+          } else {
+            newArray.splice(deepIndex + 1, newArray.length - deepIndex);
+            newArray.push(options);
+          }
+          return newArray;
+        });
+      } else {
+        setOpen(false);
+        setInnerValue(nextValue);
+      }
+    },
+  );
 
   const [open, setOpen] = React.useState(false);
+
+  useWatch([open], (isOpen) => {
+    if (!isOpen) {
+      return;
+    }
+    setActiveValue(innerValue);
+
+    const newCascadeOptionsArray = [options];
+    let currentOptions = options;
+    for (const val of innerValue) {
+      const targetOption = currentOptions.find((opt) => opt.value === val);
+      if (targetOption && targetOption.children) {
+        newCascadeOptionsArray.push(targetOption.children);
+        currentOptions = targetOption.children;
+      } else {
+        break;
+      }
+    }
+    setCascadeOptionsArray(newCascadeOptionsArray);
+  });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
