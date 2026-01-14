@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 ENV HUSKY=0
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=frontend install --frozen-lockfile
 RUN pnpm --filter=frontend run build
-RUN pnpm deploy --filter=frontend --prod /prod/frontend
+RUN pnpm deploy --filter=frontend --prod --legacy /prod/frontend
 
 FROM base AS frontend
 COPY --from=build /prod/frontend /prod/frontend
