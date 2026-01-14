@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { useMount } from '@zcat/ui/hooks';
 import { IconContainer, IconPhoto } from '@zcat/ui/icons';
 import { cn } from '@zcat/ui/shadcn';
 
