@@ -1,12 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import * as React from 'react';
 
+import { ZCollapsible } from '@zcat/ui/design/z-collapsible';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
-import {
-  CollapsibleContent,
-  CollapsibleTrigger,
-  Collapsible,
-} from '@zcat/ui/shadcn/ui/collapsible';
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +27,7 @@ interface ZSidebarItemConfig {
 }
 
 export interface ZSidebarOption extends ZSidebarItemConfig {
+  open?: boolean;
   children?: ZSidebarItemConfig[];
 }
 
@@ -66,7 +63,7 @@ export function ZSidebar(props: ZSidebarProps) {
             {options.map((item) => {
               if (item.children && item.children.length > 0) {
                 return (
-                  <ZCollapsible
+                  <SidebarCollapsibleItem
                     key={item.value}
                     item={item}
                     renderItem={renderItem}
@@ -96,39 +93,48 @@ export function ZSidebar(props: ZSidebarProps) {
   );
 }
 
-interface ZCollapsibleProps {
+interface SidebarCollapsibleItemProps {
   item: ZSidebarOption;
   renderItem: ZSidebarProps['renderItem'];
 }
 
-function ZCollapsible({ item, renderItem }: ZCollapsibleProps) {
+function SidebarCollapsibleItem({
+  item,
+  renderItem,
+}: SidebarCollapsibleItemProps) {
+  const [isOpen, setIsOpen] = React.useState(!!item.open);
   return (
-    <Collapsible title={item.label} defaultOpen className="group/collapsible">
-      <SidebarGroup>
-        <SidebarGroupLabel
-          asChild
-          className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
-        >
-          <CollapsibleTrigger>
-            {renderItem(item)}
-            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {item.children?.map((subItem) => (
-                <ZSidebarMenuItem
-                  key={subItem.value}
-                  item={subItem}
-                  renderItem={renderItem}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+    <SidebarGroup>
+      <ZCollapsible
+        className="group/collapsible"
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        trigger={
+          <SidebarGroupLabel
+            asChild
+            className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm cursor-pointer w-full"
+          >
+            <ZView className="flex items-center">
+              {renderItem(item)}
+              <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+            </ZView>
+          </SidebarGroupLabel>
+        }
+        triggerClassName="p-0 bg-transparent hover:bg-transparent"
+      >
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {item.children?.map((subItem) => (
+              <ZSidebarMenuItem
+                key={subItem.value}
+                item={subItem}
+                renderItem={renderItem}
+              />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </ZCollapsible>
+    </SidebarGroup>
   );
 }
 

@@ -39,6 +39,7 @@ export function ZCascader({
     },
   });
 
+  //
   const display = React.useMemo(() => {
     const labels: string[] = [];
     let currentOptions: CascadeOption[] = options;
@@ -54,6 +55,7 @@ export function ZCascader({
     return (labels.join(' / ') || placeholder) ?? '请选择';
   }, [options, innerValue, placeholder]);
 
+  // 检查当前项是否被选中
   const isSelected = (item: CascadeOption, deepIndex: number) => {
     return item.value === innerValue[deepIndex];
   };
