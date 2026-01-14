@@ -10,24 +10,29 @@ import {
   PopoverTrigger,
 } from '@zcat/ui/shadcn/ui/popover';
 
-import { type CascadeOption } from '../types';
 import { ZView } from '../z-view';
 
-interface ZCascaderProps {
-  defaultValue?: string[];
-  value?: string[];
-  onValueChange?: (date: string[]) => void;
-  placeholder?: string;
-  options?: CascadeOption[];
+export interface CascaderOption<T extends string | number = string> {
+  label: string;
+  value: T;
+  children?: CascaderOption<T>[];
 }
 
-export function ZCascader({
+interface ZCascaderProps<T extends string | number = string> {
+  defaultValue?: T[];
+  value?: T[];
+  onValueChange?: (date: T[]) => void;
+  placeholder?: string;
+  options?: CascaderOption<T>[];
+}
+
+export function ZCascader<T extends string | number = string>({
   defaultValue = [],
   value,
   onValueChange,
   placeholder,
   options = [],
-}: ZCascaderProps) {
+}: ZCascaderProps<T>) {
   const [innerValue, setInnerValue] = usePropsValue({
     defaultValue,
     value,
@@ -42,7 +47,7 @@ export function ZCascader({
   //
   const display = React.useMemo(() => {
     const labels: string[] = [];
-    let currentOptions: CascadeOption[] = options;
+    let currentOptions: CascaderOption<T>[] = options;
     for (const item of innerValue) {
       const option = currentOptions.find((option) => option.value === item);
       if (!option) {
@@ -56,38 +61,35 @@ export function ZCascader({
   }, [options, innerValue, placeholder]);
 
   // 检查当前项是否被选中
-  const isSelected = (item: CascadeOption, deepIndex: number) => {
+  const isSelected = (item: CascaderOption<T>, deepIndex: number) => {
     return item.value === innerValue[deepIndex];
   };
 
   const [cascadeOptionsArray, setCascadeOptionsArray] = React.useState<
-    CascadeOption[][]
+    CascaderOption<T>[][]
   >([options]);
 
-  const onSelect = (item: CascadeOption, deepIndex: number) => {
+  const onSelect = (item: CascaderOption<T>, deepIndex: number) => {
+    const options = item.children;
+    if (options) {
+      setCascadeOptionsArray((prev) => {
+        const newArray = [...prev];
+        if (deepIndex + 1 >= newArray.length) {
+          newArray.push(options);
+        } else {
+          newArray.splice(deepIndex + 1, newArray.length - deepIndex);
+          newArray.push(options);
+        }
+        return newArray;
+      });
+    } else {
+      setOpen(false);
+    }
     setInnerValue((prev) => {
       const newArray = [...prev];
       newArray.splice(deepIndex, newArray.length - deepIndex);
       newArray.push(item.value);
 
-      return newArray;
-    });
-
-    if (!item.children) {
-      setOpen(false);
-      // setInnerValue((prev) => [...prev, item.value]);
-      return;
-    }
-
-    const options = item.children;
-    setCascadeOptionsArray((prev) => {
-      const newArray = [...prev];
-      if (deepIndex + 1 >= newArray.length) {
-        newArray.push(options);
-      } else {
-        newArray.splice(deepIndex + 1, newArray.length - deepIndex);
-        newArray.push(options);
-      }
       return newArray;
     });
   };
@@ -97,11 +99,7 @@ export function ZCascader({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          id="date"
-          className="w-48 justify-between font-normal"
-        >
+        <Button variant="outline" className="justify-between font-normal">
           {display}
           <ChevronDownIcon className="size-4 opacity-50" />
         </Button>
@@ -123,19 +121,19 @@ export function ZCascader({
   );
 }
 
-interface CascaderColumnProps {
-  options: CascadeOption[];
+interface CascaderColumnProps<T extends string | number = string> {
+  options: CascaderOption<T>[];
   deepIndex: number;
-  onSelect: (item: CascadeOption, deepIndex: number) => void;
-  isSelected: (item: CascadeOption, deepIndex: number) => boolean;
+  onSelect: (item: CascaderOption<T>, deepIndex: number) => void;
+  isSelected: (item: CascaderOption<T>, deepIndex: number) => boolean;
 }
 
-function CascaderColumn({
+function CascaderColumn<T extends string | number = string>({
   options,
   deepIndex,
   onSelect,
   isSelected,
-}: CascaderColumnProps) {
+}: CascaderColumnProps<T>) {
   return (
     <ZView className="flex flex-col overflow-auto gap-1">
       {options.map((item, index, arr) => (
@@ -152,21 +150,21 @@ function CascaderColumn({
   );
 }
 
-interface CascaderItemProps {
-  item: CascadeOption;
+interface CascaderItemProps<T extends string | number = string> {
+  item: CascaderOption<T>;
   isLast: boolean;
   deepIndex: number;
-  onSelect: (item: CascadeOption, deepIndex: number) => void;
-  isSelected: (item: CascadeOption, deepIndex: number) => boolean;
+  onSelect: (item: CascaderOption<T>, deepIndex: number) => void;
+  isSelected: (item: CascaderOption<T>, deepIndex: number) => boolean;
 }
 
-function CascaderItem({
+function CascaderItem<T extends string | number = string>({
   item,
   isLast,
   deepIndex,
   onSelect,
   isSelected,
-}: CascaderItemProps) {
+}: CascaderItemProps<T>) {
   return (
     <ZView
       className={cn(
