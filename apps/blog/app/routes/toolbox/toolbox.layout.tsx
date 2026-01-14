@@ -1,23 +1,23 @@
-import { cn, ZView } from "@zcat/ui";
-import { Outlet } from "react-router";
+import { cn, ZSidebar, type ZSidebarOption } from "@zcat/ui";
+import { Link, Outlet } from "react-router";
 
-import { ToolboxSidebar, type ZSidebarItemProps } from "@blog/modules";
+import { ToolbarHeader, ToolboxFooter } from "@blog/modules";
 
-const items = [
+const items: ZSidebarOption[] = [
   {
-    title: "导航",
-    to: "/toolbox",
+    label: "导航",
+    value: "/toolbox",
   },
   {
-    title: "常用",
-    items: [
+    label: "常用",
+    children: [
       {
-        title: "图片和 Base64 互转",
-        to: "/toolbox/base64-to-image",
+        label: "图片和 Base64 互转",
+        value: "/toolbox/base64-to-image",
       },
       {
-        title: "身份证生成",
-        to: "/toolbox/id-card-generator",
+        label: "身份证生成",
+        value: "/toolbox/id-card-generator",
       },
     ],
   },
@@ -28,11 +28,27 @@ export default function ToolboxLayout() {
     "h-full w-full",
     "[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]",
   );
+
+  const renderItem = (item: ZSidebarOption) => {
+    if (item.value) {
+      return (
+        <Link to={item.value}>
+          <span>{item.label}</span>
+        </Link>
+      );
+    }
+    return <span>{item.label}</span>;
+  };
+
   return (
-    <ZView className={classNames}>
-      <ToolboxSidebar items={items}>
-        <Outlet />
-      </ToolboxSidebar>
-    </ZView>
+    <ZSidebar
+      className={classNames}
+      options={items}
+      renderItem={renderItem}
+      header={<ToolbarHeader />}
+      footer={<ToolboxFooter />}
+    >
+      <Outlet />
+    </ZSidebar>
   );
 }

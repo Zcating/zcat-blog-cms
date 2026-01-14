@@ -82,11 +82,11 @@ export function ZSidebar(props: ZSidebarProps) {
           <SidebarFooter>{sidebarFooter}</SidebarFooter>
         </Sidebar>
         <SidebarInset>
+          {header}
           <ZView className="min-h-[calc(100svh-var(--header-height,0px)-var(--footer-height,0px))]">
-            {header}
             {children}
-            {footer}
           </ZView>
+          {footer}
         </SidebarInset>
       </ZView>
     </SidebarProvider>
