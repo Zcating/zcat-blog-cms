@@ -66,7 +66,9 @@ export function ZSidebar(props: ZSidebarProps) {
       className={cn('flex flex-col', className)}
       style={{ ...defaultStyle, ...style }}
     >
-      <ZView className="h-(--header-height)">{header}</ZView>
+      <ZView className="sticky top-0 z-10 h-(--header-height) bg-siderbar-header">
+        {header}
+      </ZView>
       <ZView className="flex flex-1">
         <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
           <SidebarHeader>{sidebarHeader}</SidebarHeader>

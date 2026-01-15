@@ -165,8 +165,8 @@ function CascaderItem<T extends string | number = string>({
     <ZView
       className={cn(
         'p-2 mx-1 cursor-pointer flex justify-between items-center rounded-sm transition-colors duration-200',
-        'hover:bg-cascader-hover-bg',
-        isSelected(item, deepIndex) && 'bg-cascader-selected-bg!',
+        'hover:bg-cascader-hover',
+        isSelected(item, deepIndex) && 'bg-cascader-selected!',
       )}
       onClick={() => onSelect(item, deepIndex)}
     >
@@ -175,8 +175,12 @@ function CascaderItem<T extends string | number = string>({
     </ZView>
   );
 }
-
-// 获取级联选择器的显示列
+/**
+ * 获取级联选择器的显示列
+ * @param options 级联选择器的选项
+ * @param valuePath 级联选择器的路径
+ * @returns 级联选择器的显示列
+ */
 function getDisplayColumns<T extends string | number>(
   options: CascaderOption<T>[],
   valuePath: T[],
@@ -189,6 +193,13 @@ function getDisplayColumns<T extends string | number>(
   return [options, ...childrenColumns];
 }
 
+/**
+ * 遍历级联选择器的选项，根据路径获取对应的值
+ * @param options 级联选择器的选项
+ * @param valuePath 级联选择器的路径
+ * @param callback 回调函数，用于处理每个选项
+ * @returns 遍历结果的数组
+ */
 function traverseOptionsMap<T extends string | number, R>(
   options: CascaderOption<T>[],
   valuePath: T[],
