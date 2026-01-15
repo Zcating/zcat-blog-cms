@@ -142,10 +142,8 @@ export namespace OssAction {
    */
   export async function createArticle(values: ArticlesApi.Article) {
     const content = await uploadArticleImagesContent(values.content);
-
     return ArticlesApi.createArticle({
       ...values,
-      excerpt: 'test',
       content,
     });
   }
