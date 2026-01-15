@@ -4,3 +4,4 @@ export * from './use-mount';
 export * from './use-memoized-fn';
 export * from './use-props-value';
 export * from './use-watch';
+export * from './use-update';
