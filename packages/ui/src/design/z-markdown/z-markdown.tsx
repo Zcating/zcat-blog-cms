@@ -5,11 +5,11 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
-import 'katex/dist/katex.min.css'; // 引入 KaTeX 样式
 import { cn } from '@zcat/ui/shadcn';
 
 import { ZView } from '../z-view';
 
+import 'katex/dist/katex.min.css'; // 引入 KaTeX 样式
 export interface ZMarkdownProps {
   content: string;
   className?: string;

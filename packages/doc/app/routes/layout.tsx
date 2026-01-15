@@ -41,6 +41,10 @@ const sidebarOptions: ZSidebarOption[] = [
         label: '级联选择',
         value: 'cascader',
       },
+      {
+        label: 'Markdown',
+        value: 'markdown',
+      },
     ],
   },
   {

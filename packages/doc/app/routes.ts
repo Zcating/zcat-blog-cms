@@ -15,6 +15,7 @@ export default [
     route('avatar', 'routes/components/avatar-page.tsx'),
     route('z-image', 'routes/components/z-image-page.tsx'),
     route('cascader', 'routes/components/cascader-page.tsx'),
+    route('markdown', 'routes/components/z-markdown-page.tsx'),
     route('stagger-reveal', 'routes/animation/stagger-reveal-page.tsx'),
   ]),
 ] satisfies RouteConfig;
