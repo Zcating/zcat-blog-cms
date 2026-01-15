@@ -1,25 +1,25 @@
-import { StaggerReveal, ZView, ZPagination } from "@zcat/ui";
-import { Link, useNavigate } from "react-router";
+import { StaggerReveal, ZView, ZPagination } from '@zcat/ui';
+import { Link, useNavigate } from 'react-router';
 
-import { ArticleApi } from "@blog/apis";
-import { PostExcerptCard } from "@blog/modules/post";
-import { safePositiveNumber } from "@blog/utils";
+import { ArticleApi } from '@blog/apis';
+import { PostExcerptCard } from '@blog/modules/post';
+import { safePositiveNumber } from '@blog/utils';
 
-import type { Route } from "./+types/post-board";
+import type { Route } from './+types/post-board';
 
 export function meta() {
-  return [{ title: "文章" }, { name: "description", content: "个人技术博客" }];
+  return [{ title: '文章' }, { name: 'description', content: '个人技术博客' }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = safePositiveNumber(url.searchParams.get("page"), 1);
+  const page = safePositiveNumber(url.searchParams.get('page'), 1);
 
   return {
     pagination: await ArticleApi.getArticleList({
       page: page,
       pageSize: 10,
-      order: "latest",
+      order: 'latest',
     }),
     page,
   };

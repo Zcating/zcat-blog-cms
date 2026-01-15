@@ -1,7 +1,8 @@
 import { ZCascader } from '@zcat/ui';
+
 import type { Route } from './+types/cascader-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Cascader - @zcat/ui' },
     { name: 'description', content: 'Cascader component documentation' },

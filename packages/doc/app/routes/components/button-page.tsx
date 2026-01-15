@@ -1,7 +1,8 @@
 import { ZButton } from '@zcat/ui';
+
 import type { Route } from './+types/button-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Button - @zcat/ui' },
     { name: 'description', content: 'Button component documentation' },

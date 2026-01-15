@@ -1,21 +1,21 @@
-import { ZView } from "@zcat/ui";
-import React from "react";
+import { ZView } from '@zcat/ui';
+import React from 'react';
 
-import { StatisticsApi } from "@blog/apis";
+import { StatisticsApi } from '@blog/apis';
 
 export function meta() {
   return [
-    { title: "统计功能测试" },
-    { name: "description", content: "测试博客访客统计功能" },
+    { title: '统计功能测试' },
+    { name: 'description', content: '测试博客访客统计功能' },
   ];
 }
 
 export default function TestStatisticsPage() {
-  const [status, setStatus] = React.useState<string>("未测试");
+  const [status, setStatus] = React.useState<string>('未测试');
   const [logs, setLogs] = React.useState<string[]>([]);
   const [isClient, setIsClient] = React.useState(false);
-  const [currentPath, setCurrentPath] = React.useState("");
-  const [pageTitle, setPageTitle] = React.useState("");
+  const [currentPath, setCurrentPath] = React.useState('');
+  const [pageTitle, setPageTitle] = React.useState('');
 
   // 确保只在客户端执行
   React.useEffect(() => {
@@ -33,26 +33,26 @@ export default function TestStatisticsPage() {
 
   const testAutoRecord = async () => {
     if (!isClient) {
-      addLog("错误: 客户端未准备就绪");
+      addLog('错误: 客户端未准备就绪');
       return;
     }
 
-    setStatus("测试中...");
-    addLog("开始自动记录测试");
+    setStatus('测试中...');
+    addLog('开始自动记录测试');
 
     try {
       await StatisticsApi.uploadVisitRecord(currentPath, pageTitle);
-      addLog("自动记录成功");
-      setStatus("测试成功");
+      addLog('自动记录成功');
+      setStatus('测试成功');
     } catch (error) {
       addLog(`自动记录失败: ${String(error)}`);
-      setStatus("测试失败");
+      setStatus('测试失败');
     }
   };
 
   const getBrowserInfo = () => {
     if (!isClient) {
-      addLog("错误: 客户端未准备就绪");
+      addLog('错误: 客户端未准备就绪');
       return;
     }
 
@@ -62,7 +62,7 @@ export default function TestStatisticsPage() {
 
   const getDeviceId = async () => {
     if (!isClient) {
-      addLog("错误: 客户端未准备就绪");
+      addLog('错误: 客户端未准备就绪');
       return;
     }
 
@@ -79,13 +79,13 @@ export default function TestStatisticsPage() {
           <h2 className="text-lg font-semibold mb-3">测试状态</h2>
           <div
             className={`p-3 rounded ${
-              status === "测试成功"
-                ? "bg-green-100 text-green-800"
-                : status === "测试失败"
-                  ? "bg-red-100 text-red-800"
-                  : status === "测试中..."
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-800"
+              status === '测试成功'
+                ? 'bg-green-100 text-green-800'
+                : status === '测试失败'
+                  ? 'bg-red-100 text-red-800'
+                  : status === '测试中...'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-800'
             }`}
           >
             {status}
@@ -126,13 +126,13 @@ export default function TestStatisticsPage() {
               <strong>请求方法:</strong> POST
             </p>
             <p>
-              <strong>当前页面:</strong> {isClient ? currentPath : "加载中..."}
+              <strong>当前页面:</strong> {isClient ? currentPath : '加载中...'}
             </p>
             <p>
-              <strong>页面标题:</strong> {isClient ? pageTitle : "加载中..."}
+              <strong>页面标题:</strong> {isClient ? pageTitle : '加载中...'}
             </p>
             <p>
-              <strong>客户端状态:</strong> {isClient ? "已准备" : "SSR模式"}
+              <strong>客户端状态:</strong> {isClient ? '已准备' : 'SSR模式'}
             </p>
           </div>
         </div>

@@ -1,8 +1,8 @@
-import { Card, ZView } from "@zcat/ui";
+import { Card, ZView } from '@zcat/ui';
 
-import { stringDateFormat } from "@blog/utils";
+import { stringDateFormat } from '@blog/utils';
 
-import type { ArticleApi } from "@blog/apis";
+import type { ArticleApi } from '@blog/apis';
 
 export interface PostExcerptCardProps {
   value: ArticleApi.Article;

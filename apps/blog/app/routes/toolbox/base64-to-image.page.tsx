@@ -13,22 +13,22 @@ import {
   ZSelect,
   ZView,
   Label,
-} from "@zcat/ui";
-import { useMemo, useState } from "react";
+} from '@zcat/ui';
+import { useMemo, useState } from 'react';
 const MIME_TYPE_OPTIONS = [
-  { label: "image/png", value: "image/png" },
-  { label: "image/jpeg", value: "image/jpeg" },
-  { label: "image/webp", value: "image/webp" },
-  { label: "image/gif", value: "image/gif" },
-  { label: "image/svg+xml", value: "image/svg+xml" },
+  { label: 'image/png', value: 'image/png' },
+  { label: 'image/jpeg', value: 'image/jpeg' },
+  { label: 'image/webp', value: 'image/webp' },
+  { label: 'image/gif', value: 'image/gif' },
+  { label: 'image/svg+xml', value: 'image/svg+xml' },
 ];
 
 export function meta() {
   return [
-    { title: "图片和 Base64 互转" },
+    { title: '图片和 Base64 互转' },
     {
-      name: "description",
-      content: "将图片转换为 Base64 编码，或将 Base64 编码转换为图片",
+      name: 'description',
+      content: '将图片转换为 Base64 编码，或将 Base64 编码转换为图片',
     },
   ];
 }
@@ -36,20 +36,20 @@ export function meta() {
 export default function Base64ToImagePage() {
   // 图片 -> Base64
   // const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageBase64, setImageBase64] = useState<string>("");
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
+  const [imageBase64, setImageBase64] = useState<string>('');
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>('');
 
   // Base64 -> 图片
-  const [base64Input, setBase64Input] = useState<string>("");
-  const [mimeType, setMimeType] = useState<string>("image/png");
-  const [base64PreviewUrl, setBase64PreviewUrl] = useState<string>("");
+  const [base64Input, setBase64Input] = useState<string>('');
+  const [mimeType, setMimeType] = useState<string>('image/png');
+  const [base64PreviewUrl, setBase64PreviewUrl] = useState<string>('');
   const [dialogIsOpen, setDialogIsOpen] = useState<boolean>(false);
   const [fullscreenSrc, setFullscreenSrc] = useState<string | null>(null);
 
   const isDataUrl = useMemo(
     () =>
-      base64Input.trim().startsWith("data:image/") ||
-      base64Input.trim().startsWith("data:application/"),
+      base64Input.trim().startsWith('data:image/') ||
+      base64Input.trim().startsWith('data:application/'),
     [base64Input],
   );
 
@@ -61,8 +61,8 @@ export default function Base64ToImagePage() {
       return;
     }
 
-    setImageBase64("");
-    setImagePreviewUrl("");
+    setImageBase64('');
+    setImagePreviewUrl('');
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -70,7 +70,7 @@ export default function Base64ToImagePage() {
       setImagePreviewUrl(result);
     };
     reader.onerror = () => {
-      console.error("读取图片失败");
+      console.error('读取图片失败');
     };
     reader.readAsDataURL(file);
   };
@@ -83,20 +83,20 @@ export default function Base64ToImagePage() {
       await navigator.clipboard.writeText(imageBase64);
       // 可以接入 toast：复制成功
     } catch (err) {
-      console.error("复制失败", err);
+      console.error('复制失败', err);
     }
   };
 
   const clearImageSide = () => {
     // setImageFile(null);
-    setImageBase64("");
-    setImagePreviewUrl("");
+    setImageBase64('');
+    setImagePreviewUrl('');
   };
 
   const buildDataUrlFromBase64 = () => {
     const trimmed = base64Input.trim();
     if (!trimmed) {
-      return "";
+      return '';
     }
     if (isDataUrl) {
       return trimmed;
@@ -113,7 +113,7 @@ export default function Base64ToImagePage() {
     if (!dataUrl) {
       return;
     }
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = dataUrl;
     a.download = filename;
     document.body.appendChild(a);
@@ -122,8 +122,8 @@ export default function Base64ToImagePage() {
   };
 
   const clearBase64Side = () => {
-    setBase64Input("");
-    setBase64PreviewUrl("");
+    setBase64Input('');
+    setBase64PreviewUrl('');
   };
 
   const handleOpenDialog = (src: string) => {
@@ -192,7 +192,7 @@ export default function Base64ToImagePage() {
               variant="secondary"
               disabled={!imageBase64}
               onClick={() => {
-                downloadFromDataUrl(imageBase64, "image-base64.txt");
+                downloadFromDataUrl(imageBase64, 'image-base64.txt');
               }}
             >
               下载为文本
@@ -259,7 +259,7 @@ export default function Base64ToImagePage() {
             <Button
               variant="secondary"
               onClick={() =>
-                downloadFromDataUrl(buildDataUrlFromBase64(), "converted-image")
+                downloadFromDataUrl(buildDataUrlFromBase64(), 'converted-image')
               }
               disabled={!base64Input.trim()}
             >

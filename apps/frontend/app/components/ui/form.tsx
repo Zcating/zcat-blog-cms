@@ -102,6 +102,7 @@ function FormItem<
 ): React.ReactElement {
   const { form, name, label, children } = props;
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const render = React.useMemo(() => {
     if (typeof children === 'function') {
       return children;

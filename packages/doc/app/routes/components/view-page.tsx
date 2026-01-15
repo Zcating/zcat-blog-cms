@@ -1,7 +1,8 @@
 import { ZView } from '@zcat/ui';
+
 import type { Route } from './+types/view-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'View - @zcat/ui' },
     { name: 'description', content: 'View component documentation' },

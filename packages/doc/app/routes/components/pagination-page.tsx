@@ -1,8 +1,9 @@
 import { ZPagination } from '@zcat/ui';
-import type { Route } from './+types/pagination-page';
 import { useState } from 'react';
 
-export function meta({}: Route.MetaArgs) {
+import type { Route } from './+types/pagination-page';
+
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Pagination - @zcat/ui' },
     { name: 'description', content: 'Pagination component documentation' },

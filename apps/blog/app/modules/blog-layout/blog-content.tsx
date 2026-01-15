@@ -1,4 +1,4 @@
-import { ZView } from "@zcat/ui";
+import { ZView } from '@zcat/ui';
 
 export function BlogContent({ children }: { children: React.ReactNode }) {
   return (

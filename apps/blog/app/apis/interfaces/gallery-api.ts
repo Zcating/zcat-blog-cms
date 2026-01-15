@@ -1,4 +1,4 @@
-import { HttpClient } from "../http/http-client";
+import { HttpClient } from '../http/http-client';
 export namespace GalleryApi {
   export interface Photo {
     id: string;
@@ -35,7 +35,7 @@ export namespace GalleryApi {
   export async function getGalleries(
     params: GetPhotosParams,
   ): Promise<Pagination<Gallery>> {
-    return HttpClient.serverSideGet<Pagination>("blog/gallery", {
+    return HttpClient.serverSideGet<Pagination>('blog/gallery', {
       page: params.page,
       pageSize: params.pageSize ?? 8,
     });

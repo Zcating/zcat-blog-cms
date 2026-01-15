@@ -8,15 +8,15 @@ import {
   StaggerReveal,
   ZAvatar,
   ZView,
-} from "@zcat/ui";
-import { Mail } from "lucide-react";
+} from '@zcat/ui';
+import { Mail } from 'lucide-react';
 
-import { UserApi } from "@blog/apis";
+import { UserApi } from '@blog/apis';
 
-import type { Route } from "./+types/about";
+import type { Route } from './+types/about';
 
 export function meta() {
-  return [{ title: "关于" }, { name: "description", content: "个人技术博客" }];
+  return [{ title: '关于' }, { name: 'description', content: '个人技术博客' }];
 }
 
 export async function loader() {

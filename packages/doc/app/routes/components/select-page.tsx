@@ -1,8 +1,9 @@
 import { ZSelect } from '@zcat/ui';
-import type { Route } from './+types/select-page';
 import { useState } from 'react';
 
-export function meta({}: Route.MetaArgs) {
+import type { Route } from './+types/select-page';
+
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Select - @zcat/ui' },
     { name: 'description', content: 'Select component documentation' },

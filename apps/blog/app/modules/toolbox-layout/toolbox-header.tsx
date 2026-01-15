@@ -4,9 +4,9 @@ import {
   ZStickyHeader,
   Separator,
   useSidebar,
-} from "@zcat/ui";
-import { SidebarIcon } from "lucide-react";
-import { Link } from "react-router";
+} from '@zcat/ui';
+import { SidebarIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 export function ToolbarHeader() {
   const { toggleSidebar } = useSidebar();
@@ -25,11 +25,11 @@ export function ToolbarHeader() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <ZNavigationMenu
           options={[
-            { to: "/", title: "首页" },
-            { to: "/post-board", title: "文章" },
-            { to: "/gallery", title: "相册" },
-            { to: "/toolbox", title: "工具箱" },
-            { to: "/about", title: "关于" },
+            { to: '/', title: '首页' },
+            { to: '/post-board', title: '文章' },
+            { to: '/gallery', title: '相册' },
+            { to: '/toolbox', title: '工具箱' },
+            { to: '/about', title: '关于' },
           ]}
           renderItem={(option, index) => (
             <Link key={index.toString()} to={option.to}>

@@ -1,15 +1,15 @@
-import { ZView } from "@zcat/ui";
+import { ZView } from '@zcat/ui';
 
-import { ArticleApi } from "@blog/apis";
-import { PostContentView } from "@blog/modules";
+import { ArticleApi } from '@blog/apis';
+import { PostContentView } from '@blog/modules';
 
-import type { Route } from "./+types/post-board.id";
+import type { Route } from './+types/post-board.id';
 
 export function meta(args: Route.MetaArgs) {
   const article = args.loaderData.article;
   return [
     { title: article.title },
-    { name: "description", content: article.excerpt },
+    { name: 'description', content: article.excerpt },
   ];
 }
 
@@ -17,7 +17,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const { id } = params;
   const article = await ArticleApi.getArticleDetail(id);
   if (!article) {
-    throw new Error("文章不存在");
+    throw new Error('文章不存在');
   }
   return {
     article: article,

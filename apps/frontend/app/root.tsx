@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return () => {
       subs.forEach((sub) => sub());
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <html lang="en" data-theme="light">

@@ -6,24 +6,24 @@ import {
   CardHeader,
   CardTitle,
   ZView,
-} from "@zcat/ui";
-import { IdCard, Image as ImageIcon } from "lucide-react";
-import { Link } from "react-router";
+} from '@zcat/ui';
+import { IdCard, Image as ImageIcon } from 'lucide-react';
+import { Link } from 'react-router';
 
 export default function ToolboxHomePage() {
   // const [value, setValue] = React.useState("");
 
   const items = [
     {
-      title: "图片和 Base64 互转",
-      description: "将图片转换为 Base64，或将 Base64 还原为图片。",
-      to: "/toolbox/base64-to-image",
+      title: '图片和 Base64 互转',
+      description: '将图片转换为 Base64，或将 Base64 还原为图片。',
+      to: '/toolbox/base64-to-image',
       Icon: ImageIcon,
     },
     {
-      title: "身份证生成",
-      description: "生成符合规则的身份证信息，用于测试与演示场景。",
-      to: "/toolbox/id-card-generator",
+      title: '身份证生成',
+      description: '生成符合规则的身份证信息，用于测试与演示场景。',
+      to: '/toolbox/id-card-generator',
       Icon: IdCard,
     },
   ] as const;

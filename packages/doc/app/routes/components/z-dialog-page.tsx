@@ -1,10 +1,14 @@
 import { ZButton, ZDialog } from '@zcat/ui';
+
 import type { Route } from './+types/z-dialog-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Dialog - @zcat/ui' },
-    { name: 'description', content: 'Imperative Dialog component documentation' },
+    {
+      name: 'description',
+      content: 'Imperative Dialog component documentation',
+    },
   ];
 }
 
@@ -36,7 +40,9 @@ export default function DialogPage() {
       title: '自定义内容',
       content: (
         <div className="p-4 bg-muted rounded-md">
-          <p className="text-sm text-muted-foreground">这里可以放任意 React 节点</p>
+          <p className="text-sm text-muted-foreground">
+            这里可以放任意 React 节点
+          </p>
           <ul className="list-disc pl-4 mt-2">
             <li>列表项 1</li>
             <li>列表项 2</li>

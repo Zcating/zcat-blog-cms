@@ -7,17 +7,17 @@ import {
   IconClose,
   ZView,
   type CarouselApi,
-} from "@zcat/ui";
-import React from "react";
-import { useNavigate } from "react-router";
+} from '@zcat/ui';
+import React from 'react';
+import { useNavigate } from 'react-router';
 
-import { GalleryApi } from "@blog/apis";
-import { PhotoPoster } from "@blog/modules";
+import { GalleryApi } from '@blog/apis';
+import { PhotoPoster } from '@blog/modules';
 
-import type { Route } from "./+types/gallery.id";
+import type { Route } from './+types/gallery.id';
 
 export function meta() {
-  return [{ title: "相册" }, { name: "description", content: "个人技术博客" }];
+  return [{ title: '相册' }, { name: 'description', content: '个人技术博客' }];
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -40,7 +40,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
 
     setCount(api.scrollSnapList().length - 1);
     setCurrent(api.selectedScrollSnap());
-    api.on("select", () => {
+    api.on('select', () => {
       setCurrent(api.selectedScrollSnap());
     });
   }, [api]);

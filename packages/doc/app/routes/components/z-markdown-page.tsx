@@ -1,6 +1,8 @@
 import { ZMarkdown } from '@zcat/ui';
 
-export function meta({}: any) {
+import type { Route } from '../+types/home-page';
+
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Markdown - @zcat/ui' },
     { name: 'description', content: 'Markdown component documentation' },

@@ -1,9 +1,10 @@
 import { StaggerReveal, ZView } from '@zcat/ui';
 
 import { DemoContainer } from '~/features';
+
 import type { Route } from './+types/stagger-reveal-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: '交错动画 - @zcat/ui' },
     {
@@ -36,7 +37,7 @@ export default function StaggerRevealPage() {
           基础用法 (Default / Left)
         </h2>
         <p className="text-sm text-muted-foreground">
-          默认从左侧滑入 (`direction="left"`)。需要提供 `selector`
+          默认从左侧滑入 (`direction=&quot;left&quot;`)。需要提供 `selector`
           属性来指定需要动画的子元素。
         </p>
         <DemoContainer>

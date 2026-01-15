@@ -1,23 +1,23 @@
-import { cn, ZSidebar, ZView, type ZSidebarOption } from "@zcat/ui";
-import { Link, Outlet } from "react-router";
+import { cn, ZSidebar, ZView, type ZSidebarOption } from '@zcat/ui';
+import { Link, Outlet } from 'react-router';
 
-import { ToolbarHeader, ToolboxFooter } from "@blog/modules";
+import { ToolbarHeader, ToolboxFooter } from '@blog/modules';
 
 const items: ZSidebarOption[] = [
   {
-    label: "导航",
-    value: "/toolbox",
+    label: '导航',
+    value: '/toolbox',
   },
   {
-    label: "常用",
+    label: '常用',
     children: [
       {
-        label: "图片和 Base64 互转",
-        value: "/toolbox/base64-to-image",
+        label: '图片和 Base64 互转',
+        value: '/toolbox/base64-to-image',
       },
       {
-        label: "身份证生成",
-        value: "/toolbox/id-card-generator",
+        label: '身份证生成',
+        value: '/toolbox/id-card-generator',
       },
     ],
   },
@@ -25,8 +25,8 @@ const items: ZSidebarOption[] = [
 
 export default function ToolboxLayout() {
   const classNames = cn(
-    "h-full w-full",
-    "[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]",
+    'h-full w-full',
+    '[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]',
   );
 
   const renderItem = (item: ZSidebarOption) => {

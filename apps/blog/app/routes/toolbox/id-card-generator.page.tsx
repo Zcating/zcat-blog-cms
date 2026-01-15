@@ -10,19 +10,19 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@zcat/ui";
-import dayjs from "dayjs";
-import { useState } from "react";
-import { z } from "zod";
+} from '@zcat/ui';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { z } from 'zod';
 
-import ADDRESS_OPTIONS from "@blog/modules/toolbox/address-options.json";
+import ADDRESS_OPTIONS from '@blog/modules/toolbox/address-options.json';
 
 /**
  * 性别选项
  */
 const GENDER_OPTIONS = [
-  { label: "男（顺序码奇数）", value: "male" },
-  { label: "女（顺序码偶数）", value: "female" },
+  { label: '男（顺序码奇数）', value: 'male' },
+  { label: '女（顺序码偶数）', value: 'female' },
 ];
 
 /**
@@ -32,7 +32,7 @@ const WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
 /**
  * 校验位映射
  */
-const CHECK_MAP = ["1", "0", "X", "9", "8", "7", "6", "5", "4", "3", "2"];
+const CHECK_MAP = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
 
 /**
  * 计算校验位
@@ -41,7 +41,7 @@ const CHECK_MAP = ["1", "0", "X", "9", "8", "7", "6", "5", "4", "3", "2"];
  */
 function computeCheckDigit(id17: string): string {
   const sum = id17
-    .split("")
+    .split('')
     .reduce((acc, ch, i) => acc + parseInt(ch, 10) * WEIGHTS[i], 0);
   const mod = sum % 11;
   return CHECK_MAP[mod];
@@ -57,8 +57,8 @@ const oldMan = [0, 1, 996, 997, 998, 999];
  * @param sex 性别
  * @returns 顺序码
  */
-function randomSeqDigits(sex: "male" | "female"): string {
-  const isMale = sex === "male";
+function randomSeqDigits(sex: 'male' | 'female'): string {
+  const isMale = sex === 'male';
   const n = Math.floor(Math.random() * 1000);
   if (oldMan.includes(n)) {
     return randomSeqDigits(sex);
@@ -66,13 +66,13 @@ function randomSeqDigits(sex: "male" | "female"): string {
   const parityBit = isMale ? 1 : 0;
   const seqDigits = n % 2 === parityBit ? n : n - 1;
 
-  return seqDigits.toString().padStart(3, "0");
+  return seqDigits.toString().padStart(3, '0');
 }
 
 const schema = z.object({
   areaCodes: z.array(z.string()),
-  birthDate: z.custom<dayjs.Dayjs>(dayjs.isDayjs, "Invalid date"),
-  gender: z.enum(["male", "female"]),
+  birthDate: z.custom<dayjs.Dayjs>(dayjs.isDayjs, 'Invalid date'),
+  gender: z.enum(['male', 'female']),
 });
 
 const FormMaker = createZFormMaker(schema);
@@ -93,7 +93,7 @@ function generateUniqueIdNumbers(
     attempts++
   ) {
     const seqDigits = randomSeqDigits(data.gender);
-    const prefix = `${areaCode}${data.birthDate.format("YYYYMMDD")}${seqDigits}`;
+    const prefix = `${areaCode}${data.birthDate.format('YYYYMMDD')}${seqDigits}`;
     const checkDigit = computeCheckDigit(prefix);
 
     result.add(`${prefix}${checkDigit}`);
@@ -104,11 +104,11 @@ function generateUniqueIdNumbers(
 
 export function meta() {
   return [
-    { title: "身份证生成" },
+    { title: '身份证生成' },
     {
-      name: "description",
+      name: 'description',
       content:
-        "根据地区码、生日与性别生成合法的18位身份证号（含校验位）。示例地区码非完整库，仅供学习与测试使用。",
+        '根据地区码、生日与性别生成合法的18位身份证号（含校验位）。示例地区码非完整库，仅供学习与测试使用。',
     },
   ];
 }
@@ -118,26 +118,26 @@ export default function IdCardGeneratorPage() {
     defaultValues: {
       areaCodes: [],
       birthDate: dayjs(),
-      gender: "male",
+      gender: 'male',
     },
     onSubmit: (data) => {
       const idNumbers = generateUniqueIdNumbers(data, 10);
       setIdNumbers(idNumbers);
-      setValidateMsg("");
+      setValidateMsg('');
     },
   });
 
   // 结果
   const [idNumbers, setIdNumbers] = useState<string[]>([]);
-  const [validateMsg, setValidateMsg] = useState<string>("");
+  const [validateMsg, setValidateMsg] = useState<string>('');
 
   const copyResult = async () => {
     try {
       if (idNumbers.length === 0) return;
-      await navigator.clipboard.writeText(idNumbers.join("\n"));
-      setValidateMsg("已复制到剪贴板");
+      await navigator.clipboard.writeText(idNumbers.join('\n'));
+      setValidateMsg('已复制到剪贴板');
     } catch (e) {
-      setValidateMsg("复制失败");
+      setValidateMsg('复制失败');
     }
   };
 
@@ -185,7 +185,7 @@ export default function IdCardGeneratorPage() {
         <CardContent className="space-y-2">
           <Textarea
             className="cursor-default"
-            value={idNumbers.join("\n")}
+            value={idNumbers.join('\n')}
             readOnly
             rows={10}
             placeholder="点击生成后显示身份证号"

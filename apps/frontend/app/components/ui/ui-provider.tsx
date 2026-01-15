@@ -1,4 +1,3 @@
-import { useAtom, atom } from 'jotai';
 import React from 'react';
 
 interface UiProviderContextState {
@@ -46,7 +45,7 @@ function useUiProviderContext<T>(fn: (value: UiProviderContextState) => T) {
     return UiProviderContext.subscribe(setState);
   }, []);
 
-  return React.useMemo(() => fn(state), [state]);
+  return fn(state);
 }
 
 interface UiProviderProps {

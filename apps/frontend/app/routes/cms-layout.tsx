@@ -35,7 +35,7 @@ export function ErrorBoundary() {
     } else {
       setMessage('未知错误');
     }
-  }, [error]);
+  }, [navigate, error]);
 
   return (
     <Layout>

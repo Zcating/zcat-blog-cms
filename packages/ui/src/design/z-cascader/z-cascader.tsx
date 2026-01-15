@@ -66,6 +66,16 @@ export function ZCascader<T extends string | number = string>({
     CascaderOption<T>[][]
   >([options]);
 
+  const [open, setOpen] = React.useState(false);
+
+  useWatch([open], (isOpen) => {
+    if (!isOpen) {
+      return;
+    }
+    setActiveValue(innerValue);
+    setDisplayColumns(getDisplayColumns(options, innerValue));
+  });
+
   const onSelect = useMemoizedFn(
     (item: CascaderOption<T>, deepIndex: number) => {
       const nextValue = [...activeValue];
@@ -81,16 +91,6 @@ export function ZCascader<T extends string | number = string>({
       }
     },
   );
-
-  const [open, setOpen] = React.useState(false);
-
-  useWatch([open], (isOpen) => {
-    if (!isOpen) {
-      return;
-    }
-    setActiveValue(innerValue);
-    setDisplayColumns(getDisplayColumns(options, innerValue));
-  });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

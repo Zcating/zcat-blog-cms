@@ -1,7 +1,8 @@
 import { ZAvatar } from '@zcat/ui';
+
 import type { Route } from './+types/avatar-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Avatar - @zcat/ui' },
     { name: 'description', content: 'Avatar component documentation' },

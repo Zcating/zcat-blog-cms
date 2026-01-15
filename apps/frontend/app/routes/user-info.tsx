@@ -73,7 +73,7 @@ export default function UserInfo(props: Route.ComponentProps) {
       console.log(value);
     });
     return () => unsubscribe();
-  }, [form.watch]);
+  }, [form]);
 
   const submit = async () => {
     setEditable(false);

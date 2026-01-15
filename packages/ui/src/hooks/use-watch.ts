@@ -16,5 +16,6 @@ export function useWatch<T extends unknown[] | []>(
       return;
     }
     return result;
-  }, [...deps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }

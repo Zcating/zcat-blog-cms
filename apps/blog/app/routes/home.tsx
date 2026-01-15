@@ -8,21 +8,21 @@ import {
   ZPagination,
   ZSelect,
   StaggerReveal,
-} from "@zcat/ui";
-import { createSearchParams, Link, useNavigate } from "react-router";
+} from '@zcat/ui';
+import { createSearchParams, Link, useNavigate } from 'react-router';
 
-import { ArticleApi, UserApi } from "@blog/apis";
-import { PostExcerptCard } from "@blog/modules";
-import { safePositiveNumber } from "@blog/utils";
+import { ArticleApi, UserApi } from '@blog/apis';
+import { PostExcerptCard } from '@blog/modules';
+import { safePositiveNumber } from '@blog/utils';
 
-import type { Route } from "./+types/home";
+import type { Route } from './+types/home';
 
 /**
  * 排序选项
  */
 const SORT_OPTIONS = [
-  { value: "latest", label: "最新" },
-  { value: "oldest", label: "最早" },
+  { value: 'latest', label: '最新' },
+  { value: 'oldest', label: '最早' },
 ] as CommonOption<ArticleApi.OrderEnum>[];
 
 /**
@@ -32,9 +32,9 @@ const SORT_OPTIONS = [
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const page = safePositiveNumber(url.searchParams.get("page"), 1);
-  const order = (url.searchParams.get("order") ??
-    "latest") as ArticleApi.OrderEnum;
+  const page = safePositiveNumber(url.searchParams.get('page'), 1);
+  const order = (url.searchParams.get('order') ??
+    'latest') as ArticleApi.OrderEnum;
 
   return {
     userInfo: await UserApi.getUserInfo(),
@@ -50,8 +50,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export function meta() {
   return [
-    { title: "ZCAT - 我知道你在看" },
-    { name: "description", content: "个人技术博客" },
+    { title: 'ZCAT - 我知道你在看' },
+    { name: 'description', content: '个人技术博客' },
   ];
 }
 

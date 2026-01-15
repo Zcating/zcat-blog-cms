@@ -13,7 +13,6 @@ import {
   OssAction,
   PhotoCard,
   showPhotoSelector,
-  updateArray,
   useOptimisticArray,
   Workspace,
   type PhotoCardData,
@@ -279,19 +278,18 @@ function useCoverSetter(album: AlbumsApi.PhotoAlbumDetail) {
     setCoverId(photo.id);
   });
 
-  return React.useCallback(
-    (photo: PhotosApi.Photo) => {
-      const isCover = coverId === photo.id;
-      return isCover ? (
-        <Button variant="error" loading={setCover.loading}>
-          取消封面
-        </Button>
-      ) : (
-        <Button onClick={() => setCover(photo)} loading={setCover.loading}>
-          设为封面
-        </Button>
-      );
-    },
-    [coverId, setCover.loading],
-  );
+  const RenderCoverButton = (photo: PhotosApi.Photo) => {
+    const isCover = coverId === photo.id;
+    return isCover ? (
+      <Button variant="error" loading={setCover.loading}>
+        取消封面
+      </Button>
+    ) : (
+      <Button onClick={() => setCover(photo)} loading={setCover.loading}>
+        设为封面
+      </Button>
+    );
+  };
+
+  return RenderCoverButton;
 }

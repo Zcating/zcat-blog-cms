@@ -1,7 +1,8 @@
 import { ZImage } from '@zcat/ui';
+
 import type { Route } from './+types/z-image-page';
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: 'Image - @zcat/ui' },
     { name: 'description', content: 'Image component documentation' },

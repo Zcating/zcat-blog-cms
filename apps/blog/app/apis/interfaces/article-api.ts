@@ -1,6 +1,6 @@
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
 
-import { HttpClient } from "../http/http-client";
+import { HttpClient } from '../http/http-client';
 
 export namespace ArticleApi {
   export interface Article {
@@ -20,7 +20,7 @@ export namespace ArticleApi {
     updatedAt: string;
   }
 
-  export type OrderEnum = "latest" | "oldest";
+  export type OrderEnum = 'latest' | 'oldest';
   export interface ArticleParams {
     page: number;
     pageSize: number;
@@ -30,7 +30,7 @@ export namespace ArticleApi {
   export async function getArticleList(
     params: ArticleParams,
   ): Promise<Pagination<Article>> {
-    return HttpClient.serverSideGet<Pagination>("blog/article/list", params);
+    return HttpClient.serverSideGet<Pagination>('blog/article/list', params);
   }
 
   export async function getArticleDetail(id: string) {

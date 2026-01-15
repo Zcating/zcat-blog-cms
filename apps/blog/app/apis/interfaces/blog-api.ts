@@ -1,4 +1,4 @@
-import { HttpClient } from "../http/http-client";
+import { HttpClient } from '../http/http-client';
 
 export namespace UserApi {
   interface Contact {
@@ -21,13 +21,13 @@ export namespace UserApi {
    * @returns {Promise<UserInfo>} 用户信息
    */
   export async function getUserInfo(): Promise<UserInfo> {
-    const userInfo = await HttpClient.serverSideGet<UserInfo>("blog/user-info");
+    const userInfo = await HttpClient.serverSideGet<UserInfo>('blog/user-info');
 
     return {
       ...userInfo,
       contact: {
-        email: userInfo.contact?.email ?? "",
-        github: userInfo.contact?.github ?? "",
+        email: userInfo.contact?.email ?? '',
+        github: userInfo.contact?.github ?? '',
       },
     };
   }

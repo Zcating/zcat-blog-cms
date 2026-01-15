@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/refs */
 import React from 'react';
 
-type noop = (this: any, ...args: any[]) => any;
+type noop = (...args: any[]) => any;
 
 type PickFunction<T extends noop> = (...args: Parameters<T>) => ReturnType<T>;
 
@@ -10,8 +11,8 @@ export function useMemoizedFn<T extends noop>(fn: T) {
 
   const memoizedFn = React.useRef<PickFunction<T>>(void 0);
   if (!memoizedFn.current) {
-    memoizedFn.current = function (this, ...args) {
-      return fnRef.current.apply(this, args);
+    memoizedFn.current = function (...args) {
+      return fnRef.current.apply(null, args);
     };
   }
 

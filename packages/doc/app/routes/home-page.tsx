@@ -1,8 +1,9 @@
 import { ZButton } from '@zcat/ui';
-import type { Route } from './+types/home-page';
 import { Link } from 'react-router';
 
-export function meta({}: Route.MetaArgs) {
+import type { Route } from './+types/home-page';
+
+export function meta() {
   return [
     { title: 'Introduction - @zcat/ui' },
     {
