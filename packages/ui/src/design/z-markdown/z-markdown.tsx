@@ -17,14 +17,12 @@ export interface ZMarkdownProps {
 }
 
 export function ZMarkdown({ content, className }: ZMarkdownProps) {
-  // const { default: ReactMarkdown } = React.use(import("react-markdown"));
-
   return (
     <React.Suspense
       fallback={
         <ZView className="flex items-center justify-center h-full min-h-[100px] text-muted-foreground">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Loading...</span>
+          <ZView className="ml-2 cursor-wait">Loading...</ZView>
         </ZView>
       }
     >
