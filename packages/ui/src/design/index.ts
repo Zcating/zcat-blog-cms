@@ -15,6 +15,7 @@ export * from './z-waterfall';
 export * from './z-grid';
 export * from './z-siderbar';
 export * from './z-collapsible';
+export * from './z-dialog';
 
 export {};
 

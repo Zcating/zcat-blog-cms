@@ -45,6 +45,10 @@ const sidebarOptions: ZSidebarOption[] = [
         label: 'Markdown',
         value: 'markdown',
       },
+      {
+        label: '弹窗',
+        value: 'z-dialog',
+      },
     ],
   },
   {
