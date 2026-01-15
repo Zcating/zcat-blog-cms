@@ -1,7 +1,6 @@
+import { ToolbarHeader, ToolboxFooter } from '@blog/features';
 import { cn, ZSidebar, ZView, type ZSidebarOption } from '@zcat/ui';
 import { Link, Outlet } from 'react-router';
-
-import { ToolbarHeader, ToolboxFooter } from '@blog/modules';
 
 const items: ZSidebarOption[] = [
   {

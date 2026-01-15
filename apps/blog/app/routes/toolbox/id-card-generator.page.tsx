@@ -1,3 +1,4 @@
+import ADDRESS_OPTIONS from '@blog/features/toolbox/address-options.json';
 import {
   createZFormMaker,
   ZView,
@@ -14,8 +15,6 @@ import {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { z } from 'zod';
-
-import ADDRESS_OPTIONS from '@blog/modules/toolbox/address-options.json';
 
 /**
  * 性别选项

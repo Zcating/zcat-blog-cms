@@ -12,7 +12,7 @@ import {
 import { createSearchParams, Link, useNavigate } from 'react-router';
 
 import { ArticleApi, UserApi } from '@blog/apis';
-import { PostExcerptCard } from '@blog/modules';
+import { PostExcerptCard } from '@blog/features';
 import { safePositiveNumber } from '@blog/utils';
 
 import type { Route } from './+types/home';

@@ -1,7 +1,7 @@
 import { ZView } from '@zcat/ui';
 
 import { ArticleApi } from '@blog/apis';
-import { PostContentView } from '@blog/modules';
+import { PostContentView } from '@blog/features';
 
 import type { Route } from './+types/post-board.id';
 

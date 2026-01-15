@@ -12,7 +12,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { PhotoPoster } from '@blog/modules';
+import { PhotoPoster } from '@blog/features';
 
 import type { Route } from './+types/gallery.id';
 
