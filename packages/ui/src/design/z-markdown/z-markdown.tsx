@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -21,15 +22,16 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
   return (
     <React.Suspense
       fallback={
-        <ZView className="flex items-center justify-center h-full">
-          Loading...
+        <ZView className="flex items-center justify-center h-full min-h-[100px] text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="ml-2">Loading...</span>
         </ZView>
       }
     >
       <article
         data-slot="markdown"
         className={cn(
-          'prose prose-neutral max-w-none',
+          'prose prose-zinc max-w-none',
           'prose-headings:font-bold prose-headings:text-foreground',
           'prose-p:text-foreground prose-p:leading-7',
           'prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline',
