@@ -76,7 +76,7 @@ export default function Layout() {
   return (
     <ZSidebar
       header={
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="h-full flex shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="font-medium">@zcat/ui 文档</div>

@@ -8,13 +8,13 @@ import {
 export default [
   layout('routes/layout.tsx', [
     index('routes/home-page.tsx'),
-    route('button', 'routes/button-page.tsx'),
-    route('select', 'routes/select-page.tsx'),
-    route('pagination', 'routes/pagination-page.tsx'),
-    route('view', 'routes/view-page.tsx'),
-    route('avatar', 'routes/avatar-page.tsx'),
-    route('z-image', 'routes/z-image-page.tsx'),
-    route('cascader', 'routes/cascader-page.tsx'),
-    route('stagger-reveal', 'routes/stagger-reveal-page.tsx'),
+    route('button', 'routes/components/button-page.tsx'),
+    route('select', 'routes/components/select-page.tsx'),
+    route('pagination', 'routes/components/pagination-page.tsx'),
+    route('view', 'routes/components/view-page.tsx'),
+    route('avatar', 'routes/components/avatar-page.tsx'),
+    route('z-image', 'routes/components/z-image-page.tsx'),
+    route('cascader', 'routes/components/cascader-page.tsx'),
+    route('stagger-reveal', 'routes/animation/stagger-reveal-page.tsx'),
   ]),
 ] satisfies RouteConfig;

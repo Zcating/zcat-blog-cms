@@ -21,10 +21,11 @@ export default function ViewPage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">Basic Usage</h2>
         <div className="flex flex-col gap-4">
-          <ZView className="p-4 border rounded-md">
-            Default View
-          </ZView>
-          <ZView className="p-4 rounded-md text-white" backgroundColor="#3b82f6">
+          <ZView className="p-4 border rounded-md">Default View</ZView>
+          <ZView
+            className="p-4 rounded-md text-white"
+            backgroundColor="#3b82f6"
+          >
             View with background color
           </ZView>
         </div>

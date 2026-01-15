@@ -13,7 +13,9 @@ export default function AvatarPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Avatar 头像</h1>
-        <p className="text-muted-foreground">用来代表用户或事物的图标、图片或字符。</p>
+        <p className="text-muted-foreground">
+          用来代表用户或事物的图标、图片或字符。
+        </p>
       </div>
 
       <div className="space-y-4">

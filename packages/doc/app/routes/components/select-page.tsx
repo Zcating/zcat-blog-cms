@@ -24,7 +24,9 @@ export default function SelectPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Select 选择器</h1>
-        <p className="text-muted-foreground">下拉选择器，用于从列表中选择一个选项。</p>
+        <p className="text-muted-foreground">
+          下拉选择器，用于从列表中选择一个选项。
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -39,7 +41,8 @@ export default function SelectPage() {
             />
           </div>
           <div className="text-sm text-muted-foreground">
-            Selected value: <span className="font-mono">{value || '(none)'}</span>
+            Selected value:{' '}
+            <span className="font-mono">{value || '(none)'}</span>
           </div>
         </div>
       </div>

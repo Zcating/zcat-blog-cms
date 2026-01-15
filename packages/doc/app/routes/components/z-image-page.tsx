@@ -15,17 +15,15 @@ export default function ImagePage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Image 图片</h1>
-        <p className="text-muted-foreground">用于展示图片的组件，支持多种填充模式。</p>
+        <p className="text-muted-foreground">
+          用于展示图片的组件，支持多种填充模式。
+        </p>
       </div>
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">Basic Usage</h2>
         <div className="flex flex-wrap gap-4">
-          <ZImage
-            src={src}
-            alt="Basic usage"
-            className="h-[200px] w-[300px]"
-          />
+          <ZImage src={src} alt="Basic usage" className="h-[200px] w-[300px]" />
         </div>
       </div>
 

@@ -23,11 +23,7 @@ export default function PaginationPage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">Basic Usage</h2>
         <div className="flex flex-col gap-4">
-          <ZPagination
-            page={page}
-            totalPages={10}
-            onPageChange={setPage}
-          />
+          <ZPagination page={page} totalPages={10} onPageChange={setPage} />
           <div className="text-sm text-muted-foreground">
             Current Page: {page}
           </div>
@@ -37,13 +33,9 @@ export default function PaginationPage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">With Ellipsis</h2>
         <div className="flex flex-col gap-4">
-          <ZPagination
-            page={page2}
-            totalPages={20}
-            onPageChange={setPage2}
-          />
+          <ZPagination page={page2} totalPages={20} onPageChange={setPage2} />
           <div className="text-sm text-muted-foreground">
-             Current Page: {page2}
+            Current Page: {page2}
           </div>
         </div>
       </div>

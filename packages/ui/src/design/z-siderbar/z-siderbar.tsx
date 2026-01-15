@@ -40,7 +40,13 @@ export interface ZSidebarProps {
   sidebarFooter?: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
+
+const defaultStyle = {
+  '--header-height': 'calc(var(--spacing) * 16)',
+  '--footer-height': 'calc(var(--spacing) * 10)',
+} as React.CSSProperties;
 
 export function ZSidebar(props: ZSidebarProps) {
   const {
@@ -52,12 +58,17 @@ export function ZSidebar(props: ZSidebarProps) {
     sidebarFooter,
     footer,
     className,
+    style,
   } = props;
 
   return (
-    <SidebarProvider className={cn('flex flex-col', className)}>
+    <SidebarProvider
+      className={cn('flex flex-col', className)}
+      style={{ ...defaultStyle, ...style }}
+    >
+      <ZView className="h-(--header-height)">{header}</ZView>
       <ZView className="flex flex-1">
-        <Sidebar className="top-(--header-height,0px) h-[calc(100svh-var(--header-height,0px))]!">
+        <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
           <SidebarHeader>{sidebarHeader}</SidebarHeader>
           <SidebarContent>
             {options.map((item, index) => {
@@ -82,11 +93,10 @@ export function ZSidebar(props: ZSidebarProps) {
           <SidebarFooter>{sidebarFooter}</SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          {header}
-          <ZView className="min-h-[calc(100svh-var(--header-height,0px)-var(--footer-height,0px))]">
+          <ZView className="min-h-[calc(100svh-var(--header-height)-var(--footer-height))]">
             {children}
           </ZView>
-          {footer}
+          <ZView className="h-(--footer-height)">{footer}</ZView>
         </SidebarInset>
       </ZView>
     </SidebarProvider>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { RotateCcw } from 'lucide-react';
-import { StaggerReveal, Button, useUpdate, ZView } from '@zcat/ui';
+import { StaggerReveal, ZView } from '@zcat/ui';
+
+import { DemoContainer } from '~/features';
 import type { Route } from './+types/stagger-reveal-page';
 
 export function meta({}: Route.MetaArgs) {
@@ -15,28 +15,9 @@ export function meta({}: Route.MetaArgs) {
 
 function DemoBox({ index }: { index: number }) {
   return (
-    <div className="reveal-item flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold shadow-sm">
+    <ZView className="reveal-item flex h-20 w-20 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold shadow-sm">
       {index + 1}
-    </div>
-  );
-}
-
-function AnimationDemo({ children }: { children: React.ReactNode }) {
-  const [key, updateKey] = useState(0);
-
-  return (
-    <div className="relative rounded-lg border p-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 top-2 z-10"
-        onClick={() => updateKey((k) => k + 1)}
-        title="重新播放动画"
-      >
-        <RotateCcw className="h-4 w-4" />
-      </Button>
-      <ZView key={key}>{children}</ZView>
-    </div>
+    </ZView>
   );
 }
 
@@ -58,7 +39,7 @@ export default function StaggerRevealPage() {
           默认从左侧滑入 (`direction="left"`)。需要提供 `selector`
           属性来指定需要动画的子元素。
         </p>
-        <AnimationDemo>
+        <DemoContainer>
           <StaggerReveal
             selector=".reveal-item"
             className="flex flex-wrap gap-4"
@@ -67,7 +48,7 @@ export default function StaggerRevealPage() {
               <DemoBox key={i} index={i} />
             ))}
           </StaggerReveal>
-        </AnimationDemo>
+        </DemoContainer>
       </div>
 
       <div className="space-y-6">
@@ -77,7 +58,7 @@ export default function StaggerRevealPage() {
 
         <div className="space-y-4">
           <h3 className="font-medium">Bottom (从下方滑入)</h3>
-          <AnimationDemo>
+          <DemoContainer>
             <StaggerReveal
               selector=".reveal-item"
               direction="bottom"
@@ -87,12 +68,12 @@ export default function StaggerRevealPage() {
                 <DemoBox key={i} index={i} />
               ))}
             </StaggerReveal>
-          </AnimationDemo>
+          </DemoContainer>
         </div>
 
         <div className="space-y-4">
           <h3 className="font-medium">Top (从上方滑入)</h3>
-          <AnimationDemo>
+          <DemoContainer>
             <StaggerReveal
               selector=".reveal-item"
               direction="top"
@@ -102,12 +83,12 @@ export default function StaggerRevealPage() {
                 <DemoBox key={i} index={i} />
               ))}
             </StaggerReveal>
-          </AnimationDemo>
+          </DemoContainer>
         </div>
 
         <div className="space-y-4">
           <h3 className="font-medium">Right (从右侧滑入)</h3>
-          <AnimationDemo>
+          <DemoContainer>
             <StaggerReveal
               selector=".reveal-item"
               direction="right"
@@ -117,7 +98,7 @@ export default function StaggerRevealPage() {
                 <DemoBox key={i} index={i} />
               ))}
             </StaggerReveal>
-          </AnimationDemo>
+          </DemoContainer>
         </div>
       </div>
 
@@ -127,7 +108,7 @@ export default function StaggerRevealPage() {
           可以通过 `duration` (持续时间), `stagger` (间隔时间), `ease`
           (缓动函数) 来调整动画效果。
         </p>
-        <AnimationDemo>
+        <DemoContainer>
           <StaggerReveal
             selector=".reveal-item"
             direction="bottom"
@@ -140,7 +121,7 @@ export default function StaggerRevealPage() {
               <DemoBox key={i} index={i} />
             ))}
           </StaggerReveal>
-        </AnimationDemo>
+        </DemoContainer>
       </div>
     </div>
   );
