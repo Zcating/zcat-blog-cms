@@ -31,7 +31,7 @@ import {
   ResultData,
 } from '@backend/model';
 import { Prisma } from '@backend/prisma';
-import { createPaginate, safeParse } from '@backend/utils';
+import { createPaginate, safeNumber, safeParse } from '@backend/utils';
 
 import { BlogService } from '../services/blog.service';
 
@@ -151,10 +151,11 @@ export class BlogController {
 
   @ApiOperation({ summary: '获取图片详情' })
   @Get('gallery/:id')
-  async getGalleryDetail(@Param('id') id: number) {
+  async getGalleryDetail(@Param('id') id: string) {
+    const albumId = safeNumber(id);
     const result$ = from(
       this.prisma.photoAlbum.findUnique({
-        where: { id },
+        where: { id: albumId },
         select: {
           id: true,
           name: true,
@@ -175,7 +176,7 @@ export class BlogController {
         defer(() =>
           this.photoFindMany({
             where: {
-              albumId: id,
+              albumId: albumId,
             },
           }),
         ),
