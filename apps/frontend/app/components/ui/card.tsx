@@ -42,7 +42,7 @@ function CardFigure(props: CardFigureProps) {
   };
 
   return (
-    <figure className="aspect-[4/3] shadow-md bg-gray-200">
+    <figure className="aspect-4/3 shadow-md bg-gray-200">
       {isEmpty ? (
         <div className="w-full h-full flex items-center justify-center">
           <FileImageOutlined className="text-3xl" />
