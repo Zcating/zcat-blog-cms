@@ -30,8 +30,6 @@ export default function WaterfallPage() {
           <ZWaterfall
             data={mockData}
             columns={3}
-            columnGap="md"
-            rowGap="md"
             renderItem={(item) => (
               <div
                 className={`w-full rounded-lg flex items-center justify-center ${item.color} text-slate-700 font-medium`}
