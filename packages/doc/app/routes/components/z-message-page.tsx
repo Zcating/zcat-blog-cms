@@ -113,7 +113,9 @@ setTimeout(() => {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">自定义位置</h2>
         <div className="flex flex-wrap gap-4">
-            <p className="text-sm text-muted-foreground">位置配置在 ZToaster 组件上，默认为 bottom-right。</p>
+          <p className="text-sm text-muted-foreground">
+            位置配置在 ZToaster 组件上，默认为 bottom-right。
+          </p>
         </div>
       </div>
 
