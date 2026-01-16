@@ -16,3 +16,5 @@ export * from './collapsible';
 export * from './carousel';
 export * from './dialog';
 export * from './textarea';
+export * from './spinner';
+export * from './sonner';

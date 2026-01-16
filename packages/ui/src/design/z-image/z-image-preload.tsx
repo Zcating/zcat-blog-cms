@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { IconContainer, IconPhoto } from '@zcat/ui/icons';
 import { cn } from '@zcat/ui/shadcn';
 
+import { Spinner } from '../../shadcn/ui/spinner';
 import { ZView } from '../z-view';
 
 import { ZImage, type ZImageProps } from './z-image';
@@ -44,7 +44,7 @@ export function ImagePreload(props: ImagePreloadProps) {
           {...rest}
         />
       ) : (
-        <IconContainer Renderer={IconPhoto} size="lg" />
+        <Spinner className="text-muted-foreground size-8" />
       )}
     </ZView>
   );
