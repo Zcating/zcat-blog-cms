@@ -1,5 +1,5 @@
 import {
-  createZFormMaker,
+  createZForm,
   ZView,
   ZCascader,
   ZDatePicker,
@@ -10,97 +10,24 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  ZMessage,
+  ZButton,
 } from '@zcat/ui';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { z } from 'zod';
+import z from 'zod';
 
-import ADDRESS_OPTIONS from '@blog/features/toolbox/address-options.json';
+import {
+  GENDER_OPTIONS,
+  ADDRESS_OPTIONS,
+  generateUniqueIdNumbers,
+} from '@blog/features/toolbox/id-card-number';
 
-/**
- * 性别选项
- */
-const GENDER_OPTIONS = [
-  { label: '男（顺序码奇数）', value: 'male' },
-  { label: '女（顺序码偶数）', value: 'female' },
-];
-
-/**
- * 校验位权重与映射
- */
-const WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-/**
- * 校验位映射
- */
-const CHECK_MAP = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
-
-/**
- * 计算校验位
- * @param id17 17位身份证号（不包含校验位）
- * @returns 校验位
- */
-function computeCheckDigit(id17: string): string {
-  const sum = id17
-    .split('')
-    .reduce((acc, ch, i) => acc + parseInt(ch, 10) * WEIGHTS[i], 0);
-  const mod = sum % 11;
-  return CHECK_MAP[mod];
-}
-
-/**
- * 老人顺序码范围（0-1, 996-999）
- */
-const oldMan = [0, 1, 996, 997, 998, 999];
-
-/**
- * 生成顺序码（奇数为男，偶数为女）
- * @param sex 性别
- * @returns 顺序码
- */
-function randomSeqDigits(sex: 'male' | 'female'): string {
-  const isMale = sex === 'male';
-  const n = Math.floor(Math.random() * 1000);
-  if (oldMan.includes(n)) {
-    return randomSeqDigits(sex);
-  }
-  const parityBit = isMale ? 1 : 0;
-  const seqDigits = n % 2 === parityBit ? n : n - 1;
-
-  return seqDigits.toString().padStart(3, '0');
-}
-
-const schema = z.object({
+const ZForm = createZForm({
   areaCodes: z.array(z.string()),
   birthDate: z.custom<dayjs.Dayjs>(dayjs.isDayjs, 'Invalid date'),
   gender: z.enum(['male', 'female']),
 });
-
-const FormMaker = createZFormMaker(schema);
-
-function generateUniqueIdNumbers(
-  data: z.infer<typeof schema>,
-  count: number = 10,
-) {
-  const safeCount =
-    Number.isFinite(count) && count > 0 ? Math.floor(count) : 10;
-  const result = new Set<string>();
-  const maxAttempts = safeCount * 200;
-  const areaCode = data.areaCodes[2];
-
-  for (
-    let attempts = 0;
-    result.size < safeCount && attempts < maxAttempts;
-    attempts++
-  ) {
-    const seqDigits = randomSeqDigits(data.gender);
-    const prefix = `${areaCode}${data.birthDate.format('YYYYMMDD')}${seqDigits}`;
-    const checkDigit = computeCheckDigit(prefix);
-
-    result.add(`${prefix}${checkDigit}`);
-  }
-
-  return Array.from(result);
-}
 
 export function meta() {
   return [
@@ -114,14 +41,21 @@ export function meta() {
 }
 
 export default function IdCardGeneratorPage() {
-  const form = FormMaker.useForm({
+  const form = ZForm.useForm({
     defaultValues: {
       areaCodes: [],
       birthDate: dayjs(),
       gender: 'male',
     },
     onSubmit: (data) => {
-      const idNumbers = generateUniqueIdNumbers(data, 10);
+      const idNumbers = generateUniqueIdNumbers(
+        {
+          areaCode: data.areaCodes[2] || '',
+          birthDate: data.birthDate,
+          gender: data.gender,
+        },
+        10,
+      );
       setIdNumbers(idNumbers);
       setValidateMsg('');
     },
@@ -131,13 +65,14 @@ export default function IdCardGeneratorPage() {
   const [idNumbers, setIdNumbers] = useState<string[]>([]);
   const [validateMsg, setValidateMsg] = useState<string>('');
 
-  const copyResult = async () => {
+  const copyResult = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     try {
       if (idNumbers.length === 0) return;
       await navigator.clipboard.writeText(idNumbers.join('\n'));
-      setValidateMsg('已复制到剪贴板');
+      ZMessage.success('已复制到剪贴板');
     } catch (e) {
-      setValidateMsg('复制失败');
+      ZMessage.error('复制失败');
     }
   };
 
@@ -149,34 +84,30 @@ export default function IdCardGeneratorPage() {
           根据地区码、生日与性别生成合法的18位身份证号（含校验位）。示例地区码非完整库，仅供学习与测试使用。
         </p>
       </div>
-      <FormMaker.Form form={form}>
-        <FormMaker.FormItems
-          className="max-w-xl"
-          title="参数设置"
-          footer={
-            <ZView className="flex gap-5">
-              <Button type="submit">生成</Button>
-              <Button
-                variant="secondary"
-                onClick={copyResult}
-                disabled={idNumbers.length === 0}
-              >
-                复制结果
-              </Button>
-            </ZView>
-          }
-        >
-          <FormMaker.FormItem name="areaCodes" label="省市区">
+      <ZForm form={form}>
+        <ZForm.Items className="max-w-xl" title="参数设置">
+          <ZForm.Item name="areaCodes" label="省市区">
             <ZCascader options={ADDRESS_OPTIONS} />
-          </FormMaker.FormItem>
-          <FormMaker.FormItem name="birthDate" label="生日">
+          </ZForm.Item>
+          <ZForm.Item name="birthDate" label="生日">
             <ZDatePicker />
-          </FormMaker.FormItem>
-          <FormMaker.FormItem name="gender" label="性别">
+          </ZForm.Item>
+          <ZForm.Item name="gender" label="性别">
             <ZSelect options={GENDER_OPTIONS} />
-          </FormMaker.FormItem>
-        </FormMaker.FormItems>
-      </FormMaker.Form>
+          </ZForm.Item>
+
+          <ZView className="flex gap-5">
+            <Button type="submit">生成</Button>
+            <ZButton
+              variant="ghost"
+              onClick={copyResult}
+              disabled={idNumbers.length === 0}
+            >
+              复制结果
+            </ZButton>
+          </ZView>
+        </ZForm.Items>
+      </ZForm>
 
       <Card className="max-w-xl">
         <CardHeader>
