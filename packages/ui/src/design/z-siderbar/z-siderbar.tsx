@@ -124,7 +124,7 @@ function SidebarCollapsibleItem({
         trigger={
           <SidebarGroupLabel
             asChild
-            className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm cursor-pointer w-full"
+            className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm cursor-pointer w-full pl-4"
           >
             <ZView className="flex items-center">
               {renderItem(item)}
@@ -157,8 +157,10 @@ interface ZSidebarMenuItemProps {
 
 function ZSidebarMenuItem({ item, renderItem }: ZSidebarMenuItemProps) {
   return (
-    <SidebarMenuItem className="pl-2">
-      <SidebarMenuButton asChild>{renderItem(item)}</SidebarMenuButton>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild className="pl-4">
+        {renderItem(item)}
+      </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }

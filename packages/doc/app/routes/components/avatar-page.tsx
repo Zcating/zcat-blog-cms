@@ -1,5 +1,7 @@
 import { ZAvatar } from '@zcat/ui';
 
+import { ApiTable } from '../../features';
+
 import type { Route } from './+types/avatar-page';
 
 export function meta() {
@@ -8,6 +10,33 @@ export function meta() {
     { name: 'description', content: 'Avatar component documentation' },
   ];
 }
+
+const apiData = [
+  {
+    attribute: 'src',
+    type: 'string',
+    default: '-',
+    description: '图片地址',
+  },
+  {
+    attribute: 'alt',
+    type: 'string',
+    default: '-',
+    description: '图片无法显示时的替代文本（必须）',
+  },
+  {
+    attribute: 'fallback',
+    type: 'ReactNode',
+    default: '-',
+    description: '图片加载失败或未设置时显示的内容',
+  },
+  {
+    attribute: 'size',
+    type: "'sm' | 'md' | 'lg'",
+    default: "'md'",
+    description: '头像尺寸',
+  },
+];
 
 export default function AvatarPage() {
   return (
@@ -71,53 +100,7 @@ export default function AvatarPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">src</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">图片地址</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">alt</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">图片无法显示时的替代文本（必须）</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">fallback</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  ReactNode
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">图片加载失败或未设置时显示的内容</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">size</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;sm&apos; | &apos;md&apos; | &apos;lg&apos;
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;md&apos;
-                </td>
-                <td className="p-4">头像尺寸</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }

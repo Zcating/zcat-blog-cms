@@ -1,5 +1,7 @@
 import { ZWaterfall } from '@zcat/ui';
 
+import { ApiTable } from '~/features';
+
 // Mock data
 const mockData = Array.from({ length: 20 }).map((_, i) => ({
   id: i,
@@ -13,6 +15,45 @@ export function meta() {
     { name: 'description', content: 'Waterfall component documentation' },
   ];
 }
+
+const apiData = [
+  {
+    attribute: 'data',
+    type: 'T[]',
+    default: '-',
+    description: '数据源数组',
+  },
+  {
+    attribute: 'columns',
+    type: 'number',
+    default: '-',
+    description: '列数',
+  },
+  {
+    attribute: 'columnGap',
+    type: "'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'",
+    default: '-',
+    description: '列间距',
+  },
+  {
+    attribute: 'rowGap',
+    type: "'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'",
+    default: '-',
+    description: '行间距',
+  },
+  {
+    attribute: 'renderItem',
+    type: '(item: T, index: number) => React.ReactNode',
+    default: '-',
+    description: '自定义渲染函数',
+  },
+  {
+    attribute: 'className',
+    type: 'string',
+    default: '-',
+    description: '自定义类名',
+  },
+];
 
 export default function WaterfallPage() {
   return (
@@ -42,69 +83,7 @@ export default function WaterfallPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">data</td>
-                <td className="p-4 font-mono text-muted-foreground">T[]</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">数据源数组</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">columns</td>
-                <td className="p-4 font-mono text-muted-foreground">number</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">列数</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">columnGap</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;sm&apos; | &apos;md&apos; | &apos;lg&apos; |
-                  &apos;xl&apos; | &apos;2xl&apos; | &apos;3xl&apos; |
-                  &apos;4xl&apos;
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">列间距</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">rowGap</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;sm&apos; | &apos;md&apos; | &apos;lg&apos; |
-                  &apos;xl&apos; | &apos;2xl&apos; | &apos;3xl&apos; |
-                  &apos;4xl&apos;
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">行间距</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">renderItem</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (item: T, index: number) ={'>'} React.ReactNode
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义渲染函数</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">className</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义类名</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }

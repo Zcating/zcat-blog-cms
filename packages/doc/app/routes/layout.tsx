@@ -36,7 +36,7 @@ const sidebarOptions: ZSidebarOption[] = [
     icon: LayoutDashboard,
     children: [
       {
-        label: 'Sidebar',
+        label: '侧边栏',
         value: 'z-sidebar',
       },
     ],
@@ -52,6 +52,10 @@ const sidebarOptions: ZSidebarOption[] = [
       {
         label: '级联选择',
         value: 'cascader',
+      },
+      {
+        label: '日期选择器',
+        value: 'z-date-picker',
       },
     ],
   },
@@ -129,7 +133,11 @@ export default function Layout() {
     }
     return (
       <Link to={`/${item.value}`} className="flex items-center gap-3">
-        {item.icon && <item.icon className="size-4" />}
+        {item.icon ? (
+          <item.icon className="size-4" />
+        ) : (
+          <ZView className="size-4" />
+        )}
         <span>{item.label}</span>
       </Link>
     );

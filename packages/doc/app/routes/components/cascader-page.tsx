@@ -9,6 +9,39 @@ export function meta(_: Route.MetaArgs) {
   ];
 }
 
+const apiData = [
+  {
+    attribute: 'options',
+    type: 'CascaderOption[]',
+    default: '[]',
+    description: '数据源，结构包含 label, value, children',
+  },
+  {
+    attribute: 'value',
+    type: 'T[]',
+    default: '-',
+    description: '当前选中的值（受控）',
+  },
+  {
+    attribute: 'defaultValue',
+    type: 'T[]',
+    default: '[]',
+    description: '默认选中的值（非受控）',
+  },
+  {
+    attribute: 'onValueChange',
+    type: '(value: T[]) => void',
+    default: '-',
+    description: '选中项变化时的回调',
+  },
+  {
+    attribute: 'placeholder',
+    type: 'string',
+    default: "'请选择'",
+    description: '占位文本',
+  },
+];
+
 const options = [
   {
     value: 'guide',

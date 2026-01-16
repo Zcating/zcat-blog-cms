@@ -1,5 +1,7 @@
 import { ZButton, ZMessage } from '@zcat/ui';
 
+import { ApiTable } from '../../features';
+
 import type { Route } from './+types/z-message-page';
 
 export function meta(_: Route.MetaArgs) {
@@ -11,6 +13,45 @@ export function meta(_: Route.MetaArgs) {
     },
   ];
 }
+
+const messageMethods = [
+  {
+    attribute: 'show',
+    type: '(message: string)',
+    default: 'void',
+    description: '显示普通提示',
+  },
+  {
+    attribute: 'success',
+    type: '(message: string)',
+    default: 'void',
+    description: '显示成功提示',
+  },
+  {
+    attribute: 'error',
+    type: '(message: string)',
+    default: 'void',
+    description: '显示错误提示',
+  },
+  {
+    attribute: 'info',
+    type: '(message: string)',
+    default: 'void',
+    description: '显示信息提示',
+  },
+  {
+    attribute: 'warning',
+    type: '(message: string)',
+    default: 'void',
+    description: '显示警告提示',
+  },
+  {
+    attribute: 'loading',
+    type: '(message: string)',
+    default: '() => void',
+    description: '显示加载提示，返回关闭函数',
+  },
+];
 
 export default function MessagePage() {
   return (
@@ -119,73 +160,10 @@ setTimeout(() => {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">方法</th>
-                <th className="h-10 px-4 text-left font-medium">参数</th>
-                <th className="h-10 px-4 text-left font-medium">返回值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">show</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">void</td>
-                <td className="p-4">显示普通提示</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">success</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">void</td>
-                <td className="p-4">显示成功提示</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">error</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">void</td>
-                <td className="p-4">显示错误提示</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">info</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">void</td>
-                <td className="p-4">显示信息提示</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">warning</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">void</td>
-                <td className="p-4">显示警告提示</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">loading</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string)
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  () =&gt; void
-                </td>
-                <td className="p-4">显示加载提示，返回关闭函数</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable
+        data={messageMethods}
+        headers={['方法', '参数', '返回值', '说明']}
+      />
     </div>
   );
 }

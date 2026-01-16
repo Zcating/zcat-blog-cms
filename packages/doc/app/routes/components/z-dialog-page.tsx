@@ -1,5 +1,7 @@
 import { ZButton, ZDialog } from '@zcat/ui';
 
+import { ApiTable } from '../../features';
+
 import type { Route } from './+types/z-dialog-page';
 
 export function meta(_: Route.MetaArgs) {
@@ -11,6 +13,57 @@ export function meta(_: Route.MetaArgs) {
     },
   ];
 }
+
+const apiData = [
+  {
+    attribute: 'title',
+    type: 'ReactNode',
+    default: '-',
+    description: '弹窗标题',
+  },
+  {
+    attribute: 'content',
+    type: 'ReactNode',
+    default: '-',
+    description: '弹窗内容',
+  },
+  {
+    attribute: 'confirmText',
+    type: 'string',
+    default: "'确定'",
+    description: '确认按钮文本',
+  },
+  {
+    attribute: 'cancelText',
+    type: 'string',
+    default: "'取消'",
+    description: '取消按钮文本',
+  },
+  {
+    attribute: 'onConfirm',
+    type: '() => void | Promise<void>',
+    default: '-',
+    description: '确认回调，返回 Promise 时会自动显示 loading',
+  },
+  {
+    attribute: 'onCancel',
+    type: '() => void',
+    default: '-',
+    description: '取消回调',
+  },
+  {
+    attribute: 'hideCancel',
+    type: 'boolean',
+    default: 'false',
+    description: '是否隐藏取消按钮',
+  },
+  {
+    attribute: 'hideFooter',
+    type: 'boolean',
+    default: 'false',
+    description: '是否隐藏底部按钮栏',
+  },
+];
 
 export default function DialogPage() {
   const showSimpleDialog = () => {
@@ -122,85 +175,7 @@ export default function DialogPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">title</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  ReactNode
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">弹窗标题</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">content</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  ReactNode
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">弹窗内容</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">confirmText</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;确定&apos;
-                </td>
-                <td className="p-4">确认按钮文本</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">cancelText</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;取消&apos;
-                </td>
-                <td className="p-4">取消按钮文本</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">onConfirm</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  () =&gt; void | Promise&lt;void&gt;
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">
-                  确认回调，返回 Promise 时会自动显示 loading
-                </td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">onCancel</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  () =&gt; void
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">取消回调</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">hideCancel</td>
-                <td className="p-4 font-mono text-muted-foreground">boolean</td>
-                <td className="p-4 font-mono text-muted-foreground">false</td>
-                <td className="p-4">是否隐藏取消按钮</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">hideFooter</td>
-                <td className="p-4 font-mono text-muted-foreground">boolean</td>
-                <td className="p-4 font-mono text-muted-foreground">false</td>
-                <td className="p-4">是否隐藏底部按钮栏</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }

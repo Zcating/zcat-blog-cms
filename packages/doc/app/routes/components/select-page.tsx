@@ -18,6 +18,39 @@ const options = [
   { label: 'Pineapple', value: 'pineapple' },
 ];
 
+const apiData = [
+  {
+    attribute: 'options',
+    type: '{ label: string; value: T }[]',
+    default: '-',
+    description: '选项列表',
+  },
+  {
+    attribute: 'value',
+    type: 'T',
+    default: '-',
+    description: '当前选中的值',
+  },
+  {
+    attribute: 'onValueChange',
+    type: '(value: T) => void',
+    default: '-',
+    description: '值变化时的回调',
+  },
+  {
+    attribute: 'placeholder',
+    type: 'string',
+    default: '-',
+    description: '占位文本',
+  },
+  {
+    attribute: 'className',
+    type: 'string',
+    default: '-',
+    description: '自定义类名',
+  },
+];
+
 export default function SelectPage() {
   const [value, setValue] = useState('');
 

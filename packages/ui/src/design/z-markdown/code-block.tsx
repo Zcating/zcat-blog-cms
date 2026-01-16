@@ -94,9 +94,11 @@ export function CodeBlock({
       <FoldAnimation isOpen={isCollapsed} className="py-3">
         <SyntaxHighlighter
           language={language}
+          codeTagProps={{
+            className: 'z-markdown-code-font',
+          }}
           customStyle={{
             margin: 0,
-            fontSize: '18px',
             background: 'transparent',
             border: 0,
             backgroundColor: 'white',

@@ -1,3 +1,7 @@
+import { ZMarkdown } from '@zcat/ui';
+
+import { ApiTable } from '~/features';
+
 import type { Route } from './+types/z-sidebar-page';
 
 export function meta(_: Route.MetaArgs) {
@@ -7,23 +11,86 @@ export function meta(_: Route.MetaArgs) {
   ];
 }
 
-export default function ZSidebarPage() {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Sidebar 侧边栏布局
-        </h1>
-        <p className="text-muted-foreground">
-          提供了一套标准的侧边栏布局结构，包含头部、侧边栏菜单和内容区域。
-        </p>
-      </div>
+const sidebarProps = [
+  {
+    attribute: 'options',
+    type: 'ZSidebarOption[]',
+    default: '-',
+    description: '侧边栏菜单配置数组',
+  },
+  {
+    attribute: 'renderItem',
+    type: '(item: ZSidebarItemConfig) => React.ReactNode',
+    default: '-',
+    description: '自定义菜单项渲染函数',
+  },
+  {
+    attribute: 'header',
+    type: 'React.ReactNode',
+    default: '-',
+    description: '顶部导航栏内容（吸顶）',
+  },
+  {
+    attribute: 'sidebarHeader',
+    type: 'React.ReactNode',
+    default: '-',
+    description: '侧边栏顶部内容',
+  },
+  {
+    attribute: 'sidebarFooter',
+    type: 'React.ReactNode',
+    default: '-',
+    description: '侧边栏底部内容',
+  },
+  {
+    attribute: 'footer',
+    type: 'React.ReactNode',
+    default: '-',
+    description: '主内容区域底部内容',
+  },
+  {
+    attribute: 'children',
+    type: 'React.ReactNode',
+    default: '-',
+    description: '主内容区域',
+  },
+];
 
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">使用示例</h2>
-        <div className="rounded-md border p-4 bg-muted/50">
-          <pre className="text-sm overflow-x-auto">
-            <code>{`import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
+const sidebarOptionProps = [
+  {
+    attribute: 'label',
+    type: 'string',
+    default: '-',
+    description: '菜单项显示的文本',
+  },
+  {
+    attribute: 'value',
+    type: 'string',
+    default: '-',
+    description: '菜单项的值（可选，通常用于路由）',
+  },
+  {
+    attribute: 'icon',
+    type: 'React.ComponentType',
+    default: '-',
+    description: '菜单项图标组件',
+  },
+  {
+    attribute: 'children',
+    type: 'ZSidebarOption[]',
+    default: '-',
+    description: '子菜单项配置',
+  },
+  {
+    attribute: 'open',
+    type: 'boolean',
+    default: '-',
+    description: '是否默认展开（仅对有子菜单的项有效）',
+  },
+];
+
+const usageCode = `\`\`\`typescript
+import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
 import { Home, Settings, User } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
 
@@ -73,132 +140,30 @@ export default function Layout() {
       <Outlet />
     </ZSidebar>
   );
-}`}</code>
-          </pre>
-        </div>
+}
+\`\`\`
+`;
+
+export default function ZSidebarPage() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Sidebar 侧边栏布局
+        </h1>
+        <p className="text-muted-foreground">
+          提供了一套标准的侧边栏布局结构，包含头部、侧边栏菜单和内容区域。
+        </p>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">ZSidebar Props</h3>
-          <div className="rounded-md border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="h-10 px-4 text-left font-medium">属性</th>
-                  <th className="h-10 px-4 text-left font-medium">类型</th>
-                  <th className="h-10 px-4 text-left font-medium">说明</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">options</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    ZSidebarOption[]
-                  </td>
-                  <td className="p-4">侧边栏菜单配置数组</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">renderItem</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    (item: ZSidebarItemConfig) =&gt; React.ReactNode
-                  </td>
-                  <td className="p-4">自定义菜单项渲染函数</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">header</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ReactNode
-                  </td>
-                  <td className="p-4">顶部导航栏内容（吸顶）</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">sidebarHeader</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ReactNode
-                  </td>
-                  <td className="p-4">侧边栏顶部内容</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">sidebarFooter</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ReactNode
-                  </td>
-                  <td className="p-4">侧边栏底部内容</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">footer</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ReactNode
-                  </td>
-                  <td className="p-4">主内容区域底部内容</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">children</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ReactNode
-                  </td>
-                  <td className="p-4">主内容区域</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">ZSidebarOption Interface</h3>
-          <div className="rounded-md border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="h-10 px-4 text-left font-medium">属性</th>
-                  <th className="h-10 px-4 text-left font-medium">类型</th>
-                  <th className="h-10 px-4 text-left font-medium">说明</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">label</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    string
-                  </td>
-                  <td className="p-4">菜单项显示的文本</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">value</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    string
-                  </td>
-                  <td className="p-4">菜单项的值（可选，通常用于路由）</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">icon</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    React.ComponentType
-                  </td>
-                  <td className="p-4">菜单项图标组件</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">children</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    ZSidebarOption[]
-                  </td>
-                  <td className="p-4">子菜单项配置</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="p-4 font-mono">open</td>
-                  <td className="p-4 font-mono text-muted-foreground">
-                    boolean
-                  </td>
-                  <td className="p-4">是否默认展开（仅对有子菜单的项有效）</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold tracking-tight">使用示例</h2>
+        <div className="rounded-md border p-4 bg-muted/50">
+          <ZMarkdown content={usageCode} />
         </div>
       </div>
+      <ApiTable title="ZSiderbarProps 参数参考" data={sidebarProps} />
+      <ApiTable title="ZSidebarOption 参数参考" data={sidebarOptionProps} />
     </div>
   );
 }

@@ -16,6 +16,7 @@ export default [
     route('z-image', 'routes/components/z-image-page.tsx'),
     route('z-waterfall', 'routes/components/z-waterfall-page.tsx'),
     route('cascader', 'routes/components/cascader-page.tsx'),
+    route('z-date-picker', 'routes/components/z-date-picker-page.tsx'),
     route('markdown', 'routes/components/z-markdown-page.tsx'),
     route('z-dialog', 'routes/components/z-dialog-page.tsx'),
     route('z-message', 'routes/components/z-message-page.tsx'),

@@ -1,9 +1,11 @@
 import { Button, FoldAnimation, ZView } from '@zcat/ui';
 import { useState } from 'react';
 
-import { DemoContainer } from '~/features';
+import { ApiTable, DemoContainer, type ApiItem } from '~/features';
 
 import type { Route } from './+types/fold-animation-page';
+
+const apiData: ApiItem[] = [];
 
 export function meta(_: Route.MetaArgs) {
   return [
@@ -73,49 +75,7 @@ export default function FoldAnimationPage() {
         </DemoContainer>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">isOpen</td>
-                <td className="p-4 font-mono text-muted-foreground">boolean</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">是否展开</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">duration</td>
-                <td className="p-4 font-mono text-muted-foreground">number</td>
-                <td className="p-4 font-mono text-muted-foreground">0.3</td>
-                <td className="p-4">动画持续时间（秒）</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">className</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义类名</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">children</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  ReactNode
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">内容</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }

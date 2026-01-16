@@ -1,6 +1,6 @@
 import { StaggerReveal, ZView } from '@zcat/ui';
 
-import { DemoContainer } from '~/features';
+import { DemoContainer, ApiTable } from '~/features';
 
 import type { Route } from './+types/stagger-reveal-page';
 
@@ -13,6 +13,51 @@ export function meta(_: Route.MetaArgs) {
     },
   ];
 }
+
+const apiData = [
+  {
+    attribute: 'selector',
+    type: 'string',
+    default: '-',
+    description: 'CSS 选择器，用于选择需要执行动画的子元素',
+  },
+  {
+    attribute: 'direction',
+    type: "'left' | 'right' | 'top' | 'bottom'",
+    default: "'left'",
+    description: '动画进入的方向',
+  },
+  {
+    attribute: 'duration',
+    type: 'number',
+    default: '0.85',
+    description: '动画持续时间（秒）',
+  },
+  {
+    attribute: 'stagger',
+    type: 'number',
+    default: '0.06',
+    description: '每个元素动画之间的间隔时间（秒）',
+  },
+  {
+    attribute: 'ease',
+    type: 'string',
+    default: "'power2.out'",
+    description: 'GSAP 缓动函数',
+  },
+  {
+    attribute: 'dependencies',
+    type: 'unknown[]',
+    default: '[]',
+    description: '依赖项数组，当依赖项变化时重新执行动画',
+  },
+  {
+    attribute: 'className',
+    type: 'string',
+    default: '-',
+    description: '自定义类名',
+  },
+];
 
 function DemoBox({ index }: { index: number }) {
   return (
@@ -125,76 +170,7 @@ export default function StaggerRevealPage() {
         </DemoContainer>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">selector</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">
-                  CSS 选择器，用于选择需要执行动画的子元素
-                </td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">direction</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;left&apos; | &apos;right&apos; | &apos;top&apos; |
-                  &apos;bottom&apos;
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;left&apos;
-                </td>
-                <td className="p-4">动画进入的方向</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">duration</td>
-                <td className="p-4 font-mono text-muted-foreground">number</td>
-                <td className="p-4 font-mono text-muted-foreground">0.85</td>
-                <td className="p-4">动画持续时间（秒）</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">stagger</td>
-                <td className="p-4 font-mono text-muted-foreground">number</td>
-                <td className="p-4 font-mono text-muted-foreground">0.06</td>
-                <td className="p-4">每个元素动画之间的间隔时间（秒）</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">ease</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;power2.out&apos;
-                </td>
-                <td className="p-4">GSAP 缓动函数</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">dependencies</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  unknown[]
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">[]</td>
-                <td className="p-4">依赖项数组，当依赖项变化时重新执行动画</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">className</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义类名</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }

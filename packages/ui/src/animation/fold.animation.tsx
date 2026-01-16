@@ -1,6 +1,6 @@
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 
@@ -23,6 +23,8 @@ export interface FoldAnimationProps {
    * 类名
    */
   className?: string;
+
+  style?: React.CSSProperties;
 }
 
 export function FoldAnimation({
@@ -30,6 +32,7 @@ export function FoldAnimation({
   duration = 0.3,
   children,
   className,
+  style,
 }: FoldAnimationProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +64,7 @@ export function FoldAnimation({
     <ZView
       ref={contentRef}
       className={cn('overflow-hidden h-0 opacity-0', className)}
+      style={style}
     >
       {children}
     </ZView>

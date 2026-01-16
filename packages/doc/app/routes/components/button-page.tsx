@@ -1,5 +1,7 @@
 import { ZButton } from '@zcat/ui';
 
+import { ApiTable } from '../../features';
+
 import type { Route } from './+types/button-page';
 
 export function meta(_: Route.MetaArgs) {

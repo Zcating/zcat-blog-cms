@@ -1,5 +1,7 @@
 import { ZMarkdown } from '@zcat/ui';
 
+import { ApiTable } from '~/features';
+
 import type { Route } from '../+types/home-page';
 
 export function meta(_: Route.MetaArgs) {
@@ -69,6 +71,21 @@ $$
 [ZCat UI](https://github.com/zcat-ui)
 `;
 
+const apiData = [
+  {
+    attribute: 'content',
+    type: 'string',
+    default: '-',
+    description: 'Markdown 文本内容',
+  },
+  {
+    attribute: 'className',
+    type: 'string',
+    default: '-',
+    description: '自定义类名',
+  },
+];
+
 export default function ZMarkdownPage() {
   return (
     <div className="space-y-6">
@@ -86,35 +103,7 @@ export default function ZMarkdownPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">content</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">Markdown 文本内容</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">className</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义类名</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={apiData} />
     </div>
   );
 }
