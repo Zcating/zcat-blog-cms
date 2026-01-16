@@ -95,13 +95,14 @@ export function CodeBlock({
         <SyntaxHighlighter
           language={language}
           codeTagProps={{
-            className: 'z-markdown-code-font',
+            className: 'z-markdown-code-font text-[16px] space-y-2',
           }}
           customStyle={{
             margin: 0,
             background: 'transparent',
             border: 0,
             backgroundColor: 'white',
+            overflow: 'hidden',
           }}
           style={vsStyle}
           wrapLongLines
