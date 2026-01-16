@@ -31,7 +31,16 @@ const sidebarOptions: ZSidebarOption[] = [
       },
     ],
   },
-  { label: '布局', icon: LayoutDashboard, children: [] },
+  {
+    label: '布局',
+    icon: LayoutDashboard,
+    children: [
+      {
+        label: 'Sidebar',
+        value: 'z-sidebar',
+      },
+    ],
+  },
   {
     label: '数据录入',
     icon: FormInputIcon,
@@ -57,6 +66,10 @@ const sidebarOptions: ZSidebarOption[] = [
       {
         label: '图片',
         value: 'z-image',
+      },
+      {
+        label: '瀑布流',
+        value: 'z-waterfall',
       },
       {
         label: 'Markdown',
