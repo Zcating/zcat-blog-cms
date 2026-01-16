@@ -3,7 +3,7 @@ import React from 'react';
 
 import { useMemoizedFn, usePropsValue } from '@zcat/ui/hooks';
 import { useWatch } from '@zcat/ui/hooks/use-watch';
-import { cn } from '@zcat/ui/shadcn';
+import { cn, Separator } from '@zcat/ui/shadcn';
 import { Button } from '@zcat/ui/shadcn/ui/button';
 import {
   Popover,
@@ -45,22 +45,14 @@ export function ZCascader<T extends string | number = string>({
     },
   });
 
-  const [activeValue, setActiveValue] = React.useState<T[]>(innerValue);
+  const [activeIndices, setActiveIndices] = React.useState<number[]>([]);
 
   //
   const display = React.useMemo(() => {
-    const labels = traverseOptionsMap(
-      options,
-      innerValue,
-      (item) => item.label,
-    );
+    const indices = valuePathToIndexPath(options, innerValue);
+    const labels = traverseOptions(options, indices, (item) => item.label);
     return labels.join(' / ') || placeholder;
   }, [options, innerValue, placeholder]);
-
-  // 检查当前项是否被选中
-  const isSelected = (item: CascaderOption<T>, deepIndex: number) => {
-    return item.value === activeValue[deepIndex];
-  };
 
   const [displayColumns, setDisplayColumns] = React.useState<
     CascaderOption<T>[][]
@@ -72,22 +64,24 @@ export function ZCascader<T extends string | number = string>({
     if (!isOpen) {
       return;
     }
-    setActiveValue(innerValue);
-    setDisplayColumns(getDisplayColumns(options, innerValue));
+    const indices = valuePathToIndexPath(options, innerValue);
+    setActiveIndices(indices);
+    setDisplayColumns(getDisplayColumns(options, indices));
   });
 
   const onSelect = useMemoizedFn(
-    (item: CascaderOption<T>, deepIndex: number) => {
-      const nextValue = [...activeValue];
-      nextValue.splice(deepIndex, nextValue.length - deepIndex);
-      nextValue.push(item.value);
-      setActiveValue(nextValue);
+    (item: CascaderOption<T>, deepIndex: number, index: number) => {
+      const nextIndices = [...activeIndices];
+      nextIndices.splice(deepIndex, nextIndices.length - deepIndex);
+      nextIndices.push(index);
+      setActiveIndices(nextIndices);
 
       if (item.children) {
-        setDisplayColumns(getDisplayColumns(options, nextValue));
+        setDisplayColumns(getDisplayColumns(options, nextIndices));
       } else {
         setOpen(false);
-        setInnerValue(nextValue);
+        const nextValues = indexPathToValuePath(options, nextIndices);
+        setInnerValue(nextValues);
       }
     },
   );
@@ -103,13 +97,17 @@ export function ZCascader<T extends string | number = string>({
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <ZView className="max-h-[300px] flex">
           {displayColumns.map((options, deepIndex) => (
-            <CascaderColumn
-              key={deepIndex.toString()}
-              options={options}
-              deepIndex={deepIndex}
-              onSelect={onSelect}
-              isSelected={isSelected}
-            />
+            <React.Fragment key={deepIndex.toString()}>
+              <CascaderColumn
+                options={options}
+                deepIndex={deepIndex}
+                onSelect={onSelect}
+                activeIndices={activeIndices}
+              />
+              {deepIndex < displayColumns.length - 1 && (
+                <Separator orientation="vertical" className="h-auto" />
+              )}
+            </React.Fragment>
           ))}
         </ZView>
       </PopoverContent>
@@ -120,26 +118,24 @@ export function ZCascader<T extends string | number = string>({
 interface CascaderColumnProps<T extends string | number = string> {
   options: CascaderOption<T>[];
   deepIndex: number;
-  onSelect: (item: CascaderOption<T>, deepIndex: number) => void;
-  isSelected: (item: CascaderOption<T>, deepIndex: number) => boolean;
+  onSelect: (item: CascaderOption<T>, deepIndex: number, index: number) => void;
+  activeIndices: number[];
 }
 
 function CascaderColumn<T extends string | number = string>({
   options,
   deepIndex,
   onSelect,
-  isSelected,
+  activeIndices,
 }: CascaderColumnProps<T>) {
   return (
     <ZView className="flex flex-col overflow-auto gap-1 z-scrollbar">
-      {options.map((item, index, arr) => (
+      {options.map((item, index) => (
         <CascaderItem
           key={index.toString()}
           item={item}
-          isLast={index === arr.length - 1}
-          deepIndex={deepIndex}
-          onSelect={onSelect}
-          isSelected={isSelected}
+          isSelected={activeIndices[deepIndex] === index}
+          onSelect={() => onSelect(item, deepIndex, index)}
         />
       ))}
     </ZView>
@@ -148,68 +144,62 @@ function CascaderColumn<T extends string | number = string>({
 
 interface CascaderItemProps<T extends string | number = string> {
   item: CascaderOption<T>;
-  isLast: boolean;
-  deepIndex: number;
-  onSelect: (item: CascaderOption<T>, deepIndex: number) => void;
-  isSelected: (item: CascaderOption<T>, deepIndex: number) => boolean;
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
 function CascaderItem<T extends string | number = string>({
   item,
-  isLast,
-  deepIndex,
-  onSelect,
   isSelected,
+  onSelect,
 }: CascaderItemProps<T>) {
   return (
     <ZView
       className={cn(
         'p-2 mx-1 cursor-pointer flex justify-between items-center rounded-sm transition-colors duration-200',
         'hover:bg-cascader-hover',
-        isSelected(item, deepIndex) && 'bg-cascader-selected!',
+        isSelected && 'bg-cascader-selected!',
       )}
-      onClick={() => onSelect(item, deepIndex)}
+      onClick={onSelect}
     >
       <ZView className="text-md text-center">{item.label}</ZView>
       {item.children && <ChevronRightIcon className="size-4 opacity-50" />}
     </ZView>
   );
 }
+
 /**
- * 获取级联选择器的显示列
- * @param options 级联选择器的选项
- * @param valuePath 级联选择器的路径
- * @returns 级联选择器的显示列
+ * 获取级联选择器的显示列 (使用索引)
  */
 function getDisplayColumns<T extends string | number>(
   options: CascaderOption<T>[],
-  valuePath: T[],
+  indexPath: number[],
 ): CascaderOption<T>[][] {
-  const childrenColumns = traverseOptionsMap(
+  const childrenColumns = traverseOptions(
     options,
-    valuePath,
+    indexPath,
     (item) => item.children || [],
   );
   return [options, ...childrenColumns];
 }
 
 /**
- * 遍历级联选择器的选项，根据路径获取对应的值
+ * 遍历级联选择器的选项 (使用索引)
  * @param options 级联选择器的选项
- * @param valuePath 级联选择器的路径
- * @param callback 回调函数，用于处理每个选项
- * @returns 遍历结果的数组
+ * @param indexPath 索引路径
+ * @param callback 回调函数
+ * @returns 遍历结果
  */
-function traverseOptionsMap<T extends string | number, R>(
+function traverseOptions<T extends string | number, R>(
   options: CascaderOption<T>[],
-  valuePath: T[],
+  indexPath: number[],
   callback: (item: CascaderOption<T>) => R,
 ): R[] {
   const selected: R[] = [];
   let currentOptions = options;
 
-  for (const val of valuePath) {
-    const targetOption = currentOptions.find((opt) => opt.value === val);
+  for (const index of indexPath) {
+    const targetOption = currentOptions[index];
     if (targetOption) {
       selected.push(callback(targetOption));
       currentOptions = targetOption.children || [];
@@ -219,4 +209,54 @@ function traverseOptionsMap<T extends string | number, R>(
   }
 
   return selected;
+}
+
+/**
+ * 根据值路径获取索引路径
+ * @param options 级联选择器的选项
+ * @param valuePath 值路径
+ * @returns 索引路径
+ */
+function valuePathToIndexPath<T extends string | number>(
+  options: CascaderOption<T>[],
+  valuePath: T[],
+): number[] {
+  const indices: number[] = [];
+  let currentOptions = options;
+
+  for (const val of valuePath) {
+    const index = currentOptions.findIndex((opt) => opt.value === val);
+    if (index !== -1) {
+      indices.push(index);
+      currentOptions = currentOptions[index].children || [];
+    } else {
+      break;
+    }
+  }
+  return indices;
+}
+
+/**
+ * 根据索引路径获取值路径
+ * @param options 级联选择器的选项
+ * @param indexPath 索引路径
+ * @returns 值路径
+ */
+function indexPathToValuePath<T extends string | number>(
+  options: CascaderOption<T>[],
+  indexPath: number[],
+): T[] {
+  const values: T[] = [];
+  let currentOptions = options;
+
+  for (const index of indexPath) {
+    const option = currentOptions[index];
+    if (option) {
+      values.push(option.value);
+      currentOptions = option.children || [];
+    } else {
+      break;
+    }
+  }
+  return values;
 }
