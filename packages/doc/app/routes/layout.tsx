@@ -5,12 +5,20 @@ import {
   ZView,
   type ZSidebarOption,
 } from '@zcat/ui';
-import { Component as ComponentIcon, Bird as BirdIcon } from 'lucide-react';
+import {
+  Component as ComponentIcon,
+  Bird as BirdIcon,
+  FormInputIcon,
+  LayoutDashboard,
+  CircleAlertIcon,
+  MenuSquareIcon,
+  NavigationIcon,
+} from 'lucide-react';
 import { Link, Outlet } from 'react-router';
 
 const sidebarOptions: ZSidebarOption[] = [
   {
-    label: '组件',
+    label: '通用',
     icon: ComponentIcon,
     children: [
       {
@@ -18,17 +26,30 @@ const sidebarOptions: ZSidebarOption[] = [
         value: 'button',
       },
       {
+        label: '视图',
+        value: 'view',
+      },
+    ],
+  },
+  { label: '布局', icon: LayoutDashboard, children: [] },
+  {
+    label: '数据录入',
+    icon: FormInputIcon,
+    children: [
+      {
         label: '选择器',
         value: 'select',
       },
       {
-        label: '分页',
-        value: 'pagination',
+        label: '级联选择',
+        value: 'cascader',
       },
-      {
-        label: '视图',
-        value: 'view',
-      },
+    ],
+  },
+  {
+    label: '数据展示',
+    icon: MenuSquareIcon,
+    children: [
       {
         label: '头像',
         value: 'avatar',
@@ -38,16 +59,32 @@ const sidebarOptions: ZSidebarOption[] = [
         value: 'z-image',
       },
       {
-        label: '级联选择',
-        value: 'cascader',
-      },
-      {
         label: 'Markdown',
         value: 'markdown',
       },
+    ],
+  },
+  {
+    label: '反馈',
+    icon: CircleAlertIcon,
+    children: [
       {
         label: '弹窗',
         value: 'z-dialog',
+      },
+      {
+        label: '消息提示',
+        value: 'z-message',
+      },
+    ],
+  },
+  {
+    label: '导航',
+    icon: NavigationIcon,
+    children: [
+      {
+        label: '分页',
+        value: 'pagination',
       },
     ],
   },

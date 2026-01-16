@@ -17,6 +17,7 @@ export default [
     route('cascader', 'routes/components/cascader-page.tsx'),
     route('markdown', 'routes/components/z-markdown-page.tsx'),
     route('z-dialog', 'routes/components/z-dialog-page.tsx'),
+    route('z-message', 'routes/components/z-message-page.tsx'),
     route('stagger-reveal', 'routes/animation/stagger-reveal-page.tsx'),
     route('fold-animation', 'routes/animation/fold-animation-page.tsx'),
   ]),
