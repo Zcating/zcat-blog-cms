@@ -4,10 +4,9 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 // @ts-ignore
 import importPlugin from 'eslint-plugin-import';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import eslintConfigPrettier from 'eslint-config-prettier';
-
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import prettier from 'eslint-plugin-prettier';
 import checkFile from 'eslint-plugin-check-file';
 
 // @ts-ignore
@@ -20,9 +19,10 @@ export default defineConfig(
   eslintPluginPrettierRecommended,
   importPlugin.flatConfigs.recommended,
   {
-    ignores: ['eslint.config.ts'],
-  },
-  {
+    ignores: ['**/*.config.ts'],
+    plugins: {
+      prettier: prettier,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
@@ -35,6 +35,10 @@ export default defineConfig(
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/unbound-method': 'off',
+    },
+  },
+  {
+    rules: {
       'import/no-dynamic-require': 'warn',
       'import/order': [
         'error',
@@ -49,18 +53,6 @@ export default defineConfig(
             'object',
             'type',
           ],
-          // pathGroups: [
-          //   {
-          //     pattern: '@nestjs/*',
-          //     group: 'builtin',
-          //     position: 'before',
-          //   },
-          //   {
-          //     pattern: '@backend/*',
-          //     group: 'builtin',
-          //     position: 'before',
-          //   },
-          // ],
           'newlines-between': 'always',
           pathGroupsExcludedImportTypes: ['builtin'],
           alphabetize: {

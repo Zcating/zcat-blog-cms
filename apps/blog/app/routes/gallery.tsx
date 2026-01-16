@@ -38,7 +38,7 @@ export default function GalleryPage(props: Route.ComponentProps) {
 
   return (
     <ZView className="flex flex-row items-center justify-center">
-      <ZView className="flex flex-col items-center gap-20 lg:w-3xl md:w-2xl">
+      <ZView className="w-full flex flex-col items-center gap-20 px-4 md:px-10 lg:px-20">
         <StaggerReveal selector="[data-gallery-title='true']" direction="top">
           <ZView className="text-2xl font-bold" data-gallery-title="true">
             一些我拍的照片
@@ -52,9 +52,7 @@ export default function GalleryPage(props: Route.ComponentProps) {
         >
           <ZWaterfall
             data-gallery-item="true"
-            columns={2}
-            columnGap="xl"
-            rowGap="2xl"
+            columns={3}
             data={pagination.data}
             renderItem={(gallery) => (
               <PhotoItem value={gallery} onClick={handleClick} />
@@ -88,14 +86,18 @@ function PhotoItem({ value, onClick }: PhotoItemProps) {
   const url = value.cover?.url;
   const click = () => onClick(value);
   return (
-    <ZView className="flex flex-col items-center gap-4">
+    <ZView className="flex-1 flex flex-col items-center gap-4">
       <Card
-        className="cursor-pointer p-0! aspect-square overflow-hidden w-full"
+        className="group relative cursor-pointer p-0! overflow-hidden w-full"
         onClick={click}
       >
         <ImagePreload src={url} />
+        <ZView className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <ZView className="text-3xl font-bold text-white translate-y-10 transition-transform duration-300 group-hover:translate-y-0 text-center px-4">
+            {value.name}
+          </ZView>
+        </ZView>
       </Card>
-      <ZView className="text-3xl font-bold">{value.name}</ZView>
     </ZView>
   );
 }

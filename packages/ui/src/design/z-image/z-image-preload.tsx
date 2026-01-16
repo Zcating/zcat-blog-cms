@@ -28,10 +28,14 @@ export function ImagePreload(props: ImagePreloadProps) {
     image.src = src;
   }, [src]);
 
-  const cls = cn('flex items-center justify-center w-full h-full', className);
+  const viewClassName = cn(
+    'flex items-center justify-center w-full',
+    !loaded && 'aspect-square',
+    className,
+  );
 
   return (
-    <ZView className={cls}>
+    <ZView className={viewClassName}>
       {loaded ? (
         <ZImage
           contentMode="contain"
