@@ -53,6 +53,66 @@ export default function ButtonPage() {
           </ZButton>
         </div>
       </div>
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="h-10 px-4 text-left font-medium">属性</th>
+                <th className="h-10 px-4 text-left font-medium">类型</th>
+                <th className="h-10 px-4 text-left font-medium">默认值</th>
+                <th className="h-10 px-4 text-left font-medium">说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="p-4 font-mono">variant</td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  &apos;default&apos; | &apos;destructive&apos; |
+                  &apos;outline&apos; | &apos;secondary&apos; |
+                  &apos;ghost&apos; | &apos;link&apos;
+                </td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  &apos;default&apos;
+                </td>
+                <td className="p-4">按钮样式变体</td>
+              </tr>
+              <tr className="border-b">
+                <td className="p-4 font-mono">size</td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  &apos;default&apos; | &apos;sm&apos; | &apos;lg&apos; |
+                  &apos;xl&apos; | &apos;icon&apos; | &apos;icon-sm&apos; |
+                  &apos;icon-lg&apos;
+                </td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  &apos;default&apos;
+                </td>
+                <td className="p-4">按钮尺寸</td>
+              </tr>
+              <tr className="border-b">
+                <td className="p-4 font-mono">asChild</td>
+                <td className="p-4 font-mono text-muted-foreground">boolean</td>
+                <td className="p-4 font-mono text-muted-foreground">false</td>
+                <td className="p-4">
+                  是否作为子组件渲染（用于合并 Props，例如配合 Tooltip 使用）
+                </td>
+              </tr>
+              <tr>
+                <td className="p-4 font-mono">...props</td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  React.ButtonHTMLAttributes
+                </td>
+                <td className="p-4 font-mono text-muted-foreground">-</td>
+                <td className="p-4">
+                  支持所有原生 button 属性（如 onClick, disabled 等）
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

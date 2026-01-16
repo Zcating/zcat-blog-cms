@@ -24,7 +24,8 @@ export default function FoldAnimationPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">FoldAnimation</h1>
         <p className="text-muted-foreground">
-          用于平滑展开和收起内容的动画组件，基于 GSAP 实现。常用于手风琴、折叠面板等场景。
+          用于平滑展开和收起内容的动画组件，基于 GSAP
+          实现。常用于手风琴、折叠面板等场景。
         </p>
       </div>
 
@@ -105,7 +106,9 @@ export default function FoldAnimationPage() {
               </tr>
               <tr>
                 <td className="p-4 font-mono">children</td>
-                <td className="p-4 font-mono text-muted-foreground">ReactNode</td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  ReactNode
+                </td>
                 <td className="p-4 font-mono text-muted-foreground">-</td>
                 <td className="p-4">内容</td>
               </tr>

@@ -31,6 +31,40 @@ export default function ViewPage() {
           </ZView>
         </div>
       </div>
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="h-10 px-4 text-left font-medium">属性</th>
+                <th className="h-10 px-4 text-left font-medium">类型</th>
+                <th className="h-10 px-4 text-left font-medium">默认值</th>
+                <th className="h-10 px-4 text-left font-medium">说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="p-4 font-mono">backgroundColor</td>
+                <td className="p-4 font-mono text-muted-foreground">string</td>
+                <td className="p-4 font-mono text-muted-foreground">-</td>
+                <td className="p-4">背景颜色</td>
+              </tr>
+              <tr>
+                <td className="p-4 font-mono">...props</td>
+                <td className="p-4 font-mono text-muted-foreground">
+                  React.HTMLAttributes
+                </td>
+                <td className="p-4 font-mono text-muted-foreground">-</td>
+                <td className="p-4">
+                  支持所有原生 div 属性（如 className, style, onClick 等）
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
