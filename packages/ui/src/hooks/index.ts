@@ -6,3 +6,5 @@ export * from './use-props-value';
 export * from './use-watch';
 export * from './use-update';
 export * from './use-client';
+export * from './use-boolean';
+export * from './use-toggle-value';

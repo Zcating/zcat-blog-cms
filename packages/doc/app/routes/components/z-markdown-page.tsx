@@ -36,7 +36,8 @@ Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor
 
 ## 代码块
 
-\`\`\`typescript
+\`\`\`typescript 
+import path from "path";
 const greeting = "Hello, World!";
 console.log(greeting);
 \`\`\`

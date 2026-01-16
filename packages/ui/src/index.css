@@ -43,6 +43,8 @@
   --siderbar-header: #fff;
   --cascader-selected-bg: #e6f4ff;
   --cascader-hover-bg: rgba(0, 0, 0, 0.05);
+  --markdown-code-lang: black;
+  --markdown-code-border: rgba(0, 0, 0, 0.08);
 }
 
 .dark {
@@ -81,6 +83,8 @@
   --siderbar-header: #000;
   --cascader-selected: #e6f4ff;
   --cascader-hover: rgba(0, 0, 0, 0.05);
+  --markdown-code-lang: black;
+  --markdown-code-border: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {
@@ -123,6 +127,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-cascader-selected: var(--cascader-selected);
   --color-cascader-hover: var(--cascader-hover);
+  --color-markdown-code-lang: var(--markdown-code-lang);
+  --color-markdown-code-border: var(--markdown-code-border);
 }
 
 @layer base {

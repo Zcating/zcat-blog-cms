@@ -25,7 +25,7 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
         'prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline',
         'prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground',
         'prose-code:border-none prose-code:text-black',
-        // 'prose-pre:bg-gray-200',
+        'prose-pre:p-0! prose-pre:bg-transparent',
         'prose-ul:text-foreground prose-ol:text-foreground',
         'prose-li:text-foreground',
         'prose-table:border prose-table:border-border',
