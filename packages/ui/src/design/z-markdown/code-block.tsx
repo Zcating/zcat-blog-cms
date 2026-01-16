@@ -1,19 +1,20 @@
+import { Copy } from 'lucide-react';
 import React from 'react';
 import {
   type PrismAsyncLight,
   type SyntaxHighlighterProps,
 } from 'react-syntax-highlighter';
-import vscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
-import { Copy } from 'lucide-react';
+import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
 
+import { FoldAnimation } from '@zcat/ui/animation';
 import { useMount, useToggleValue, useWatch } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 import { isFunction } from '@zcat/ui/utils';
 
-import { languageLoaderMap } from './language-loader-map';
 import { Button } from '../../shadcn/ui/button';
 import { ZView } from '../z-view';
-import { FoldAnimation } from '@zcat/ui/animation';
+
+import { languageLoaderMap } from './language-loader-map';
 
 export interface CodeBlockProps extends SyntaxHighlighterProps {
   children: string;
@@ -100,7 +101,7 @@ export function CodeBlock({
             border: 0,
             backgroundColor: 'white',
           }}
-          style={vscDarkPlus}
+          style={vsStyle}
           wrapLongLines
           wrapLines
           showLineNumbers
