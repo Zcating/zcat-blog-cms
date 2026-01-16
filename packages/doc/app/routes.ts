@@ -18,5 +18,6 @@ export default [
     route('markdown', 'routes/components/z-markdown-page.tsx'),
     route('z-dialog', 'routes/components/z-dialog-page.tsx'),
     route('stagger-reveal', 'routes/animation/stagger-reveal-page.tsx'),
+    route('fold-animation', 'routes/animation/fold-animation-page.tsx'),
   ]),
 ] satisfies RouteConfig;

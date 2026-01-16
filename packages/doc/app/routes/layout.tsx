@@ -59,6 +59,10 @@ const sidebarOptions: ZSidebarOption[] = [
         label: '交错显示',
         value: 'stagger-reveal',
       },
+      {
+        label: '折叠动画',
+        value: 'fold-animation',
+      },
     ],
   },
 ];
