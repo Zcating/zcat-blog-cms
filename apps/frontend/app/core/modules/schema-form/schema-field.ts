@@ -64,10 +64,10 @@ interface ValueMap {
   file: string;
 }
 interface ZodValueMap {
-  string: z.ZodString;
-  number: z.ZodNumber;
-  boolean: z.ZodBoolean;
-  file: z.ZodString;
+  string: z.ZodDefault<z.ZodString>;
+  number: z.ZodDefault<z.ZodNumber>;
+  boolean: z.ZodDefault<z.ZodBoolean>;
+  file: z.ZodDefault<z.ZodString>;
 }
 
 export type SchemaFieldsZodValues<Fields extends SchemaFieldsRecord> =

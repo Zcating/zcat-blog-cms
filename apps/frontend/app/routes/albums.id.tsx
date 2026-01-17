@@ -184,17 +184,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="primary" onClick={() => editAlbum(album)}>
             编辑相册
           </Button>
-          <Button
-            variant="info"
-            onClick={() =>
-              addPhoto({
-                id: 0,
-                name: '',
-                image: '',
-                albumId: album.id,
-              })
-            }
-          >
+          <Button variant="info" onClick={() => addPhoto()}>
             添加照片
           </Button>
           <Button variant="default" onClick={selectPhoto}>
@@ -237,10 +227,10 @@ const usePhotoForm = createSchemaForm({
     albumId: createConstNumber(),
   },
   schema: zod.object({
-    id: zod.number().int(),
-    name: zod.string().min(1, '照片名称不能为空'),
-    image: zod.string(),
-    albumId: zod.number().int(),
+    id: zod.number().int().default(0),
+    name: zod.string().min(1, '照片名称不能为空').default(''),
+    image: zod.string().default(''),
+    albumId: zod.number().int().default(0),
   }),
 });
 
@@ -253,10 +243,10 @@ const useAlbumForm = createSchemaForm({
     available: createCheckbox('发布相册'),
   },
   schema: zod.object({
-    id: zod.number().int(),
-    name: zod.string().min(1, '相册名称不能为空'),
-    description: zod.string(),
-    available: zod.boolean(),
+    id: zod.number().int().default(0),
+    name: zod.string().min(1, '相册名称不能为空').default(''),
+    description: zod.string().default(''),
+    available: zod.boolean().default(false),
   }),
 });
 

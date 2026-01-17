@@ -108,7 +108,7 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
       onSubmit,
     } = props;
 
-    return (values: Partial<SchemaFieldsData<Fields>>) => {
+    return (values?: Partial<SchemaFieldsData<Fields>>) => {
       ZDialog.show((ref) => {
         return {
           title,

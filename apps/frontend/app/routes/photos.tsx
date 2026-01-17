@@ -1,4 +1,5 @@
 import React from 'react';
+import z from 'zod';
 
 import { PhotosApi } from '@cms/api';
 import { Button, Dialog, Grid } from '@cms/components';
@@ -28,6 +29,11 @@ const useSchemeForm = createSchemaForm({
     name: createInput('名称'),
     image: createImageUpload('图片'),
   },
+  schema: z.object({
+    id: z.number().default(0),
+    name: z.string().min(1, '照片名称不能为空').default('新照片'),
+    image: z.string().default(''),
+  }),
 });
 
 export async function clientLoader() {
@@ -58,11 +64,6 @@ export default function Photos(props: Route.ComponentProps) {
 
   const create = useSchemeForm({
     title: '新增照片',
-    map: () => ({
-      id: 0,
-      name: '新照片',
-      image: '',
-    }),
     onSubmit: (data) => {
       React.startTransition(async () => {
         // 先添加到 optimisticState 中，等待服务器返回结果
@@ -90,11 +91,6 @@ export default function Photos(props: Route.ComponentProps) {
     title: '编辑照片',
     confirmText: '保存',
     cancelText: '取消',
-    map: (data: PhotosApi.Photo) => ({
-      id: data.id,
-      name: data.name,
-      image: data.thumbnailUrl,
-    }),
     onSubmit: async (data) => {
       React.startTransition(async () => {
         setOptimisticPhotos(data);
@@ -142,7 +138,7 @@ export default function Photos(props: Route.ComponentProps) {
     <Workspace
       title="照片"
       operation={
-        <Button variant="primary" onClick={create}>
+        <Button variant="primary" onClick={() => create()}>
           新增
         </Button>
       }

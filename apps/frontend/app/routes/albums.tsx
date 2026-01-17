@@ -157,9 +157,9 @@ const useAlbumForm = createSchemaForm({
     available: createCheckbox('发布相册'),
   },
   schema: zod.object({
-    id: zod.number().int(),
-    name: zod.string().min(1, '相册名称不能为空'),
-    description: zod.string(),
-    available: zod.boolean(),
+    id: zod.number().int().default(0),
+    name: zod.string().min(1, '相册名称不能为空').default(''),
+    description: zod.string().default(''),
+    available: zod.boolean().default(false),
   }),
 });
