@@ -21,6 +21,7 @@ export interface ZFormFieldProps<
   name: K;
   description?: string;
   children: React.ReactElement<any>;
+  className?: string;
 }
 
 export function ZFormItem<T extends FieldValues, K extends FieldPath<T>>(
@@ -36,7 +37,7 @@ export function ZFormItem<T extends FieldValues, K extends FieldPath<T>>(
       control={instance.control}
       name={props.name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={props.className}>
           <FormLabel>{props.label}</FormLabel>
           <FormControl>
             {React.cloneElement(props.children, {

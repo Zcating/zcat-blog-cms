@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Toaster } from '../../shadcn/ui/sonner';
 
 let toasterRoot: Root | null = null;
-function install() {
+async function install() {
   if (toasterRoot) {
     return;
   }
@@ -14,6 +14,12 @@ function install() {
 
   root.render(<Toaster />);
   toasterRoot = root;
+
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      resolve(undefined);
+    });
+  });
   // const remove = () => {
   //   root.unmount();
   //   if (document.body.contains(container)) {
@@ -23,32 +29,33 @@ function install() {
 }
 
 export const ZMessage = {
-  show(message: string) {
-    install();
+  async show(message: string) {
+    await install();
     toast(message);
   },
-  success(message: string) {
-    install();
+  async success(message: string) {
+    await install();
     toast.success(message);
   },
-  error(message: string) {
-    install();
+  async error(message: string) {
+    await install();
     toast.error(message);
   },
-  info(message: string) {
-    install();
+  async info(message: string) {
+    await install();
     toast.info(message);
   },
-  loading(message: string) {
-    install();
+  async loading(message: string) {
+    await install();
     const id = toast.loading(message);
     return () => {
       toast.dismiss(id);
     };
   },
-  warning(message: string) {
-    install();
+  async warning(message: string) {
+    await install();
     toast.warning(message);
   },
 };
-export const ZToaster = Toaster;
+
+export const ZMessageToaster = Toaster;

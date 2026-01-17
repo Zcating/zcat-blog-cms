@@ -18,3 +18,4 @@ export * from './dialog';
 export * from './textarea';
 export * from './spinner';
 export * from './sonner';
+export * from './checkbox';
