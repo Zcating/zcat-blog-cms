@@ -1,21 +1,26 @@
 import {
-  FormOutlined,
-  PictureOutlined,
-  PieChartOutlined,
-  SettingOutlined,
-  TagsOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  Separator,
+  SidebarTrigger,
+  ZSidebar,
+  ZView,
+  type ZSidebarOption,
+} from '@zcat/ui';
+import {
+  BookImageIcon,
+  Gauge,
+  ImageIcon,
+  NotebookIcon,
+  SettingsIcon,
+  UserIcon,
+} from 'lucide-react';
 import React from 'react';
 import {
+  Link,
   Outlet,
-  useLocation,
   useNavigate,
   useRouteError,
   isRouteErrorResponse,
 } from 'react-router';
-
-import { Navbar, Sidebar } from '@cms/components';
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -52,41 +57,41 @@ export default function CMSLayout() {
   );
 }
 
-const menuItems = [
+const menuItems: ZSidebarOption[] = [
   {
-    name: '仪表盘',
-    icon: <PieChartOutlined style={{ color: 'oklch(0.45 0.15 45)' }} />,
-    href: '/dashboard',
+    label: '仪表盘',
+    value: '/dashboard',
+    icon: Gauge,
   },
   {
-    name: '文章管理',
-    icon: <FormOutlined style={{ color: 'oklch(0.42 0.12 35)' }} />,
-    href: '/articles',
+    label: '文章管理',
+    value: '/articles',
+    icon: NotebookIcon,
   },
   // {
-  //   name: '分类管理',
-  //   icon: <TagsOutlined style={{ color: 'oklch(0.48 0.18 55)' }} />,
-  //   href: '/article-categories',
+  //   label: '分类管理',
+  //   value: '/article-categories',
+  //   icon: (props: any) => <TagsOutlined {...props} style={{ ...props.style, color: 'oklch(0.48 0.18 55)' }} />,
   // },
   {
-    name: '相册管理',
-    icon: <PictureOutlined style={{ color: 'oklch(0.46 0.14 65)' }} />,
-    href: '/albums',
+    label: '相册管理',
+    value: '/albums',
+    icon: BookImageIcon,
   },
   {
-    name: '照片管理',
-    icon: <PictureOutlined style={{ color: 'oklch(0.44 0.16 25)' }} />,
-    href: '/photos',
+    label: '照片管理',
+    value: '/photos',
+    icon: ImageIcon,
   },
   {
-    name: '用户信息',
-    icon: <UserOutlined style={{ color: 'oklch(0.43 0.13 15)' }} />,
-    href: '/user-info',
+    label: '用户信息',
+    value: '/user-info',
+    icon: UserIcon,
   },
   {
-    name: '系统设置',
-    icon: <SettingOutlined style={{ color: 'oklch(0.41 0.11 75)' }} />,
-    href: '/settings',
+    label: '系统设置',
+    value: '/settings',
+    icon: SettingsIcon,
   },
 ];
 
@@ -95,33 +100,40 @@ interface LayoutProps {
 }
 
 function Layout(props: LayoutProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const renderItem = (item: ZSidebarOption) => {
+    if (!item.value) {
+      return (
+        <ZView className="flex items-center gap-3">
+          {item.icon && <item.icon className="size-4" />}
+          <span>{item.label}</span>
+        </ZView>
+      );
+    }
+    return (
+      <Link to={item.value} className="flex items-center gap-3">
+        {item.icon ? (
+          <item.icon className="size-6" />
+        ) : (
+          <ZView className="size-6" />
+        )}
+        <span className="text-[16px]">{item.label}</span>
+      </Link>
+    );
+  };
 
   return (
-    <div className="h-screen bg-base-200">
-      {/* 主内容区域 */}
-      <div className="h-full flex flex-col">
-        {/* 顶部导航栏 */}
-        <Navbar />
-
-        {/* 主内容 */}
-        <div className="flex flex-1">
-          <Sidebar
-            className="w-40 h-full"
-            items={menuItems}
-            isSelected={(item) => location.pathname.startsWith(item.href)}
-            onClickItem={(item) => {
-              navigate(item.href);
-            }}
-          />
-          <main className="flex-1 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 bottom-0 overflow-auto p-6">
-              {props.children}
-            </div>
-          </main>
-        </div>
-      </div>
-    </div>
+    <ZSidebar
+      header={
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <div className="font-medium">ZCAT CMS</div>
+        </header>
+      }
+      options={menuItems}
+      renderItem={renderItem}
+    >
+      <div className="flex flex-1 flex-col gap-4 p-4">{props.children}</div>
+    </ZSidebar>
   );
 }

@@ -19,6 +19,7 @@
     "@react-router/node": "^7.9.1",
     "@react-router/serve": "^7.9.1",
     "@tailwindcss/typography": "^0.5.16",
+    "@zcat/ui": "workspace:*",
     "clsx": "^2.1.1",
     "cross-env": "^10.1.0",
     "dayjs": "^1.11.13",
@@ -26,6 +27,7 @@
     "isbot": "^5.1.27",
     "jotai": "^2.12.5",
     "js-cookie": "^3.0.5",
+    "lucide-react": "^0.515.0",
     "markdown-it-ts": "^0.0.3",
     "md-editor-rt": "^6.3.1",
     "qiniu-js": "^3.4.3",
@@ -42,8 +44,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^1.0.0",
     "use-constant": "^2.0.0",
-    "zod": "^4.0.17",
-    "@zcat/ui": "workspace:*"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@react-router/dev": "^7.9.1",
