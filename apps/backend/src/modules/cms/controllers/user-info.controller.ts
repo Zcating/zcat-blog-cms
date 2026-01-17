@@ -13,16 +13,8 @@ import { Request } from 'express';
 import { createResult, ResultCode } from '@backend/model';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { UserInfoDto } from '../schemas';
 import { UserInfoService } from '../services/user-info.service';
-
-interface UpdateUserInfoDto {
-  name?: string;
-  contact?: string;
-  occupation?: string;
-  avatar?: string;
-  aboutMe?: string;
-  abstract?: string;
-}
 
 @Controller('api/cms/user-info')
 @UseGuards(JwtAuthGuard)
@@ -59,7 +51,7 @@ export class UserInfoController {
   @Post('update')
   @ApiOperation({ summary: '更新用户信息' })
   @ApiResponse({ status: 200, description: '用户信息更新成功' })
-  async updateUserInfo(@Req() req: Request, @Body() body: UpdateUserInfoDto) {
+  async updateUserInfo(@Req() req: Request, @Body() body: UserInfoDto) {
     const userId = req.user?.userId;
     if (!userId) {
       return createResult({

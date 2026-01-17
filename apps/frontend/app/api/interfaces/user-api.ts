@@ -9,7 +9,6 @@ export namespace UserApi {
   }
 
   export interface UserInfo {
-    id: string;
     name: string;
     contact: Contact;
     occupation: string;
@@ -21,7 +20,6 @@ export namespace UserApi {
   export async function userInfo(): Promise<UserInfo> {
     const result = await HttpClient.get('cms/user-info');
     return {
-      id: result.id,
       name: result.name,
       contact: safeParse<Contact>(result.contact, { email: '', github: '' }),
       occupation: result.occupation,
@@ -43,7 +41,6 @@ export namespace UserApi {
     );
 
     return {
-      id: result.id,
       name: result.name,
       contact: safeParse<Contact>(result.contact, { email: '', github: '' }),
       occupation: result.occupation,

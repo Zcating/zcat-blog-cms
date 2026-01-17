@@ -1,17 +1,18 @@
-import { LoadingOutlined } from '@ant-design/icons';
+import {
+  Button,
+  createZForm,
+  ZAvatar,
+  ZInput,
+  Textarea,
+  Label,
+  useWatch,
+} from '@zcat/ui';
+import { Loader2 } from 'lucide-react';
 import React from 'react';
+import { z } from 'zod';
 
 import { UserApi } from '@cms/api';
-import {
-  Avatar,
-  Button,
-  Form,
-  ImageUpload,
-  Input,
-  safeObjectURL,
-  Textarea,
-} from '@cms/components';
-import { Label } from '@cms/components/ui/label';
+import { ImageUpload, safeObjectURL } from '@cms/components';
 import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
 
 import type { Route } from './+types/user-info';
@@ -25,6 +26,20 @@ export async function clientLoader() {
     userInfo: (await UserApi.userInfo()) as UserInfoValues,
   };
 }
+
+const UserInfoSchema = z.object({
+  name: z.string().min(1, '用户名不能为空'),
+  contact: z.object({
+    email: z.email('请输入有效的邮箱地址'),
+    github: z.string(),
+  }),
+  occupation: z.string(),
+  avatar: z.string(),
+  aboutMe: z.string(),
+  abstract: z.string(),
+});
+
+const UserInfoForm = createZForm(UserInfoSchema);
 
 export default function UserInfo(props: Route.ComponentProps) {
   const [userInfo, setOptimisticUserInfo, commitUserInfo] = UseOptimisticObject(
@@ -40,9 +55,8 @@ export default function UserInfo(props: Route.ComponentProps) {
 
   const [editable, setEditable] = React.useState(false);
 
-  const form = Form.useForm({
-    initialValues: {
-      id: userInfo.id,
+  const form = UserInfoForm.useForm({
+    defaultValues: {
       name: userInfo.name,
       contact: {
         email: userInfo.contact.email,
@@ -53,31 +67,39 @@ export default function UserInfo(props: Route.ComponentProps) {
       aboutMe: userInfo.aboutMe,
       abstract: userInfo.abstract,
     },
-    async onSubmit(values) {
+    onSubmit: (values) => {
       React.startTransition(async () => {
         try {
           setOptimisticUserInfo(values);
           const res = await OssAction.updateUserInfo(values);
-          console.log('updateUserInfo', values, res);
           commitUserInfo('update', res);
         } catch (error) {
-          console.error(error);
           commitUserInfo('rollback');
         }
       });
     },
   });
 
-  React.useEffect(() => {
-    const { unsubscribe } = form.watch((value) => {
-      console.log(value);
+  useWatch([editable], (_editable) => {
+    if (!editable) {
+      return;
+    }
+    form.instance.reset({
+      name: userInfo.name,
+      contact: {
+        email: userInfo.contact.email,
+        github: userInfo.contact.github,
+      },
+      occupation: userInfo.occupation,
+      avatar: userInfo.avatar,
+      aboutMe: userInfo.aboutMe,
+      abstract: userInfo.abstract,
     });
-    return () => unsubscribe();
-  }, [form]);
+  });
 
   const submit = async () => {
     setEditable(false);
-    form.submit();
+    form.instance.handleSubmit(form.submit)();
   };
 
   return (
@@ -86,70 +108,77 @@ export default function UserInfo(props: Route.ComponentProps) {
       operation={
         editable ? (
           <React.Fragment>
-            <Button variant="accent" onClick={submit}>
+            <Button variant="default" onClick={submit}>
               保存
             </Button>
-            <Button variant="error" onClick={() => setEditable(false)}>
+            <Button variant="destructive" onClick={() => setEditable(false)}>
               取消
             </Button>
           </React.Fragment>
         ) : (
-          <Button variant="primary" onClick={() => setEditable(true)}>
+          <Button variant="default" onClick={() => setEditable(true)}>
             编辑
           </Button>
         )
       }
     >
       {editable ? (
-        <Form form={form} className="space-y-5 w-lg mb-20">
-          <Form.Item form={form} name="avatar" label="头像">
+        <UserInfoForm form={form} className="space-y-6 w-lg mb-20">
+          <UserInfoForm.Item name="avatar" label="头像">
             <ImageUpload />
-          </Form.Item>
-          <Form.Item form={form} name="name" label="用户名">
-            <Input />
-          </Form.Item>
-          <Form.Item form={form} name="contact.email" label="Email">
-            <Input />
-          </Form.Item>
-          <Form.Item form={form} name="contact.github" label="Github">
-            <Input />
-          </Form.Item>
-          <Form.Item form={form} name="occupation" label="职业">
-            <Input />
-          </Form.Item>
-          <Form.Item form={form} name="abstract" label="一句话描述自己">
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="name" label="用户名">
+            <ZInput />
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="contact.email" label="Email">
+            <ZInput />
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="contact.github" label="Github">
+            <ZInput />
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="occupation" label="职业">
+            <ZInput />
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="abstract" label="一句话描述自己">
             <Textarea />
-          </Form.Item>
-          <Form.Item form={form} name="aboutMe" label="关于我">
+          </UserInfoForm.Item>
+          <UserInfoForm.Item name="aboutMe" label="关于我">
             <Textarea />
-          </Form.Item>
-        </Form>
+          </UserInfoForm.Item>
+        </UserInfoForm>
       ) : (
         <div className="space-y-5 w-lg mb-40 relative">
-          <Label label="头像">
-            <Avatar src={userInfo.avatar} />
-          </Label>
-          <Label label="用户名">
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">头像</Label>
+            <ZAvatar src={userInfo.avatar} alt={userInfo.name} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">用户名</Label>
             <TextField value={userInfo.name} />
-          </Label>
-          <Label label="Email">
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">Email</Label>
             <TextField value={userInfo.contact.email} />
-          </Label>
-          <Label label="Github">
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">Github</Label>
             <TextField value={userInfo.contact.github} />
-          </Label>
-          <Label label="职业">
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">职业</Label>
             <TextField value={userInfo.occupation} />
-          </Label>
-          <Label label="一句话描述自己">
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">一句话描述自己</Label>
             <TextField value={userInfo.abstract} />
-          </Label>
-          <Label label="关于我">
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label className="text-muted-foreground">关于我</Label>
             <TextField value={userInfo.aboutMe} />
-          </Label>
+          </div>
           {userInfo.loading ? (
-            <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center">
-              <LoadingOutlined className="text-xl" />
+            <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center bg-white/50 z-10">
+              <Loader2 className="animate-spin text-xl" />
             </div>
           ) : null}
         </div>

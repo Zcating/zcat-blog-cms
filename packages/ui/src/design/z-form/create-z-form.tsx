@@ -28,10 +28,13 @@ function createUseZForm<T extends FieldValues>(schema: zod.ZodObject<T>) {
       resolver: zodResolver(schema) as any,
       ...props,
     });
-    return {
-      instance: form,
-      submit: onSubmit,
-    };
+    return React.useMemo(
+      () => ({
+        instance: form,
+        submit: onSubmit,
+      }),
+      [form, onSubmit],
+    );
   };
 }
 

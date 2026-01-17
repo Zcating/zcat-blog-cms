@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import { OssService, PrismaService } from '@backend/common';
 
+import { UserInfoDto } from '../schemas';
+
 export interface UpdateUserInfoInput {
   name?: string;
   contact?: string;
@@ -44,12 +46,12 @@ export class UserInfoService {
     return this.transformUserInfo(result);
   }
 
-  async updateUserInfo(userId: number, body: UpdateUserInfoInput) {
+  async updateUserInfo(userId: number, body: UserInfoDto) {
     const updated = await this.prisma.userInfo.update({
       where: { id: userId },
       data: {
         name: body.name,
-        contact: body.contact,
+        contact: JSON.stringify(body.contact),
         occupation: body.occupation,
         avatar: body.avatar,
         aboutMe: body.aboutMe,
