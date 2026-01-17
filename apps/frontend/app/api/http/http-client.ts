@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { HttpClientEventCenter } from './http-client-event-center';
+import { EventCenter } from './event-center';
 import { createQueryPath } from './http-utils';
 
 export namespace HttpClient {
@@ -99,21 +99,21 @@ export namespace HttpClient {
   }
 
   export function subscribeUnauthEvent(callback: () => void) {
-    return HttpClientEventCenter.subscribe('UNAUTH', callback);
+    return EventCenter.subscribe('UNAUTH', callback);
   }
 
-  export function subscribeErrorEvent(callback: () => void) {
-    return HttpClientEventCenter.subscribe('ERROR', callback);
+  export function subscribeErrorEvent(callback: (error: Error) => void) {
+    return EventCenter.subscribe('ERROR', callback);
   }
 
   async function fetchFrom(input: string | URL | Request, init?: RequestInit) {
     const response = await fetch(input, init);
     if (response.status === 401) {
-      HttpClientEventCenter.emitEvent('UNAUTH');
+      EventCenter.emitEvent('UNAUTH', new Error('UNAUTH'));
     }
     const result = (await response.json()) as ResponseResult;
     if (result.code !== '0000') {
-      HttpClientEventCenter.emitEvent('ERROR');
+      EventCenter.emitEvent('ERROR', new Error(result.message));
       throw new Error(result.message);
     }
 

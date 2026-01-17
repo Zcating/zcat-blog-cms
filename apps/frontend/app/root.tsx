@@ -1,3 +1,4 @@
+import { ZMessage } from '@zcat/ui';
 import React from 'react';
 import {
   isRouteErrorResponse,
@@ -15,6 +16,7 @@ import { UiProvider } from './components';
 import type { Route } from './+types/root';
 
 import './app.css';
+import '@zcat/ui/src/index.css';
 
 export function meta() {
   return [
@@ -32,9 +34,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       HttpClient.subscribeUnauthEvent(() => {
         navigate('/login');
       }),
-      HttpClient.subscribeErrorEvent(() => {
+      HttpClient.subscribeErrorEvent((error) => {
         // TODO: 处理错误
         // navigate('/error');
+        ZMessage.error(error.message);
+        console.log('error', error);
       }),
     ];
     return () => {

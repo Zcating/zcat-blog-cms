@@ -1,8 +1,19 @@
-import { useState, type FormEvent } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  createZForm,
+  ZButton,
+  ZInput,
+  ZCheckbox,
+  StaggerReveal,
+} from '@zcat/ui';
 import { useNavigate } from 'react-router';
+import { z } from 'zod';
 
 import { AuthApi } from '@cms/api';
-import { Button, useLoadingFn } from '@cms/components';
 
 export function meta() {
   return [
@@ -11,107 +22,69 @@ export function meta() {
   ];
 }
 
+const LoginForm = createZForm({
+  username: z.string().min(1, '请输入用户名'),
+  password: z.string().min(1, '请输入密码'),
+});
+
 export default function GuestHome() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    rememberMe: false,
-  });
-
-  // const [isLoading, setIsLoading] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
   const navigate = useNavigate();
 
-  const handleSubmit = useLoadingFn(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      await AuthApi.login(formData);
+  const form = LoginForm.useForm({
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+    onSubmit: async (data) => {
+      await AuthApi.login(data);
       await navigate('/dashboard');
     },
-  );
-
-  const isLoading = handleSubmit.loading;
+  });
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
-      <div className="card w-full max-w-md bg-base-100 shadow-xl">
-        <div className="card-body">
-          {/* 头部 */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary mb-2">欢迎回来</h1>
-            <p className="text-base-content/70">登录到你的博客管理系统</p>
-          </div>
+    <StaggerReveal
+      selector='[login-form="true"]'
+      direction="top"
+      className="min-h-screen bg-base-200 flex items-center justify-center p-4"
+    >
+      <Card
+        login-form="true"
+        className="w-full max-w-md shadow-xl bg-base-100 border-none"
+      >
+        <CardHeader className="text-center pb-6">
+          <CardTitle className="text-3xl font-bold text-primary mb-2">
+            ZCAT-BLOG-CMS
+          </CardTitle>
+          <CardDescription className="text-base-content/70">
+            欢迎回来，请登录
+          </CardDescription>
+        </CardHeader>
 
-          {/* 登录表单 */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 用户名输入 */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">用户名</span>
-              </label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder="请输入用户名"
-                className="input w-full"
-                required
-              />
-            </div>
+        <CardContent>
+          <LoginForm form={form} className="space-y-4">
+            <LoginForm.Item name="username" label="用户名">
+              <ZInput placeholder="请输入用户名" />
+            </LoginForm.Item>
 
-            {/* 密码输入 */}
-            <div>
-              <label className="label">
-                <span className="label-text">密码</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="请输入密码"
-                className="input w-full"
-                required
-              />
-            </div>
+            <LoginForm.Item name="password" label="密码">
+              <ZInput type="password" placeholder="请输入密码" />
+            </LoginForm.Item>
 
-            {/* 记住我和忘记密码 */}
             <div className="form-control">
               <label className="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleInputChange}
-                  className="checkbox checkbox-primary"
-                />
+                <ZCheckbox />
                 <span className="label-text">记住我</span>
               </label>
             </div>
 
-            {/* 登录按钮 */}
             <div className="form-control mt-6">
-              <Button
-                variant="primary"
-                shape="block"
-                disabled={isLoading}
-                type="submit"
-              >
-                {isLoading ? '登录中...' : '登录'}
-              </Button>
+              <ZButton className="w-full" type="submit">
+                登录
+              </ZButton>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </LoginForm>
+        </CardContent>
+      </Card>
+    </StaggerReveal>
   );
 }
