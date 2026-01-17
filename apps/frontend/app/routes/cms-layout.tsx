@@ -20,6 +20,7 @@ import {
   useNavigate,
   useRouteError,
   isRouteErrorResponse,
+  useLocation,
 } from 'react-router';
 
 export function ErrorBoundary() {
@@ -95,11 +96,17 @@ const menuItems: ZSidebarOption[] = [
   },
 ];
 
+function isActive(value: string | undefined, activeValue: string | undefined) {
+  return !!activeValue?.startsWith(value ?? '');
+}
+
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 function Layout(props: LayoutProps) {
+  const location = useLocation();
+
   const renderItem = (item: ZSidebarOption) => {
     if (!item.value) {
       return (
@@ -110,7 +117,7 @@ function Layout(props: LayoutProps) {
       );
     }
     return (
-      <Link to={item.value} className="flex items-center gap-3">
+      <Link to={item.value} className="flex items-center gap-3 h-12">
         {item.icon ? (
           <item.icon className="size-6" />
         ) : (
@@ -132,6 +139,8 @@ function Layout(props: LayoutProps) {
       }
       options={menuItems}
       renderItem={renderItem}
+      activeValue={location.pathname}
+      isActive={isActive}
     >
       <div className="flex flex-1 flex-col gap-4 p-4">{props.children}</div>
     </ZSidebar>
