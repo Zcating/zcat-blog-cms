@@ -1,8 +1,9 @@
-import type { SelectOption } from '@cms/components';
+import type { CommonOption } from '@zcat/ui';
+import type z from 'zod';
 
-interface SelectSchemaField {
+export interface SelectSchemaField {
   label: string;
-  options: SelectOption[];
+  options: CommonOption[];
   type: 'select';
   valueType: 'string';
 }
@@ -54,7 +55,7 @@ export type SchemaField =
   | ConstantNumberField
   | ConstantStringField;
 
-export type FieldsRecord = Record<string, SchemaField>;
+export type SchemaFieldsRecord = Record<string, SchemaField>;
 
 interface ValueMap {
   string: string;
@@ -62,18 +63,25 @@ interface ValueMap {
   boolean: boolean;
   file: string;
 }
+interface ZodValueMap {
+  string: z.ZodString;
+  number: z.ZodNumber;
+  boolean: z.ZodBoolean;
+  file: z.ZodString;
+}
 
-export type SchemaFieldsData<Fields extends FieldsRecord> = {
-  [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
-};
+export type SchemaFieldsZodValues<Fields extends SchemaFieldsRecord> =
+  z.ZodObject<{
+    [Key in keyof Fields]: ZodValueMap[Fields[Key]['valueType']];
+  }>;
 
-// export type SchemaSubmitData<Fields extends FieldsRecord> = {
-//   [Key in keyof Fields]: ValueMap[Fields[Key]['valueType']];
-// };
+export type SchemaFieldsData<Fields extends SchemaFieldsRecord> = z.infer<
+  SchemaFieldsZodValues<Fields>
+>;
 
 export function createSelect(
   label: string,
-  options: SelectOption[],
+  options: CommonOption[],
 ): SelectSchemaField {
   return {
     label,

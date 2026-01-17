@@ -8,7 +8,7 @@ export function isPromise(value: unknown): boolean {
   return isObject<{ then: unknown }>(value) && typeof value.then === 'function';
 }
 
-type FnType = (...args: unknown[]) => unknown;
+type FnType = (...args: any[]) => any;
 
 export function isFunction<T extends FnType = FnType>(
   value: unknown,

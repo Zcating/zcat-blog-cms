@@ -21,7 +21,7 @@ export function updateArray<T>(
     }
 
     if (!hasUpdate) {
-      updatedArray.push(item);
+      updatedArray.splice(0, 0, item);
     }
   }
 

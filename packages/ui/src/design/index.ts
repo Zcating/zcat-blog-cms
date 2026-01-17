@@ -18,6 +18,8 @@ export * from './z-collapsible';
 export * from './z-dialog';
 export * from './z-message';
 export * from './z-checkbox';
+export * from './z-textarea';
+export * from './types';
 
 export {};
 

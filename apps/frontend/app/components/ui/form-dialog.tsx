@@ -1,4 +1,4 @@
-import { Modal } from './modal';
+import { ZDialog } from '@zcat/ui';
 
 export namespace FormDialog {
   export interface FormComponentProps<T> {
@@ -25,30 +25,37 @@ export namespace FormDialog {
     FormComponent: TheFormComponentType<T>,
   ): TheFormOpener<T> {
     return async (props: TheFormProps<T>) => {
-      return Modal.open((resolve) => {
+      return new Promise<void>((resolve) => {
         const { title, initialValues, onSubmit, ...rest } = props;
+
+        let dialogHandle: { close: () => void } | null = null;
+
         const close = () => {
+          dialogHandle?.close();
           resolve();
         };
 
         const submit = async (data: T) => {
+          dialogHandle?.close();
           resolve();
           onSubmit(data);
         };
-        return {
-          backdropClose: false,
-          children: (
-            <div className="space-y-5">
-              <h3 className="font-bold text-lg">{title}</h3>
-              <FormComponent
-                {...rest}
-                initialValues={initialValues}
-                onSubmit={submit}
-                onCancel={close}
-              />
-            </div>
+
+        dialogHandle = ZDialog.show({
+          title,
+          hideFooter: true,
+          onClose: () => {
+            resolve();
+          },
+          content: (
+            <FormComponent
+              {...rest}
+              initialValues={initialValues}
+              onSubmit={submit}
+              onCancel={close}
+            />
           ),
-        };
+        });
       });
     };
   }

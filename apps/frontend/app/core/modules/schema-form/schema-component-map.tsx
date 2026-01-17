@@ -1,33 +1,24 @@
-import {
-  Checkbox,
-  ImageUpload,
-  Input,
-  Select,
-  Textarea,
-  type CheckboxProps,
-  // type ImageUploadProps,
-  type InputProps,
-  type SelectProps,
-  type TextareaProps,
-} from '@cms/components';
+import { ZCheckbox, ZInput, ZSelect, Textarea } from '@zcat/ui';
+
+import { ImageUpload } from '@cms/components';
 
 import type { SchemaField } from './schema-field';
+
+const ZTextarea = ({ onValueChange, ...props }: any) => <Textarea {...props} />;
 
 export const SCHEMA_COMPONENT_MAP = {
   select: (field: SchemaField) => {
     if (field.type !== 'select') {
       return null;
     }
-    return (props: Omit<SelectProps, 'options'>) => (
-      <Select {...props} options={field.options} />
-    );
+    return (props: any) => <ZSelect {...props} options={field.options} />;
   },
   input: (field: SchemaField) => {
     if (field.type !== 'input') {
       return null;
     }
-    return (props: InputProps) => (
-      <Input {...props} placeholder={field.placeholder || '请输入'} />
+    return (props: any) => (
+      <ZInput {...props} placeholder={field.placeholder || '请输入'} />
     );
   },
   imageUpload: (field: SchemaField) => {
@@ -40,14 +31,14 @@ export const SCHEMA_COMPONENT_MAP = {
     if (field.type !== 'checkbox') {
       return null;
     }
-    return (props: CheckboxProps) => <Checkbox {...props} variant="primary" />;
+    return (props: any) => <ZCheckbox {...props} />;
   },
   textarea: (field: SchemaField) => {
     if (field.type !== 'textarea') {
       return null;
     }
-    return (props: TextareaProps) => (
-      <Textarea {...props} placeholder={field.placeholder || '请输入'} />
+    return (props: any) => (
+      <ZTextarea {...props} placeholder={field.placeholder || '请输入'} />
     );
   },
 

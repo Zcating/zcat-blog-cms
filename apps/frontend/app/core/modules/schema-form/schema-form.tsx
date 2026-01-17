@@ -1,122 +1,132 @@
-import { Button, Form, FormDialog, Row, useLoadingFn } from '@cms/components';
+import { createZForm, ZButton, ZDialog } from '@zcat/ui';
 
 import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
 
 import type {
-  FieldsRecord,
   SchemaField,
   SchemaFieldsData,
+  SchemaFieldsRecord,
+  SchemaFieldsZodValues,
 } from './schema-field';
-import type { zodResolver } from '@hookform/resolvers/zod';
 import type { Path } from 'react-hook-form';
 
-interface SchemaFormProps<Fields extends FieldsRecord> {
-  fields: Fields;
-  schema?: Parameters<typeof zodResolver>[0];
+/**
+ * 基于Zod schema的表单组件 props
+ */
+interface SchemaFormProps<Fields extends SchemaFieldsRecord> {
   initialValues: SchemaFieldsData<Fields>;
   confirmText?: string;
   cancelText?: string;
-
   onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void> | void;
   onCancel: () => void;
 }
+/**
+ * 创建一个基于Zod schema的表单组件参数
+ */
+interface CreateSchemaFormParams<Fields extends SchemaFieldsRecord> {
+  fields: Fields;
+  schema: SchemaFieldsZodValues<Fields>;
+}
+
+interface UseFormDialogProps<Fields extends SchemaFieldsRecord> {
+  title: string;
+  confirmText?: string;
+  cancelText?: string;
+  onSubmit: (data: SchemaFieldsData<Fields>) => Promise<void> | void;
+}
 
 /**
- * 方案创建表单
- * @param {PhotoCreationFormProps} props
- * @returns {React.ReactElement}
+ * 创建一个基于Zod schema的表单组件
+ * @param params 创建参数
+ * @returns 表单组件
  */
-function SchemaForm<Fields extends FieldsRecord>(
-  props: SchemaFormProps<Fields>,
-): React.ReactElement {
-  const entries = Object.entries(props.fields) as [
+export function createSchemaForm<Fields extends SchemaFieldsRecord>(
+  params: CreateSchemaFormParams<Fields>,
+) {
+  const SchemaForm = createZForm(params.schema);
+
+  const entries = Object.entries(params.fields) as [
     Path<SchemaFieldsData<Fields>>,
     SchemaField,
   ][];
 
-  const submit = useLoadingFn(props.onSubmit);
+  const initialValues = params.schema.parse({});
 
-  const instance = Form.useForm<SchemaFieldsData<Fields>>({
-    initialValues: props.initialValues,
-    schema: props.schema,
-    onSubmit: submit,
-  });
+  function SchemaFormComponent(props: SchemaFormProps<Fields>) {
+    const {
+      initialValues,
+      confirmText = '确定',
+      cancelText = '取消',
+      onSubmit,
+      onCancel,
+    } = props;
 
-  return (
-    <Form form={instance}>
-      {entries.map(([key, field]) => {
-        const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
-        if (!componentRenderer) {
-          return null;
-        }
-
-        const Component = componentRenderer(field);
-        if (!Component) {
-          return null;
-        }
-        return (
-          <Form.Item
-            form={instance}
-            label={field.label}
-            name={key}
-            key={`form-${key}`}
-            span={3}
-          >
-            <Component />
-          </Form.Item>
-        );
-      })}
-      <Row gap="5" justify="end">
-        <Button variant="primary" type="submit" loading={submit.loading}>
-          {props.confirmText || '创建'}
-        </Button>
-        <Button onClick={props.onCancel} disabled={submit.loading}>
-          {props.cancelText || '取消'}
-        </Button>
-      </Row>
-    </Form>
-  );
-}
-
-interface UseSchemaFormParams<U, Fields extends FieldsRecord> {
-  title: string;
-  confirmText?: string;
-  cancelText?: string;
-  map: (data: U) => SchemaFieldsData<Fields>;
-  onSubmit: (data: SchemaFieldsData<Fields>) => void;
-}
-
-interface CreateSchemaFormParams<Fields extends FieldsRecord> {
-  fields: Fields;
-  schema?: Parameters<typeof zodResolver>[0];
-}
-
-export function createSchemaForm<Fields extends FieldsRecord>(
-  params: CreateSchemaFormParams<Fields>,
-) {
-  const showDialog = FormDialog.create<SchemaFieldsData<Fields>>((props) => {
+    const form = SchemaForm.useForm({
+      defaultValues: initialValues as any,
+      onSubmit: onSubmit,
+    });
     return (
-      <SchemaForm
-        {...props}
-        fields={params.fields}
-        schema={params.schema}
-        initialValues={props.initialValues}
-        confirmText={props.confirmText}
-        cancelText={props.cancelText}
-        onSubmit={props.onSubmit}
-        onCancel={props.onCancel}
-      />
-    );
-  });
+      <SchemaForm form={form}>
+        <div className="grid gap-4 py-4">
+          {entries.map(([key, field]) => {
+            const componentRenderer = SCHEMA_COMPONENT_MAP[field.type];
+            if (!componentRenderer) {
+              return null;
+            }
 
-  return function useSchemaForm<U>(params: UseSchemaFormParams<U, Fields>) {
-    return (data: U) =>
-      showDialog({
-        initialValues: params.map(data),
-        title: params.title,
-        confirmText: params.confirmText,
-        cancelText: params.cancelText,
-        onSubmit: params.onSubmit,
+            const Component = componentRenderer(field);
+            if (!Component) {
+              return null;
+            }
+            return (
+              <SchemaForm.Item
+                key={`form-${key as any}`}
+                label={field.label}
+                name={key as any}
+                className="grid grid-cols-4 items-center gap-4"
+              >
+                <Component className="col-span-3" />
+              </SchemaForm.Item>
+            );
+          })}
+        </div>
+        <div className="flex gap-5 justify-end">
+          <ZButton variant="outline" type="button" onClick={onCancel}>
+            {cancelText}
+          </ZButton>
+          <ZButton type="submit">{confirmText}</ZButton>
+        </div>
+      </SchemaForm>
+    );
+  }
+
+  return function useFormDialog(props: UseFormDialogProps<Fields>) {
+    const {
+      title,
+      confirmText = '确定',
+      cancelText = '取消',
+      onSubmit,
+    } = props;
+
+    return (values: Partial<SchemaFieldsData<Fields>>) => {
+      ZDialog.show((ref) => {
+        return {
+          title,
+          hideFooter: true,
+          content: (
+            <SchemaFormComponent
+              confirmText={confirmText}
+              cancelText={cancelText}
+              initialValues={{ ...initialValues, ...values }}
+              onSubmit={(data) => {
+                onSubmit(data);
+                ref.close();
+              }}
+              onCancel={ref.close}
+            />
+          ),
+        };
       });
+    };
   };
 }

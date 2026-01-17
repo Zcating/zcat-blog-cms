@@ -73,14 +73,6 @@ export default function Albums(props: Route.ComponentProps) {
 
   const create = useAlbumForm({
     title: '新增相册',
-    map() {
-      return {
-        id: 0,
-        name: '默认相册',
-        available: false,
-        description: '',
-      };
-    },
     onSubmit: async (data) => {
       React.startTransition(async () => {
         setOptimisticAlbums(data);
@@ -92,7 +84,6 @@ export default function Albums(props: Route.ComponentProps) {
           }
           commitAlbums('update', result);
         } catch (error) {
-          console.log(error);
           commitAlbums('rollback');
         }
       });
@@ -102,14 +93,6 @@ export default function Albums(props: Route.ComponentProps) {
   const edit = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
-    map(item: AlbumsApi.PhotoAlbum) {
-      return {
-        id: item.id,
-        name: item.name ?? '',
-        available: item.available ?? false,
-        description: item.description ?? '',
-      };
-    },
     onSubmit: async (data) => {
       React.startTransition(async () => {
         setOptimisticAlbums(data);
@@ -121,7 +104,6 @@ export default function Albums(props: Route.ComponentProps) {
           }
           commitAlbums('update', result);
         } catch (error) {
-          console.log(error);
           commitAlbums('rollback');
         }
       });
@@ -136,7 +118,17 @@ export default function Albums(props: Route.ComponentProps) {
     <Workspace
       title="相册列表"
       operation={
-        <Button variant="primary" onClick={create}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            create({
+              id: 0,
+              name: '默认相册',
+              available: false,
+              description: '',
+            });
+          }}
+        >
           新增相册
         </Button>
       }

@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@zcat/ui/shadcn/ui/dialog';
+import { isFunction } from '@zcat/ui/utils';
 
 export interface ZDialogProps {
   /** 弹窗标题 */
@@ -23,6 +24,8 @@ export interface ZDialogProps {
   onCancel?: () => void;
   /** 确认回调，支持 Promise，返回 Promise 时会自动显示 loading */
   onConfirm?: () => void | Promise<void>;
+  /** 弹窗关闭后的回调 */
+  onClose?: () => void;
   /** 是否隐藏取消按钮 */
   hideCancel?: boolean;
   /** 是否隐藏底部按钮栏 */
@@ -42,6 +45,7 @@ function DialogContainer({
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       setOpen(false);
+      props.onClose?.();
       // 等待动画结束后销毁 DOM
       setTimeout(remove, 300);
     }
@@ -99,12 +103,18 @@ function DialogContainer({
   );
 }
 
+interface DialogRef {
+  close: () => void;
+}
+
+type CreateDialogProps = (ref: DialogRef) => ZDialogProps;
+
 export const ZDialog = {
   /**
    * 显示一个命令式弹窗
    * @param props 弹窗配置项
    */
-  show: (props: ZDialogProps) => {
+  show: (props: ZDialogProps | CreateDialogProps) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -115,8 +125,18 @@ export const ZDialog = {
         document.body.removeChild(container);
       }
     };
+    const dialogRef = {
+      close: remove,
+    };
 
-    root.render(<DialogContainer props={props} remove={remove} />);
+    let currentProps: ZDialogProps;
+    if (isFunction(props)) {
+      currentProps = props(dialogRef);
+    } else {
+      currentProps = props;
+    }
+
+    root.render(<DialogContainer props={currentProps} remove={remove} />);
 
     return {
       close: remove,

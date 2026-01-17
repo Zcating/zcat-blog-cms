@@ -75,12 +75,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const editAlbum = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
-    map: (item: AlbumsApi.PhotoAlbumDetail) => ({
-      id: item.id,
-      name: item.name ?? '',
-      description: item.description ?? '',
-      available: item.available ?? false,
-    }),
     async onSubmit(data) {
       await AlbumsApi.updatePhotoAlbum({
         id: data.id,
@@ -94,12 +88,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
   // 新增相册照片
   const addPhoto = usePhotoForm({
     title: '新增照片',
-    map: () => ({
-      id: 0,
-      name: '',
-      image: '',
-      albumId: album.id,
-    }),
     async onSubmit(data) {
       // 先添加到 optimisticState 中，等待服务器返回结果
       addOptimisticPhoto(data);
@@ -126,12 +114,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const editPhoto = usePhotoForm({
     title: '编辑照片',
     confirmText: '保存',
-    map: (data: PhotosApi.Photo) => ({
-      id: data.id,
-      name: data.name,
-      image: data.url,
-      albumId: album.id,
-    }),
     async onSubmit(data) {
       // 先添加到 optimisticState 中，等待服务器返回结果
       addOptimisticPhoto(data);
@@ -202,7 +184,17 @@ export default function AlbumsId(props: Route.ComponentProps) {
           <Button variant="primary" onClick={() => editAlbum(album)}>
             编辑相册
           </Button>
-          <Button variant="info" onClick={addPhoto}>
+          <Button
+            variant="info"
+            onClick={() =>
+              addPhoto({
+                id: 0,
+                name: '',
+                image: '',
+                albumId: album.id,
+              })
+            }
+          >
             添加照片
           </Button>
           <Button variant="default" onClick={selectPhoto}>
@@ -217,7 +209,14 @@ export default function AlbumsId(props: Route.ComponentProps) {
         renderItem={(item) => (
           <PhotoCard
             data={item}
-            onEdit={editPhoto}
+            onEdit={(data) =>
+              editPhoto({
+                id: data.id,
+                name: data.name,
+                image: data.url,
+                albumId: album.id,
+              })
+            }
             onDelete={deletePhoto}
             hoverComponent={coverSetter(item)}
           />
@@ -240,7 +239,7 @@ const usePhotoForm = createSchemaForm({
   schema: zod.object({
     id: zod.number().int(),
     name: zod.string().min(1, '照片名称不能为空'),
-    image: zod.instanceof(Blob).nullable(),
+    image: zod.string(),
     albumId: zod.number().int(),
   }),
 });
