@@ -84,7 +84,7 @@ export function ZSidebar(props: ZSidebarProps) {
       <ZView className="flex flex-1">
         <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
           <SidebarHeader>{sidebarHeader}</SidebarHeader>
-          <SidebarContent>
+          <SidebarContent className="mx-4">
             {options.map((item, index) => {
               if (item.children && item.children.length > 0) {
                 return (
