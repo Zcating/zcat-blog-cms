@@ -3,6 +3,7 @@ import React from 'react';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -10,24 +11,25 @@ import {
 
 export type ZFormItemsProps = React.ComponentProps<'div'> & {
   title?: string;
+  description?: string;
   header?: React.ReactNode;
   footer?: React.ReactNode;
 };
 
 export function ZFormItems({
   title,
+  description,
   header,
   footer,
   ...props
 }: ZFormItemsProps) {
   return (
     <Card {...props}>
-      {title ? (
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-      ) : null}
-      {header ? <CardHeader>{header}</CardHeader> : null}
+      <CardHeader>
+        {title ? <CardTitle>{title}</CardTitle> : null}
+        {description ? <CardDescription>{description}</CardDescription> : null}
+        {header ? header : null}
+      </CardHeader>
       <CardContent className="flex flex-col gap-5">
         {props.children}
       </CardContent>
