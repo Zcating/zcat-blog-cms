@@ -1,5 +1,4 @@
 import { createZForm, ZButton, ZDialog } from '@zcat/ui';
-import { isFunction } from '@zcat/ui/src/utils';
 
 import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
 
@@ -9,7 +8,7 @@ import type {
   SchemaFieldsRecord,
   SchemaFieldsZodValues,
 } from './schema-field';
-import type { Path } from 'react-hook-form';
+import type { DefaultValues } from 'react-hook-form';
 
 /**
  * 基于Zod schema的表单组件 props
@@ -47,7 +46,7 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
   const SchemaForm = createZForm(params.schema);
 
   const entries = Object.entries(params.fields) as [
-    Path<SchemaFieldsData<Fields>>,
+    keyof Fields,
     SchemaField,
   ][];
 
@@ -63,7 +62,7 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
     } = props;
 
     const form = SchemaForm.useForm({
-      defaultValues: initialValues as any,
+      defaultValues: initialValues as DefaultValues<SchemaFieldsData<Fields>>,
       onSubmit: onSubmit,
     });
     return (

@@ -1,6 +1,7 @@
 import {
   type FieldPath,
   type FieldValues,
+  type SubmitHandler,
   type UseFormProps,
   type UseFormReturn,
 } from 'react-hook-form';
@@ -11,5 +12,5 @@ export type UseReactFormReturnType<T extends FieldValues> = UseFormReturn<T>;
 
 export type UseZFormReturn<T extends FieldValues> = {
   instance: UseReactFormReturnType<T>;
-  submit: (data: T) => void;
+  submit: SubmitHandler<T>;
 };

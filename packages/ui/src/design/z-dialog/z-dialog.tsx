@@ -20,6 +20,17 @@ export interface ZDialogAlertProps {
   confirmText?: string;
 }
 
+export interface ZDialogConfirmProps {
+  /** 弹窗标题 */
+  title: React.ReactNode;
+  /** 弹窗内容 */
+  content: React.ReactNode;
+
+  confirmText?: string;
+
+  cancelText?: string;
+}
+
 function createPortal() {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -87,6 +98,30 @@ export const ZDialog = {
         </React.Fragment>
       ),
     });
+  },
+
+  confirm: async (confirmProps: ZDialogConfirmProps) => {
+    let isConfirmed = false;
+    await createDialog({
+      title: confirmProps.title,
+      content: confirmProps.content,
+      footer: (props) => (
+        <React.Fragment>
+          <ZButton onClick={props.onClose} variant="outline">
+            {confirmProps.cancelText || '取消'}
+          </ZButton>
+          <ZButton
+            onClick={() => {
+              isConfirmed = true;
+              props.onClose();
+            }}
+          >
+            {confirmProps.confirmText || '确定'}
+          </ZButton>
+        </React.Fragment>
+      ),
+    });
+    return isConfirmed;
   },
 
   /**

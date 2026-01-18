@@ -1,3 +1,4 @@
+import { ZDialog } from '@zcat/ui';
 import React from 'react';
 import z from 'zod';
 
@@ -111,7 +112,7 @@ export default function Photos(props: Route.ComponentProps) {
   });
 
   const deletePhoto = async (data: PhotosApi.Photo) => {
-    const confirm = await Dialog.confirm({
+    const confirm = await ZDialog.confirm({
       title: '删除照片',
       content: (
         <div>
