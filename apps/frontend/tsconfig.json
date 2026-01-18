@@ -35,12 +35,6 @@
       "@cms/api/*": [
         "./app/api/*"
       ],
-      "@cms/components": [
-        "./app/components"
-      ],
-      "@cms/components/*": [
-        "./app/components/*"
-      ],
       "@cms/core": [
         "app/core"
       ],

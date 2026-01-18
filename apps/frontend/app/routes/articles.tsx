@@ -11,8 +11,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 
 import { ArticlesApi } from '@cms/api';
-import { useLoadingFn } from '@cms/components';
-import { Workspace } from '@cms/core';
+import { useLoadingFn, Workspace } from '@cms/core';
 
 import type { Route } from './+types/articles';
 

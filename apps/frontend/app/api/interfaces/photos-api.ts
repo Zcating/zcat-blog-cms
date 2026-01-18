@@ -1,5 +1,3 @@
-import { isBlob, isBoolean } from '@cms/components';
-
 import { HttpClient } from '../http/http-client';
 
 export namespace PhotosApi {

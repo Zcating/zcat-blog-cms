@@ -17,4 +17,3 @@ export function safeDateString(date: unknown, defaultValue: string = '') {
   }
   return defaultValue;
 }
-

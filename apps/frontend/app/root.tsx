@@ -11,7 +11,6 @@ import {
 } from 'react-router';
 
 import { HttpClient } from './api';
-import { UiProvider } from './components';
 
 import type { Route } from './+types/root';
 
@@ -54,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <UiProvider>{children}</UiProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>

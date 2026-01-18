@@ -1,7 +1,6 @@
 // import MdEditor from 'react-markdown-editor-lite';
+import { cn } from '@zcat/ui';
 import { MdEditor } from 'md-editor-rt';
-
-import { classnames } from '../utils';
 
 import 'md-editor-rt/lib/style.css';
 
@@ -18,7 +17,7 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
   return (
     <MdEditor
-      className={classnames('h-full!', className)}
+      className={cn('h-full!', className)}
       value={value}
       onChange={onChange}
       onUploadImg={async (files, callBack) => {

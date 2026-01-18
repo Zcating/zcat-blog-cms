@@ -1,4 +1,4 @@
-import { safeParse } from '@cms/components';
+import { safeParse } from '@zcat/ui';
 
 import { HttpClient } from '../http';
 

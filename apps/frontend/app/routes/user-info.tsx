@@ -7,13 +7,13 @@ import {
   Textarea,
   Label,
   useWatch,
+  safeObjectURL,
 } from '@zcat/ui';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { z } from 'zod';
 
 import { UserApi } from '@cms/api';
-import { safeObjectURL } from '@cms/components';
 import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
 
 import type { Route } from './+types/user-info';

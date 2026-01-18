@@ -4,8 +4,8 @@ import React from 'react';
 
 import { ArticlesApi } from '@cms/api';
 
-import { MarkdownEditor } from '../../../components/ui/markdown-editor';
-import { useLoadingFn } from '../../hooks/use-loading-fn';
+import { useLoadingFn } from '../../hooks';
+import { MarkdownEditor } from '../../ui';
 
 interface ArticleEditorProps {
   article: ArticlesApi.Article;

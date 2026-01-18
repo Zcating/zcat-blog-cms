@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "build": "tsx ./scripts/build.ts",
-    "dev": "tsx ./scripts/dev.ts",
+    "dev": "tsup --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --ext .ts,.tsx ./src --max-warnings 0 --fix"
   },

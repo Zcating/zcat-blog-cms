@@ -1,14 +1,6 @@
 import dayjs from 'dayjs';
 
-import { isNumber, isString } from './is-type';
-
-export function safeParse<T>(data: string, defaultValue: T): T {
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    return defaultValue;
-  }
-}
+import { isString, isNumber } from './is-types';
 
 export function safeNumber(value: unknown, defaultValue: number = 0) {
   if (isNumber(value)) {
@@ -60,4 +52,24 @@ export function safeObjectURL(data: unknown, defaultValue: string = '') {
   }
 
   return defaultValue;
+}
+
+export function safeParse<T>(value: unknown): T | null;
+export function safeParse<T>(value: unknown, defaultValue: T): T;
+export function safeParse<T>(
+  value: unknown,
+  defaultValue: T | null = null,
+): T | null {
+  try {
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    const result = JSON.parse(value as string) as T;
+    if (!result) {
+      return defaultValue;
+    }
+    return result;
+  } catch {
+    return defaultValue;
+  }
 }

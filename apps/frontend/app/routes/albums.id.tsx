@@ -3,7 +3,6 @@ import React from 'react';
 import zod from 'zod';
 
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { useLoadingFn } from '@cms/components';
 import {
   createCheckbox,
   createConstNumber,
@@ -14,6 +13,7 @@ import {
   OssAction,
   PhotoCard,
   showPhotoSelector,
+  useLoadingFn,
   useOptimisticArray,
   Workspace,
   type PhotoCardData,
