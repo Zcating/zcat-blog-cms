@@ -1,8 +1,9 @@
+import { ZDialog } from '@zcat/ui';
 import React from 'react';
 import zod from 'zod';
 
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { Button, Dialog, Grid, useLoadingFn } from '@cms/components';
+import { Button, Grid, useLoadingFn } from '@cms/components';
 import {
   createCheckbox,
   createConstNumber,
@@ -156,7 +157,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
 
   // 删除照片
   const deletePhoto = async (photo: PhotosApi.Photo) => {
-    const confirm = await Dialog.confirm({
+    const confirm = await ZDialog.confirm({
       title: '删除照片',
       content: (
         <div>

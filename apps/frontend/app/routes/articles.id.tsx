@@ -22,29 +22,6 @@ export default function Article({ loaderData }: Route.ComponentProps) {
 
   const navigate = useNavigate();
 
-  // // 保存文章
-  // const handleSave = async (article: ArticlesApi.Article) => {
-  //   React.startTransition(async () => {
-  //     setOptimisticArticle(article);
-  //     setIsEditing(false);
-
-  //     if (article.id === 0) {
-  //       const result = await ArticlesApi.createArticle(article);
-  //       await navigate(`/articles/${result.id}`);
-  //       setArticle(result);
-  //     } else {
-  //       const updated = await ArticlesApi.updateArticle({
-  //         id: article.id,
-  //         title: article.title,
-  //         excerpt: article.excerpt,
-  //         content: article.content,
-  //       });
-  //       setArticle(updated);
-  //     }
-  //     setIsEditing(false);
-  //   });
-  // };
-
   // 开始编辑
   const handleEdit = () => {
     navigate(`/articles/edit?id=${article.id}`);
@@ -53,15 +30,6 @@ export default function Article({ loaderData }: Route.ComponentProps) {
   return (
     <Workspace title="文章详情">
       <ArticleViewer article={article} onEdit={handleEdit} />
-      {/* {isEditing ? (
-        <ArticleEditor
-          article={optimisticArticle}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      ) : (
-        <ArticleViewer article={article} onEdit={handleEdit} />
-      )} */}
     </Workspace>
   );
 }

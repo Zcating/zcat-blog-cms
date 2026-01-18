@@ -1,3 +1,4 @@
+import { ZDialog } from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -5,7 +6,6 @@ import { ArticlesApi } from '@cms/api';
 import {
   Button,
   Card,
-  Dialog,
   List,
   Pagination,
   Row,
@@ -39,7 +39,7 @@ export default function Articles(props: Route.ComponentProps) {
     if (!article.id) {
       return;
     }
-    const isConfirmed = await Dialog.confirm({
+    const isConfirmed = await ZDialog.confirm({
       title: '温馨提示',
       content: `确定删除文章“${article.title}”吗？`,
     });

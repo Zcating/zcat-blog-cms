@@ -3,7 +3,7 @@ import React from 'react';
 import z from 'zod';
 
 import { PhotosApi } from '@cms/api';
-import { Button, Dialog, Grid } from '@cms/components';
+import { Button, Grid } from '@cms/components';
 import {
   createConstNumber,
   createImageUpload,
