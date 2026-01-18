@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@source "@zcat/ui/src/index.css";
+@source "@zcat/ui/dist/index.css";
 
 @plugin "daisyui";
 @plugin "@tailwindcss/typography";

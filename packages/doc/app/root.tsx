@@ -1,4 +1,3 @@
-import { ZToaster } from '@zcat/ui';
 import {
   isRouteErrorResponse,
   Links,
@@ -11,7 +10,6 @@ import {
 import type { Route } from './+types/root';
 
 import './app.css';
-import '@zcat/ui/src/index.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -24,7 +22,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <ZToaster />
         <ScrollRestoration />
         <Scripts />
       </body>

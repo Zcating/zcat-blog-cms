@@ -1,6 +1,4 @@
-import { ZCheckbox, ZInput, ZSelect, Textarea } from '@zcat/ui';
-
-import { ImageUpload } from '@cms/components';
+import { ZCheckbox, ZImageUpload, ZInput, ZSelect, Textarea } from '@zcat/ui';
 
 import type { SchemaField } from './schema-field';
 
@@ -25,7 +23,7 @@ export const SCHEMA_COMPONENT_MAP = {
     if (field.type !== 'imageUpload') {
       return null;
     }
-    return ImageUpload;
+    return ZImageUpload;
   },
   checkbox: (field: SchemaField) => {
     if (field.type !== 'checkbox') {

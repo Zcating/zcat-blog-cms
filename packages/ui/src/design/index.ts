@@ -19,6 +19,7 @@ export * from './z-dialog';
 export * from './z-message';
 export * from './z-checkbox';
 export * from './z-textarea';
+export * from './z-image-upload';
 export * from './types';
 
 export {};

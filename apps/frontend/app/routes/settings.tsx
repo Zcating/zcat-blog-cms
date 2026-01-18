@@ -1,7 +1,5 @@
+import { ZImageUpload as ImageUpload } from '@zcat/ui';
 import React from 'react';
-
-import { SystemSettingApi } from '@cms/api';
-import { Button, Form, ImageUpload, Input } from '@cms/components';
 
 import type { Route } from './+types/settings';
 

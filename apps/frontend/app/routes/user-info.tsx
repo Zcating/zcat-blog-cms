@@ -2,6 +2,7 @@ import {
   Button,
   createZForm,
   ZAvatar,
+  ZImageUpload as ImageUpload,
   ZInput,
   Textarea,
   Label,
@@ -12,7 +13,7 @@ import React from 'react';
 import { z } from 'zod';
 
 import { UserApi } from '@cms/api';
-import { ImageUpload, safeObjectURL } from '@cms/components';
+import { safeObjectURL } from '@cms/components';
 import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
 
 import type { Route } from './+types/user-info';

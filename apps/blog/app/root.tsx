@@ -15,7 +15,6 @@ import type { Route } from './+types/root';
 import type React from 'react';
 
 import './app.css';
-// import '@zcat/ui/src/index.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

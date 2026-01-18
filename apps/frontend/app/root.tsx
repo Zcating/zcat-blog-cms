@@ -16,7 +16,6 @@ import { UiProvider } from './components';
 import type { Route } from './+types/root';
 
 import './app.css';
-import '@zcat/ui/src/index.css';
 
 export function meta() {
   return [
