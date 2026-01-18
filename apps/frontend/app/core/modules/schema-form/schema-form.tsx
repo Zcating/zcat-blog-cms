@@ -112,7 +112,6 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
     return (values?: Partial<SchemaFieldsData<Fields>>) => {
       ZDialog.show({
         title,
-        hideFooter: true,
         content: (props) => (
           <SchemaFormComponent
             confirmText={confirmText}
