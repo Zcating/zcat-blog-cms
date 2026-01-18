@@ -1,25 +1,14 @@
 import {
   LineChartOutlined,
   SmileOutlined,
-  TagOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Line, Column } from '@ant-design/plots';
+import { Card, CardContent, CardHeader, CardTitle, ZButton } from '@zcat/ui';
 import React from 'react';
-import { useLoaderData } from 'react-router';
 
 import { StatisticsApi } from '@cms/api';
-import {
-  Card,
-  Button,
-  // Table,
-  // DatePicker,
-  Input,
-  Select,
-  Row,
-  Col,
-} from '@cms/components';
 
 import type { Route } from './+types/dashboard';
 
@@ -43,14 +32,6 @@ export async function clientLoader({ request }: Route.LoaderArgs) {
 
 export default function DashboardPage(props: Route.ComponentProps) {
   const { summary, chartData, detailData } = props.loaderData;
-  const [dateRange, setDateRange] = React.useState<[string, string]>(['', '']);
-  const [searchFilters, setSearchFilters] = React.useState({
-    pagePath: '',
-    ip: '',
-    browser: '',
-    os: '',
-    device: '',
-  });
 
   // 统计卡片数据
   const statsCards = [
@@ -101,26 +82,28 @@ export default function DashboardPage(props: Route.ComponentProps) {
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">仪表盘</h1>
-        <Button onClick={() => window.location.reload()}>刷新数据</Button>
+        <ZButton onClick={() => window.location.reload()}>刷新数据</ZButton>
       </div>
 
       {/* 统计卡片 */}
-      <Row gap="5">
+      <div className="flex gap-5">
         {statsCards.map((card, index) => (
           <Card key={index} className="text-center flex-1">
-            <Card.Body className="items-center">
+            <CardContent className="flex flex-col items-center gap-2">
               {card.icon}
-              <Card.Title>{card.title}</Card.Title>
+              <div className="text-sm text-muted-foreground">{card.title}</div>
               <p className="text-3xl font-bold text-gray-900">{card.value}</p>
-            </Card.Body>
+            </CardContent>
           </Card>
         ))}
-      </Row>
+      </div>
 
       {/* 访问趋势图表 */}
       <Card>
-        <Card.Title>访问趋势（最近7天）</Card.Title>
-        <Card.Body>
+        <CardHeader>
+          <CardTitle>访问趋势（最近7天）</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Line
             data={chartData.flatMap((item) => [
               { date: item.date, value: item.visits, category: '访问量' },
@@ -154,13 +137,15 @@ export default function DashboardPage(props: Route.ComponentProps) {
               },
             }}
           />
-        </Card.Body>
+        </CardContent>
       </Card>
 
       {/* 热门页面 */}
       <Card>
-        <Card.Title>热门页面（最近7天）</Card.Title>
-        <Card.Body>
+        <CardHeader>
+          <CardTitle>热门页面（最近7天）</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Column
             data={summary.topPages}
             height={300}
@@ -204,7 +189,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
               },
             }}
           />
-        </Card.Body>
+        </CardContent>
       </Card>
     </div>
   );

@@ -1,9 +1,8 @@
-import { ZDialog } from '@zcat/ui';
+import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
 import React from 'react';
 import z from 'zod';
 
 import { PhotosApi } from '@cms/api';
-import { Button, Grid } from '@cms/components';
 import {
   createConstNumber,
   createImageUpload,
@@ -138,15 +137,12 @@ export default function Photos(props: Route.ComponentProps) {
   return (
     <Workspace
       title="照片"
-      operation={
-        <Button variant="primary" onClick={() => create()}>
-          新增
-        </Button>
-      }
+      operation={<ZButton onClick={() => create()}>新增</ZButton>}
     >
-      <Grid
-        columns={5}
+      <ZGrid
+        cols={5}
         items={photos}
+        columnClassName="px-0"
         renderItem={(item) => (
           <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
         )}

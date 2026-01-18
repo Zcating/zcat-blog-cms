@@ -1,9 +1,9 @@
+import { ZButton, ZGrid } from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
-import zod, { boolean } from 'zod';
+import zod from 'zod';
 
 import { AlbumsApi } from '@cms/api';
-import { Grid, Button } from '@cms/components';
 import {
   AlbumImageCard,
   createCheckbox,
@@ -118,8 +118,7 @@ export default function Albums(props: Route.ComponentProps) {
     <Workspace
       title="相册列表"
       operation={
-        <Button
-          variant="primary"
+        <ZButton
           onClick={() => {
             create({
               id: 0,
@@ -130,12 +129,13 @@ export default function Albums(props: Route.ComponentProps) {
           }}
         >
           新增相册
-        </Button>
+        </ZButton>
       }
     >
-      <Grid
+      <ZGrid
         items={albums}
-        columns={3}
+        cols={3}
+        columnClassName="px-0"
         renderItem={(item) => (
           <AlbumImageCard
             data={item}

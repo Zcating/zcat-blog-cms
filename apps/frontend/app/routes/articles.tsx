@@ -1,16 +1,17 @@
-import { ZDialog } from '@zcat/ui';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ZButton,
+  ZDialog,
+  ZPagination,
+} from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
 import { ArticlesApi } from '@cms/api';
-import {
-  Button,
-  Card,
-  List,
-  Pagination,
-  Row,
-  useLoadingFn,
-} from '@cms/components';
+import { useLoadingFn } from '@cms/components';
 import { Workspace } from '@cms/core';
 
 import type { Route } from './+types/articles';
@@ -30,6 +31,7 @@ export default function Articles(props: Route.ComponentProps) {
   const pagination = props.loaderData.pagination;
 
   const [articles, setArticles] = React.useState(pagination.data);
+  const [page, setPage] = React.useState(1);
 
   const navigate = useNavigate();
   const handleClick = () => {
@@ -47,7 +49,7 @@ export default function Articles(props: Route.ComponentProps) {
       return;
     }
     await ArticlesApi.deleteArticle(article.id);
-    setArticles(articles.filter((item) => item.id !== article.id));
+    setArticles((prev) => prev.filter((item) => item.id !== article.id));
   });
 
   const handlePageChange = useLoadingFn(async (page: number) => {
@@ -55,55 +57,52 @@ export default function Articles(props: Route.ComponentProps) {
       page: page,
     });
     setArticles(result.data);
+    setPage(page);
   });
 
   return (
     <Workspace
       title="文章列表"
-      operation={
-        <Button variant="primary" onClick={handleClick}>
-          新增文章
-        </Button>
-      }
+      operation={<ZButton onClick={handleClick}>新增文章</ZButton>}
     >
-      <List
-        data={articles}
-        contentContainerClassName="gap-5"
-        FooterComponent={
-          <div className="mt-10 mr-10 flex justify-end">
-            <Pagination
-              totalPages={pagination.totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        }
-        renderItem={(article) => (
-          <Card>
-            <Card.Body>
-              <Row justify="between">
-                <div>
-                  <h2 className="card-title">{article.title}</h2>
-                  <p className="card-text">{article.excerpt}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate(`/articles/${article.id}`)}
-                  >
-                    详情
-                  </Button>
-                  <Button
-                    variant="error"
-                    onClick={() => deleteArticles(article)}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </Row>
-            </Card.Body>
+      <div className="flex flex-col gap-5">
+        {articles.map((article) => (
+          <Card key={article.id}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">{article.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {article.excerpt}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <ZButton
+                  variant="secondary"
+                  onClick={() => navigate(`/articles/${article.id}`)}
+                >
+                  详情
+                </ZButton>
+                <ZButton
+                  variant="destructive"
+                  onClick={() => deleteArticles(article)}
+                  loading={deleteArticles.loading}
+                >
+                  删除
+                </ZButton>
+              </div>
+            </CardContent>
           </Card>
-        )}
-      />
+        ))}
+        <div className="mt-10 mr-10 flex justify-end">
+          <ZPagination
+            page={page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      </div>
     </Workspace>
   );
 }

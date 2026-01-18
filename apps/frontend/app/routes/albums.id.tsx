@@ -1,9 +1,9 @@
-import { ZDialog } from '@zcat/ui';
+import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
 import React from 'react';
 import zod from 'zod';
 
 import { AlbumsApi, PhotosApi } from '@cms/api';
-import { Button, Grid, useLoadingFn } from '@cms/components';
+import { useLoadingFn } from '@cms/components';
 import {
   createCheckbox,
   createConstNumber,
@@ -181,22 +181,21 @@ export default function AlbumsId(props: Route.ComponentProps) {
       title={`相册名称：${album.name}`}
       description={`相册描述：${album.description}`}
       operation={
-        <>
-          <Button variant="primary" onClick={() => editAlbum(album)}>
-            编辑相册
-          </Button>
-          <Button variant="info" onClick={() => addPhoto()}>
+        <div className="flex flex-wrap gap-2">
+          <ZButton onClick={() => editAlbum(album)}>编辑相册</ZButton>
+          <ZButton variant="secondary" onClick={() => addPhoto()}>
             添加照片
-          </Button>
-          <Button variant="default" onClick={selectPhoto}>
+          </ZButton>
+          <ZButton variant="outline" onClick={selectPhoto}>
             选择照片
-          </Button>
-        </>
+          </ZButton>
+        </div>
       }
     >
-      <Grid
+      <ZGrid
         items={photos}
-        columns={5}
+        cols={5}
+        columnClassName="px-0"
         renderItem={(item) => (
           <PhotoCard
             data={item}
@@ -271,13 +270,13 @@ function useCoverSetter(album: AlbumsApi.PhotoAlbumDetail) {
   const RenderCoverButton = (photo: PhotosApi.Photo) => {
     const isCover = coverId === photo.id;
     return isCover ? (
-      <Button variant="error" loading={setCover.loading}>
+      <ZButton variant="destructive" loading={setCover.loading}>
         取消封面
-      </Button>
+      </ZButton>
     ) : (
-      <Button onClick={() => setCover(photo)} loading={setCover.loading}>
+      <ZButton onClick={() => setCover(photo)} loading={setCover.loading}>
         设为封面
-      </Button>
+      </ZButton>
     );
   };
 
