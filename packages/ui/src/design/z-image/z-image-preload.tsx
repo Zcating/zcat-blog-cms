@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { IconPhoto } from '@zcat/ui/icons';
 import { cn } from '@zcat/ui/shadcn';
 
 import { Spinner } from '../../shadcn/ui/spinner';
@@ -11,41 +12,78 @@ interface ImagePreloadProps extends ZImageProps {
   imageClassName?: string;
 }
 
-export function ImagePreload(props: ImagePreloadProps) {
+type ImagePreloadStatus = 'pending' | 'fulfilled' | 'rejected';
+
+export function ZImagePreload(props: ImagePreloadProps) {
   const { src, className, imageClassName, ...rest } = props;
-  const [loaded, setLoaded] = React.useState(false);
+  const [status, setStatus] = React.useState<ImagePreloadStatus>('pending');
 
   React.useEffect(() => {
     if (!src) {
+      setStatus('rejected');
       return;
     }
-    setLoaded(false);
+    setStatus('pending');
 
     const image = new window.Image();
+    let cancelled = false;
     image.onload = function () {
-      setLoaded(true);
+      if (cancelled) return;
+      setStatus('fulfilled');
+    };
+    image.onerror = function () {
+      if (cancelled) return;
+      setStatus('rejected');
     };
     image.src = src;
+
+    return () => {
+      cancelled = true;
+    };
   }, [src]);
 
   const viewClassName = cn(
     'flex items-center justify-center w-full',
-    !loaded && 'aspect-square',
+    status !== 'fulfilled' && 'aspect-square',
     className,
   );
 
   return (
     <ZView className={viewClassName}>
-      {loaded ? (
+      <ImagePreloadContent
+        status={status}
+        src={src}
+        imageClassName={imageClassName}
+        {...rest}
+      />
+    </ZView>
+  );
+}
+
+interface ImagePreloadContentProps extends Omit<
+  ImagePreloadProps,
+  'className'
+> {
+  status: ImagePreloadStatus;
+}
+
+function ImagePreloadContent(props: ImagePreloadContentProps) {
+  const { status, src, imageClassName, ...imageProps } = props;
+
+  switch (status) {
+    case 'fulfilled':
+      return (
         <ZImage
           contentMode="contain"
           src={src}
           className={imageClassName}
-          {...rest}
+          {...imageProps}
         />
-      ) : (
-        <Spinner className="text-muted-foreground size-8" />
-      )}
-    </ZView>
-  );
+      );
+    case 'rejected':
+      return <IconPhoto className="text-muted-foreground size-10" />;
+    case 'pending':
+    default:
+      return <Spinner className="text-muted-foreground size-8" />;
+  }
 }

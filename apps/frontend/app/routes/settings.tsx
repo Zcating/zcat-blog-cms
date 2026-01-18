@@ -1,4 +1,4 @@
-import { ZImageUpload as ImageUpload } from '@zcat/ui';
+import { ZImageUpload } from '@zcat/ui';
 import React from 'react';
 
 import type { Route } from './+types/settings';
@@ -47,5 +47,5 @@ export default function Settings(props: Route.ComponentProps) {
       URL.revokeObjectURL(imageUrl);
     };
   }, [imageUrl]);
-  return <ImageUpload value={imageUrl} onChange={setImageUrl} />;
+  return <ZImageUpload value={imageUrl} onChange={setImageUrl} />;
 }

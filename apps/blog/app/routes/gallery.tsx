@@ -2,7 +2,7 @@ import {
   Button,
   Card,
   ZGrid,
-  ImagePreload,
+  ZImagePreload,
   Skeleton,
   StaggerReveal,
   ZView,
@@ -91,7 +91,7 @@ function PhotoItem({ value, onClick }: PhotoItemProps) {
         className="group relative cursor-pointer p-0! overflow-hidden w-full"
         onClick={click}
       >
-        <ImagePreload src={url} />
+        <ZImagePreload src={url} />
         <ZView className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <ZView className="text-3xl font-bold text-white translate-y-10 transition-transform duration-300 group-hover:translate-y-0 text-center px-4">
             {value.name}

@@ -1,5 +1,5 @@
-import { FullscreenOutlined } from '@ant-design/icons';
 import {
+  Button,
   Card,
   CardContent,
   ZButton,
@@ -7,8 +7,10 @@ import {
   ZDialog,
   ZGrid,
   ZImage,
+  ZImagePreload,
   cn,
 } from '@zcat/ui';
+import { Maximize2 } from 'lucide-react';
 import React from 'react';
 
 import type { PhotosApi } from '@cms/api';
@@ -197,7 +199,7 @@ function PhotoSelectorCard(props: PhotoSelectorCardProps) {
       onClick={() => onSelect(!selected)}
     >
       <div className="aspect-4/3 bg-gray-200">
-        <ZImage
+        <ZImagePreload
           className="w-full h-full"
           src={photo.thumbnailUrl}
           alt={photo.name}
@@ -221,7 +223,7 @@ function PhotoSelectorCard(props: PhotoSelectorCardProps) {
               onFullscreen();
             }}
           >
-            <FullscreenOutlined className="text-xl" />
+            <Maximize2 className="size-5" />
           </ZButton>
         </div>
       )}
@@ -254,7 +256,7 @@ export async function showPhotoSelector(props: PhotoSelectorModalProps) {
     resolvers.resolve(value);
   };
 
-  void ZDialog.show({
+  await ZDialog.show({
     title: '选择照片',
     contentContainerClassName:
       'p-4 h-[70vh] w-[70vw] max-w-[calc(100%-2rem)] sm:max-w-[70vw] flex flex-col overflow-hidden',

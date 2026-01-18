@@ -6,6 +6,7 @@
     "build": "react-router build --mode production",
     "dev": "react-router dev --mode development",
     "start": "react-router-serve ./build/server/index.js",
+    "pretypecheck": "pnpm --filter=@zcat/ui run build",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0 --fix"
   },
