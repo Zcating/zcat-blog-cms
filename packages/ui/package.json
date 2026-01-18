@@ -9,18 +9,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },    
+    },
     "./index.css": {
       "style": "./src/index.css",
       "default": "./src/index.css"
+    },
+    "./shadcn/ui/*": {
+      "types": "./dist/shadcn/ui/*.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./shadcn/lib/*": {
+      "types": "./dist/shadcn/lib/*.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsx ./scripts/build.ts",
+    "dev": "tsx ./scripts/dev.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --ext .ts,.tsx ./src --max-warnings 0 --fix"
   },

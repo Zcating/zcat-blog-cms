@@ -6,8 +6,9 @@ interface ZTextareaProps extends React.ComponentProps<'textarea'> {
 }
 
 export function ZTextarea(props: ZTextareaProps) {
+  const { onValueChange, ...rest } = props;
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    props.onValueChange?.(e.target.value);
+    onValueChange?.(e.target.value);
   };
-  return <Textarea value={props.value} onChange={handleChange} />;
+  return <Textarea {...rest} onChange={handleChange} />;
 }

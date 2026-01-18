@@ -1,7 +1,13 @@
 import { FullscreenOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  Card,
+  CardContent,
+  CardTitle,
+  ZButton,
+  ZDialog,
+  ZImagePreload,
+} from '@zcat/ui';
 import React from 'react';
-
-import { Button, Card, Image, Modal, Row } from '@cms/components';
 
 import type { PhotosApi } from '@cms/api';
 
@@ -28,45 +34,58 @@ export function PhotoCard(props: PhotoCardProps) {
   };
 
   const fullscreen = async (photo: PhotosApi.Photo) => {
-    await Modal.open({
+    await ZDialog.show({
+      title: photo.name,
       contentContainerClassName: 'max-w-3xl',
-      children: <Image className="w-full" src={photo.url} alt={photo.name} />,
-      backdropClose: true,
+      content: (
+        <ZImagePreload
+          className="w-full max-h-[80vh]"
+          src={photo.url}
+          alt={photo.name}
+          contentMode="contain"
+        />
+      ),
     });
   };
 
   return (
     <Card
-      className="relative overflow-hidden"
+      className="relative overflow-hidden gap-0 py-0"
       onMouseOver={hover}
       onMouseLeave={leave}
     >
-      <Card.Figure src={srcUrl} alt={props.data.name} />
-      <Card.Body>
-        <Card.Title>{props.data.name}</Card.Title>
-        <Card.Actions>
-          <Button variant="primary" onClick={() => props.onEdit(props.data)}>
-            编辑
-          </Button>
-          <Button variant="error" onClick={() => props.onDelete(props.data)}>
+      <div className="relative w-full aspect-4/3 bg-muted">
+        <ZImagePreload
+          className="w-full h-full"
+          src={srcUrl}
+          alt={props.data.name}
+          contentMode="cover"
+        />
+      </div>
+      <CardContent className="px-4 py-4">
+        <CardTitle className="text-base">{props.data.name}</CardTitle>
+        <div className="mt-3 flex gap-2">
+          <ZButton onClick={() => props.onEdit(props.data)}>编辑</ZButton>
+          <ZButton
+            variant="destructive"
+            onClick={() => props.onDelete(props.data)}
+          >
             删除
-          </Button>
-        </Card.Actions>
-      </Card.Body>
+          </ZButton>
+        </div>
+      </CardContent>
       {visible && (
-        <div className="absolute top-0 right-0 left-0">
-          <Row justify="between">
-            <Button
-              variant="info"
-              shape="square"
-              size="sm"
-              appearance="soft"
+        <div className="absolute top-0 right-0 left-0 p-2">
+          <div className="flex items-center justify-between gap-2">
+            <ZButton
+              variant="secondary"
+              size="icon-sm"
               onClick={() => fullscreen(props.data)}
             >
               <FullscreenOutlined className="text-xl" />
-            </Button>
+            </ZButton>
             {props.hoverComponent}
-          </Row>
+          </div>
         </div>
       )}
       {props.data.loading && (

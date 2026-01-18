@@ -1,6 +1,6 @@
-import dayjs from 'dayjs';
+import { ZButton, ZMarkdown } from '@zcat/ui';
 
-import { Button, Markdown, safeDateString } from '@cms/components';
+import { safeDateString } from '../../utils';
 
 import type { ArticlesApi } from '@cms/api';
 
@@ -16,9 +16,7 @@ export function ArticleViewer({ article, onEdit }: ArticleViewerProps) {
     <div className="w-full flex flex-col justify-center gap-10">
       {/* 文章标题和操作按钮 */}
       <div className="space-y-4">
-        <Button onClick={onEdit} variant="primary">
-          编辑
-        </Button>
+        <ZButton onClick={onEdit}>编辑</ZButton>
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-800">
             文章标题：{article.title}
@@ -40,7 +38,7 @@ export function ArticleViewer({ article, onEdit }: ArticleViewerProps) {
 
       <div className="px-40">
         {/* Markdown 内容预览 */}
-        <Markdown content={article.content || '暂无内容'} />
+        <ZMarkdown content={article.content || '暂无内容'} />
       </div>
     </div>
   );

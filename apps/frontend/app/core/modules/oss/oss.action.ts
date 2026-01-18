@@ -1,8 +1,8 @@
 import * as qiniu from 'qiniu-js';
 
 import { ArticlesApi, PhotosApi, SystemSettingApi, UserApi } from '@cms/api';
-import { isString, safeArray } from '@cms/components';
-import { CommonRegex } from '@cms/core/utils';
+
+import { CommonRegex, isString } from '../../utils';
 
 import type { Observable } from 'qiniu-js/esm/utils';
 

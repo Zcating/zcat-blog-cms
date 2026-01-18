@@ -13,7 +13,7 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "jsx": "react-jsx",
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
     "composite": true,
@@ -34,6 +34,7 @@
   },
   "include": [
     "src/**/*",
+    "scripts/**/*"
   ],
   "exclude": [
     "tsup.config.ts"

@@ -1,16 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons';
+import { ZButton, ZInput, ZTextarea } from '@zcat/ui';
 import React from 'react';
 
 import { ArticlesApi } from '@cms/api';
-import {
-  Button,
-  Input,
-  MarkdownEditor,
-  Row,
-  Textarea,
-  useLoadingFn,
-} from '@cms/components';
-import { CommonRegex } from '@cms/core/utils';
+
+import { MarkdownEditor } from '../../../components/ui/markdown-editor';
+import { useLoadingFn } from '../../hooks/use-loading-fn';
 
 interface ArticleEditorProps {
   article: ArticlesApi.Article;
@@ -39,32 +34,33 @@ export function ArticleEditor({
       {/* 文章标题和操作按钮 */}
       <div className="mx-3 mt-3">
         <div className="flex justify-between items-center mb-4 gap-5">
-          <Input
-            variant="primary"
-            className="flex-1 h-12"
-            weight="bold"
-            size="xl"
+          <ZInput
+            className="flex-1 h-12 text-xl font-bold"
             value={article.title}
-            onChange={(e) =>
-              setArticle((prev) => ({ ...prev, title: e.target.value }))
+            onValueChange={(value) =>
+              setArticle((prev) => ({ ...prev, title: value }))
             }
             placeholder="请输入文章标题"
             maxLength={50}
           />
           <div className="">
-            <Row justify="end" gap="5">
-              <Button onClick={handleSave} variant="primary">
+            <div className="flex justify-end gap-3">
+              <ZButton onClick={handleSave} loading={handleSave.loading}>
                 保存
-              </Button>
-              <Button onClick={onCancel}>取消</Button>
-            </Row>
+              </ZButton>
+              <ZButton onClick={onCancel} variant="outline">
+                取消
+              </ZButton>
+            </div>
           </div>
         </div>
 
         {/* 文章摘要 */}
-        <Textarea
+        <ZTextarea
           value={article.excerpt}
-          onChange={(e) => setArticle((prev) => ({ ...prev, excerpt: e }))}
+          onValueChange={(value) =>
+            setArticle((prev) => ({ ...prev, excerpt: value }))
+          }
           placeholder="请输入文章摘要"
         />
       </div>
