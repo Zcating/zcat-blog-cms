@@ -12,5 +12,5 @@ export default defineConfig({
   clean: true,
   splitting: true,
   treeshake: true,
-  tsconfig: './tsconfig.json',
+  tsconfig: './tsconfig.build.json',
 });
