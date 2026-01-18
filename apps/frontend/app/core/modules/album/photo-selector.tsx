@@ -1,16 +1,15 @@
 import { FullscreenOutlined } from '@ant-design/icons';
-import React from 'react';
-
 import {
-  Button,
   Card,
-  Checkbox,
-  classnames,
-  Grid,
-  Image,
-  Modal,
-  Row,
-} from '@cms/components';
+  CardContent,
+  ZButton,
+  ZCheckbox,
+  ZDialog,
+  ZGrid,
+  ZImage,
+  cn,
+} from '@zcat/ui';
+import React from 'react';
 
 import type { PhotosApi } from '@cms/api';
 
@@ -92,10 +91,19 @@ export function PhotoSelector(props: PhotoSelectorProps) {
 
   // 全屏预览
   const handleFullscreen = async (photo: PhotosApi.Photo) => {
-    await Modal.open({
-      contentContainerClassName: 'min-h-[50vh] max-h-[80vh] max-w-3xl',
-      children: <Image className="w-full" src={photo.url} alt={photo.name} />,
-      backdropClose: true,
+    await ZDialog.show({
+      contentContainerClassName:
+        'p-2 w-full max-w-3xl sm:max-w-3xl min-h-[50vh] max-h-[80vh] overflow-hidden',
+      content: (
+        <div className="h-full w-full flex items-center justify-center overflow-auto">
+          <ZImage
+            className="w-full h-full"
+            src={photo.url}
+            alt={photo.name}
+            contentMode="contain"
+          />
+        </div>
+      ),
     });
   };
 
@@ -104,15 +112,15 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   const hasSelection = internalSelectedIds.length > 0;
 
   return (
-    <div className={classnames('flex flex-col gap-4 h-full', className)}>
+    <div className={cn('flex flex-col gap-4 h-full', className)}>
       {/* 操作栏 */}
       {showActions && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {mode === 'multiple' && (
-              <Button variant="accent" size="sm" onClick={handleSelectAll}>
+              <ZButton variant="outline" size="sm" onClick={handleSelectAll}>
                 {allSelected ? '取消全选' : '全选'}
-              </Button>
+              </ZButton>
             )}
             <span className="text-sm text-gray-600">
               {mode === 'single'
@@ -123,18 +131,14 @@ export function PhotoSelector(props: PhotoSelectorProps) {
 
           <div className="flex items-center gap-2">
             {onCancel && (
-              <Button variant="accent" onClick={onCancel}>
+              <ZButton variant="outline" onClick={onCancel}>
                 取消
-              </Button>
+              </ZButton>
             )}
             {onConfirm && (
-              <Button
-                variant="primary"
-                onClick={handleConfirm}
-                disabled={!hasSelection}
-              >
+              <ZButton onClick={handleConfirm} disabled={!hasSelection}>
                 确认选择
-              </Button>
+              </ZButton>
             )}
           </div>
         </div>
@@ -142,26 +146,29 @@ export function PhotoSelector(props: PhotoSelectorProps) {
 
       <div className="flex-1 overflow-auto">
         {/* 照片网格 */}
-        <Grid
-          columns={5}
-          gap="md"
-          items={photos}
-          columnClassName="p-1"
-          renderItem={(photo) => (
-            <PhotoSelectorCard
-              key={photo.id}
-              photo={photo}
-              selected={internalSelectedIds.includes(photo.id)}
-              onSelect={(selected) => handlePhotoSelect(photo.id, selected)}
-              onFullscreen={() => handleFullscreen(photo)}
-            />
-          )}
-          renderEmpty={() => (
-            <div className="text-center py-12 text-gray-500">
-              <p>暂无照片</p>
-            </div>
-          )}
-        />
+        {photos.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <p>暂无照片</p>
+          </div>
+        ) : (
+          <ZGrid
+            cols={5}
+            rowGap="md"
+            columnGap="md"
+            items={photos}
+            columnClassName="px-0"
+            rowClassName="p-1"
+            renderItem={(photo) => (
+              <PhotoSelectorCard
+                key={photo.id}
+                photo={photo}
+                selected={internalSelectedIds.includes(photo.id)}
+                onSelect={(selected) => handlePhotoSelect(photo.id, selected)}
+                onFullscreen={() => handleFullscreen(photo)}
+              />
+            )}
+          />
+        )}
       </div>
     </div>
   );
@@ -178,46 +185,51 @@ interface PhotoSelectorCardProps {
 function PhotoSelectorCard(props: PhotoSelectorCardProps) {
   const { photo, selected, onSelect, onFullscreen } = props;
   const [isHovered, setIsHovered] = React.useState(false);
-  const className = classnames(
+  const className = cn(
     'relative cursor-pointer transition-all duration-200',
     selected ? 'ring-2 ring-blue-500 ring-offset-2' : '',
   );
   return (
     <Card
-      className={className}
+      className={cn('p-0 gap-0 overflow-hidden', className)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onSelect(!selected)}
     >
-      <Card.Figure src={photo.thumbnailUrl} alt={photo.name} />
+      <div className="aspect-4/3 bg-gray-200">
+        <ZImage
+          className="w-full h-full"
+          src={photo.thumbnailUrl}
+          alt={photo.name}
+          contentMode="scale-down"
+        />
+      </div>
 
       {/* 选择状态指示器 */}
       <div className="absolute top-2 left-2">
-        <Checkbox value={selected} onChange={onSelect} variant="primary" />
+        <ZCheckbox value={selected} onValueChange={onSelect} />
       </div>
 
       {/* 悬停操作按钮 */}
       {isHovered && (
         <div className="absolute top-2 right-2">
-          <Button
-            variant="info"
-            shape="square"
-            size="sm"
-            appearance="soft"
+          <ZButton
+            variant="secondary"
+            size="icon-sm"
             onClick={(e) => {
               e.stopPropagation();
               onFullscreen();
             }}
           >
             <FullscreenOutlined className="text-xl" />
-          </Button>
+          </ZButton>
         </div>
       )}
 
       {/* 照片名称 */}
-      <Card.Body className="p-2">
-        <Card.Title className="text-sm truncate">{photo.name}</Card.Title>
-      </Card.Body>
+      <CardContent className="p-2">
+        <div className="text-sm truncate font-medium">{photo.name}</div>
+      </CardContent>
     </Card>
   );
 }
@@ -234,19 +246,35 @@ interface PhotoSelectorModalProps extends Omit<
  * @returns
  */
 export async function showPhotoSelector(props: PhotoSelectorModalProps) {
-  return Modal.open<PhotosApi.Photo[]>((resolve) => ({
-    contentContainerClassName: 'h-[70vh] min-w-[70vw] overflow-hidden',
-    children: (
-      <div className="space-y-5 p-1 h-full flex flex-col">
-        <h2 className="text-xl font-semibold">选择照片</h2>
-        <PhotoSelector
-          {...props}
-          className="flex-1 overflow-auto"
-          onConfirm={resolve}
-          onCancel={() => resolve([])}
-          showActions={true}
-        />
-      </div>
+  const resolvers = Promise.withResolvers<PhotosApi.Photo[]>();
+  let settled = false;
+  const safeResolve = (value: PhotosApi.Photo[]) => {
+    if (settled) return;
+    settled = true;
+    resolvers.resolve(value);
+  };
+
+  void ZDialog.show({
+    title: '选择照片',
+    contentContainerClassName:
+      'p-4 h-[70vh] w-[70vw] max-w-[calc(100%-2rem)] sm:max-w-[70vw] flex flex-col overflow-hidden',
+    content: ({ onClose }) => (
+      <PhotoSelector
+        {...props}
+        className="flex-1 overflow-auto"
+        onConfirm={(selected) => {
+          safeResolve(selected);
+          onClose();
+        }}
+        onCancel={() => {
+          safeResolve([]);
+          onClose();
+        }}
+        showActions={true}
+      />
     ),
-  }));
+    onClose: () => safeResolve([]),
+  });
+
+  return resolvers.promise;
 }

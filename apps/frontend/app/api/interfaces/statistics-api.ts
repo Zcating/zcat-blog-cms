@@ -1,7 +1,7 @@
 import { HttpClient } from '../http';
 
 export namespace StatisticsApi {
-  interface StatisticsSummary {
+  export interface StatisticsSummary {
     totalVisits: number;
     totalUniqueVisitors: number;
     todayVisits: number;
@@ -12,12 +12,12 @@ export namespace StatisticsApi {
       visitCount: number;
     }[];
   }
-  interface StatisticsChartData {
+  export interface StatisticsChartData {
     date: string;
     visits: number;
     uniqueVisitors: number;
   }
-  interface StatisticsDetailData {
+  export interface StatisticsDetailData {
     id: number;
     time: string;
     pagePath: string;

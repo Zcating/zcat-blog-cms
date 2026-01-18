@@ -23,6 +23,9 @@ export interface ZDialogContentProps {
 
   footer?: React.FC<ZDialogCloseProps>;
 
+  /** DialogContent 容器样式 */
+  contentContainerClassName?: string;
+
   /** 弹窗关闭后的回调 */
   onClose?: () => void;
 }
@@ -69,7 +72,10 @@ export const DialogContainer = React.forwardRef<
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent onAnimationEnd={handleAnimationEnd}>
+      <DialogContent
+        className={props.contentContainerClassName}
+        onAnimationEnd={handleAnimationEnd}
+      >
         {props.title && (
           <DialogHeader>
             <DialogTitle>{props.title}</DialogTitle>
