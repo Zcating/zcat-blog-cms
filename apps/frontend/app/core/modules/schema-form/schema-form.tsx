@@ -1,4 +1,5 @@
 import { createZForm, ZButton, ZDialog } from '@zcat/ui';
+import { isFunction } from '@zcat/ui/src/utils';
 
 import { SCHEMA_COMPONENT_MAP } from './schema-component-map';
 
@@ -109,23 +110,21 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
     } = props;
 
     return (values?: Partial<SchemaFieldsData<Fields>>) => {
-      ZDialog.show((ref) => {
-        return {
-          title,
-          hideFooter: true,
-          content: (
-            <SchemaFormComponent
-              confirmText={confirmText}
-              cancelText={cancelText}
-              initialValues={{ ...initialValues, ...values }}
-              onSubmit={(data) => {
-                onSubmit(data);
-                ref.close();
-              }}
-              onCancel={ref.close}
-            />
-          ),
-        };
+      ZDialog.show({
+        title,
+        hideFooter: true,
+        content: (props) => (
+          <SchemaFormComponent
+            confirmText={confirmText}
+            cancelText={cancelText}
+            initialValues={{ ...initialValues, ...values }}
+            onSubmit={async (data) => {
+              await onSubmit(data);
+              props.onClose();
+            }}
+            onCancel={props.onClose}
+          />
+        ),
       });
     };
   };

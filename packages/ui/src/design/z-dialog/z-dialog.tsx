@@ -11,19 +11,25 @@ import {
 } from '@zcat/ui/shadcn/ui/dialog';
 import { isFunction } from '@zcat/ui/utils';
 
+import { ZView } from '../z-view';
+
+interface ZDialogContentProps {
+  onClose: () => void;
+}
+
 export interface ZDialogProps {
   /** 弹窗标题 */
   title?: React.ReactNode;
   /** 弹窗内容 */
-  content?: React.ReactNode;
+  content?: React.ReactNode | React.FC<ZDialogContentProps>;
   /** 取消按钮文本 */
   cancelText?: string;
   /** 确认按钮文本 */
   confirmText?: string;
   /** 取消回调 */
   onCancel?: () => void;
-  /** 确认回调，支持 Promise，返回 Promise 时会自动显示 loading */
-  onConfirm?: () => void | Promise<void>;
+  /** 确认回调 */
+  onConfirm?: () => void;
   /** 弹窗关闭后的回调 */
   onClose?: () => void;
   /** 是否隐藏取消按钮 */
@@ -32,114 +38,147 @@ export interface ZDialogProps {
   hideFooter?: boolean;
 }
 
-function DialogContainer({
-  props,
-  remove,
-}: {
+interface ZDialogContainerProps {
   props: ZDialogProps;
-  remove: () => void;
-}) {
-  const [open, setOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
+  onDismiss: () => void;
+}
 
-  const handleClose = (isOpen: boolean) => {
-    if (!isOpen) {
-      setOpen(false);
-      props.onClose?.();
-      // 等待动画结束后销毁 DOM
-      setTimeout(remove, 300);
-    }
-  };
+interface ContaienrRef {
+  close(): void;
+}
 
-  const onCancel = () => {
-    props.onCancel?.();
-    handleClose(false);
-  };
+const DialogContainer = React.forwardRef<ContaienrRef, ZDialogContainerProps>(
+  ({ props, onDismiss }, ref) => {
+    const [open, setOpen] = useState(true);
 
-  const onConfirm = async () => {
-    if (props.onConfirm) {
-      const result = props.onConfirm();
-      if (result instanceof Promise) {
-        setLoading(true);
-        try {
-          await result;
-          handleClose(false);
-        } catch (e) {
-          console.error('Dialog confirm error:', e);
-        } finally {
-          setLoading(false);
-        }
+    const handleClose = (isOpen: boolean) => {
+      if (isOpen) {
         return;
       }
+      setOpen(false);
+      // 等待动画结束后销毁 DOM
+      setTimeout(() => {
+        if (isFunction(onDismiss)) {
+          onDismiss();
+        }
+        props.onClose?.();
+      }, 300);
+    };
+
+    const close = () => {
+      handleClose(false);
+    };
+
+    React.useImperativeHandle(ref, () => ({
+      close,
+    }));
+
+    const onCancel = () => {
+      if (isFunction(props.onCancel)) {
+        props.onCancel();
+      }
+      close();
+    };
+
+    const onConfirm = async () => {
+      if (isFunction(props.onConfirm)) {
+        props.onConfirm();
+      }
+      close();
+    };
+
+    const content = isFunction(props.content) ? (
+      <props.content onClose={close} />
+    ) : (
+      props.content
+    );
+
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent>
+          {props.title && (
+            <DialogHeader>
+              <DialogTitle>{props.title}</DialogTitle>
+            </DialogHeader>
+          )}
+
+          <ZView className="py-2">{content}</ZView>
+
+          {!props.hideFooter && (
+            <DialogFooter>
+              {!props.hideCancel && (
+                <Button variant="outline" onClick={onCancel}>
+                  {props.cancelText || '取消'}
+                </Button>
+              )}
+              <Button onClick={onConfirm}>{props.confirmText || '确定'}</Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  },
+);
+
+DialogContainer.displayName = 'DialogContainer';
+
+function createPortal() {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  const destroy = () => {
+    root.unmount();
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
     }
-    handleClose(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
-        {props.title && (
-          <DialogHeader>
-            <DialogTitle>{props.title}</DialogTitle>
-          </DialogHeader>
-        )}
-
-        <div className="py-2">{props.content}</div>
-
-        {!props.hideFooter && (
-          <DialogFooter>
-            {!props.hideCancel && (
-              <Button variant="outline" onClick={onCancel} disabled={loading}>
-                {props.cancelText || '取消'}
-              </Button>
-            )}
-            <Button onClick={onConfirm} disabled={loading}>
-              {props.confirmText || '确定'}
-            </Button>
-          </DialogFooter>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
+  return {
+    root,
+    destroy,
+  };
 }
-
-interface DialogRef {
-  close: () => void;
-}
-
-type CreateDialogProps = (ref: DialogRef) => ZDialogProps;
 
 export const ZDialog = {
   /**
    * 显示一个命令式弹窗
    * @param props 弹窗配置项
    */
-  show: (props: ZDialogProps | CreateDialogProps) => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
+  show: async (props: ZDialogProps) => {
+    const portal = createPortal();
 
-    const remove = () => {
-      root.unmount();
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
+    const resolvers = Promise.withResolvers<void>();
+
+    let containerRef: ContaienrRef | null = null;
+    const setContaienrRef = (ref: ContaienrRef) => {
+      containerRef = ref;
     };
+
     const dialogRef = {
-      close: remove,
+      close: () => {
+        containerRef?.close();
+        resolvers.resolve();
+      },
     };
 
-    let currentProps: ZDialogProps;
-    if (isFunction(props)) {
-      currentProps = props(dialogRef);
-    } else {
-      currentProps = props;
-    }
-
-    root.render(<DialogContainer props={currentProps} remove={remove} />);
-
-    return {
-      close: remove,
+    const currentProps: ZDialogProps = {
+      ...props,
+      onClose() {
+        if (isFunction(props.onClose)) {
+          props.onClose();
+        }
+        dialogRef.close();
+      },
     };
+
+    portal.root.render(
+      <DialogContainer
+        ref={setContaienrRef}
+        props={currentProps}
+        onDismiss={portal.destroy}
+      />,
+    );
+
+    return resolvers.promise;
   },
 };
