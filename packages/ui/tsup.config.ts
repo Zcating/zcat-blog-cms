@@ -7,7 +7,7 @@ export default defineConfig({
   external: ['react', 'react-dom'],
   platform: 'neutral',
   injectStyle: false,
-  dts: true,
+  dts: false,
   sourcemap: 'inline',
   clean: true,
   splitting: true,
