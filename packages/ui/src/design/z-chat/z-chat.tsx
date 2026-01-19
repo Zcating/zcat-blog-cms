@@ -29,10 +29,16 @@ export function ZChat({
   className,
   ...props
 }: ZChatProps) {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!scrollRef.current) {
+      return;
+    }
+    scrollRef.current.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
   };
 
   React.useEffect(() => {
@@ -47,7 +53,7 @@ export function ZChat({
       )}
       {...props}
     >
-      <ZView className="flex-1 overflow-y-auto p-4 space-y-4">
+      <ZView ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
@@ -56,7 +62,6 @@ export function ZChat({
             <Loader2 className="w-4 h-4 animate-spin" />
           </ZView>
         )}
-        <ZView ref={messagesEndRef} />
       </ZView>
       <MessageInput
         onSendMessage={onSendMessage}
