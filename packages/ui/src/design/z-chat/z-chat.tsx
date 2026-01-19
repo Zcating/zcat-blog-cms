@@ -1,6 +1,8 @@
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
+import { useMount } from '@zcat/ui/hooks';
+
 import { cn } from '../../shadcn/lib/utils';
 import { ZView } from '../z-view/z-view';
 
@@ -41,9 +43,30 @@ export function ZChat({
     });
   };
 
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useMount(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) {
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      const { scrollHeight, scrollTop, clientHeight } = scrollElement;
+      // 如果距离底部小于 200px，则自动滚动到底部
+      // 这样允许用户向上滚动查看历史消息而不被强制拉回
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        scrollToBottom();
+      }
+    });
+
+    observer.observe(scrollElement, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  });
 
   return (
     <ZView
