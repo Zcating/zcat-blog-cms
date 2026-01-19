@@ -1,4 +1,4 @@
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -9,10 +9,34 @@ import { CodeBlock } from './code-block';
 
 // 引入 KaTeX 样式
 import 'katex/dist/katex.min.css';
+
 export interface ZMarkdownProps {
   content: string;
   className?: string;
 }
+
+const MarkdownComponents: Components = {
+  code: ({ node, className, children }) => {
+    const match = /language-(\w+)/.exec(className || '');
+    if (!match || typeof children !== 'string') {
+      return <code className={className}>{children}</code>;
+    }
+
+    return (
+      <CodeBlock language={match[1]} className={className}>
+        {children}
+      </CodeBlock>
+    );
+  },
+  // 自定义链接渲染
+  a({ href, children, ...props }) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
+    );
+  },
+};
 
 export function ZMarkdown({ content, className }: ZMarkdownProps) {
   return (
@@ -25,7 +49,7 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
         'prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline',
         'prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground',
         'prose-code:border-none prose-code:text-black',
-        'prose-pre:p-0! prose-pre:m-0! prose-pre:bg-transparent',
+        'prose-pre:m-0! prose-pre:bg-transparent',
         'prose-ul:text-foreground prose-ol:text-foreground',
         'prose-li:text-foreground',
         'prose-table:border prose-table:border-border',
@@ -38,33 +62,7 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]} // 渲染数学公式
-        components={{
-          code: ({ node, className, children }) => {
-            const match = /language-(\w+)/.exec(className || '');
-            if (!match || typeof children !== 'string') {
-              return <code className={className}>{children}</code>;
-            }
-
-            return (
-              <CodeBlock language={match[1]} className={className}>
-                {children}
-              </CodeBlock>
-            );
-          },
-          // 自定义链接渲染
-          a({ href, children, ...props }) {
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                {...props}
-              >
-                {children}
-              </a>
-            );
-          },
-        }}
+        components={MarkdownComponents}
       >
         {content}
       </ReactMarkdown>

@@ -29,16 +29,18 @@ export function CodeBlock({
   className,
   ...props
 }: CodeBlockProps) {
-  const [SyntaxHighlighter, setSyntaxHighlighter] =
-    React.useState<typeof PrismAsyncLight>();
+  const [SyntaxHighlighter, setSyntaxHighlighter] = React.useState<
+    typeof PrismAsyncLight | undefined
+  >(SyntaxHighlighterCache);
   const [isCollapsed, onToggleCollapsed] = useToggleValue(true);
 
   useMount(async () => {
-    if (!SyntaxHighlighterCache) {
-      // prettier-ignore
-      const module = await import('react-syntax-highlighter/dist/esm/prism-async-light');
-      SyntaxHighlighterCache = module.default;
+    if (SyntaxHighlighterCache) {
+      return;
     }
+    // prettier-ignore
+    const module = await import('react-syntax-highlighter/dist/esm/prism-async-light');
+    SyntaxHighlighterCache = module.default;
     setSyntaxHighlighter(() => SyntaxHighlighterCache);
   });
 
@@ -117,7 +119,7 @@ interface CustomPreProps extends React.ComponentProps<'pre'> {}
 function CustomPre({ className, style, ...props }: CustomPreProps) {
   return (
     <pre
-      style={{ margin: 0 }}
+      style={{ margin: 0, padding: '0px 12px' }}
       className={cn(
         'border-0 bg-transparent overflow-hidden text-left whitespace-pre break-normal tab-size-[4]',
         className,

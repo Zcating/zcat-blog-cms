@@ -4,6 +4,65 @@ import { useState } from 'react';
 
 import type { MetaFunction } from 'react-router';
 
+const markdownContent = `# Markdown 标题
+
+这是一个段落。支持 **加粗**、*斜体* 和 ~~删除线~~。
+
+# 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+
+## Lorem ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+
+## 列表
+
+- 无序列表项 1
+- 无序列表项 2
+
+1. 有序列表项 1
+2. 有序列表项 2
+
+## 代码块
+
+\`\`\`typescript 
+import path from "path";
+const greeting = "Hello, World!";
+console.log(greeting);
+\`\`\`
+
+## 引用
+
+> 这是一个引用块。
+> 可以包含多行。
+
+## 表格
+
+| 标题 1 | 标题 2 |
+| ------ | ------ |
+| 内容 1 | 内容 2 |
+| 内容 3 | 内容 4 |
+
+## 数学公式 (KaTeX)
+
+行内公式：$E = mc^2$
+
+块级公式：
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+## 链接
+
+[ZCat UI](https://github.com/zcat-ui)
+`;
+
 const createStreamResponse = (text: string) => {
   const encoder = new TextEncoder();
 
@@ -66,9 +125,7 @@ export default function ZChatPage() {
     setLoading(true);
 
     if (content.toLowerCase().includes('stream')) {
-      const stream = createStreamResponse(
-        '这是一个流式响应的测试文本。正在逐步生成内容...\n\n支持 Markdown 语法：\n- 列表项 1\n- 列表项 2\n\n```javascript\nconsole.log("Hello Stream");\n```',
-      );
+      const stream = createStreamResponse(markdownContent);
       const responseMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

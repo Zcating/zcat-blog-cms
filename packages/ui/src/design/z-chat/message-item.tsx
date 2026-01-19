@@ -105,7 +105,7 @@ const AssistantMessage = ({ message }: { message: Message }) => {
 
   return (
     <ZView className="flex w-full gap-2 justify-start">
-      <ZMarkdown content={content} />
+      <ZMarkdown className="w-full" content={content} />
       <ZView className="text-[10px] opacity-70 mt-1 text-right">
         {message.time}
       </ZView>
