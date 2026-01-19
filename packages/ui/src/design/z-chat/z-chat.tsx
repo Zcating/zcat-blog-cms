@@ -31,13 +31,13 @@ export function ZChat({
 }: ZChatProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-  // React.useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <ZView

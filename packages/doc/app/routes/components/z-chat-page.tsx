@@ -135,7 +135,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export default function ZChatPage() {
+function BasicChatDemo() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -146,8 +146,6 @@ export default function ZChatPage() {
     },
   ]);
   const [loading, setLoading] = useState(false);
-
-  // 使用 Generator 模拟流式生成
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
@@ -189,22 +187,132 @@ export default function ZChatPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-xl font-medium tracking-tight">基础示例</h3>
+        <p className="text-sm text-muted-foreground">
+          支持 Markdown 渲染和流式响应。
+        </p>
+      </div>
+      <div className="border rounded-xl p-6 bg-muted/10">
+        <ZChat
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          loading={loading}
+          className="h-[500px]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function PresetChatDemo() {
+  const messages: Message[] = [
+    {
+      id: '1',
+      role: 'assistant',
+      content: '你好！有什么我可以帮你的吗？',
+      time: '10:00',
+    },
+    {
+      id: '2',
+      role: 'user',
+      content: '请介绍一下 React 的 Hooks。',
+      time: '10:01',
+    },
+    {
+      id: '3',
+      role: 'assistant',
+      content: `React Hooks 是 React 16.8 引入的新特性，允许你在不编写 class 的情况下使用 state 和其他 React 特性。
+      
+常用的 Hooks 包括：
+- \`useState\`: 管理状态
+- \`useEffect\`: 处理副作用
+- \`useContext\`: 共享上下文
+- \`useReducer\`: 复杂状态管理`,
+      time: '10:01',
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-xl font-medium tracking-tight">预设对话</h3>
+        <p className="text-sm text-muted-foreground">
+          展示一段已经完成的对话历史。
+        </p>
+      </div>
+      <div className="border rounded-xl p-6 bg-muted/10">
+        <ZChat
+          messages={messages}
+          onSendMessage={() => {}}
+          className="h-[400px]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function CustomStyleDemo() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSendMessage = (content: string) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content,
+      time: dayjs().format('hh:mm'),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    setLoading(true);
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: '收到！',
+          time: dayjs().format('hh:mm'),
+        },
+      ]);
+      setLoading(false);
+    }, 500);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-xl font-medium tracking-tight">自定义样式</h3>
+        <p className="text-sm text-muted-foreground">
+          自定义高度、边框和 Placeholder。
+        </p>
+      </div>
+      <div className="border rounded-xl p-6 bg-muted/10">
+        <ZChat
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          loading={loading}
+          placeholder="请输入您的问题（自定义 Placeholder）..."
+          className="h-[300px] border-primary/20 bg-background/50"
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function ZChatPage() {
+  return (
+    <div className="space-y-10">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Chat 聊天</h1>
         <p className="text-muted-foreground">用于构建 AI 对话界面的组件。</p>
       </div>
 
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">示例</h2>
-        <div className="border rounded-xl p-6 bg-muted/10">
-          <ZChat
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            loading={loading}
-            className="h-[500px]"
-          />
-        </div>
+      <div className="space-y-12">
+        <BasicChatDemo />
+        <PresetChatDemo />
+        <CustomStyleDemo />
       </div>
 
       <ApiTable data={chatApiData} />

@@ -17,6 +17,7 @@ export function MessageInput({
   placeholder,
 }: MessageInputProps) {
   const [inputValue, setInputValue] = React.useState('');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (inputValue.trim() && !loading) {
@@ -35,6 +36,7 @@ export function MessageInput({
   return (
     <ZView className="p-4 border-t bg-muted/30 flex gap-2 items-end">
       <ZTextarea
+        ref={textareaRef}
         value={inputValue}
         onValueChange={setInputValue}
         onKeyDown={handleKeyDown}
