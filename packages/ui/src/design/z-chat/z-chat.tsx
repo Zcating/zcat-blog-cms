@@ -11,7 +11,7 @@ import { MessageItem } from './message-item';
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string;
+  content: string | ReadableStream;
   time?: string;
 }
 
@@ -69,15 +69,10 @@ export function ZChat({
         ))}
         {loading && (
           <ZView className="flex w-full gap-2 justify-start">
-            <ZView className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Bot className="w-5 h-5 text-primary" />
-            </ZView>
-            <ZView className="bg-muted rounded-lg px-4 py-2 flex items-center">
-              <Loader2 className="w-4 h-4 animate-spin" />
-            </ZView>
+            <Loader2 className="w-4 h-4 animate-spin" />
           </ZView>
         )}
-        <div ref={messagesEndRef} />
+        <ZView ref={messagesEndRef} />
       </ZView>
       <ZView className="p-4 border-t bg-muted/30 flex gap-2 items-end">
         <ZTextarea

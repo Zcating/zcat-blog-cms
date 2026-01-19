@@ -1,4 +1,5 @@
 import { ZChat, type Message } from '@zcat/ui';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import type { MetaFunction } from 'react-router';
@@ -15,24 +16,54 @@ export default function ZChatPage() {
     {
       id: '1',
       role: 'assistant',
-      content: '你好！我是 AI 助手，有什么可以帮你的吗？',
-      time: '12:00',
+      content:
+        '你好！我是 AI 助手，有什么可以帮你的吗？（输入 "stream" 可测试流式响应）',
+      time: dayjs().format('hh:mm'),
     },
   ]);
   const [loading, setLoading] = useState(false);
+
+  // 模拟流式生成器
+  const createStreamResponse = (text: string) => {
+    const encoder = new TextEncoder();
+    return new ReadableStream({
+      async start(controller) {
+        for (let i = 0; i < text.length; i++) {
+          controller.enqueue(encoder.encode(text[i]));
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+        controller.close();
+      },
+    });
+  };
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content,
-      time: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      time: dayjs().format('hh:mm'),
     };
     setMessages((prev) => [...prev, newMessage]);
     setLoading(true);
+
+    if (content.toLowerCase().includes('stream')) {
+      const stream = createStreamResponse(
+        '这是一个流式响应的测试文本。正在逐步生成内容...\n\n支持 Markdown 语法：\n- 列表项 1\n- 列表项 2\n\n```javascript\nconsole.log("Hello Stream");\n```',
+      );
+      const responseMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: stream,
+        time: dayjs().format('hh:mm'),
+      };
+      // 模拟一点延迟再开始返回
+      setTimeout(() => {
+        setMessages((prev) => [...prev, responseMessage]);
+        setLoading(false);
+      }, 500);
+      return;
+    }
 
     // Simulate AI response
     setTimeout(() => {
@@ -40,10 +71,7 @@ export default function ZChatPage() {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: `收到你的消息：“${content}”。这是一个模拟回复。`,
-        time: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        time: dayjs().format('mm:ss'),
       };
       setMessages((prev) => [...prev, responseMessage]);
       setLoading(false);
@@ -88,7 +116,9 @@ export default function ZChatPage() {
                   Message[]
                 </td>
                 <td className="p-4 font-mono text-muted-foreground">[]</td>
-                <td className="p-4">消息列表，包含 id, role, content, time</td>
+                <td className="p-4">
+                  消息列表，content 支持 string 或 ReadableStream
+                </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4 font-mono">onSendMessage</td>
