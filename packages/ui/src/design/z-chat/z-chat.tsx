@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 import * as React from 'react';
 
 import { useMount } from '@zcat/ui/hooks';
@@ -21,6 +21,7 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   onSendMessage: (message: string) => void;
   loading?: boolean;
   placeholder?: string;
+  emptyState?: React.ReactNode;
 }
 
 export function ZChat({
@@ -29,6 +30,7 @@ export function ZChat({
   loading = false,
   placeholder = 'Type a message...',
   className,
+  emptyState,
   ...props
 }: ZChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -68,6 +70,17 @@ export function ZChat({
     };
   });
 
+  const renderEmptyState = () => {
+    if (emptyState) return emptyState;
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+        <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
+        <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
+      </div>
+    );
+  };
+
   return (
     <ZView
       className={cn(
@@ -77,9 +90,11 @@ export function ZChat({
       {...props}
     >
       <ZView ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <MessageItem key={message.id} message={message} />
-        ))}
+        {messages.length === 0
+          ? renderEmptyState()
+          : messages.map((message) => (
+              <MessageItem key={message.id} message={message} />
+            ))}
         {loading && (
           <ZView className="flex w-full gap-2 justify-start">
             <Loader2 className="w-4 h-4 animate-spin" />
