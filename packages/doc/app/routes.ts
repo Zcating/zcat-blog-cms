@@ -20,6 +20,7 @@ export default [
     route('markdown', 'routes/components/z-markdown-page.tsx'),
     route('z-dialog', 'routes/components/z-dialog-page.tsx'),
     route('z-message', 'routes/components/z-message-page.tsx'),
+    route('z-chat', 'routes/components/z-chat-page.tsx'),
     route('z-sidebar', 'routes/components/z-sidebar-page.tsx'),
     route('stagger-reveal', 'routes/animation/stagger-reveal-page.tsx'),
     route('fold-animation', 'routes/animation/fold-animation-page.tsx'),

@@ -79,6 +79,10 @@ const sidebarOptions: ZSidebarOption[] = [
         label: 'Markdown',
         value: 'markdown',
       },
+      {
+        label: '聊天',
+        value: 'z-chat',
+      },
     ],
   },
   {
