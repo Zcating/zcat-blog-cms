@@ -21,7 +21,7 @@ import {
   GENDER_OPTIONS,
   ADDRESS_OPTIONS,
   generateUniqueIdNumbers,
-} from '@blog/features/toolbox/id-card-number';
+} from '@blog/features';
 
 const ZForm = createZForm({
   areaCodes: z.array(z.string()),

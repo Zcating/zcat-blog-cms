@@ -48,7 +48,7 @@ export default function ToolboxLayout() {
       header={<ToolbarHeader />}
       footer={<ToolboxFooter />}
     >
-      <ZView className="container p-10">
+      <ZView className="container p-4 h-full">
         <Outlet />
       </ZView>
     </ZSidebar>

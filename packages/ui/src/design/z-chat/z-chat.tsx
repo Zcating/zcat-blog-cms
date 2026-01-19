@@ -8,29 +8,30 @@ import { ZView } from '../z-view/z-view';
 
 import { MessageInput } from './message-input';
 import { MessageItem } from './message-item';
+import { ZChatManager } from './z-chat-manager';
 
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string | ReadableStream;
+  content: string;
   time?: string;
 }
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
-  messages: Message[];
-  onSendMessage: (message: string) => void;
+  manager: ZChatManager;
+  onSend: (message: string) => void;
   loading?: boolean;
   placeholder?: string;
-  emptyState?: React.ReactNode;
+  emptyComponent?: React.ReactNode;
 }
 
 export function ZChat({
-  messages,
-  onSendMessage,
+  manager,
+  onSend,
   loading = false,
   placeholder = 'Type a message...',
   className,
-  emptyState,
+  emptyComponent: emptyState,
   ...props
 }: ZChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -74,26 +75,33 @@ export function ZChat({
     if (emptyState) return emptyState;
 
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+      <ZView className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
         <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
-      </div>
+      </ZView>
     );
+  };
+
+  const onSendMessage = (content: string) => {
+    manager.add({
+      role: 'user',
+      content,
+    });
   };
 
   return (
     <ZView
       className={cn(
-        'flex flex-col h-[500px] w-full border rounded-lg bg-background overflow-hidden',
+        'flex flex-col min-h-[500px] w-full bg-background overflow-hidden p-3',
         className,
       )}
       {...props}
     >
       <ZView ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0
+        {manager.length === 0
           ? renderEmptyState()
-          : messages.map((message) => (
-              <MessageItem key={message.id} message={message} />
+          : manager.map((message, index) => (
+              <MessageItem key={index} message={message} />
             ))}
         {loading && (
           <ZView className="flex w-full gap-2 justify-start">
@@ -102,7 +110,7 @@ export function ZChat({
         )}
       </ZView>
       <MessageInput
-        onSendMessage={onSendMessage}
+        onSend={onSendMessage}
         loading={loading}
         placeholder={placeholder}
       />

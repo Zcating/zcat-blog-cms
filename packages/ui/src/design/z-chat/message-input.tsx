@@ -6,13 +6,13 @@ import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void;
+  onSend: (content: string) => void;
   loading?: boolean;
   placeholder?: string;
 }
 
 export function MessageInput({
-  onSendMessage,
+  onSend,
   loading,
   placeholder,
 }: MessageInputProps) {
@@ -21,7 +21,7 @@ export function MessageInput({
 
   const handleSend = () => {
     if (inputValue.trim() && !loading) {
-      onSendMessage(inputValue);
+      onSend(inputValue);
       setInputValue('');
     }
   };
@@ -34,7 +34,7 @@ export function MessageInput({
   };
 
   return (
-    <ZView className="p-4 border-t bg-muted/30 flex gap-2 items-end">
+    <ZView className="flex flex-col p-4 gap-2 items-end border rounded-lg bg-white shadow-md">
       <ZTextarea
         ref={textareaRef}
         value={inputValue}
@@ -42,21 +42,23 @@ export function MessageInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={loading}
-        className="flex-1 min-h-[40px] resize-none"
+        className="flex-1 min-h-[40px] resize-none border-0 shadow-none focus-visible:ring-0"
         rows={1}
       />
-      <ZButton
-        onClick={handleSend}
-        disabled={loading || !inputValue.trim()}
-        size="icon"
-        className="shrink-0"
-      >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Send className="w-4 h-4" />
-        )}
-      </ZButton>
+      <ZView className="flex justify-between gap-2">
+        <ZButton
+          onClick={handleSend}
+          disabled={loading || !inputValue.trim()}
+          size="icon"
+          className="shrink-0"
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+        </ZButton>
+      </ZView>
     </ZView>
   );
 }
