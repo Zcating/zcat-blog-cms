@@ -2,6 +2,8 @@ import { ZChat, type Message } from '@zcat/ui';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 
+import { ApiTable } from '../../features/docs';
+
 import type { MetaFunction } from 'react-router';
 
 const markdownContent = `# Markdown 标题
@@ -62,6 +64,39 @@ $$
 
 [ZCat UI](https://github.com/zcat-ui)
 `;
+
+const chatApiData = [
+  {
+    attribute: 'messages',
+    type: 'Message[]',
+    default: '[]',
+    description: '消息列表，content 支持 string 或 ReadableStream',
+  },
+  {
+    attribute: 'onSendMessage',
+    type: '(message: string) => void',
+    default: '-',
+    description: '发送消息时的回调函数',
+  },
+  {
+    attribute: 'loading',
+    type: 'boolean',
+    default: 'false',
+    description: '是否处于等待回复状态（显示加载动画，禁用输入）',
+  },
+  {
+    attribute: 'placeholder',
+    type: 'string',
+    default: "'Type a message...'",
+    description: '输入框占位符',
+  },
+  {
+    attribute: 'className',
+    type: 'string',
+    default: '-',
+    description: '自定义样式类名',
+  },
+];
 
 const createStreamResponse = (text: string) => {
   const encoder = new TextEncoder();
@@ -172,63 +207,7 @@ export default function ZChatPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">API 参考</h2>
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="h-10 px-4 text-left font-medium">属性</th>
-                <th className="h-10 px-4 text-left font-medium">类型</th>
-                <th className="h-10 px-4 text-left font-medium">默认值</th>
-                <th className="h-10 px-4 text-left font-medium">说明</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b">
-                <td className="p-4 font-mono">messages</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  Message[]
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">[]</td>
-                <td className="p-4">
-                  消息列表，content 支持 string 或 ReadableStream
-                </td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">onSendMessage</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  (message: string) ={'>'} void
-                </td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">发送消息时的回调函数</td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">loading</td>
-                <td className="p-4 font-mono text-muted-foreground">boolean</td>
-                <td className="p-4 font-mono text-muted-foreground">false</td>
-                <td className="p-4">
-                  是否处于等待回复状态（显示加载动画，禁用输入）
-                </td>
-              </tr>
-              <tr className="border-b">
-                <td className="p-4 font-mono">placeholder</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">
-                  &apos;Type a message...&apos;
-                </td>
-                <td className="p-4">输入框占位符</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-mono">className</td>
-                <td className="p-4 font-mono text-muted-foreground">string</td>
-                <td className="p-4 font-mono text-muted-foreground">-</td>
-                <td className="p-4">自定义样式类名</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApiTable data={chatApiData} />
     </div>
   );
 }
