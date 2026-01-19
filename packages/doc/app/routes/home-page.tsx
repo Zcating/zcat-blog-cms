@@ -27,7 +27,7 @@ export default function Home() {
           <Link to="/button">
             <ZButton size="lg">开始使用</ZButton>
           </Link>
-          <ZButton variant="outline" size="lg" asChild>
+          <ZButton variant="outline" size="lg">
             <a
               href="https://github.com/your-repo/zcat-ui"
               target="_blank"

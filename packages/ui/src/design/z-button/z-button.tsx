@@ -3,7 +3,10 @@ import React from 'react';
 
 import { Button } from '@zcat/ui/shadcn/ui/button';
 
-export interface ZButtonProps extends React.ComponentProps<typeof Button> {
+export interface ZButtonProps extends Omit<
+  React.ComponentProps<typeof Button>,
+  'asChild'
+> {
   loading?: boolean;
 }
 
@@ -14,8 +17,9 @@ export function ZButton({
   ...restProps
 }: ZButtonProps) {
   const computedDisabled = disabled || loading;
+
   return (
-    <Button disabled={computedDisabled} {...restProps}>
+    <Button {...restProps} disabled={computedDisabled} asChild={false}>
       {loading ? <Loader2 className="size-4 animate-spin" /> : null}
       {children}
     </Button>

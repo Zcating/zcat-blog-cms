@@ -91,7 +91,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-          <ZButton asChild size="lg" className="w-full sm:w-auto">
+          <ZButton size="lg" className="w-full sm:w-auto">
             <a href="/">
               <Home className="w-4 h-4 mr-2" />
               返回首页

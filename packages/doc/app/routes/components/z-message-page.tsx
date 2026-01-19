@@ -86,8 +86,8 @@ export default function MessagePage() {
             警告提示
           </ZButton>
           <ZButton
-            onClick={() => {
-              const close = ZMessage.loading('加载中...');
+            onClick={async () => {
+              const close = await ZMessage.loading('加载中...');
               setTimeout(() => {
                 close();
               }, 5000);
@@ -117,8 +117,8 @@ ZMessage.loading('加载中...');`}
         </p>
         <div className="flex flex-wrap gap-4">
           <ZButton
-            onClick={() => {
-              const close = ZMessage.loading('加载中... (3秒后自动关闭)');
+            onClick={async () => {
+              const close = await ZMessage.loading('加载中... (3秒后自动关闭)');
               setTimeout(() => {
                 close();
               }, 3000);
