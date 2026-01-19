@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 import { cn } from '../../shadcn/lib/utils';
 import { ZMarkdown } from '../z-markdown';
@@ -7,11 +7,11 @@ import { ZView } from '../z-view/z-view';
 import type { Message } from './z-chat';
 
 function useStreamContent(content: string | ReadableStream) {
-  const [data, setData] = useState<string>(
+  const [data, setData] = React.useState<string>(
     typeof content === 'string' ? content : '',
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof content === 'string') {
       setData(content);
       return;
@@ -24,7 +24,7 @@ function useStreamContent(content: string | ReadableStream) {
     // Reset content for new stream
     setData('');
 
-    let isActive = true;
+    const isActive = true;
     let reader: ReadableStreamDefaultReader | undefined;
 
     try {
@@ -37,41 +37,43 @@ function useStreamContent(content: string | ReadableStream) {
     const decoder = new TextDecoder();
 
     const read = async () => {
-      if (!reader) return;
+      if (!reader) {
+        return;
+      }
 
       try {
         while (isActive) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (!isActive) break;
-          const chunk = decoder.decode(value, { stream: true });
+          const data = await reader.read();
+          if (data.done) {
+            break;
+          }
+          const chunk = decoder.decode(data.value, { stream: true });
           setData((prev) => prev + chunk);
         }
       } catch (error) {
         console.error('Stream reading error:', error);
       } finally {
-        if (!isActive) {
+        // In Strict Mode, we want to release lock instead of cancel if possible,
+        // so that the next effect can pick up the stream.
+        // However, if we are truly unmounting, we should cancel.
+        // Since we can't distinguish, we prefer releasing lock to support Strict Mode.
+        // But if the stream is infinite, this might leak.
+        // For now, we prioritize Strict Mode compatibility.
+        if (reader) {
           try {
-            await reader.cancel();
-          } catch {
-            // ignore
+            reader.releaseLock();
+          } catch (e) {
+            console.warn('Failed to release lock:', e);
           }
-        } else {
-          reader.releaseLock();
         }
       }
     };
 
     read();
 
-    return () => {
-      isActive = false;
-      // We don't cancel here immediately because 'read' loop might be awaiting.
-      // The finally block in 'read' will handle cleanup when it wakes up or finishes.
-      // However, to prevent memory leaks if read() is stuck, we might want to force cancel?
-      // But we can't force cancel easily without the reader instance.
-      // The current logic relies on 'isActive' flag and the next 'await' resolving.
-    };
+    // return () => {
+    //   isActive = false;
+    // };
   }, [content]);
 
   return data;

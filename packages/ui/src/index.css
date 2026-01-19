@@ -159,6 +159,20 @@
   background-color: rgba(107, 114, 128, 0.8);
 }
 
+code {
+  margin: 0;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace !important;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace !important;
+}
+
 .z-markdown-code-font {
   font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
     Liberation Mono, monospace !important;

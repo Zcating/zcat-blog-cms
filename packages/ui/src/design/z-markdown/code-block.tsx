@@ -94,16 +94,8 @@ export function CodeBlock({
       <FoldAnimation isOpen={isCollapsed} className="py-3">
         <SyntaxHighlighter
           language={language}
-          codeTagProps={{
-            className: 'z-markdown-code-font text-[16px] space-y-2',
-          }}
-          customStyle={{
-            margin: 0,
-            background: 'transparent',
-            border: 0,
-            backgroundColor: 'white',
-            overflow: 'hidden',
-          }}
+          PreTag={CustomPre}
+          CodeTag={CustomCode}
           style={vsStyle}
           wrapLongLines
           wrapLines
@@ -114,5 +106,36 @@ export function CodeBlock({
         </SyntaxHighlighter>
       </FoldAnimation>
     </ZView>
+  );
+}
+
+interface CustomPreProps extends React.ComponentProps<'pre'> {}
+
+/**
+ *
+ */
+function CustomPre({ className, style, ...props }: CustomPreProps) {
+  return (
+    <pre
+      style={{ margin: 0 }}
+      className={cn(
+        'border-0 bg-transparent overflow-hidden text-left whitespace-pre break-normal tab-size-[4]',
+        className,
+      )}
+      // style={style}
+      {...props}
+    />
+  );
+}
+
+interface CustomCodeProps extends React.ComponentProps<'code'> {}
+
+function CustomCode({ className, style, ...props }: CustomCodeProps) {
+  return (
+    <code
+      style={{ margin: 0 }}
+      className="text-[16px] text-left whitespace-pre break-normal tab-size-[4]"
+      {...props}
+    />
   );
 }

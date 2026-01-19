@@ -4,6 +4,36 @@ import { useState } from 'react';
 
 import type { MetaFunction } from 'react-router';
 
+const createStreamResponse = (text: string) => {
+  const encoder = new TextEncoder();
+
+  function* streamGenerator() {
+    for (let i = 0; i < text.length; i++) {
+      yield encoder.encode(text[i]);
+    }
+  }
+
+  const iterator = streamGenerator();
+
+  let interval: ReturnType<typeof setInterval>;
+  return new ReadableStream({
+    async start(controller) {
+      interval = setInterval(() => {
+        const { value, done } = iterator.next();
+        if (done) {
+          clearInterval(interval);
+          controller.close();
+          return;
+        }
+        controller.enqueue(value);
+      }, 30);
+    },
+    cancel() {
+      clearInterval(interval);
+    },
+  });
+};
+
 export const meta: MetaFunction = () => {
   return [
     { title: 'Chat - @zcat/ui' },
@@ -23,19 +53,7 @@ export default function ZChatPage() {
   ]);
   const [loading, setLoading] = useState(false);
 
-  // 模拟流式生成器
-  const createStreamResponse = (text: string) => {
-    const encoder = new TextEncoder();
-    return new ReadableStream({
-      async start(controller) {
-        for (let i = 0; i < text.length; i++) {
-          controller.enqueue(encoder.encode(text[i]));
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
-        controller.close();
-      },
-    });
-  };
+  // 使用 Generator 模拟流式生成
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
