@@ -11,8 +11,8 @@
       "import": "./dist/index.js"
     },
     "./index.css": {
-      "style": "./src/index.css",
-      "default": "./src/index.css"
+      "style": "./dist/index.css",
+      "default": "./dist/index.css"
     },
     "./shadcn/ui/*": {
       "types": "./dist/shadcn/ui/*.d.ts",
