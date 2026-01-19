@@ -46,6 +46,10 @@ const sidebarOptions: ZSidebarOption[] = [
     icon: FormInputIcon,
     children: [
       {
+        label: '文本域',
+        value: 'z-textarea',
+      },
+      {
         label: '选择器',
         value: 'select',
       },
