@@ -47,9 +47,7 @@ const AssistantMessage = React.memo(
               <span>复制</span>
             </Button>
           )}
-          {!message.isFinish && (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          )}
+          {!message.isFinish && <Loader2 className="w-4 h-4 animate-spin" />}
         </ZView>
       </ZView>
     );

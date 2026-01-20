@@ -27,4 +27,3 @@ export async function copyToClipboard(text: string) {
     throw new Error('Failed to copy text');
   }
 }
-
