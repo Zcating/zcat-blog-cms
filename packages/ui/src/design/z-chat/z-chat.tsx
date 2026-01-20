@@ -26,6 +26,10 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   emptyComponent?: React.ReactNode;
 }
 
+export function createObservableMessage(message: Message): Message {
+  return observeMessage(message);
+}
+
 export function ZChat({
   messages,
   onSend,
@@ -37,8 +41,7 @@ export function ZChat({
 }: ZChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const renderedMessages = React.useMemo(() => {
-    messages.forEach(observeMessage);
-    return messages;
+    return messages.map(observeMessage);
   }, [messages]);
 
   const scrollToBottom = () => {

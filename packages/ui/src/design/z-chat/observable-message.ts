@@ -1,61 +1,61 @@
 import type { Message } from './z-chat';
 
-const LISTENERS = Symbol.for('@zcat/ui.z-chat.message.listeners');
-const IS_OBSERVABLE = Symbol.for('@zcat/ui.z-chat.message.isObservable');
-
 type Listener = () => void;
 
-type ObservableMessage = Message & {
-  [LISTENERS]?: Set<Listener>;
-  [IS_OBSERVABLE]?: true;
+type Entry = {
+  target: Message;
+  proxy: Message;
+  listeners: Set<Listener>;
 };
 
-export function observeMessage(message: Message) {
-  const target = message as ObservableMessage;
-  if (target[IS_OBSERVABLE]) {
-    return;
+const entryByObject = new WeakMap<object, Entry>();
+
+function getEntry(message: Message) {
+  return entryByObject.get(message as unknown as object);
+}
+
+export function observeMessage(message: Message): Message {
+  const existingEntry = getEntry(message);
+  if (existingEntry) {
+    return existingEntry.proxy;
   }
 
   const listeners = new Set<Listener>();
-  target[LISTENERS] = listeners;
-  target[IS_OBSERVABLE] = true;
+  const entry: Entry = {
+    target: message,
+    proxy: message,
+    listeners,
+  };
 
-  let content = target.content;
-  Object.defineProperty(target, 'content', {
-    get() {
-      return content;
+  const proxy = new Proxy(message as unknown as object, {
+    set(target, prop, value, receiver) {
+      const prev = Reflect.get(target, prop, receiver);
+      const ok = Reflect.set(target, prop, value, receiver);
+      if (!ok) {
+        return false;
+      }
+      if (prev !== value) {
+        entry.listeners.forEach((fn) => fn());
+      }
+      return true;
     },
-    set(next) {
-      content = next;
-      listeners.forEach((fn) => fn());
-    },
-    enumerable: true,
-    configurable: true,
-  });
+  }) as unknown as Message;
 
-  let isFinish = target.isFinish;
-  Object.defineProperty(target, 'isFinish', {
-    get() {
-      return isFinish;
-    },
-    set(next) {
-      isFinish = next;
-      listeners.forEach((fn) => fn());
-    },
-    enumerable: true,
-    configurable: true,
-  });
+  entry.proxy = proxy;
+  entryByObject.set(message as unknown as object, entry);
+  entryByObject.set(proxy as unknown as object, entry);
+
+  return proxy;
 }
 
 export function subscribeMessage(message: Message, listener: Listener) {
-  observeMessage(message);
-  const target = message as ObservableMessage;
-  const listeners = target[LISTENERS];
-  if (!listeners) {
+  const proxy = observeMessage(message);
+  const entry = getEntry(proxy);
+  if (!entry) {
     return () => {};
   }
-  listeners.add(listener);
+  entry.listeners.add(listener);
   return () => {
-    listeners.delete(listener);
+    entry.listeners.delete(listener);
   };
 }

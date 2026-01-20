@@ -1,4 +1,5 @@
 import { ZButton, ZDialog } from '@zcat/ui';
+import React from 'react';
 
 import { ApiTable } from '../../features';
 
@@ -28,40 +29,22 @@ const apiData = [
     description: '弹窗内容',
   },
   {
-    attribute: 'confirmText',
-    type: 'string',
-    default: "'确定'",
-    description: '确认按钮文本',
-  },
-  {
-    attribute: 'cancelText',
-    type: 'string',
-    default: "'取消'",
-    description: '取消按钮文本',
-  },
-  {
-    attribute: 'onConfirm',
-    type: '() => void | Promise<void>',
+    attribute: 'footer',
+    type: 'React.FC<{ onClose: () => void }>',
     default: '-',
-    description: '确认回调，返回 Promise 时会自动显示 loading',
+    description: '自定义底部区域（通常放按钮）',
   },
   {
-    attribute: 'onCancel',
+    attribute: 'contentContainerClassName',
+    type: 'string',
+    default: '-',
+    description: 'DialogContent 容器样式类名',
+  },
+  {
+    attribute: 'onClose',
     type: '() => void',
     default: '-',
-    description: '取消回调',
-  },
-  {
-    attribute: 'hideCancel',
-    type: 'boolean',
-    default: 'false',
-    description: '是否隐藏取消按钮',
-  },
-  {
-    attribute: 'hideFooter',
-    type: 'boolean',
-    default: 'false',
-    description: '是否隐藏底部按钮栏',
+    description: '弹窗关闭后的回调',
   },
 ];
 
@@ -70,21 +53,18 @@ export default function DialogPage() {
     ZDialog.show({
       title: '提示',
       content: '这是一个简单的命令式弹窗',
-      onConfirm: () => {
-        console.log('点击了确定');
-      },
-    });
-  };
-
-  const showAsyncDialog = () => {
-    ZDialog.show({
-      title: '异步操作',
-      content: '点击确定后会等待 2 秒',
-      confirmText: '开始执行',
-      onConfirm: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log('执行完成');
-      },
+      footer: (props) => (
+        <React.Fragment>
+          <ZButton
+            onClick={() => {
+              console.log('点击了确定');
+              props.onClose();
+            }}
+          >
+            确定
+          </ZButton>
+        </React.Fragment>
+      ),
     });
   };
 
@@ -102,8 +82,11 @@ export default function DialogPage() {
           </ul>
         </div>
       ),
-      hideCancel: true,
-      confirmText: '知道了',
+      footer: (props) => (
+        <React.Fragment>
+          <ZButton onClick={props.onClose}>知道了</ZButton>
+        </React.Fragment>
+      ),
     });
   };
 
@@ -126,29 +109,16 @@ export default function DialogPage() {
             {`ZDialog.show({
   title: '提示',
   content: '这是一个简单的命令式弹窗',
-  onConfirm: () => {
-    console.log('点击了确定');
-  },
-});`}
-          </pre>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">异步操作</h2>
-        <div className="flex flex-wrap gap-4">
-          <ZButton onClick={showAsyncDialog}>打开异步弹窗</ZButton>
-        </div>
-        <div className="rounded-md bg-muted p-4">
-          <pre className="text-sm">
-            {`ZDialog.show({
-  title: '异步操作',
-  content: '点击确定后会等待 2 秒',
-  confirmText: '开始执行',
-  onConfirm: async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log('执行完成');
-  },
+  footer: (props) => (
+    <ZButton
+      onClick={() => {
+        console.log('点击了确定');
+        props.onClose();
+      }}
+    >
+      确定
+    </ZButton>
+  ),
 });`}
           </pre>
         </div>
@@ -168,8 +138,9 @@ export default function DialogPage() {
       <p>这里可以放任意 React 节点</p>
     </div>
   ),
-  hideCancel: true,
-  confirmText: '知道了',
+  footer: (props) => (
+    <ZButton onClick={props.onClose}>知道了</ZButton>
+  ),
 });`}
           </pre>
         </div>

@@ -1,5 +1,4 @@
-import { useUpdate, ZChat, type Message } from '@zcat/ui';
-import dayjs from 'dayjs';
+import { createObservableMessage, ZChat, type Message } from '@zcat/ui';
 import { useState } from 'react';
 
 import { ApiTable } from '../../features/docs';
@@ -141,7 +140,6 @@ function BasicChatDemo() {
         '你好！我是 AI 助手，有什么可以帮你的吗？（输入 "stream" 可测试流式响应）',
     },
   ]);
-  const update = useUpdate();
 
   const handleSendMessage = async (message: Message) => {
     setMessages((prev) => [...prev, message]);
@@ -150,10 +148,10 @@ function BasicChatDemo() {
       // 模拟一点延迟再开始返回
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const responseMessage: Message = {
+      const responseMessage: Message = createObservableMessage({
         role: 'assistant',
         content: '',
-      };
+      });
       setMessages((prev) => [...prev, responseMessage]);
 
       const stream = createStreamResponse(markdownContent);
@@ -163,7 +161,6 @@ function BasicChatDemo() {
           break;
         }
         responseMessage.content += value;
-        update();
       }
       return;
     }

@@ -1,4 +1,9 @@
-import { useMemoizedFn, ZChat, type Message } from '@zcat/ui';
+import {
+  createObservableMessage,
+  useMemoizedFn,
+  ZChat,
+  type Message,
+} from '@zcat/ui';
 import React from 'react';
 
 // import { AiApi } from '@blog/apis';
@@ -46,11 +51,11 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       ...result,
     ]);
     const assistantId = createMessageId();
-    const assistantMessage: Message = {
+    const assistantMessage: Message = createObservableMessage({
       id: assistantId,
       role: 'assistant',
       content: '',
-    };
+    });
     addMessage(assistantMessage);
 
     for await (const message of stream) {
