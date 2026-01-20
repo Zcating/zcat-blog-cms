@@ -1,4 +1,4 @@
-import { useMemoizedFn, useUpdate, ZChat, type Message } from '@zcat/ui';
+import { useMemoizedFn, ZChat, type Message } from '@zcat/ui';
 import React from 'react';
 
 // import { AiApi } from '@blog/apis';
@@ -9,13 +9,20 @@ interface AiChatProps {
   emptyComponent?: React.ReactNode;
 }
 
+function createMessageId() {
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
+}
+
 function useChatMessages() {
   const [messages, setMessages] = React.useState<Message[]>([]);
 
   const addMessage = useMemoizedFn((message: Message) => {
-    const result = [...messages, message];
-    setMessages(result);
-    return result;
+    const next = [...messages, message];
+    setMessages(next);
+    return next;
   });
 
   return [messages, setMessages, addMessage] as const;
@@ -23,12 +30,12 @@ function useChatMessages() {
 
 export function AiChat({ className, emptyComponent }: AiChatProps) {
   const [messages, setMessages, addMessage] = useChatMessages();
-  const update = useUpdate();
 
   const [chatHandler] = React.useState(AiApi.chat);
 
   const handleSendMessage = async (message: Message) => {
-    const result = addMessage(message);
+    const userMessage: Message = { ...message, id: createMessageId() };
+    const result = addMessage(userMessage);
 
     const stream = await chatHandler.create([
       {
@@ -38,7 +45,9 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       },
       ...result,
     ]);
+    const assistantId = createMessageId();
     const assistantMessage: Message = {
+      id: assistantId,
       role: 'assistant',
       content: '',
     };
@@ -46,10 +55,8 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
     for await (const message of stream) {
       assistantMessage.content += message.content;
-      update();
     }
     assistantMessage.isFinish = true;
-    update();
   };
 
   const handleAbort = () => {
@@ -62,6 +69,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
     setMessages((prev) => prev.filter((msg) => msg !== lastMessage));
   };
 
+  console.log('fuck', 'should render once');
   return (
     <ZChat
       className={className}

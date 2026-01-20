@@ -9,8 +9,10 @@ import { ZView } from '../z-view/z-view';
 
 import { MessageInput } from './message-input';
 import { MessageItem } from './message-item';
+import { observeMessage } from './observable-message';
 
 export interface Message {
+  id?: string;
   role: 'user' | 'assistant' | 'system' | 'function';
   content: string;
   isFinish?: boolean;
@@ -34,6 +36,10 @@ export function ZChat({
   ...props
 }: ZChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const renderedMessages = React.useMemo(() => {
+    messages.forEach(observeMessage);
+    return messages;
+  }, [messages]);
 
   const scrollToBottom = () => {
     if (!scrollRef.current) {
@@ -112,10 +118,10 @@ export function ZChat({
       {...props}
     >
       <ZView ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0
+        {renderedMessages.length === 0
           ? renderEmptyState()
-          : messages.map((message, index) => (
-              <MessageItem key={index} message={message} />
+          : renderedMessages.map((message, index) => (
+              <MessageItem key={message.id ?? index} message={message} />
             ))}
       </ZView>
       <MessageInput
