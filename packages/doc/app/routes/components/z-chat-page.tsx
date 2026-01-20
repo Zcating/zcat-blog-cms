@@ -1,4 +1,4 @@
-import { ZChat, type Message } from '@zcat/ui';
+import { useUpdate, ZChat, type Message } from '@zcat/ui';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 
@@ -136,51 +136,45 @@ export const meta: MetaFunction = () => {
 function BasicChatDemo() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
       role: 'assistant',
       content:
         '你好！我是 AI 助手，有什么可以帮你的吗？（输入 "stream" 可测试流式响应）',
-      time: dayjs().format('hh:mm'),
     },
   ]);
-  const [loading, setLoading] = useState(false);
+  const update = useUpdate();
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      time: dayjs().format('hh:mm'),
-    };
-    setMessages((prev) => [...prev, newMessage]);
-    setLoading(true);
+  const handleSendMessage = async (message: Message) => {
+    setMessages((prev) => [...prev, message]);
 
-    if (content.toLowerCase().includes('stream')) {
-      const stream = createStreamResponse(markdownContent);
-      const responseMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: stream,
-        time: dayjs().format('hh:mm'),
-      };
+    if (message.content.toLowerCase().includes('stream')) {
       // 模拟一点延迟再开始返回
-      setTimeout(() => {
-        setMessages((prev) => [...prev, responseMessage]);
-        setLoading(false);
-      }, 500);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const responseMessage: Message = {
+        role: 'assistant',
+        content: '',
+      };
+      setMessages((prev) => [...prev, responseMessage]);
+
+      const stream = createStreamResponse(markdownContent);
+      while (true) {
+        const { value, done } = await stream.getReader().read();
+        if (done) {
+          break;
+        }
+        responseMessage.content += value;
+        update();
+      }
       return;
     }
 
     // Simulate AI response
     setTimeout(() => {
       const responseMessage: Message = {
-        id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `收到你的消息：“${content}”。这是一个模拟回复。`,
-        time: dayjs().format('mm:ss'),
+        content: `收到你的消息：“${message.content}”。这是一个模拟回复。`,
       };
       setMessages((prev) => [...prev, responseMessage]);
-      setLoading(false);
     }, 1000);
   };
 
@@ -195,8 +189,8 @@ function BasicChatDemo() {
       <div className="border rounded-xl p-6 bg-muted/10">
         <ZChat
           messages={messages}
-          onSendMessage={handleSendMessage}
-          loading={loading}
+          onSend={handleSendMessage}
+          onAbort={() => {}}
           className="h-[500px]"
         />
       </div>
@@ -207,19 +201,14 @@ function BasicChatDemo() {
 function PresetChatDemo() {
   const messages: Message[] = [
     {
-      id: '1',
       role: 'assistant',
       content: '你好！有什么我可以帮你的吗？',
-      time: '10:00',
     },
     {
-      id: '2',
       role: 'user',
       content: '请介绍一下 React 的 Hooks。',
-      time: '10:01',
     },
     {
-      id: '3',
       role: 'assistant',
       content: `React Hooks 是 React 16.8 引入的新特性，允许你在不编写 class 的情况下使用 state 和其他 React 特性。
       
@@ -228,7 +217,6 @@ function PresetChatDemo() {
 - \`useEffect\`: 处理副作用
 - \`useContext\`: 共享上下文
 - \`useReducer\`: 复杂状态管理`,
-      time: '10:01',
     },
   ];
 
@@ -243,7 +231,8 @@ function PresetChatDemo() {
       <div className="border rounded-xl p-6 bg-muted/10">
         <ZChat
           messages={messages}
-          onSendMessage={() => {}}
+          onSend={() => {}}
+          onAbort={() => {}}
           className="h-[400px]"
         />
       </div>
@@ -253,28 +242,17 @@ function PresetChatDemo() {
 
 function CustomStyleDemo() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      time: dayjs().format('hh:mm'),
-    };
+  const handleSendMessage = (newMessage: Message) => {
     setMessages((prev) => [...prev, newMessage]);
-    setLoading(true);
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: '收到！',
-          time: dayjs().format('hh:mm'),
         },
       ]);
-      setLoading(false);
     }, 500);
   };
 
@@ -289,8 +267,8 @@ function CustomStyleDemo() {
       <div className="border rounded-xl p-6 bg-muted/10">
         <ZChat
           messages={messages}
-          onSendMessage={handleSendMessage}
-          loading={loading}
+          onSend={handleSendMessage}
+          onAbort={() => {}}
           placeholder="请输入您的问题（自定义 Placeholder）..."
           className="h-[300px] border-primary/20 bg-background/50"
         />

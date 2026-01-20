@@ -1,14 +1,16 @@
+import { Copy, Loader2 } from 'lucide-react';
 import React from 'react';
 
-import { useMount } from '@zcat/ui/hooks';
+import { isFunction } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
+import { Button } from '../../shadcn/ui/button';
 import { ZMarkdown } from '../z-markdown';
 import { ZView } from '../z-view/z-view';
 
-import { ZChatMessage } from './z-chat-manager';
+import type { Message } from './z-chat';
 
-const UserMessage = ({ message }: { message: ZChatMessage }) => {
+const UserMessage = ({ message }: { message: Message }) => {
   return (
     <ZView className="flex w-full gap-2 justify-end">
       <ZView
@@ -17,39 +19,68 @@ const UserMessage = ({ message }: { message: ZChatMessage }) => {
         )}
       >
         {message.content}
-        {message.time && (
-          <ZView className="text-[10px] opacity-70 mt-1 text-right">
-            {message.time}
-          </ZView>
-        )}
       </ZView>
     </ZView>
   );
 };
 
-const AssistantMessage = ({ message }: { message: ZChatMessage }) => {
-  const [content, setContent] = React.useState(message.content);
-
-  useMount(() => {
-    return message.addListener(setContent);
-  });
-
-  return (
-    <ZView className="flex w-full gap-2 justify-start">
-      <ZMarkdown className="w-full" content={content} />
-      <ZView className="text-[10px] opacity-70 mt-1 text-right">
-        {message.time}
+const AssistantMessage = React.memo(
+  ({
+    message,
+    onCopyAssistant,
+  }: {
+    message: Message;
+    onCopyAssistant?: (message: Message) => void | Promise<void>;
+  }) => {
+    return (
+      <ZView className="flex flex-col w-full gap-2 justify-start">
+        <ZMarkdown className="w-full" content={message.content} />
+        <ZView className="flex w-full items-center gap-2 justify-end">
+          {isFunction(onCopyAssistant) && !!message.content && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => onCopyAssistant(message)}
+            >
+              <Copy size={14} />
+              <span>复制</span>
+            </Button>
+          )}
+          {!message.isFinish && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
+        </ZView>
       </ZView>
-    </ZView>
-  );
-};
+    );
+  },
+  (prevProps, nextProps) => {
+    const prev = prevProps.message;
+    const next = nextProps.message;
+    const isSameContent = prev.content === next.content;
+    const isSameFinish = prev.isFinish === next.isFinish;
+    const isSameCopyHandler =
+      prevProps.onCopyAssistant === nextProps.onCopyAssistant;
+    return isSameContent && isSameFinish && isSameCopyHandler;
+  },
+);
+
+AssistantMessage.displayName = 'AssistantMessage';
 
 const patterns = {
   user: UserMessage,
   assistant: AssistantMessage,
+  system: () => null,
+  function: () => null,
 };
 
-export function MessageItem({ message }: { message: ZChatMessage }) {
+export function MessageItem({
+  message,
+  onCopyAssistant,
+}: {
+  message: Message;
+  onCopyAssistant?: (message: Message) => void | Promise<void>;
+}) {
   const Component = patterns[message.role];
-  return <Component message={message} />;
+  return <Component message={message} onCopyAssistant={onCopyAssistant} />;
 }

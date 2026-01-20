@@ -8,3 +8,4 @@ export * from './use-update';
 export * from './use-client';
 export * from './use-boolean';
 export * from './use-toggle-value';
+export * from './use-adapt-element';

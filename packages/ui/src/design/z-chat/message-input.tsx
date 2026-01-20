@@ -1,18 +1,25 @@
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import * as React from 'react';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../../shadcn/ui/tooltip';
 import { ZButton } from '../z-button/z-button';
 import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';
 
 interface MessageInputProps {
   onSend: (content: string) => void;
+  onAbort: () => void;
   loading?: boolean;
   placeholder?: string;
 }
 
 export function MessageInput({
   onSend,
+  onAbort,
   loading,
   placeholder,
 }: MessageInputProps) {
@@ -33,6 +40,14 @@ export function MessageInput({
     }
   };
 
+  const handleAction = () => {
+    if (loading) {
+      onAbort();
+    } else {
+      handleSend();
+    }
+  };
+
   return (
     <ZView className="flex flex-col p-4 gap-2 items-end border rounded-lg bg-white shadow-md">
       <ZTextarea
@@ -46,18 +61,25 @@ export function MessageInput({
         rows={1}
       />
       <ZView className="flex justify-between gap-2">
-        <ZButton
-          onClick={handleSend}
-          disabled={loading || !inputValue.trim()}
-          size="icon"
-          className="shrink-0"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4" />
-          )}
-        </ZButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ZButton
+              onClick={handleAction}
+              size="icon"
+              className="shrink-0"
+              aria-label={loading ? '停止' : '发送'}
+            >
+              {loading ? (
+                <Square className="w-4 h-4" fill="currentColor" stroke="none" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </ZButton>
+          </TooltipTrigger>
+          <TooltipContent side="top" align="center" sideOffset={6}>
+            {loading ? '停止' : '发送'}
+          </TooltipContent>
+        </Tooltip>
       </ZView>
     </ZView>
   );

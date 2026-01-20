@@ -1,7 +1,7 @@
-import { spawn } from 'node:child_process';
+import { spawn, type SpawnOptions } from 'node:child_process';
 
-function run(command, args, options = {}) {
-  return new Promise((resolve) => {
+function run(command: string, args: string[], options: SpawnOptions = {}) {
+  return new Promise<number>((resolve) => {
     const child = spawn(command, args, {
       stdio: 'inherit',
       shell: process.platform === 'win32',
@@ -24,4 +24,3 @@ const tscCode = await run('pnpm', [
   '--emitDeclarationOnly',
 ]);
 process.exit(tscCode);
-

@@ -9,7 +9,7 @@ import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
 import { FoldAnimation } from '@zcat/ui/animation';
 import { useMount, useToggleValue, useWatch } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
-import { isFunction } from '@zcat/ui/utils';
+import { copyToClipboard, isFunction } from '@zcat/ui/utils';
 
 import { Button } from '../../shadcn/ui/button';
 import { ZView } from '../z-view';
@@ -58,10 +58,9 @@ export function CodeBlock({
 
   const onCopy = async () => {
     try {
-      await navigator.clipboard.writeText(children);
-      // TODO: show toast
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+      await copyToClipboard(children);
+    } catch {
+      return;
     }
   };
 

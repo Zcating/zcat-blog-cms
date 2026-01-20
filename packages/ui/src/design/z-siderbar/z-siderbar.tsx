@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import * as React from 'react';
 
 import { ZCollapsible } from '@zcat/ui/design/z-collapsible';
+import { useAdaptElement } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 import {
   Sidebar,
@@ -43,10 +44,10 @@ export interface ZSidebarProps {
   options: ZSidebarOption[];
   renderItem: (item: ZSidebarItemConfig) => React.ReactNode;
   children?: React.ReactNode;
-  header?: React.ReactNode;
-  sidebarHeader?: React.ReactNode;
-  sidebarFooter?: React.ReactNode;
-  footer?: React.ReactNode;
+  header?: React.ReactNode | React.ComponentType<any>;
+  footer?: React.ReactNode | React.ComponentType<any>;
+  sidebarHeader?: React.ReactNode | React.ComponentType<any>;
+  sidebarFooter?: React.ReactNode | React.ComponentType<any>;
   className?: string;
   style?: React.CSSProperties;
   activeValue?: string;
@@ -73,17 +74,22 @@ export function ZSidebar(props: ZSidebarProps) {
     isActive = isEqual,
   } = props;
 
+  const adaptedHeader = useAdaptElement(header);
+  const adaptedFooter = useAdaptElement(footer);
+  const adaptedSidebarHeader = useAdaptElement(sidebarHeader);
+  const adaptedSidebarFooter = useAdaptElement(sidebarFooter);
+
   return (
     <SidebarProvider
       className={cn('flex flex-col', className)}
       style={{ ...defaultStyle, ...style }}
     >
       <ZView className="sticky top-0 z-10 h-(--header-height) bg-siderbar-header">
-        {header}
+        {adaptedHeader}
       </ZView>
       <ZView className="flex flex-1">
         <Sidebar className="top-(--header-height) h-[calc(100svh-var(--header-height))]!">
-          <SidebarHeader>{sidebarHeader}</SidebarHeader>
+          <SidebarHeader>{adaptedSidebarHeader}</SidebarHeader>
           <SidebarContent className="mx-4">
             {options.map((item, index) => {
               if (item.children && item.children.length > 0) {
@@ -108,13 +114,13 @@ export function ZSidebar(props: ZSidebarProps) {
               );
             })}
           </SidebarContent>
-          <SidebarFooter>{sidebarFooter}</SidebarFooter>
+          <SidebarFooter>{adaptedSidebarFooter}</SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <ZView className="min-h-[calc(100svh-var(--header-height)-var(--footer-height))]">
             {children}
           </ZView>
-          <ZView className="h-(--footer-height)">{footer}</ZView>
+          <ZView className="h-(--footer-height)">{adaptedFooter}</ZView>
         </SidebarInset>
       </ZView>
     </SidebarProvider>
