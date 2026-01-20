@@ -1,11 +1,12 @@
-import { Copy, Loader2 } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import React from 'react';
 
-import { isFunction } from '@zcat/ui/utils';
+import { copyToClipboard } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
 import { Button } from '../../shadcn/ui/button';
 import { ZMarkdown } from '../z-markdown';
+import { ZMessage } from '../z-message';
 import { ZView } from '../z-view/z-view';
 
 import type { Message } from './z-chat';
@@ -25,29 +26,35 @@ const UserMessage = ({ message }: { message: Message }) => {
 };
 
 const AssistantMessage = React.memo(
-  ({
-    message,
-    onCopyAssistant,
-  }: {
-    message: Message;
-    onCopyAssistant?: (message: Message) => void | Promise<void>;
-  }) => {
+  ({ message }: { message: Message }) => {
+    const onCopy = async () => {
+      const text = message.content ?? '';
+      if (!text) {
+        return;
+      }
+      try {
+        await copyToClipboard(text);
+        await ZMessage.success('已复制');
+      } catch {
+        await ZMessage.error('复制失败');
+      }
+    };
+
     return (
       <ZView className="flex flex-col w-full gap-2 justify-start">
         <ZMarkdown className="w-full" content={message.content} />
         <ZView className="flex w-full items-center gap-2 justify-end">
-          {isFunction(onCopyAssistant) && !!message.content && (
+          {message.isFinish && (
             <Button
               size="sm"
               variant="ghost"
               className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => onCopyAssistant(message)}
+              onClick={() => void onCopy()}
             >
               <Copy size={14} />
               <span>复制</span>
             </Button>
           )}
-          {!message.isFinish && <Loader2 className="w-4 h-4 animate-spin" />}
         </ZView>
       </ZView>
     );
@@ -57,9 +64,7 @@ const AssistantMessage = React.memo(
     const next = nextProps.message;
     const isSameContent = prev.content === next.content;
     const isSameFinish = prev.isFinish === next.isFinish;
-    const isSameCopyHandler =
-      prevProps.onCopyAssistant === nextProps.onCopyAssistant;
-    return isSameContent && isSameFinish && isSameCopyHandler;
+    return isSameContent && isSameFinish;
   },
 );
 
@@ -72,13 +77,7 @@ const patterns = {
   function: () => null,
 };
 
-export function MessageItem({
-  message,
-  onCopyAssistant,
-}: {
-  message: Message;
-  onCopyAssistant?: (message: Message) => void | Promise<void>;
-}) {
+export function MessageItem({ message }: { message: Message }) {
   const Component = patterns[message.role];
-  return <Component message={message} onCopyAssistant={onCopyAssistant} />;
+  return <Component message={message} />;
 }

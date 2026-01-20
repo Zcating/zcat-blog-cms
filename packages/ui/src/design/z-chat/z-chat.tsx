@@ -2,10 +2,9 @@ import { MessageSquare } from 'lucide-react';
 import React from 'react';
 
 import { useMount } from '@zcat/ui/hooks';
-import { copyToClipboard, isFunction } from '@zcat/ui/utils';
+import { isFunction } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
-import { ZMessage } from '../z-message';
 import { ZView } from '../z-view/z-view';
 
 import { MessageInput } from './message-input';
@@ -23,8 +22,6 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   onAbort?: () => void;
   placeholder?: string;
   emptyComponent?: React.ReactNode;
-  enableCopyAssistant?: boolean;
-  onCopyAssistant?: (message: Message) => void | Promise<void>;
 }
 
 export function ZChat({
@@ -34,8 +31,6 @@ export function ZChat({
   placeholder = 'Type a message...',
   className,
   emptyComponent: emptyState,
-  enableCopyAssistant = true,
-  onCopyAssistant,
   ...props
 }: ZChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -108,23 +103,6 @@ export function ZChat({
     setLoading(false);
   };
 
-  const handleCopyAssistant = async (message: Message) => {
-    if (isFunction(onCopyAssistant)) {
-      await onCopyAssistant(message);
-      return;
-    }
-    const text = message.content ?? '';
-    if (!text) {
-      return;
-    }
-    try {
-      await copyToClipboard(text);
-      await ZMessage.success('已复制');
-    } catch {
-      await ZMessage.error('复制失败');
-    }
-  };
-
   return (
     <ZView
       className={cn(
@@ -137,13 +115,7 @@ export function ZChat({
         {messages.length === 0
           ? renderEmptyState()
           : messages.map((message, index) => (
-              <MessageItem
-                key={index}
-                message={message}
-                onCopyAssistant={
-                  enableCopyAssistant ? handleCopyAssistant : undefined
-                }
-              />
+              <MessageItem key={index} message={message} />
             ))}
       </ZView>
       <MessageInput
