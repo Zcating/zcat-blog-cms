@@ -42,7 +42,7 @@ const items = [
 ] as const;
 
 const EmptyStateComponent = () => (
-  <ZView className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ZView className="p-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
     {items.map((item) => (
       <Link
         key={item.to}

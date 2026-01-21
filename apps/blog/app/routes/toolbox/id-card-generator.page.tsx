@@ -77,7 +77,7 @@ export default function IdCardGeneratorPage() {
   };
 
   return (
-    <ZView className="space-y-6">
+    <ZView className="p-4 space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">中国大陆身份证号生成器</h1>
         <p className="text-sm text-muted-foreground">
