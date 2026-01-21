@@ -98,9 +98,25 @@ export function CodeBlock({
           PreTag={CustomPre}
           CodeTag={CustomCode}
           style={vsStyle}
-          wrapLongLines
-          wrapLines
           showLineNumbers
+          wrapLines
+          lineProps={{
+            style: {
+              display: 'block',
+              paddingLeft: '3.5em',
+              position: 'relative',
+            },
+          }}
+          lineNumberStyle={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '3em',
+            textAlign: 'right',
+            paddingRight: '1em',
+            userSelect: 'none',
+            color: '#9CA3AF',
+          }}
           {...props}
         >
           {children}
@@ -120,7 +136,7 @@ function CustomPre({ className, style, ...props }: CustomPreProps) {
     <pre
       style={{ margin: 0, padding: '0px 12px' }}
       className={cn(
-        'border-0 bg-transparent overflow-hidden text-left whitespace-pre break-normal tab-size-[4]',
+        'border-0 bg-transparent overflow-hidden text-left whitespace-pre-wrap wrap-break-word tab-size-[4]',
         className,
       )}
       // style={style}
@@ -135,7 +151,7 @@ function CustomCode({ className, style, ...props }: CustomCodeProps) {
   return (
     <code
       style={{ margin: 0 }}
-      className="text-[16px] text-left whitespace-pre break-normal tab-size-[4]"
+      className="text-[16px] text-left whitespace-pre-wrap wrap-break-word tab-size-[4]"
       {...props}
     />
   );
