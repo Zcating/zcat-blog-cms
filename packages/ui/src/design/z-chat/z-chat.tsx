@@ -1,7 +1,7 @@
 import { ChevronsDown, MessageSquare } from 'lucide-react';
 import React from 'react';
 
-import { useAdaptElement, useBoolean } from '@zcat/ui/hooks';
+import { useAdaptElement } from '@zcat/ui/hooks';
 import { isFunction } from '@zcat/ui/utils';
 
 import { ShrinkDownAnimation } from '../../animation';
