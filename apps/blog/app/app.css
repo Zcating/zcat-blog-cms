@@ -158,14 +158,3 @@ body {
   }
 }
 
-
-:root {
-  --header-height: 64px;
-  --footer-height: 64px;
-  --sidebar-content-height: calc(100svh - var(--header-height) - var(--footer-height));
-}
-
-
-.min-h-siderbar-content {
-  min-height: var(--sidebar-content-height);
-}

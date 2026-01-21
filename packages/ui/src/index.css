@@ -40,7 +40,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --siderbar-header: #fff;
+  --sidebar-header: #fff;
   --cascader-selected: #e6f4ff;
   --cascader-hover: rgba(0, 0, 0, 0.05);
   --markdown-code-lang: black;
@@ -80,7 +80,7 @@
   --sidebar-accent-foreground: oklch(49.217% 0.19524 28.491);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
-  --siderbar-header: #000;
+  --sidebar-header: #000;
   --cascader-selected: #e6f4ff;
   --cascader-hover: rgba(0, 0, 0, 0.05);
   --markdown-code-lang: black;
@@ -117,7 +117,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
-  --color-siderbar-header: var(--siderbar-header);
+  --color-sidebar-header: var(--sidebar-header);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -179,3 +179,33 @@ code::after {
   content: '' !important;
 }
 
+:root {
+  --header-height: calc(--spacing(16));
+  --footer-height: calc(--spacing(10));
+  --sidebar-height: calc(100svh - var(--header-height));
+  --sidebar-content-height: calc(100svh - var(--header-height) - var(--footer-height));
+}
+
+.top-header-height {
+  top: var(--header-height);
+}
+
+.h-header-height {
+  height: var(--header-height);
+}
+
+.h-footer-height {
+  height: var(--footer-height);
+}
+
+.h-sidebar-height {
+  height: var(--sidebar-height);
+}
+
+.h-sidebar-content {
+  height: var(--sidebar-content-height);
+}
+
+.min-h-sidebar-content {
+  min-height: var(--sidebar-content-height);
+}

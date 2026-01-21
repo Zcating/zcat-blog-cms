@@ -162,7 +162,7 @@ export default function ZSidebarPage() {
           <ZMarkdown content={usageCode} />
         </div>
       </div>
-      <ApiTable title="ZSiderbarProps 参数参考" data={sidebarProps} />
+      <ApiTable title="ZSidebarProps 参数参考" data={sidebarProps} />
       <ApiTable title="ZSidebarOption 参数参考" data={sidebarOptionProps} />
     </div>
   );

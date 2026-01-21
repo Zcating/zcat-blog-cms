@@ -26,7 +26,8 @@ const items: ZSidebarOption[] = [
 export default function ToolboxLayout() {
   const classNames = cn(
     'h-full w-full',
-    '[--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]',
+    '[--header-height:calc(--spacing(20))]',
+    '[--footer-height:calc(--spacing(10))]',
   );
 
   const renderItem = (item: ZSidebarOption) => {
