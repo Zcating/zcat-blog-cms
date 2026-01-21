@@ -119,7 +119,7 @@ export function ZChat({
     >
       <ZView
         ref={scrollRef}
-        className="w-full flex-1 overflow-y-auto p-2 space-y-4 z-scrollbar"
+        className="w-full flex-1 overflow-y-auto p-2 space-y-6 z-scrollbar px-4 md:px-20 lg:px-40"
       >
         {renderedMessages.length === 0
           ? renderEmptyState()

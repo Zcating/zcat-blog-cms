@@ -1,4 +1,4 @@
-import { cn, ZSidebar, ZView, type ZSidebarOption } from '@zcat/ui';
+import { cn, ZSidebar, type ZSidebarOption } from '@zcat/ui';
 import { Link, Outlet } from 'react-router';
 
 import { ToolbarHeader, ToolboxFooter } from '@blog/features';
