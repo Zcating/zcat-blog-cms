@@ -91,7 +91,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-          <ZButton size="lg" className="w-full sm:w-auto">
+          <ZButton
+            size="lg"
+            className="w-full sm:w-auto flex items-center justify-center"
+          >
             <a href="/">
               <Home className="w-4 h-4 mr-2" />
               返回首页
@@ -100,7 +103,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <ZButton
             variant="outline"
             size="lg"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto flex items-center justify-center"
             onClick={() => window.location.reload()}
           >
             <RefreshCcw className="w-4 h-4 mr-2" />

@@ -74,7 +74,6 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
     setMessages((prev) => prev.filter((msg) => msg !== lastMessage));
   };
 
-  console.log('fuck', 'should render once');
   return (
     <ZChat
       className={className}

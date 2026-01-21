@@ -31,7 +31,7 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [SyntaxHighlighter, setSyntaxHighlighter] = React.useState<
     typeof PrismAsyncLight | undefined
-  >(SyntaxHighlighterCache);
+  >(() => SyntaxHighlighterCache);
   const [isCollapsed, onToggleCollapsed] = useToggleValue(true);
 
   useMount(async () => {
