@@ -71,7 +71,8 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
     if (lastMessage.role === 'user') {
       return;
     }
-    setMessages((prev) => prev.filter((msg) => msg !== lastMessage));
+    lastMessage.isFinish = true;
+    lastMessage.content = '用户暂停生成';
   };
 
   return (

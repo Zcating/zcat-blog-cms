@@ -1,11 +1,6 @@
 import { Send, Square } from 'lucide-react';
 import * as React from 'react';
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '../../shadcn/ui/tooltip';
 import { ZButton } from '../z-button/z-button';
 import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';

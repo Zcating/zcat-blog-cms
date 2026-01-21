@@ -10,6 +10,10 @@ declare global {
   }
 }
 
+Promise.tick = function tick(timeoutMs: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, timeoutMs));
+};
+
 Promise.withResolvers = function withResolvers<T, E = unknown>() {
   let resolve: (value: T | PromiseLike<T>) => void;
   let reject: (reason?: E) => void;

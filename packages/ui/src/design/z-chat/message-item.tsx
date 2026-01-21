@@ -5,7 +5,6 @@ import { useUpdate, useWatch } from '@zcat/ui/hooks';
 import { copyToClipboard } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
-import { Button } from '../../shadcn/ui/button';
 import { ZButton } from '../z-button/z-button';
 import { ZMarkdown } from '../z-markdown';
 import { ZMessage } from '../z-message';
@@ -80,7 +79,6 @@ const AssistantMessage = React.memo(
               <ZButton
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => void onCopy()}
                 tooltip="复制"
               >
@@ -89,7 +87,6 @@ const AssistantMessage = React.memo(
               <ZButton
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => void onRegenerate?.(message)}
                 tooltip="重新生成"
               >
