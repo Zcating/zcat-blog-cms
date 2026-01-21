@@ -7,6 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigate,
 } from 'react-router';
 
 import { StatisticsApi } from '@blog/apis';
@@ -47,6 +48,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let details = '发生了一个意想不到的错误。';
   let stack: string | undefined;
   let status = 500;
+  const navigate = useNavigate();
 
   if (isRouteErrorResponse(error)) {
     status = error.status;
@@ -93,17 +95,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
           <ZButton
             size="lg"
-            className="w-full sm:w-auto flex items-center justify-center"
+            className="w-full sm:w-auto"
+            onClick={() => navigate('/')}
           >
-            <a href="/">
-              <Home className="w-4 h-4 mr-2" />
-              返回首页
-            </a>
+            <Home className="w-4 h-4 mr-2" />
+            返回首页
           </ZButton>
           <ZButton
             variant="outline"
             size="lg"
-            className="w-full sm:w-auto flex items-center justify-center"
+            className="w-full sm:w-auto"
             onClick={() => window.location.reload()}
           >
             <RefreshCcw className="w-4 h-4 mr-2" />
