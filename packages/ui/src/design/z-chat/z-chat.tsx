@@ -1,7 +1,7 @@
 import { MessageSquare } from 'lucide-react';
 import React from 'react';
 
-import { useMount } from '@zcat/ui/hooks';
+import { useAdaptElement, useMount } from '@zcat/ui/hooks';
 import { isFunction } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
@@ -23,7 +23,7 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   onSend: (message: Message) => void | Promise<void>;
   onAbort?: () => void;
   placeholder?: string;
-  emptyComponent?: React.ReactNode;
+  emptyComponent?: React.ReactNode | React.ComponentType;
 }
 
 export function createObservableMessage(message: Message): Message {
@@ -80,16 +80,13 @@ export function ZChat({
     };
   });
 
+  const emptyCompoenent = useAdaptElement(emptyState);
+
   const renderEmptyState = () => {
-    if (emptyState) {
-      return emptyState;
+    if (emptyCompoenent) {
+      return emptyCompoenent;
     }
-    return (
-      <ZView className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
-        <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
-      </ZView>
-    );
+    return <DefaultEmptyState />;
   };
 
   const [loading, setLoading] = React.useState(false);
@@ -115,12 +112,15 @@ export function ZChat({
   return (
     <ZView
       className={cn(
-        'flex flex-col h-full w-full bg-background overflow-hidden p-3',
+        'flex flex-col h-full w-full bg-background items-center gap-3',
         className,
       )}
       {...props}
     >
-      <ZView ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <ZView
+        ref={scrollRef}
+        className="w-full flex-1 overflow-y-auto p-2 space-y-4 z-scrollbar"
+      >
         {renderedMessages.length === 0
           ? renderEmptyState()
           : renderedMessages.map((message, index) => (
@@ -133,6 +133,15 @@ export function ZChat({
         loading={loading}
         placeholder={placeholder}
       />
+    </ZView>
+  );
+}
+
+function DefaultEmptyState() {
+  return (
+    <ZView className="flex flex-col items-center justify-center h-full text-muted-foreground">
+      <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
+      <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
     </ZView>
   );
 }

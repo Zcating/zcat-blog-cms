@@ -11,7 +11,7 @@ import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
 
 interface AiChatProps {
   className?: string;
-  emptyComponent?: React.ReactNode;
+  emptyComponent?: React.ReactNode | React.ComponentType;
 }
 
 function createMessageId() {

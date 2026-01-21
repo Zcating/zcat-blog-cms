@@ -25,7 +25,7 @@ const items: ZSidebarOption[] = [
 
 export default function ToolboxLayout() {
   const classNames = cn(
-    'h-full w-full',
+    'h-full w-full overflow-hidden',
     '[--header-height:calc(--spacing(20))]',
     '[--footer-height:calc(--spacing(10))]',
   );
@@ -49,7 +49,7 @@ export default function ToolboxLayout() {
       header={ToolbarHeader}
       footer={ToolboxFooter}
     >
-      <ZView className="container p-4 h-full">
+      <ZView className="container h-full">
         <Outlet />
       </ZView>
     </ZSidebar>

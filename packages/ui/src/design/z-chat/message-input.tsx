@@ -49,7 +49,7 @@ export function MessageInput({
   };
 
   return (
-    <ZView className="flex flex-col p-4 gap-2 items-end border rounded-lg bg-white shadow-md">
+    <ZView className="w-xl flex flex-col my-4 p-2 gap-2 border rounded-lg bg-white shadow-md">
       <ZTextarea
         ref={textareaRef}
         value={inputValue}
@@ -60,7 +60,7 @@ export function MessageInput({
         className="flex-1 min-h-[40px] resize-none border-0 shadow-none focus-visible:ring-0"
         rows={1}
       />
-      <ZView className="flex justify-between gap-2">
+      <ZView className="flex justify-between gap-2 self-end">
         <Tooltip>
           <TooltipTrigger asChild>
             <ZButton

@@ -57,7 +57,7 @@ const AssistantMessage = React.memo(({ message }: { message: Message }) => {
   };
 
   return (
-    <ZView className="flex flex-col w-full gap-2 justify-start">
+    <ZView className="flex flex-col w-full gap-2 justify-start items-center px-4">
       <ZMarkdown className="w-full" content={message.content} />
       <ZView className="flex w-full items-center gap-2 justify-end">
         {message.isFinish && (
