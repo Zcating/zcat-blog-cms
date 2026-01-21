@@ -6,6 +6,7 @@ import { copyToClipboard } from '@zcat/ui/utils';
 
 import { cn } from '../../shadcn/lib/utils';
 import { Button } from '../../shadcn/ui/button';
+import { ZButton } from '../z-button/z-button';
 import { ZMarkdown } from '../z-markdown';
 import { ZMessage } from '../z-message';
 import { ZView } from '../z-view/z-view';
@@ -76,26 +77,24 @@ const AssistantMessage = React.memo(
         <ZView className="flex w-full items-center gap-2 justify-start">
           {message.isFinish && (
             <>
-              <Button
+              <ZButton
                 size="sm"
                 variant="ghost"
                 className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => void onCopy()}
+                tooltip="复制"
               >
                 <Copy size={14} />
-                <span>复制</span>
-              </Button>
-              {onRegenerate && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => void onRegenerate(message)}
-                >
-                  <RefreshCw size={14} />
-                  <span>重新生成</span>
-                </Button>
-              )}
+              </ZButton>
+              <ZButton
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => void onRegenerate?.(message)}
+                tooltip="重新生成"
+              >
+                <RefreshCw size={14} />
+              </ZButton>
             </>
           )}
         </ZView>

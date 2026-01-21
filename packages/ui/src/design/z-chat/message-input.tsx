@@ -64,27 +64,23 @@ export function MessageInput({
         className="flex-1 min-h-10 max-h-20 resize-none border-0 shadow-none focus-visible:ring-0 z-scrollbar"
         rows={1}
       />
-      <ZView className="flex items-center gap-2 self-end">
-        <span className="text-xs text-muted-foreground">{shortcut}</span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ZButton
-              onClick={handleAction}
-              size="icon"
-              className="shrink-0"
-              aria-label={loading ? '停止' : '发送'}
-            >
-              {loading ? (
-                <Square className="w-4 h-4" fill="currentColor" stroke="none" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </ZButton>
-          </TooltipTrigger>
-          <TooltipContent side="top" align="center" sideOffset={6}>
-            {loading ? '停止' : '发送'}
-          </TooltipContent>
-        </Tooltip>
+      <ZView className="flex items-center gap-4 self-end">
+        <span className="text-sm font-bold text-muted-foreground">
+          {shortcut}
+        </span>
+        <ZButton
+          onClick={handleAction}
+          size="icon"
+          className="shrink-0"
+          aria-label={loading ? '停止' : '发送'}
+          tooltip={loading ? '停止' : '发送'}
+        >
+          {loading ? (
+            <Square className="w-4 h-4" fill="currentColor" stroke="none" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+        </ZButton>
       </ZView>
     </ZView>
   );
