@@ -2,7 +2,6 @@ import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import React from 'react';
 
-import { ZView } from '../design';
 import { cn } from '../shadcn';
 import { composeRefs } from '../utils/compose-ref';
 
@@ -102,7 +101,7 @@ export const StaggerReveal = React.forwardRef<
   );
 
   return (
-    <ZView
+    <div
       ref={composeRefs(ref, scopeRef)}
       className={cn('opacity-0', className)}
       {...rest}

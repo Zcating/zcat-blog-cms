@@ -4,8 +4,6 @@ import React, { useRef } from 'react';
 
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 
-import { ZView } from '../design/z-view';
-
 export interface FoldAnimationProps {
   /**
    * 是否展开
@@ -61,12 +59,12 @@ export function FoldAnimation({
   }, [isOpen]);
 
   return (
-    <ZView
+    <div
       ref={contentRef}
       className={cn('overflow-hidden h-0 opacity-0', className)}
       style={style}
     >
       {children}
-    </ZView>
+    </div>
   );
 }

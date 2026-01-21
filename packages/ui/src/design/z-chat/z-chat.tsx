@@ -1,15 +1,18 @@
-import { MessageSquare } from 'lucide-react';
+import { ChevronsDown, MessageSquare } from 'lucide-react';
 import React from 'react';
 
-import { useAdaptElement, useMount } from '@zcat/ui/hooks';
+import { useAdaptElement, useBoolean } from '@zcat/ui/hooks';
 import { isFunction } from '@zcat/ui/utils';
 
+import { ShrinkDownAnimation } from '../../animation';
 import { cn } from '../../shadcn/lib/utils';
+import { ZButton } from '../z-button/z-button';
 import { ZView } from '../z-view/z-view';
 
 import { MessageInput } from './message-input';
 import { MessageItem } from './message-item';
 import { observeMessage } from './observable-message';
+import { useChatAutoScroll } from './use-chat-auto-scroll';
 
 export interface Message {
   id?: string;
@@ -41,46 +44,12 @@ export function ZChat({
   emptyComponent: emptyState,
   ...props
 }: ZChatProps) {
-  const scrollRef = React.useRef<HTMLDivElement>(null);
   const renderedMessages = React.useMemo(() => {
     return messages.map(observeMessage);
   }, [messages]);
 
-  const scrollToBottom = () => {
-    if (!scrollRef.current) {
-      return;
-    }
-    scrollRef.current.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
-
-  useMount(() => {
-    const scrollElement = scrollRef.current;
-    if (!scrollElement) {
-      return;
-    }
-    const observer = new MutationObserver(() => {
-      scrollToBottom();
-      // const { scrollHeight, scrollTop, clientHeight } = scrollElement;
-      // // 如果距离底部小于 200px，则自动滚动到底部
-      // // 这样允许用户向上滚动查看历史消息而不被强制拉回
-      // if (scrollHeight - scrollTop - clientHeight < 400) {
-      //   scrollToBottom();
-      // }
-    });
-
-    observer.observe(scrollElement, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  });
+  const { scrollRef, isAtBottom, updateIsAtBottom, lockToBottom } =
+    useChatAutoScroll();
 
   const emptyCompoenent = useAdaptElement(emptyState);
 
@@ -114,14 +83,15 @@ export function ZChat({
   return (
     <ZView
       className={cn(
-        'flex flex-col h-full w-full items-center gap-3',
+        'relative flex flex-col h-full w-full items-center gap-3',
         className,
       )}
       {...props}
     >
       <ZView
         ref={scrollRef}
-        className="w-full flex-1 overflow-y-auto p-2 space-y-6 z-scrollbar px-4 md:px-20 lg:px-40"
+        className="w-full flex-1 overflow-y-auto space-y-6 z-scrollbar px-4 md:px-20 lg:px-40"
+        onScroll={updateIsAtBottom}
       >
         {renderedMessages.length === 0
           ? renderEmptyState()
@@ -133,12 +103,26 @@ export function ZChat({
               />
             ))}
       </ZView>
-      <MessageInput
-        onSend={handleSend}
-        onAbort={handleAbort}
-        loading={loading}
-        placeholder={placeholder}
-      />
+      <ZView className="relative">
+        <ShrinkDownAnimation
+          show={!isAtBottom}
+          className="absolute -top-10 left-[50%] translate-x-[-50%]"
+        >
+          <ZButton
+            variant="outline"
+            onClick={lockToBottom}
+            className="rounded-full size-8"
+          >
+            <ChevronsDown className="size-4" />
+          </ZButton>
+        </ShrinkDownAnimation>
+        <MessageInput
+          onSend={handleSend}
+          onAbort={handleAbort}
+          loading={loading}
+          placeholder={placeholder}
+        />
+      </ZView>
     </ZView>
   );
 }
