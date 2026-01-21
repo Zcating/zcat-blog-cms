@@ -21,6 +21,7 @@ export interface Message {
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   messages: Message[];
   onSend: (message: Message) => void | Promise<void>;
+  onRegenerate?: (message: Message) => void | Promise<void>;
   onAbort?: () => void;
   placeholder?: string;
   emptyComponent?: React.ReactNode | React.ComponentType;
@@ -33,6 +34,7 @@ export function createObservableMessage(message: Message): Message {
 export function ZChat({
   messages,
   onSend,
+  onRegenerate,
   onAbort,
   placeholder = 'Type a message...',
   className,
@@ -124,7 +126,11 @@ export function ZChat({
         {renderedMessages.length === 0
           ? renderEmptyState()
           : renderedMessages.map((message, index) => (
-              <MessageItem key={message.id ?? index} message={message} />
+              <MessageItem
+                key={message.id ?? index}
+                message={message}
+                onRegenerate={onRegenerate}
+              />
             ))}
       </ZView>
       <MessageInput

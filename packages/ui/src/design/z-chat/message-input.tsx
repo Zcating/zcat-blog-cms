@@ -10,6 +10,8 @@ import { ZButton } from '../z-button/z-button';
 import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';
 
+import { useShortcut } from './use-shortcut';
+
 interface MessageInputProps {
   onSend: (content: string) => void;
   onAbort: () => void;
@@ -25,6 +27,8 @@ export function MessageInput({
 }: MessageInputProps) {
   const [inputValue, setInputValue] = React.useState('');
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const shortcut = useShortcut();
 
   const handleSend = () => {
     if (inputValue.trim() && !loading) {
@@ -61,7 +65,7 @@ export function MessageInput({
         rows={1}
       />
       <ZView className="flex items-center gap-2 self-end">
-        <span className="text-xs text-muted-foreground">Ctrl + Enter</span>
+        <span className="text-xs text-muted-foreground">{shortcut}</span>
         <Tooltip>
           <TooltipTrigger asChild>
             <ZButton
