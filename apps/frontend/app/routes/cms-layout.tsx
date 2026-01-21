@@ -139,7 +139,7 @@ function Layout(props: LayoutProps) {
       }
       options={menuItems}
       renderItem={renderItem}
-      activeValue={location.pathname}
+      currentValue={location.pathname}
       isActive={isActive}
     >
       <div className="flex flex-1 flex-col gap-4 p-4">{props.children}</div>

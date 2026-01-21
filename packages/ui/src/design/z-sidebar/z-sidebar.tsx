@@ -50,7 +50,7 @@ export interface ZSidebarProps {
   sidebarFooter?: React.ReactNode | React.ComponentType<any>;
   className?: string;
   style?: React.CSSProperties;
-  activeValue?: string;
+  currentValue?: string;
   isActive?: ZSidebarIsActiveFn;
 }
 
@@ -65,7 +65,7 @@ export function ZSidebar(props: ZSidebarProps) {
     footer,
     className,
     style,
-    activeValue,
+    currentValue,
     isActive = isEqual,
   } = props;
 
@@ -90,7 +90,7 @@ export function ZSidebar(props: ZSidebarProps) {
                     key={index.toString()}
                     item={item}
                     renderItem={renderItem}
-                    activeValue={activeValue}
+                    currentValue={currentValue}
                     isActive={isActive}
                   />
                 );
@@ -100,7 +100,7 @@ export function ZSidebar(props: ZSidebarProps) {
                   key={index.toString()}
                   item={item}
                   renderItem={renderItem}
-                  activeValue={activeValue}
+                  currentValue={currentValue}
                   isActive={isActive}
                 />
               );
@@ -120,14 +120,14 @@ export function ZSidebar(props: ZSidebarProps) {
 interface SidebarCollapsibleItemProps {
   item: ZSidebarOption;
   renderItem: ZSidebarProps['renderItem'];
-  activeValue?: string;
+  currentValue?: string;
   isActive: ZSidebarIsActiveFn;
 }
 
 function SidebarCollapsibleItem({
   item,
   renderItem,
-  activeValue,
+  currentValue,
   isActive,
 }: SidebarCollapsibleItemProps) {
   const [isOpen, setIsOpen] = React.useState(!!item.open);
@@ -157,7 +157,7 @@ function SidebarCollapsibleItem({
                 key={index.toString()}
                 item={subItem}
                 renderItem={renderItem}
-                activeValue={activeValue}
+                currentValue={currentValue}
                 isActive={isActive}
               />
             ))}
@@ -171,14 +171,14 @@ function SidebarCollapsibleItem({
 interface ZSidebarMenuItemProps {
   item: ZSidebarItemConfig;
   renderItem: ZSidebarProps['renderItem'];
-  activeValue?: string;
+  currentValue?: string;
   isActive: ZSidebarIsActiveFn;
 }
 
 function ZSidebarMenuItem({
   item,
   renderItem,
-  activeValue,
+  currentValue,
   isActive,
 }: ZSidebarMenuItemProps) {
   return (
@@ -186,7 +186,7 @@ function ZSidebarMenuItem({
       <SidebarMenuButton
         asChild
         className="pl-4"
-        isActive={isActive(item.value, activeValue)}
+        isActive={isActive(item.value, currentValue)}
       >
         {renderItem(item)}
       </SidebarMenuButton>

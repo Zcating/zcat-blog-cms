@@ -50,9 +50,10 @@ export namespace AiApiMock {
     const encoder = new TextEncoder();
 
     function* streamGenerator() {
-      for (let i = 0; i < text.length; i++) {
-        yield encoder.encode(JSON.stringify({ content: text[i] }) + '\n');
-      }
+      // for (let i = 0; i < text.length; i++) {
+      //   yield encoder.encode(JSON.stringify({ content: text[i] }) + '\n');
+      // }
+      yield encoder.encode(JSON.stringify({ content: text }) + '\n');
     }
 
     const iterator = streamGenerator();
@@ -98,7 +99,7 @@ export namespace AiApiMock {
 
 \`\`\`typescript 
 import path from "path";
-const greeting = "Hello, World!";
+const greeting = "Hello, World! Hello, World! Hello, World! Hello, World! Hello, World!";
 console.log(greeting);
 \`\`\`
 

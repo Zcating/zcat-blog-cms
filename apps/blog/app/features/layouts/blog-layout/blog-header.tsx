@@ -1,7 +1,16 @@
 import { ZNavigationMenu, ZStickyHeader } from '@zcat/ui';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 export function BlogHeader() {
+  const { pathname } = useLocation();
+
+  const checkIsActive = (to: string) => {
+    if (to === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(to);
+  };
+
   return (
     <ZStickyHeader>
       <ZNavigationMenu
@@ -12,11 +21,22 @@ export function BlogHeader() {
           { to: '/toolbox', title: '工具箱' },
           { to: '/about', title: '关于' },
         ]}
-        renderItem={(item, index) => (
-          <Link key={index.toString()} to={item.to}>
-            {item.title}
-          </Link>
-        )}
+        renderItem={(item, index) => {
+          const isActive = checkIsActive(item.to);
+          return (
+            <Link
+              key={index.toString()}
+              to={item.to}
+              className={
+                isActive
+                  ? 'text-primary font-medium transition-colors'
+                  : 'text-muted-foreground hover:text-primary transition-colors'
+              }
+            >
+              {item.title}
+            </Link>
+          );
+        }}
       />
     </ZStickyHeader>
   );
