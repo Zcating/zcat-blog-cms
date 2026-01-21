@@ -23,14 +23,7 @@ export function meta() {
 }
 
 export default function ToolboxHomePage() {
-  return (
-    <ZView className="h-full space-y-6 flex flex-col">
-      <AiChat
-        className="flex-1 self-center"
-        emptyComponent={EmptyStateComponent}
-      />
-    </ZView>
-  );
+  return <AiChat className="" emptyComponent={EmptyStateComponent} />;
 }
 
 const items = [
