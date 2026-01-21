@@ -1,4 +1,4 @@
-import { Copy } from 'lucide-react';
+import { ChevronDown, Copy } from 'lucide-react';
 import React from 'react';
 import {
   type PrismAsyncLight,
@@ -8,6 +8,13 @@ import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
 
 import { FoldAnimation } from '@zcat/ui/animation';
 import { useMount, useToggleValue, useWatch } from '@zcat/ui/hooks';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@zcat/ui/shadcn';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 import { copyToClipboard, isFunction } from '@zcat/ui/utils';
 
@@ -69,60 +76,59 @@ export function CodeBlock({
   }
 
   return (
-    <ZView
-      className={cn(
-        'relative overflow-hidden bg-white border rounded-xl border-markdown-code-border',
-        className,
-      )}
-    >
-      <ZView
-        className="flex items-center justify-between border-b border-markdown-code-border px-4 py-2"
-        backgroundColor="rgba(237,237,237,1)"
-      >
-        <ZView className="flex items-center gap-1.5 text-markdown-code-lang">
-          {language}
-        </ZView>
-        <ZView className="flex items-center gap-2">
+    <Card className={cn('py-0 gap-0', className)}>
+      <CardHeader className="flex items-center bg-accent/50 justify-between px-4 py-2">
+        <CardTitle className="text-markdown-code-lang">{language}</CardTitle>
+        <CardAction className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={onCopy}>
             <Copy className="text-gray-500" size={14} />
             <p>复制</p>
           </Button>
           <Button size="sm" variant="outline" onClick={onToggleCollapsed}>
+            <ChevronDown
+              className={cn(
+                'transition-transform duration-200 ease-out motion-reduce:transition-none motion-reduce:transform-none',
+                isCollapsed ? 'rotate-180' : 'rotate-360',
+              )}
+              size={14}
+            />
             <p>{isCollapsed ? '折叠' : '展开'}</p>
           </Button>
-        </ZView>
-      </ZView>
-      <FoldAnimation isOpen={isCollapsed} className="py-3">
-        <SyntaxHighlighter
-          language={language}
-          PreTag={CustomPre}
-          CodeTag={CustomCode}
-          style={vsStyle}
-          showLineNumbers
-          wrapLines
-          lineProps={{
-            style: {
-              display: 'block',
-              paddingLeft: '3.5em',
-              position: 'relative',
-            },
-          }}
-          lineNumberStyle={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: '3em',
-            textAlign: 'right',
-            paddingRight: '1em',
-            userSelect: 'none',
-            color: '#9CA3AF',
-          }}
-          {...props}
-        >
-          {children}
-        </SyntaxHighlighter>
-      </FoldAnimation>
-    </ZView>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="py-3">
+        <FoldAnimation isOpen={isCollapsed}>
+          <SyntaxHighlighter
+            language={language}
+            PreTag={CustomPre}
+            CodeTag={CustomCode}
+            style={vsStyle}
+            showLineNumbers
+            wrapLines
+            lineProps={{
+              style: {
+                display: 'block',
+                paddingLeft: '3.5em',
+                position: 'relative',
+              },
+            }}
+            lineNumberStyle={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '3em',
+              textAlign: 'right',
+              paddingRight: '1em',
+              userSelect: 'none',
+              color: '#9CA3AF',
+            }}
+            {...props}
+          >
+            {children}
+          </SyntaxHighlighter>
+        </FoldAnimation>
+      </CardContent>
+    </Card>
   );
 }
 

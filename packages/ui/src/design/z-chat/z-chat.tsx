@@ -114,7 +114,7 @@ export function ZChat({
   return (
     <ZView
       className={cn(
-        'flex flex-col h-full w-full bg-background items-center gap-3',
+        'flex flex-col h-full w-full items-center gap-3',
         className,
       )}
       {...props}
