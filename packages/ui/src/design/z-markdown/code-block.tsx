@@ -22,7 +22,7 @@ import { ZSyntaxHighlighter } from './z-syntax-highlighter';
 
 export interface CodeBlockProps {
   language: string;
-  children: string;
+  children: React.ReactNode;
   className?: string;
 }
 
@@ -32,7 +32,7 @@ const rendererRegistry: Record<string, React.FC<any>> = {
   default: ZSyntaxHighlighter,
 };
 
-function useRenderer(language: string) {
+function getRenderer(language: string) {
   return rendererRegistry[language.toLowerCase()] || rendererRegistry.default;
 }
 
@@ -46,6 +46,9 @@ export function CodeBlock({
 
   const onCopy = async () => {
     try {
+      if (typeof children !== 'string') {
+        return;
+      }
       await copyToClipboard(children);
     } catch {
       return;
@@ -53,7 +56,7 @@ export function CodeBlock({
   };
 
   // Determine which renderer to use
-  const Renderer = useRenderer(language);
+  const Renderer = getRenderer(language);
 
   return (
     <Card className={cn('py-0 gap-0', className)}>

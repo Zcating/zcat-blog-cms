@@ -8,17 +8,19 @@ import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
 
 import { useAsyncImport, useWatch } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
-import { isFunction } from '@zcat/ui/utils';
 
-import { languageLoaderMap } from './language-loader-map';
+import { getLanguageLoader } from './language-loader-map';
 
 export interface ZSyntaxHighlighterProps extends SyntaxHighlighterProps {
   children: string;
   language?: string;
 }
 
-const SyntaxHighlighterImporter = () =>
-  import('react-syntax-highlighter/dist/esm/prism-async-light');
+const SyntaxHighlighterImporter = async () => {
+  const module =
+    await import('react-syntax-highlighter/dist/esm/prism-async-light');
+  return module.default;
+};
 
 export function ZSyntaxHighlighter({
   language = '',
@@ -34,12 +36,8 @@ export function ZSyntaxHighlighter({
     if (!currentLang || !highlighter) {
       return;
     }
-    const loaderFn = languageLoaderMap[currentLang.toLowerCase()];
-    if (!isFunction(loaderFn)) {
-      return;
-    }
-    const loader = await loaderFn();
-    highlighter?.registerLanguage(language, loader.default as any);
+    const loader = await getLanguageLoader(currentLang);
+    highlighter.registerLanguage(currentLang, loader);
   });
 
   if (!SyntaxHighlighter) {
@@ -78,7 +76,7 @@ export function ZSyntaxHighlighter({
   );
 }
 
-interface CustomPreProps extends React.ComponentProps<'pre'> {}
+type CustomPreProps = React.ComponentProps<'pre'>;
 
 function CustomPre({ className, style, ...props }: CustomPreProps) {
   return (
@@ -94,7 +92,7 @@ function CustomPre({ className, style, ...props }: CustomPreProps) {
   );
 }
 
-interface CustomCodeProps extends React.ComponentProps<'code'> {}
+type CustomCodeProps = React.ComponentProps<'code'>;
 
 function CustomCode({ className, style, ...props }: CustomCodeProps) {
   return (

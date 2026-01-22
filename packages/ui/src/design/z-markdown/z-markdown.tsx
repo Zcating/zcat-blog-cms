@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
 import { cn } from '@zcat/ui/shadcn';
+import { safeArray } from '@zcat/ui/utils';
 
 import { CodeBlock } from './code-block';
 
@@ -18,12 +19,9 @@ export interface ZMarkdownProps {
 const MarkdownComponents: Components = {
   code: ({ node, className, children }) => {
     const match = /language-(\w+)/.exec(className || '');
-    if (!match || typeof children !== 'string') {
-      return <code className={className}>{children}</code>;
-    }
-
+    const language = safeArray<string>(match)[1] ?? '';
     return (
-      <CodeBlock language={match[1]} className={className}>
+      <CodeBlock language={language} className={className}>
         {children}
       </CodeBlock>
     );

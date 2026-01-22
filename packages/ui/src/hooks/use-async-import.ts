@@ -6,7 +6,7 @@ const cache = new Map<string, any>();
 
 export function useAsyncImport<T>(
   key: string,
-  importer: () => Promise<{ default: any }>,
+  importer: () => Promise<T>,
 ): T | undefined {
   const [module, setModule] = useState<T | undefined>(() => {
     if (key && cache.has(key)) {
@@ -27,12 +27,10 @@ export function useAsyncImport<T>(
 
     try {
       const result = await importer();
-      // Handle both ES modules (default export) and CommonJS/others
-      const exportContent = result.default || result;
 
-      cache.set(key, exportContent);
+      cache.set(key, result);
 
-      setModule(() => exportContent);
+      setModule(() => result);
     } catch (error) {
       console.error(
         `Failed to load async module${key ? ` (${key})` : ''}:`,

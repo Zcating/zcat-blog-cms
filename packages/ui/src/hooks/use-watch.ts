@@ -5,7 +5,7 @@ import { isFunction, Teardown } from '../utils';
 import { useMemoizedFn } from './use-memoized-fn';
 
 export function useWatch<T extends unknown[] | []>(
-  deps: T,
+  deps: [...T],
   callback: (...args: [...T]) => void | Teardown | Promise<void>,
 ) {
   const handleCallback = useMemoizedFn(callback);

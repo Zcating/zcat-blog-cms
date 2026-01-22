@@ -1,4 +1,6 @@
-type LoaderType = { default: unknown };
+import { isFunction } from '@zcat/ui/utils';
+
+type LoaderType = { default: () => any };
 
 export const languageLoaderMap: Record<
   string,
@@ -53,3 +55,12 @@ export const languageLoaderMap: Record<
     import('react-syntax-highlighter/dist/esm/languages/prism/kotlin'),
   kt: () => import('react-syntax-highlighter/dist/esm/languages/prism/kotlin'),
 };
+
+export async function getLanguageLoader(language: string): Promise<() => any> {
+  const importer = languageLoaderMap[language.toLowerCase()];
+  if (!isFunction(importer)) {
+    return () => null;
+  }
+  const module = await importer();
+  return module.default;
+}

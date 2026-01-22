@@ -10,3 +10,4 @@ export * from './use-boolean';
 export * from './use-toggle-value';
 export * from './use-adapt-element';
 export * from './use-async-import';
+export * from './use-async';
