@@ -3,7 +3,7 @@ import { ZView } from '@zcat/ui';
 import { ArticleApi } from '@blog/apis';
 import { PostContentView } from '@blog/features';
 
-import type { Route } from '../+types/post-board.id';
+import type { Route } from '../index/+types/post-board.id';
 
 export function meta(args: Route.MetaArgs) {
   const article = args.loaderData.article;

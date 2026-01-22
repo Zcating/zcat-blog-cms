@@ -5,7 +5,7 @@ import { ArticleApi } from '@blog/apis';
 import { PostExcerptCard } from '@blog/features/components/post';
 import { safePositiveNumber } from '@blog/utils';
 
-import type { Route } from '../+types/post-board';
+import type { Route } from '../index/+types/post-board';
 
 export function meta() {
   return [{ title: '文章' }, { name: 'description', content: '个人技术博客' }];

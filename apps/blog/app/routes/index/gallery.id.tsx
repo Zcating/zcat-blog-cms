@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router';
 import { GalleryApi } from '@blog/apis';
 import { PhotoPoster } from '@blog/features';
 
-import type { Route } from '../+types/gallery.id';
+import type { Route } from '../index/+types/gallery.id';
 
 export function meta() {
   return [{ title: '相册' }, { name: 'description', content: '个人技术博客' }];
