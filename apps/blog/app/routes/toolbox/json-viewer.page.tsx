@@ -125,14 +125,14 @@ export default function JsonViewerPage() {
 
   return (
     <ZView className="p-4 space-y-6 h-full w-full flex flex-col">
-      <div className="space-y-2">
+      <ZView className="space-y-2">
         <h1 className="text-2xl font-bold">JSON 结构化查看</h1>
         <p className="text-sm text-muted-foreground">
           输入 JSON 字符串，将其转换为可视化的树形结构，方便阅读和分析。
         </p>
-      </div>
+      </ZView>
 
-      <div className="flex-1 flex gap-6 min-h-0">
+      <ZView className="flex-1 flex gap-6 min-h-0">
         {/* 左侧：输入区 */}
         <Card className="flex-1 flex flex-col h-full min-w-0">
           <CardHeader>
@@ -150,9 +150,9 @@ export default function JsonViewerPage() {
               placeholder="请在此粘贴 JSON 内容..."
             />
             {error && (
-              <div className="text-destructive text-sm bg-destructive/10 p-2 rounded">
+              <ZView className="text-destructive text-sm bg-destructive/10 p-2 rounded">
                 解析错误: {error}
-              </div>
+              </ZView>
             )}
             <ZButton
               className="w-full"
@@ -185,7 +185,7 @@ export default function JsonViewerPage() {
             </ZView>
           </CardContent>
         </Card>
-      </div>
+      </ZView>
     </ZView>
   );
 }
