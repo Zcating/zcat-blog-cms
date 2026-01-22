@@ -1,2 +1,1 @@
-export * from './toolbox-header';
-export * from './toolbox-footer';
+export * from './toolbox.layout';

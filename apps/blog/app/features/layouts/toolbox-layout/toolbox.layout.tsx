@@ -1,7 +1,8 @@
 import { cn, ZSidebar, type ZSidebarOption } from '@zcat/ui';
 import { Link, Outlet } from 'react-router';
 
-import { ToolbarHeader, ToolboxFooter } from '@blog/features';
+import { ToolboxFooter } from './toolbox-footer';
+import { ToolbarHeader } from './toolbox-header';
 
 const items: ZSidebarOption[] = [
   {
@@ -59,7 +60,7 @@ export default function ToolboxLayout() {
       options={items}
       renderItem={renderItem}
       header={ToolbarHeader}
-      footer={ToolboxFooter}
+      sidebarFooter={ToolboxFooter}
     >
       <Outlet />
     </ZSidebar>
