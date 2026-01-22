@@ -16,6 +16,10 @@ const items: ZSidebarOption[] = [
         value: '/toolbox/ip-lookup',
       },
       {
+        label: 'Hash 计算',
+        value: '/toolbox/hash',
+      },
+      {
         label: 'RSA 加解密',
         value: '/toolbox/rsa-crypto',
       },

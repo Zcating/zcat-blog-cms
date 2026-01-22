@@ -20,6 +20,7 @@ export default [
       'routes/toolbox/id-card-generator.page.tsx',
     ),
     route('toolbox/ip-lookup', 'routes/toolbox/ip-lookup.page.tsx'),
+    route('toolbox/hash', 'routes/toolbox/hash.page.tsx'),
     route('toolbox/rsa-crypto', 'routes/toolbox/rsa-crypto.page.tsx'),
   ]),
   route('gallery/:id', 'routes/gallery.id.tsx'),
