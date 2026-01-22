@@ -1,4 +1,5 @@
 import {
+  cn,
   createObservableMessage,
   useMemoizedFn,
   ZChat,
@@ -77,7 +78,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
   return (
     <ZChat
-      className={className}
+      className={cn('overflow-hidden', className)}
       messages={messages}
       onSend={handleSendMessage}
       onAbort={handleAbort}

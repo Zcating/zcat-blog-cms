@@ -2,7 +2,7 @@ import { isFunction } from '@zcat/ui/utils';
 
 type LoaderType = { default: () => any };
 
-export const languageLoaderMap: Record<
+const languageLoaderMap: Record<
   string,
   (() => Promise<LoaderType>) | undefined
 > = {

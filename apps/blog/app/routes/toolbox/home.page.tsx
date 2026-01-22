@@ -29,7 +29,7 @@ export function meta() {
 }
 
 export default function ToolboxHomePage() {
-  return <AiChat className="" emptyComponent={EmptyStateComponent} />;
+  return <AiChat emptyComponent={EmptyStateComponent} />;
 }
 
 const items = [

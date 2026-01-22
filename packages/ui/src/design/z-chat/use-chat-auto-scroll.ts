@@ -16,14 +16,17 @@ export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
   const [isAtBottom, setIsAtBottom] = React.useState(true);
   const isAtBottomRef = React.useRef(true);
 
-  const scrollToBottom = useMemoizedFn(() => {
+  const scrollToBottom = useMemoizedFn((behavior: ScrollBehavior = 'auto') => {
     const el = scrollRef.current;
     if (!el) {
       return;
     }
+    if (el.scrollHeight <= el.clientHeight + bottomTolerance) {
+      return;
+    }
     el.scrollTo({
       top: el.scrollHeight,
-      behavior: 'smooth',
+      behavior,
     });
   });
 
@@ -47,15 +50,17 @@ export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
       return;
     }
 
-    const startScroll = throttle(() => {
+    // const startScroll = throttle(() => {
+    //   if (!isAtBottomRef.current) {
+    //     return;
+    //   }
+    //   scrollToBottom('auto');
+    // }, intervalMs);
+    const observer = new MutationObserver(() => {
       if (!isAtBottomRef.current) {
         return;
       }
-      scrollToBottom();
-    }, intervalMs);
-    const observer = new MutationObserver(() => {
-      startScroll();
-      console.log('isAtBottomRef.current', isAtBottomRef.current);
+      scrollToBottom('auto');
     });
 
     observer.observe(el, {
@@ -74,7 +79,7 @@ export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
   const lockToBottom = useMemoizedFn(() => {
     isAtBottomRef.current = true;
     setIsAtBottom(true);
-    scrollToBottom();
+    scrollToBottom('smooth');
   });
 
   return {
