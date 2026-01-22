@@ -7,7 +7,7 @@ import {
   CardTitle,
   ZView,
 } from '@zcat/ui';
-import { Globe, IdCard, Image as ImageIcon } from 'lucide-react';
+import { Globe, IdCard, Image as ImageIcon, Key } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { AiChat } from '@blog/features';
@@ -32,6 +32,12 @@ const items = [
     description: '查询当前网络 IP 地址及归属地信息。',
     to: '/toolbox/ip-lookup',
     Icon: Globe,
+  },
+  {
+    title: 'RSA 加解密',
+    description: '在线生成 RSA 密钥对，进行公钥加密和私钥解密。',
+    to: '/toolbox/rsa-crypto',
+    Icon: Key,
   },
   {
     title: '图片和 Base64 互转',

@@ -16,6 +16,10 @@ const items: ZSidebarOption[] = [
         value: '/toolbox/ip-lookup',
       },
       {
+        label: 'RSA 加解密',
+        value: '/toolbox/rsa-crypto',
+      },
+      {
         label: '图片和 Base64 互转',
         value: '/toolbox/base64-to-image',
       },
