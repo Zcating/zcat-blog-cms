@@ -1,13 +1,10 @@
+/* eslint-disable react-hooks/static-components */
 import { ChevronDown, Copy } from 'lucide-react';
 import React from 'react';
-import {
-  type PrismAsyncLight,
-  type SyntaxHighlighterProps,
-} from 'react-syntax-highlighter';
-import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
+// import { type SyntaxHighlighterProps } from 'react-syntax-highlighter';
 
 import { FoldAnimation } from '@zcat/ui/animation';
-import { useMount, useToggleValue, useWatch } from '@zcat/ui/hooks';
+import { useToggleValue } from '@zcat/ui/hooks';
 import {
   Card,
   CardAction,
@@ -16,18 +13,28 @@ import {
   CardTitle,
 } from '@zcat/ui/shadcn';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
-import { copyToClipboard, isFunction } from '@zcat/ui/utils';
+import { copyToClipboard } from '@zcat/ui/utils';
 
 import { Button } from '../../shadcn/ui/button';
 
-import { languageLoaderMap } from './language-loader-map';
+import { ZMermaid } from './z-mermaid';
+import { ZSyntaxHighlighter } from './z-syntax-highlighter';
 
-export interface CodeBlockProps extends SyntaxHighlighterProps {
+export interface CodeBlockProps {
+  language: string;
   children: string;
   className?: string;
 }
 
-let SyntaxHighlighterCache: typeof PrismAsyncLight | undefined = void 0;
+// Renderer Registry
+const rendererRegistry: Record<string, React.FC<any>> = {
+  mermaid: ZMermaid,
+  default: ZSyntaxHighlighter,
+};
+
+function useRenderer(language: string) {
+  return rendererRegistry[language.toLowerCase()] || rendererRegistry.default;
+}
 
 export function CodeBlock({
   language = '',
@@ -35,32 +42,7 @@ export function CodeBlock({
   className,
   ...props
 }: CodeBlockProps) {
-  const [SyntaxHighlighter, setSyntaxHighlighter] = React.useState<
-    typeof PrismAsyncLight | undefined
-  >(() => SyntaxHighlighterCache);
   const [isCollapsed, onToggleCollapsed] = useToggleValue(true);
-
-  useMount(async () => {
-    if (SyntaxHighlighterCache) {
-      return;
-    }
-    // prettier-ignore
-    const module = await import('react-syntax-highlighter/dist/esm/prism-async-light');
-    SyntaxHighlighterCache = module.default;
-    setSyntaxHighlighter(() => SyntaxHighlighterCache);
-  });
-
-  useWatch([language, SyntaxHighlighter], async (currentLang, highlighter) => {
-    if (!currentLang && !highlighter) {
-      return;
-    }
-    const loaderFn = languageLoaderMap[currentLang.toLowerCase()];
-    if (!isFunction(loaderFn)) {
-      return;
-    }
-    const loader = await loaderFn();
-    highlighter?.registerLanguage(language, loader.default as any);
-  });
 
   const onCopy = async () => {
     try {
@@ -70,9 +52,8 @@ export function CodeBlock({
     }
   };
 
-  if (!SyntaxHighlighter) {
-    return null;
-  }
+  // Determine which renderer to use
+  const Renderer = useRenderer(language);
 
   return (
     <Card className={cn('py-0 gap-0', className)}>
@@ -97,67 +78,11 @@ export function CodeBlock({
       </CardHeader>
       <CardContent className="py-3">
         <FoldAnimation isOpen={isCollapsed}>
-          <SyntaxHighlighter
-            language={language}
-            PreTag={CustomPre}
-            CodeTag={CustomCode}
-            style={vsStyle}
-            showLineNumbers
-            wrapLines
-            lineProps={{
-              style: {
-                display: 'block',
-                paddingLeft: '3.5em',
-                position: 'relative',
-              },
-            }}
-            lineNumberStyle={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: '3em',
-              textAlign: 'right',
-              paddingRight: '1em',
-              userSelect: 'none',
-              color: '#9CA3AF',
-            }}
-            {...props}
-          >
+          <Renderer language={language} className={className} {...props}>
             {children}
-          </SyntaxHighlighter>
+          </Renderer>
         </FoldAnimation>
       </CardContent>
     </Card>
-  );
-}
-
-interface CustomPreProps extends React.ComponentProps<'pre'> {}
-
-/**
- *
- */
-function CustomPre({ className, style, ...props }: CustomPreProps) {
-  return (
-    <pre
-      style={{ margin: 0, padding: '0px 12px' }}
-      className={cn(
-        'border-0 bg-transparent overflow-hidden text-left whitespace-pre-wrap wrap-break-word tab-size-[4]',
-        className,
-      )}
-      // style={style}
-      {...props}
-    />
-  );
-}
-
-interface CustomCodeProps extends React.ComponentProps<'code'> {}
-
-function CustomCode({ className, style, ...props }: CustomCodeProps) {
-  return (
-    <code
-      style={{ margin: 0 }}
-      className="text-[16px] text-left whitespace-pre-wrap wrap-break-word tab-size-[4]"
-      {...props}
-    />
   );
 }
