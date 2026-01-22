@@ -1,3 +1,4 @@
+import CryptoJSW from '@originjs/crypto-js-wasm';
 import {
   ZButton,
   Card,
@@ -9,9 +10,29 @@ import {
   ZSelect,
   ZView,
 } from '@zcat/ui';
-// import JSEncrypt from 'jsencrypt'; // 避免 SSR 报错，改为动态引入
 import { ArrowDown, Copy, Key, Lock, Unlock } from 'lucide-react';
 import { useState } from 'react';
+
+let rsaWasmLoaded = false;
+
+const uint8ArrayToBase64 = (bytes: Uint8Array) => {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+};
+
+const base64ToUint8Array = (base64: string) => {
+  const binary_string = window.atob(base64);
+  const len = binary_string.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes;
+};
 
 export function meta() {
   return [
@@ -46,11 +67,13 @@ export default function RsaCryptoPage() {
     // 使用 setTimeout 让出主线程，避免 UI 卡死
     setTimeout(async () => {
       try {
-        const { default: JSEncrypt } = await import('jsencrypt');
-        const crypt = new JSEncrypt({ default_key_size: keySize });
-        crypt.getKey();
-        const pub = crypt.getPublicKey();
-        const priv = crypt.getPrivateKey();
+        if (!rsaWasmLoaded) {
+          await CryptoJSW.RSA.loadWasm();
+          rsaWasmLoaded = true;
+        }
+        CryptoJSW.RSA.updateRsaKey(parseInt(keySize));
+        const pub = CryptoJSW.RSA.getKeyContent('public', 'pem');
+        const priv = CryptoJSW.RSA.getKeyContent('private', 'pem');
         setPublicKey(pub);
         setPrivateKey(priv);
 
@@ -71,23 +94,35 @@ export default function RsaCryptoPage() {
   const handleProcess = async () => {
     if (!inputKey || !inputText) return;
     try {
-      const { default: JSEncrypt } = await import('jsencrypt');
-      const crypt = new JSEncrypt();
+      if (!rsaWasmLoaded) {
+        await CryptoJSW.RSA.loadWasm();
+        rsaWasmLoaded = true;
+      }
+
       if (mode === 'encrypt') {
-        crypt.setPublicKey(inputKey);
-        const encrypted = crypt.encrypt(inputText);
-        if (!encrypted) {
+        try {
+          const encrypted = CryptoJSW.RSA.encrypt(inputText, {
+            key: inputKey,
+            isPublicKey: true,
+            encryptPadding: 'PKCS1V15',
+          });
+          setOutputText(uint8ArrayToBase64(encrypted));
+        } catch {
           setOutputText('加密失败：可能公钥无效或文本过长');
-        } else {
-          setOutputText(encrypted);
         }
       } else {
-        crypt.setPrivateKey(inputKey);
-        const decrypted = crypt.decrypt(inputText);
-        if (!decrypted) {
+        try {
+          const decrypted = CryptoJSW.RSA.decrypt(
+            base64ToUint8Array(inputText),
+            {
+              key: inputKey,
+              isPublicKey: false,
+              encryptPadding: 'PKCS1V15',
+            },
+          );
+          setOutputText(new TextDecoder().decode(decrypted));
+        } catch {
           setOutputText('解密失败：可能私钥无效或密文不匹配');
-        } else {
-          setOutputText(decrypted);
         }
       }
     } catch (e) {

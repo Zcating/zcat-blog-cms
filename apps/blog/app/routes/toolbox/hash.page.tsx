@@ -1,3 +1,4 @@
+import CryptoJSW from '@originjs/crypto-js-wasm';
 import {
   ZButton,
   Card,
@@ -10,7 +11,8 @@ import {
 } from '@zcat/ui';
 import { ArrowDown, Copy, Hash } from 'lucide-react';
 import { useState } from 'react';
-import SparkMD5 from 'spark-md5';
+
+let md5WasmLoaded = false;
 
 export function meta() {
   return [
@@ -46,8 +48,12 @@ export default function HashPage() {
     setIsProcessing(true);
 
     try {
-      // MD5 (使用 spark-md5)
-      const md5 = SparkMD5.hash(inputText);
+      if (!md5WasmLoaded) {
+        await CryptoJSW.MD5.loadWasm();
+        md5WasmLoaded = true;
+      }
+      // MD5 (使用 crypto-js-wasm)
+      const md5 = CryptoJSW.MD5(inputText).toString();
 
       // SHA 系列 (并行计算)
       const [sha1, sha256, sha512] = await Promise.all([

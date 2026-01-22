@@ -1,7 +1,9 @@
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
-import SparkMD5 from 'spark-md5';
+import CryptoJSW from '@originjs/crypto-js-wasm';
 
 import { HttpClient } from '../http/http-client';
+
+let md5Loaded = false;
 
 export namespace StatisticsApi {
   // 博客访客记录DTO
@@ -44,8 +46,13 @@ export namespace StatisticsApi {
         .map((item) => `${item}=${params[item]}`)
         .join('&');
 
+      if (!md5Loaded) {
+        await CryptoJSW.MD5.loadWasm();
+        md5Loaded = true;
+      }
+
       await HttpClient.post('blog/visitor', params, {
-        'Data-Hash': SparkMD5.hash(serializedParams),
+        'Data-Hash': CryptoJSW.MD5(serializedParams).toString(),
       });
     } catch (error) {
       console.warn('Failed to auto record visit:', error);
