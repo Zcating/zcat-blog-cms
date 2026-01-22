@@ -1,8 +1,7 @@
 import { ChevronsDown, MessageSquare } from 'lucide-react';
 import React from 'react';
 
-import { useAdaptElement } from '@zcat/ui/hooks';
-import { isFunction } from '@zcat/ui/utils';
+import { isFunction, safeReactNode } from '@zcat/ui/utils';
 
 import { ShrinkDownAnimation } from '../../animation';
 import { cn } from '../../shadcn/lib/utils';
@@ -37,8 +36,8 @@ export function createObservableMessage(message: Message): Message {
 export function ZChat({
   messages,
   onSend,
-  onRegenerate,
   onAbort,
+  onRegenerate,
   placeholder = 'Type a message...',
   className,
   emptyComponent: emptyState,
@@ -51,34 +50,9 @@ export function ZChat({
   const { scrollRef, isAtBottom, updateIsAtBottom, lockToBottom } =
     useChatAutoScroll();
 
-  const emptyCompoenent = useAdaptElement(emptyState);
+  const renderEmptyState = () => safeReactNode(emptyState, DefaultEmptyState);
 
-  const renderEmptyState = () => {
-    if (emptyCompoenent) {
-      return emptyCompoenent;
-    }
-    return <DefaultEmptyState />;
-  };
-
-  const [loading, setLoading] = React.useState(false);
-  const handleSend = async (content: string) => {
-    setLoading(true);
-    try {
-      const result = onSend({ role: 'user', content });
-      if (result instanceof Promise) {
-        await result;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAbort = () => {
-    if (isFunction(onAbort)) {
-      onAbort();
-    }
-    setLoading(false);
-  };
+  const { handleSend, handleAbort, loading } = useSender(onSend, onAbort);
 
   return (
     <ZView
@@ -106,7 +80,7 @@ export function ZChat({
       <ZView className="relative">
         <ShrinkDownAnimation
           show={!isAtBottom}
-          className="absolute -top-10 left-[50%] translate-x-[-50%]"
+          className="absolute -top-12 left-[50%] translate-x-[-50%]"
         >
           <ZButton
             variant="outline"
@@ -134,4 +108,35 @@ function DefaultEmptyState() {
       <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
     </ZView>
   );
+}
+
+function useSender(
+  onSend: ZChatProps['onSend'],
+  onAbort?: ZChatProps['onAbort'],
+) {
+  const [loading, setLoading] = React.useState(false);
+  const handleSend = async (content: string) => {
+    setLoading(true);
+    try {
+      const result = onSend({ role: 'user', content });
+      if (result instanceof Promise) {
+        await result;
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAbort = () => {
+    if (isFunction(onAbort)) {
+      onAbort();
+    }
+    setLoading(false);
+  };
+
+  return {
+    handleSend,
+    handleAbort,
+    loading,
+  };
 }

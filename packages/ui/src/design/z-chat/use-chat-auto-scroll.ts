@@ -11,7 +11,7 @@ export interface UseChatAutoScrollOptions {
 export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  const { bottomTolerance = 10, intervalMs = 200 } = options;
+  const { bottomTolerance = 10, intervalMs = 300 } = options;
 
   const [isAtBottom, setIsAtBottom] = React.useState(true);
   const isAtBottomRef = React.useRef(true);
@@ -47,14 +47,16 @@ export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
       return;
     }
 
-    const observer = new MutationObserver(
-      throttle(() => {
-        if (!isAtBottomRef.current) {
-          return;
-        }
-        scrollToBottom();
-      }, intervalMs),
-    );
+    const startScroll = throttle(() => {
+      if (!isAtBottomRef.current) {
+        return;
+      }
+      scrollToBottom();
+    }, intervalMs);
+    const observer = new MutationObserver(() => {
+      startScroll();
+      console.log('isAtBottomRef.current', isAtBottomRef.current);
+    });
 
     observer.observe(el, {
       childList: true,
