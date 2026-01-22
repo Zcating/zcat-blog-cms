@@ -29,16 +29,13 @@ const mermaidImporter = async () => {
 };
 
 export function ZMermaid({ children, className }: ZMermaidProps) {
-  const ref = React.useRef<HTMLDivElement>(null);
   const mermaid = useAsyncImport<Mermaid>('mermaid', mermaidImporter);
-
   const [svg] = useAsync(
     '',
     async () => {
       if (!mermaid) {
         return '';
       }
-
       const id = `mermaid-${generateId()}`;
       const result = await mermaid.render(id, children);
       return result.svg;
@@ -48,7 +45,6 @@ export function ZMermaid({ children, className }: ZMermaidProps) {
 
   return (
     <ZView
-      ref={ref}
       className={cn(
         'flex justify-center p-4 rounded-md overflow-x-auto',
         className,

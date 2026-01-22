@@ -4,7 +4,6 @@ import {
   type PrismAsyncLight,
   type SyntaxHighlighterProps,
 } from 'react-syntax-highlighter';
-import vsStyle from 'react-syntax-highlighter/dist/esm/styles/prism/vs';
 
 import { useAsyncImport, useWatch } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
@@ -22,6 +21,12 @@ const SyntaxHighlighterImporter = async () => {
   return module.default;
 };
 
+const vsStyleImporter = async () => {
+  const module =
+    await import('react-syntax-highlighter/dist/esm/styles/prism/vs');
+  return module.default;
+};
+
 export function ZSyntaxHighlighter({
   language = '',
   children,
@@ -30,6 +35,11 @@ export function ZSyntaxHighlighter({
   const SyntaxHighlighter = useAsyncImport<typeof PrismAsyncLight>(
     'react-syntax-highlighter',
     SyntaxHighlighterImporter,
+  );
+
+  const vsStyle = useAsyncImport<Record<string, React.CSSProperties>>(
+    'vsStyle',
+    vsStyleImporter,
   );
 
   useWatch([language, SyntaxHighlighter], async (currentLang, highlighter) => {
