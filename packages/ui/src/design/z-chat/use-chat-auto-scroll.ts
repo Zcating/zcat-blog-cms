@@ -1,16 +1,17 @@
 import * as React from 'react';
 
 import { useMemoizedFn, useMount } from '@zcat/ui/hooks';
+import { throttle } from '@zcat/ui/utils';
 
 export interface UseChatAutoScrollOptions {
   bottomTolerance?: number;
-  mutationDebounceMs?: number;
+  intervalMs?: number;
 }
 
 export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  const { bottomTolerance = 4, mutationDebounceMs = 300 } = options;
+  const { bottomTolerance = 10, intervalMs = 200 } = options;
 
   const [isAtBottom, setIsAtBottom] = React.useState(true);
   const isAtBottomRef = React.useRef(true);
@@ -46,13 +47,14 @@ export function useChatAutoScroll(options: UseChatAutoScrollOptions = {}) {
       return;
     }
 
-    const observer = new MutationObserver(async () => {
-      if (!isAtBottomRef.current) {
-        return;
-      }
-      await Promise.tick(mutationDebounceMs);
-      scrollToBottom();
-    });
+    const observer = new MutationObserver(
+      throttle(() => {
+        if (!isAtBottomRef.current) {
+          return;
+        }
+        scrollToBottom();
+      }, intervalMs),
+    );
 
     observer.observe(el, {
       childList: true,
