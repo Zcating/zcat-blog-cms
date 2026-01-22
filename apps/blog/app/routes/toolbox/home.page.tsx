@@ -7,7 +7,13 @@ import {
   CardTitle,
   ZView,
 } from '@zcat/ui';
-import { Globe, IdCard, Image as ImageIcon, Key } from 'lucide-react';
+import {
+  FileJsonIcon,
+  Globe,
+  IdCard,
+  Image as ImageIcon,
+  Key,
+} from 'lucide-react';
 import { Link } from 'react-router';
 
 import { AiChat } from '@blog/features';
@@ -50,6 +56,12 @@ const items = [
     description: '生成符合规则的身份证信息，用于测试与演示场景。',
     to: '/toolbox/id-card-generator',
     Icon: IdCard,
+  },
+  {
+    title: 'JSON 查看器',
+    description: '在线查看和格式化 JSON 数据，方便调试与分析。',
+    to: '/toolbox/json-viewer',
+    Icon: FileJsonIcon,
   },
 ] as const;
 

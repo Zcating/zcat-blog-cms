@@ -9,6 +9,7 @@ import {
   ZTextarea,
   ZSelect,
   ZView,
+  ZToggleGroup,
 } from '@zcat/ui';
 import { ArrowDown, Copy, Key, Lock, Unlock } from 'lucide-react';
 import { useState } from 'react';
@@ -47,6 +48,11 @@ export function meta() {
 const KEY_SIZE_OPTIONS = [
   { label: '1024 bit', value: '1024' },
   { label: '2048 bit', value: '2048' },
+];
+
+const MODE_OPTIONS = [
+  { value: 'encrypt', label: '公钥加密' },
+  { value: 'decrypt', label: '私钥解密' },
 ];
 
 export default function RsaCryptoPage() {
@@ -227,33 +233,20 @@ export default function RsaCryptoPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 flex-1">
-            <div className="flex gap-2 p-1 bg-muted rounded-lg">
-              <ZButton
-                variant={mode === 'encrypt' ? 'default' : 'ghost'}
-                className="flex-1"
-                onClick={() => {
-                  setMode('encrypt');
-                  // 如果刚才生成了密钥，切换模式时自动填充对应的 key
-                  if (publicKey && mode === 'decrypt') {
-                    setInputKey(publicKey);
-                  }
-                }}
-              >
-                公钥加密
-              </ZButton>
-              <ZButton
-                variant={mode === 'decrypt' ? 'default' : 'ghost'}
-                className="flex-1"
-                onClick={() => {
-                  setMode('decrypt');
-                  if (privateKey && mode === 'encrypt') {
-                    setInputKey(privateKey);
-                  }
-                }}
-              >
-                私钥解密
-              </ZButton>
-            </div>
+            <ZToggleGroup
+              type="single"
+              options={MODE_OPTIONS}
+              value={mode}
+              onValueChange={(value) => {
+                const newMode = value as 'encrypt' | 'decrypt';
+                setMode(newMode);
+                if (newMode === 'encrypt' && publicKey) {
+                  setInputKey(publicKey);
+                } else if (newMode === 'decrypt' && privateKey) {
+                  setInputKey(privateKey);
+                }
+              }}
+            />
 
             <div className="space-y-2">
               <Label>

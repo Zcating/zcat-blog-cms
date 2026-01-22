@@ -22,6 +22,7 @@ export default [
     route('toolbox/ip-lookup', 'routes/toolbox/ip-lookup.page.tsx'),
     route('toolbox/hash', 'routes/toolbox/hash.page.tsx'),
     route('toolbox/rsa-crypto', 'routes/toolbox/rsa-crypto.page.tsx'),
+    route('toolbox/json-viewer', 'routes/toolbox/json-viewer.page.tsx'),
   ]),
   route('gallery/:id', 'routes/index/gallery.id.tsx'),
 ] satisfies RouteConfig;
