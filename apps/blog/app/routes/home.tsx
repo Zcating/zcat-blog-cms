@@ -8,7 +8,9 @@ import {
   ZPagination,
   ZSelect,
   StaggerReveal,
+  Calendar,
 } from '@zcat/ui';
+import { useState } from 'react';
 import { createSearchParams, Link, useNavigate } from 'react-router';
 
 import { ArticleApi, UserApi } from '@blog/apis';
@@ -60,6 +62,7 @@ export function meta() {
  *
  */
 export default function HomePage(props: Route.ComponentProps) {
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const loaderData = props.loaderData;
   const userInfo = loaderData.userInfo;
   const pagination = loaderData.pagination;
@@ -111,6 +114,19 @@ export default function HomePage(props: Route.ComponentProps) {
                 options={SORT_OPTIONS}
                 value={order}
                 onValueChange={handleOrderChange}
+              />
+            </CardContent>
+          </Card>
+          <Card data-home-left-card="true" className="w-xs">
+            <CardHeader>
+              <CardTitle>日历</CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border shadow-sm"
               />
             </CardContent>
           </Card>

@@ -19,6 +19,7 @@ export default [
       'toolbox/id-card-generator',
       'routes/toolbox/id-card-generator.page.tsx',
     ),
+    route('toolbox/ip-lookup', 'routes/toolbox/ip-lookup.page.tsx'),
   ]),
   route('gallery/:id', 'routes/gallery.id.tsx'),
 ] satisfies RouteConfig;

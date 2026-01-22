@@ -7,7 +7,7 @@ import {
   CardTitle,
   ZView,
 } from '@zcat/ui';
-import { IdCard, Image as ImageIcon } from 'lucide-react';
+import { Globe, IdCard, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { AiChat } from '@blog/features';
@@ -27,6 +27,12 @@ export default function ToolboxHomePage() {
 }
 
 const items = [
+  {
+    title: 'IP 查询',
+    description: '查询当前网络 IP 地址及归属地信息。',
+    to: '/toolbox/ip-lookup',
+    Icon: Globe,
+  },
   {
     title: '图片和 Base64 互转',
     description: '将图片转换为 Base64，或将 Base64 还原为图片。',

@@ -12,6 +12,10 @@ const items: ZSidebarOption[] = [
     label: '常用',
     children: [
       {
+        label: 'IP 查询',
+        value: '/toolbox/ip-lookup',
+      },
+      {
         label: '图片和 Base64 互转',
         value: '/toolbox/base64-to-image',
       },
