@@ -11,13 +11,8 @@ import {
   PopoverTrigger,
 } from '@zcat/ui/shadcn/ui/popover';
 
+import { CascaderOption } from '../types';
 import { ZView } from '../z-view';
-
-export interface CascaderOption<T extends string | number = string> {
-  label: string;
-  value: T;
-  children?: CascaderOption<T>[];
-}
 
 interface ZCascaderProps<T extends string | number = string> {
   defaultValue?: T[];

@@ -182,17 +182,6 @@ code::after {
 :root {
   --header-height: calc(--spacing(16));
   --footer-height: calc(--spacing(10));
-
-  /* 
-    模拟 CSS 函数: calc-height
-    用法: 
-    .element {
-      --deduct-height: var(--header-height);
-      height: var(--calc-height);
-    }
-  */
-  --deduct-height: 0px;
-  --calc-height: calc(100vh - var(--deduct-height));
 }
 
 .top-header-height {
@@ -212,11 +201,9 @@ code::after {
 }
 
 .h-sidebar-content {
-  --deduct-height: calc(var(--header-height) + var(--footer-height));
-  height: calc(100vh - var(--deduct-height));
+  height: calc(100vh - var(--header-height));
 }
 
 .min-h-sidebar-content {
-  --deduct-height: calc(var(--header-height) + var(--footer-height));
-  min-height: calc(100vh - var(--deduct-height));
+  min-height: calc(100vh - var(--header-height));
 }

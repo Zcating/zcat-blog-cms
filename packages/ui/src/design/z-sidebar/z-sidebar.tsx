@@ -70,7 +70,7 @@ export function ZSidebar(props: ZSidebarProps) {
   } = props;
 
   const adaptedHeader = useAdaptElement(header);
-  const adaptedFooter = useAdaptElement(footer);
+  // const adaptedFooter = useAdaptElement(footer);
   const adaptedSidebarHeader = useAdaptElement(sidebarHeader);
   const adaptedSidebarFooter = useAdaptElement(sidebarFooter);
 
@@ -109,8 +109,7 @@ export function ZSidebar(props: ZSidebarProps) {
           <SidebarFooter>{adaptedSidebarFooter}</SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <ZView className="h-sidebar-content w-full">{children}</ZView>
-          <ZView className="h-footer-height">{adaptedFooter}</ZView>
+          <ZView className="h-sidebar-content">{children}</ZView>
         </SidebarInset>
       </ZView>
     </SidebarProvider>
