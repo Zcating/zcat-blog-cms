@@ -125,6 +125,17 @@ $$
 \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
 $$
 
+
+\`\`\`mermaid
+graph TD
+    A[开始] --> B{输入数据};
+    B --> C{数据有效?};
+    C -->|是| D[处理数据];
+    C -->|否| E[显示错误];
+    D --> F[结束];
+    E --> B;
+\`\`\`
+
 ## 链接
 
 [ZCat UI](https://github.com/zcat-ui)

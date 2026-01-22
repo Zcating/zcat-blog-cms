@@ -19,7 +19,6 @@ import { cn } from '@zcat/ui/shadcn/lib/utils';
 import { copyToClipboard, isFunction } from '@zcat/ui/utils';
 
 import { Button } from '../../shadcn/ui/button';
-import { ZView } from '../z-view';
 
 import { languageLoaderMap } from './language-loader-map';
 
