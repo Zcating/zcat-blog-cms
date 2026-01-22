@@ -17,7 +17,7 @@ import { ArticleApi, UserApi } from '@blog/apis';
 import { PostExcerptCard } from '@blog/features';
 import { safePositiveNumber } from '@blog/utils';
 
-import type { Route } from './+types/home';
+import type { Route } from '../+types/home';
 
 /**
  * 排序选项

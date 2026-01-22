@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
 
-import type { Route } from './+types/gallery';
+import type { Route } from '../+types/gallery';
 
 export function meta() {
   return [{ title: '相册' }, { name: 'description', content: '个人技术博客' }];
