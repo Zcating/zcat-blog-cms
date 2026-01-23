@@ -25,8 +25,16 @@ const items: ZSidebarOption[] = [
         value: '/toolbox/rsa-crypto',
       },
       {
+        label: 'AES 加解密',
+        value: '/toolbox/aes-crypto',
+      },
+      {
         label: '图片和 Base64 互转',
         value: '/toolbox/base64-to-image',
+      },
+      {
+        label: '二维码生成',
+        value: '/toolbox/qrcode-generator',
       },
       {
         label: '身份证生成',

@@ -22,6 +22,7 @@ export * from './z-textarea';
 export * from './z-image-upload';
 export * from './z-chat';
 export * from './z-toggle-group';
+export * from './z-qrcode';
 export * from './z-tree';
 export * from './types';
 

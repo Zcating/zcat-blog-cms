@@ -23,6 +23,11 @@ export default [
     route('toolbox/hash', 'routes/toolbox/hash.page.tsx'),
     route('toolbox/rsa-crypto', 'routes/toolbox/rsa-crypto.page.tsx'),
     route('toolbox/json-viewer', 'routes/toolbox/json-viewer.page.tsx'),
+    route('toolbox/aes-crypto', 'routes/toolbox/aes-crypto.page.tsx'),
+    route(
+      'toolbox/qrcode-generator',
+      'routes/toolbox/qrcode-generator.page.tsx',
+    ),
   ]),
   route('gallery/:id', 'routes/index/gallery.id.tsx'),
 ] satisfies RouteConfig;
