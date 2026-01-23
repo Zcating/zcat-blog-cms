@@ -14,7 +14,7 @@ import {
 } from '@zcat/ui';
 import CryptoJS from 'crypto-js';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { z } from 'zod';
 
 export function meta() {
@@ -217,17 +217,6 @@ export default function AesCryptoPage() {
   const operationMode = form.instance.watch('mode');
   const currentAesMode = form.instance.watch('aesMode');
 
-  // 监听模式变化，自动调整输入输出编码默认值
-  useEffect(() => {
-    if (operationMode === 'encrypt') {
-      form.instance.setValue('inputEncoding', 'Utf8');
-      form.instance.setValue('outputEncoding', 'Base64');
-    } else {
-      form.instance.setValue('inputEncoding', 'Base64');
-      form.instance.setValue('outputEncoding', 'Utf8');
-    }
-  }, [operationMode, form.instance]);
-
   const copyToClipboard = (text: string) => {
     if (text) {
       navigator.clipboard.writeText(text);
@@ -282,12 +271,22 @@ export default function AesCryptoPage() {
               </div>
             )}
 
-            <AesForm.Item name="aesMode" label="加密模式 (Mode)">
-              <ZSelect options={AES_MODES} />
+            <div className="grid grid-cols-2 gap-4">
+              <AesForm.Item name="aesMode" label="加密模式 (Mode)">
+                <ZSelect options={AES_MODES} />
+              </AesForm.Item>
+
+              <AesForm.Item name="padding" label="填充方式 (Padding)">
+                <ZSelect options={AES_PADDINGS} />
+              </AesForm.Item>
+            </div>
+
+            <AesForm.Item name="inputEncoding" label="明文编码 (Input)">
+              <ZSelect options={AES_ENCODINGS} />
             </AesForm.Item>
 
-            <AesForm.Item name="padding" label="填充方式 (Padding)">
-              <ZSelect options={AES_PADDINGS} />
+            <AesForm.Item name="outputEncoding" label="密文编码 (Output)">
+              <ZSelect options={AES_ENCODINGS} />
             </AesForm.Item>
           </CardContent>
         </Card>
@@ -309,31 +308,21 @@ export default function AesCryptoPage() {
               <ZToggleGroup type="single" options={OPERATION_MODES} />
             </AesForm.Item>
 
-            <div className="flex gap-2 items-start">
-              <AesForm.Item
-                name="text"
-                label={
-                  operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
+            <AesForm.Item
+              name="text"
+              label={
+                operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
+              }
+            >
+              <ZTextarea
+                className="font-mono min-h-32"
+                placeholder={
+                  operationMode === 'encrypt'
+                    ? '请输入要加密的内容...'
+                    : '请输入要解密的内容...'
                 }
-                className="flex-1"
-              >
-                <ZTextarea
-                  className="font-mono min-h-32"
-                  placeholder={
-                    operationMode === 'encrypt'
-                      ? '请输入要加密的内容...'
-                      : '请输入要解密的内容...'
-                  }
-                />
-              </AesForm.Item>
-              <AesForm.Item
-                name="inputEncoding"
-                label="编码"
-                className="w-28 shrink-0"
-              >
-                <ZSelect options={AES_ENCODINGS} />
-              </AesForm.Item>
-            </div>
+              />
+            </AesForm.Item>
 
             <div className="flex justify-center">
               <ZButton
@@ -347,22 +336,11 @@ export default function AesCryptoPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <Label>
-                    {operationMode === 'encrypt'
-                      ? '密文 (Output)'
-                      : '明文 (Output)'}
-                  </Label>
-                  <div className="w-28">
-                    <AesForm.Item
-                      name="outputEncoding"
-                      label=""
-                      className="mb-0"
-                    >
-                      <ZSelect options={AES_ENCODINGS} />
-                    </AesForm.Item>
-                  </div>
-                </div>
+                <Label>
+                  {operationMode === 'encrypt'
+                    ? '密文 (Output)'
+                    : '明文 (Output)'}
+                </Label>
                 <ZButton
                   variant="ghost"
                   size="sm"
