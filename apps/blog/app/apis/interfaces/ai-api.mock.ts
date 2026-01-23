@@ -16,7 +16,7 @@ export namespace AiApiMock {
   export function chat(): ChatStreamHandler<ChatMessage[]> {
     return createHandler(async (params: ChatMessage[], controller) => {
       const stream = createTestStreamResponse(
-        `收到了${params[params.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？\n${markdownContent}`,
+        `收到了${params[params.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？\n${mermaidTestContent}`,
       );
 
       return Stream.from(stream, controller);
@@ -50,10 +50,10 @@ export namespace AiApiMock {
     const encoder = new TextEncoder();
 
     function* streamGenerator() {
-      // for (let i = 0; i < text.length; i++) {
-      //   yield encoder.encode(JSON.stringify({ content: text[i] }) + '\n');
-      // }
-      yield encoder.encode(JSON.stringify({ content: text }) + '\n');
+      for (let i = 0; i < text.length; i++) {
+        yield encoder.encode(JSON.stringify({ content: text[i] }) + '\n');
+      }
+      // yield encoder.encode(JSON.stringify({ content: text }) + '\n');
     }
 
     const iterator = streamGenerator();
@@ -126,6 +126,14 @@ $$
 $$
 
 
+
+## 链接
+
+[ZCat UI](https://github.com/zcat-ui)
+`;
+}
+
+const mermaidTestContent = `
 \`\`\`mermaid
 graph TD
     A[开始] --> B{输入数据};
@@ -135,9 +143,4 @@ graph TD
     D --> F[结束];
     E --> B;
 \`\`\`
-
-## 链接
-
-[ZCat UI](https://github.com/zcat-ui)
 `;
-}

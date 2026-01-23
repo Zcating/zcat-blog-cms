@@ -47,6 +47,9 @@ export function ZSyntaxHighlighter({
       return;
     }
     const loader = await getLanguageLoader(currentLang);
+    if (!loader) {
+      return;
+    }
     highlighter.registerLanguage(currentLang, loader);
   });
 

@@ -18,6 +18,7 @@ export interface ZMarkdownProps {
 
 const MarkdownComponents: Components = {
   code: ({ node, className, children }) => {
+    console.log(node);
     const match = /language-(\w+)/.exec(className || '');
     const language = safeArray<string>(match)[1] ?? '';
     return (

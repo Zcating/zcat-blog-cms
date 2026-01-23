@@ -29,7 +29,11 @@ export function meta() {
 }
 
 export default function ToolboxHomePage() {
-  return <AiChat emptyComponent={EmptyStateComponent} />;
+  return (
+    <ZView className="h-full">
+      <AiChat emptyComponent={EmptyStateComponent} />
+    </ZView>
+  );
 }
 
 const items = [

@@ -57,14 +57,14 @@ export function ZChat({
   return (
     <ZView
       className={cn(
-        'relative flex flex-col h-full w-full items-center gap-3',
+        'relative flex flex-col h-full w-full items-center',
         className,
       )}
       {...props}
     >
       <ZView
         ref={scrollRef}
-        className="w-full flex-1 overflow-y-auto space-y-6 z-scrollbar px-4 md:px-20 lg:px-40"
+        className="w-full flex-1 overflow-y-auto space-y-6 z-scrollbar py-4 px-4 md:px-20 lg:px-40"
         onScroll={updateIsAtBottom}
       >
         {renderedMessages.length === 0
