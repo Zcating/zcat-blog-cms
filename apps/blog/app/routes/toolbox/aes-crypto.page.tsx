@@ -14,8 +14,7 @@ import {
 } from '@zcat/ui';
 import CryptoJS from 'crypto-js';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
-import { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 
 export function meta() {
@@ -50,6 +49,14 @@ const AES_PADDINGS = [
   { label: 'NoPadding', value: 'NoPadding' },
 ] as CommonOption<AesPaddingEnum>[];
 
+type AesEncodingEnum = 'Utf8' | 'Hex' | 'Base64' | 'Latin1';
+const AES_ENCODINGS = [
+  { label: 'UTF-8', value: 'Utf8' },
+  { label: 'Hex', value: 'Hex' },
+  { label: 'Base64', value: 'Base64' },
+  { label: 'Latin1', value: 'Latin1' },
+] as CommonOption<AesEncodingEnum>[];
+
 const OPERATION_MODES = [
   { label: '加密', value: 'encrypt' },
   { label: '解密', value: 'decrypt' },
@@ -59,7 +66,11 @@ const AesFormSchema = z.object({
   mode: z.enum(['encrypt', 'decrypt']),
   text: z.string().min(1, '请输入内容'),
   key: z.string().min(1, '请输入密钥'),
+  keyEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
   iv: z.string().optional(),
+  ivEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+  inputEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+  outputEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
   aesMode: z.enum(AES_MODES.map((item) => item.value)),
   padding: z.enum(AES_PADDINGS.map((item) => item.value)),
 });
@@ -82,11 +93,26 @@ export default function AesCryptoPage() {
       padding: 'Pkcs7',
       text: '',
       key: '',
+      keyEncoding: 'Utf8',
       iv: '',
+      ivEncoding: 'Utf8',
+      inputEncoding: 'Utf8',
+      outputEncoding: 'Base64',
     },
     onSubmit: (data) => {
       try {
-        const { mode, text, key, iv, aesMode, padding } = data;
+        const {
+          mode,
+          text,
+          key,
+          keyEncoding,
+          iv,
+          ivEncoding,
+          inputEncoding,
+          outputEncoding,
+          aesMode,
+          padding,
+        } = data;
 
         // Config
         const config: CipherOption = {
@@ -94,40 +120,113 @@ export default function AesCryptoPage() {
           padding: CryptoJS.pad[padding],
         };
 
+        const parseInput = (input: string, encoding: AesEncodingEnum) => {
+          try {
+            // 清理空白字符，避免 Base64/Hex 解析因换行符报错
+            const cleanInput =
+              encoding === 'Base64' || encoding === 'Hex'
+                ? input.replace(/\s/g, '')
+                : input;
+
+            return CryptoJS.enc[encoding].parse(cleanInput);
+          } catch (e) {
+            throw new Error(
+              `无法使用 ${encoding} 解析输入: ${(e as Error).message}`,
+            );
+          }
+        };
+
+        const formatOutput = (
+          wordArray: CryptoJS.lib.WordArray,
+          encoding: AesEncodingEnum,
+        ) => {
+          try {
+            return wordArray.toString(CryptoJS.enc[encoding]);
+          } catch (e) {
+            throw new Error(
+              `无法使用 ${encoding} 格式化输出: ${(e as Error).message}`,
+            );
+          }
+        };
+
         // IV 处理：ECB 不需要 IV，其他模式如果用户输入了 IV 则使用
         if (aesMode !== 'ECB' && iv) {
-          config.iv = CryptoJS.enc.Utf8.parse(iv);
+          config.iv = parseInput(iv, ivEncoding);
         }
 
-        const keyParsed = CryptoJS.enc.Utf8.parse(key);
+        const keyParsed = parseInput(key, keyEncoding);
+        const textParsed =
+          mode === 'encrypt'
+            ? parseInput(text, inputEncoding) // 加密时，输入可能是 Utf8, Hex 等
+            : parseInput(text, inputEncoding); // 解密时，输入通常是 Base64/Hex
 
         let result;
         if (mode === 'encrypt') {
-          result = CryptoJS.AES.encrypt(text, keyParsed, config).toString();
+          // encrypt 接受 WordArray
+          const encrypted = CryptoJS.AES.encrypt(textParsed, keyParsed, config);
+          // 加密结果通常转换为 Base64 或 Hex
+          result = formatOutput(encrypted.ciphertext, outputEncoding);
         } else {
           // 解密
-          const decrypted = CryptoJS.AES.decrypt(text, keyParsed, config);
-          result = decrypted.toString(CryptoJS.enc.Utf8);
-          if (!result && decrypted.sigBytes > 0) {
-            // 可能是解密成功但编码不是 UTF8，或者其他情况，这里简单处理
-            // 实际上如果是空字符串可能是解密失败或者原内容为空
+          // decrypt 接受 CipherParams (或 Base64 字符串)
+          // 这里我们传入 WordArray (作为 ciphertext)，需要构建 CipherParams
+          const cipherParams = CryptoJS.lib.CipherParams.create({
+            ciphertext: textParsed,
+          });
+          const decrypted = CryptoJS.AES.decrypt(
+            cipherParams,
+            keyParsed,
+            config,
+          );
+
+          if (outputEncoding === 'Utf8') {
+            try {
+              result = decrypted.toString(CryptoJS.enc.Utf8);
+            } catch {
+              // UTF8 转换失败，尝试 Hex 并提示
+              result = decrypted.toString(CryptoJS.enc.Hex);
+              setOutput(
+                `解密成功，但结果不是有效的 UTF-8 文本。已自动转为 Hex 显示。\n结果: ${result}`,
+              );
+              return;
+            }
+          } else {
+            result = formatOutput(decrypted, outputEncoding);
           }
         }
 
         setOutput(
           result ||
             (mode === 'decrypt'
-              ? '解密结果为空（可能密钥错误或填充不匹配）'
+              ? '解密结果为空（可能密钥错误、填充不匹配或密文损坏）'
               : ''),
         );
       } catch (error: any) {
-        setOutput('执行出错: ' + (error as Error).message);
+        // 捕获解密过程中的具体错误（如 Padding Error）
+        let msg = (error as Error).message;
+        if (msg.includes('Malformed UTF-8')) {
+          msg = '解密后数据不是有效的 UTF-8 文本（密钥错误？）';
+        } else if (msg.includes('Invalid padding')) {
+          msg = '填充无效（密钥错误或填充方式选择错误？）';
+        }
+        setOutput('执行出错: ' + msg);
       }
     },
   });
 
   const operationMode = form.instance.watch('mode');
   const currentAesMode = form.instance.watch('aesMode');
+
+  // 监听模式变化，自动调整输入输出编码默认值
+  useEffect(() => {
+    if (operationMode === 'encrypt') {
+      form.instance.setValue('inputEncoding', 'Utf8');
+      form.instance.setValue('outputEncoding', 'Base64');
+    } else {
+      form.instance.setValue('inputEncoding', 'Base64');
+      form.instance.setValue('outputEncoding', 'Utf8');
+    }
+  }, [operationMode, form.instance]);
 
   const copyToClipboard = (text: string) => {
     if (text) {
@@ -155,14 +254,32 @@ export default function AesCryptoPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 flex-1">
-            <AesForm.Item name="key" label="密钥 (Key)">
-              <ZInput placeholder="请输入密钥" />
-            </AesForm.Item>
+            <div className="flex gap-2 items-start">
+              <AesForm.Item name="key" label="密钥 (Key)" className="flex-1">
+                <ZTextarea placeholder="请输入密钥" className="font-mono" />
+              </AesForm.Item>
+              <AesForm.Item
+                name="keyEncoding"
+                label="编码"
+                className="w-28 shrink-0"
+              >
+                <ZSelect options={AES_ENCODINGS} />
+              </AesForm.Item>
+            </div>
 
             {currentAesMode !== 'ECB' && (
-              <AesForm.Item name="iv" label="偏移量 (IV)">
-                <ZInput placeholder="请输入 IV (ECB模式无需)" />
-              </AesForm.Item>
+              <div className="flex gap-2 items-start">
+                <AesForm.Item name="iv" label="偏移量 (IV)" className="flex-1">
+                  <ZInput placeholder="请输入 IV (ECB模式无需)" />
+                </AesForm.Item>
+                <AesForm.Item
+                  name="ivEncoding"
+                  label="编码"
+                  className="w-28 shrink-0"
+                >
+                  <ZSelect options={AES_ENCODINGS} />
+                </AesForm.Item>
+              </div>
             )}
 
             <AesForm.Item name="aesMode" label="加密模式 (Mode)">
@@ -192,21 +309,31 @@ export default function AesCryptoPage() {
               <ZToggleGroup type="single" options={OPERATION_MODES} />
             </AesForm.Item>
 
-            <AesForm.Item
-              name="text"
-              label={
-                operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
-              }
-            >
-              <ZTextarea
-                className="font-mono min-h-32"
-                placeholder={
-                  operationMode === 'encrypt'
-                    ? '请输入要加密的内容...'
-                    : '请输入要解密的内容...'
+            <div className="flex gap-2 items-start">
+              <AesForm.Item
+                name="text"
+                label={
+                  operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
                 }
-              />
-            </AesForm.Item>
+                className="flex-1"
+              >
+                <ZTextarea
+                  className="font-mono min-h-32"
+                  placeholder={
+                    operationMode === 'encrypt'
+                      ? '请输入要加密的内容...'
+                      : '请输入要解密的内容...'
+                  }
+                />
+              </AesForm.Item>
+              <AesForm.Item
+                name="inputEncoding"
+                label="编码"
+                className="w-28 shrink-0"
+              >
+                <ZSelect options={AES_ENCODINGS} />
+              </AesForm.Item>
+            </div>
 
             <div className="flex justify-center">
               <ZButton
@@ -220,11 +347,22 @@ export default function AesCryptoPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label>
-                  {operationMode === 'encrypt'
-                    ? '密文 (Output)'
-                    : '明文 (Output)'}
-                </Label>
+                <div className="flex items-center gap-4">
+                  <Label>
+                    {operationMode === 'encrypt'
+                      ? '密文 (Output)'
+                      : '明文 (Output)'}
+                  </Label>
+                  <div className="w-28">
+                    <AesForm.Item
+                      name="outputEncoding"
+                      label=""
+                      className="mb-0"
+                    >
+                      <ZSelect options={AES_ENCODINGS} />
+                    </AesForm.Item>
+                  </div>
+                </div>
                 <ZButton
                   variant="ghost"
                   size="sm"
