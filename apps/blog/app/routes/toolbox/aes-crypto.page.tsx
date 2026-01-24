@@ -96,6 +96,22 @@ export default function AesCryptoPage() {
 
   const operationMode = form.instance.watch('mode');
   const currentAesMode = form.instance.watch('aesMode');
+  const isEncrypt = operationMode === 'encrypt';
+  const modeText = React.useMemo(() => {
+    return isEncrypt
+      ? {
+          inputLabel: '明文 (Input)',
+          inputPlaceholder: '请输入要加密的内容...',
+          submitText: '执行加密',
+          outputLabel: '密文 (Output)',
+        }
+      : {
+          inputLabel: '密文 (Input)',
+          inputPlaceholder: '请输入要解密的内容...',
+          submitText: '执行解密',
+          outputLabel: '明文 (Output)',
+        };
+  }, [isEncrypt]);
 
   useWatch([operationMode], (mode) => {
     form.instance.setValue('text', '');
@@ -181,7 +197,7 @@ export default function AesCryptoPage() {
         <Card className="flex flex-col xl:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {operationMode === 'encrypt' ? (
+              {isEncrypt ? (
                 <Lock className="w-5 h-5" />
               ) : (
                 <Unlock className="w-5 h-5" />
@@ -194,19 +210,10 @@ export default function AesCryptoPage() {
               <ZToggleGroup type="single" options={OPERATION_MODES} />
             </AesForm.Item>
 
-            <AesForm.Item
-              name="text"
-              label={
-                operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
-              }
-            >
+            <AesForm.Item name="text" label={modeText.inputLabel}>
               <ZTextarea
                 className="font-mono min-h-32"
-                placeholder={
-                  operationMode === 'encrypt'
-                    ? '请输入要加密的内容...'
-                    : '请输入要解密的内容...'
-                }
+                placeholder={modeText.inputPlaceholder}
               />
             </AesForm.Item>
 
@@ -216,16 +223,14 @@ export default function AesCryptoPage() {
                 className="w-full md:w-auto md:min-w-[200px]"
               >
                 <ArrowDown className="w-4 h-4 mr-2" />
-                {operationMode === 'encrypt' ? '执行加密' : '执行解密'}
+                {modeText.submitText}
               </ZButton>
             </div>
 
             <div className="space-y-2">
               <div className="flex gap-2 items-center">
                 <Label className={isError ? 'text-destructive' : undefined}>
-                  {operationMode === 'encrypt'
-                    ? '密文 (Output)'
-                    : '明文 (Output)'}
+                  {modeText.outputLabel}
                 </Label>
                 {isError && <Badge variant="destructive">错误</Badge>}
                 <ZButton
