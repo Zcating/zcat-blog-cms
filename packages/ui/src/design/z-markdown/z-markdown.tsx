@@ -21,6 +21,24 @@ const MarkdownComponents: Components = {
     console.log(node);
     const match = /language-(\w+)/.exec(className || '');
     const language = safeArray<string>(match)[1] ?? '';
+
+    // Handle think tags
+    if (language === 'think') {
+      return (
+        <div className="my-4 p-4 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/20 dark:border-amber-800">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+              Thinking...
+            </span>
+          </div>
+          <div className="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap">
+            {children}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <CodeBlock language={language} className={className}>
         {children}

@@ -106,13 +106,13 @@ function useAiChatManager(model: ApiModelName) {
           if (message.thinking) {
             if (!isThinking) {
               isThinking = true;
-              assistantMessage.content += '<think>';
+              assistantMessage.content += '```think\n';
             }
             assistantMessage.content += message.thinking;
             continue;
           }
           if (isThinking) {
-            assistantMessage.content += '</think> \n';
+            assistantMessage.content += '\n```\n';
             isThinking = false;
           }
           assistantMessage.content += message.content;
