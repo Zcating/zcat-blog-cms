@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
   isObject,
+  ZTextarea,
   ZView,
 } from '@zcat/ui';
 import { Check, Copy, RefreshCw } from 'lucide-react';
@@ -35,7 +36,9 @@ export default function IpLookupPage() {
   const [info, setInfo] = useState<IpInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [ipCopied, setIpCopied] = useState(false);
+  const [userAgent, setUserAgent] = useState('');
+  const [uaCopied, setUaCopied] = useState(false);
 
   const fetchIp = async () => {
     setLoading(true);
@@ -71,12 +74,30 @@ export default function IpLookupPage() {
     fetchIp();
   }, []);
 
-  const handleCopy = () => {
+  useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    setUserAgent(navigator.userAgent || '');
+  }, []);
+
+  const handleCopyIp = () => {
     if (info?.ip) {
       navigator.clipboard.writeText(info.ip);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setIpCopied(true);
+      setTimeout(() => setIpCopied(false), 2000);
     }
+  };
+
+  const handleCopyUa = () => {
+    if (userAgent) {
+      navigator.clipboard.writeText(userAgent);
+      setUaCopied(true);
+      setTimeout(() => setUaCopied(false), 2000);
+    }
+  };
+
+  const handleResetUa = () => {
+    if (typeof navigator === 'undefined') return;
+    setUserAgent(navigator.userAgent || '');
   };
 
   return (
@@ -116,9 +137,9 @@ export default function IpLookupPage() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={handleCopy}
+                    onClick={handleCopyIp}
                   >
-                    {copied ? (
+                    {ipCopied ? (
                       <Check className="h-4 w-4 text-green-500" />
                     ) : (
                       <Copy className="h-4 w-4" />
@@ -127,6 +148,46 @@ export default function IpLookupPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium leading-none text-muted-foreground">
+                UserAgent
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleResetUa}
+                  title="使用当前 UA"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleCopyUa}
+                  disabled={!userAgent}
+                  title="复制"
+                >
+                  {uaCopied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <ZTextarea
+              value={userAgent}
+              onValueChange={setUserAgent}
+              rows={4}
+              className="text-sm"
+              placeholder="未获取到 UserAgent"
+            />
           </div>
 
           {!loading && info && (

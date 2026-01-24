@@ -11,10 +11,12 @@ import {
   CardTitle,
   CardContent,
   Label,
+  copyToClipboard,
+  useWatch,
 } from '@zcat/ui';
 import CryptoJS from 'crypto-js';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 export function meta() {
@@ -62,18 +64,33 @@ const OPERATION_MODES = [
   { label: '解密', value: 'decrypt' },
 ];
 
-const AesFormSchema = z.object({
-  mode: z.enum(['encrypt', 'decrypt']),
-  text: z.string().min(1, '请输入内容'),
-  key: z.string().min(1, '请输入密钥'),
-  keyEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
-  iv: z.string().optional(),
-  ivEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
-  inputEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
-  outputEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
-  aesMode: z.enum(AES_MODES.map((item) => item.value)),
-  padding: z.enum(AES_PADDINGS.map((item) => item.value)),
-});
+const AesFormSchema = z
+  .object({
+    mode: z.enum(['encrypt', 'decrypt']),
+    text: z.string().min(1, '请输入内容'),
+    key: z.string().min(1, '请输入密钥'),
+    keyEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+    iv: z.string().optional(),
+    ivEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+    plaintextEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+    ciphertextEncoding: z.enum(AES_ENCODINGS.map((item) => item.value)),
+    aesMode: z.enum(AES_MODES.map((item) => item.value)),
+    padding: z.enum(AES_PADDINGS.map((item) => item.value)),
+  })
+  .refine(
+    (data) => {
+      if (data.aesMode !== 'ECB' && !data.iv) {
+        return false;
+      }
+
+      return true;
+    },
+
+    {
+      message: '非 ECB 模式下，请填写 IV',
+      path: ['iv'], // 错误信息位置
+    },
+  );
 
 interface CipherOption {
   mode: (typeof CryptoJS.mode)['CBC'];
@@ -84,17 +101,7 @@ interface CipherOption {
 const AesForm = createZForm(AesFormSchema);
 
 export default function AesCryptoPage() {
-  const [outputByMode, setOutputByMode] = useState<{
-    encrypt: string;
-    decrypt: string;
-  }>({
-    encrypt: '',
-    decrypt: '',
-  });
-  const textCacheRef = useRef<{ encrypt: string; decrypt: string }>({
-    encrypt: '',
-    decrypt: '',
-  });
+  const [result, setResult] = useState('');
 
   const form = AesForm.useForm({
     defaultValues: {
@@ -106,8 +113,8 @@ export default function AesCryptoPage() {
       keyEncoding: 'Utf8',
       iv: '',
       ivEncoding: 'Utf8',
-      inputEncoding: 'Utf8',
-      outputEncoding: 'Base64',
+      plaintextEncoding: 'Utf8',
+      ciphertextEncoding: 'Base64',
     },
     onSubmit: (data) => {
       try {
@@ -118,49 +125,16 @@ export default function AesCryptoPage() {
           keyEncoding,
           iv,
           ivEncoding,
-          inputEncoding,
-          outputEncoding,
+          plaintextEncoding,
+          ciphertextEncoding,
           aesMode,
           padding,
         } = data;
-
-        const setOutputForMode = (value: string) => {
-          setOutputByMode((prev) => ({ ...prev, [mode]: value }));
-        };
-
+        console.log('data', data);
         // Config
         const config: CipherOption = {
           mode: CryptoJS.mode[aesMode],
           padding: CryptoJS.pad[padding],
-        };
-
-        const parseInput = (input: string, encoding: AesEncodingEnum) => {
-          try {
-            // 清理空白字符，避免 Base64/Hex 解析因换行符报错
-            const cleanInput =
-              encoding === 'Base64' || encoding === 'Hex'
-                ? input.replace(/\s/g, '')
-                : input;
-
-            return CryptoJS.enc[encoding].parse(cleanInput);
-          } catch (e) {
-            throw new Error(
-              `无法使用 ${encoding} 解析输入: ${(e as Error).message}`,
-            );
-          }
-        };
-
-        const formatOutput = (
-          wordArray: CryptoJS.lib.WordArray,
-          encoding: AesEncodingEnum,
-        ) => {
-          try {
-            return wordArray.toString(CryptoJS.enc[encoding]);
-          } catch (e) {
-            throw new Error(
-              `无法使用 ${encoding} 格式化输出: ${(e as Error).message}`,
-            );
-          }
         };
 
         // IV 处理：ECB 不需要 IV，其他模式如果用户输入了 IV 则使用
@@ -169,100 +143,37 @@ export default function AesCryptoPage() {
         }
 
         const keyParsed = parseInput(key, keyEncoding);
-        const textParsed =
-          mode === 'encrypt'
-            ? parseInput(text, inputEncoding) // 加密时，输入可能是 Utf8, Hex 等
-            : parseInput(text, inputEncoding); // 解密时，输入通常是 Base64/Hex
 
-        let result;
-        if (mode === 'encrypt') {
-          // encrypt 接受 WordArray
-          const encrypted = CryptoJS.AES.encrypt(textParsed, keyParsed, config);
-          // 加密结果通常转换为 Base64 或 Hex
-          result = formatOutput(encrypted.ciphertext, outputEncoding);
-        } else {
-          // 解密
-          // decrypt 接受 CipherParams (或 Base64 字符串)
-          // 这里我们传入 WordArray (作为 ciphertext)，需要构建 CipherParams
-          const cipherParams = CryptoJS.lib.CipherParams.create({
-            ciphertext: textParsed,
-          });
-          const decrypted = CryptoJS.AES.decrypt(
-            cipherParams,
-            keyParsed,
-            config,
-          );
+        const result = CryptoStrategy[mode]({
+          text,
+          plaintextEncoding,
+          ciphertextEncoding,
+          keyParsed,
+          config,
+        });
+        console.log(result);
 
-          if (outputEncoding === 'Utf8') {
-            try {
-              result = decrypted.toString(CryptoJS.enc.Utf8);
-            } catch {
-              // UTF8 转换失败，尝试 Hex 并提示
-              result = decrypted.toString(CryptoJS.enc.Hex);
-              setOutputForMode(
-                `解密成功，但结果不是有效的 UTF-8 文本。已自动转为 Hex 显示。\n结果: ${result}`,
-              );
-              return;
-            }
-          } else {
-            result = formatOutput(decrypted, outputEncoding);
-          }
-        }
-
-        setOutputForMode(
-          result ||
-            (mode === 'decrypt'
-              ? '解密结果为空（可能密钥错误、填充不匹配或密文损坏）'
-              : ''),
-        );
+        setResult(result);
       } catch (error: any) {
-        // 捕获解密过程中的具体错误（如 Padding Error）
-        let msg = (error as Error).message;
-        if (msg.includes('Malformed UTF-8')) {
-          msg = '解密后数据不是有效的 UTF-8 文本（密钥错误？）';
-        } else if (msg.includes('Invalid padding')) {
-          msg = '填充无效（密钥错误或填充方式选择错误？）';
-        }
-        setOutputByMode((prev) => ({
-          ...prev,
-          [data.mode]: '执行出错: ' + msg,
-        }));
+        //
+        console.log(error);
       }
     },
   });
 
   const operationMode = form.instance.watch('mode');
   const currentAesMode = form.instance.watch('aesMode');
-  const lastModeRef = useRef(operationMode);
-  const output = outputByMode[operationMode] ?? '';
 
-  useEffect(() => {
-    if (lastModeRef.current === operationMode) return;
+  useWatch([operationMode], (mode) => {
+    form.instance.setValue('text', '');
+    setResult('');
+  });
 
-    const prevMode = lastModeRef.current;
-    textCacheRef.current[prevMode] = form.instance.getValues('text') ?? '';
-
-    lastModeRef.current = operationMode;
-
-    const cachedText = textCacheRef.current[operationMode] ?? '';
-
-    let nextText = cachedText;
-    if (!nextText) {
-      if (operationMode === 'decrypt') {
-        nextText = outputByMode.encrypt ?? '';
-      } else {
-        nextText = outputByMode.decrypt ?? '';
-      }
+  const copy = () => {
+    if (!result) {
+      return;
     }
-
-    form.instance.setValue('text', nextText);
-    form.instance.clearErrors('text');
-  }, [form.instance, operationMode, outputByMode]);
-
-  const copyToClipboard = (text: string) => {
-    if (text) {
-      navigator.clipboard.writeText(text);
-    }
+    copyToClipboard(result);
   };
 
   return (
@@ -323,11 +234,11 @@ export default function AesCryptoPage() {
               </AesForm.Item>
             </div>
 
-            <AesForm.Item name="inputEncoding" label="明文编码 (Input)">
+            <AesForm.Item name="plaintextEncoding" label="明文编码 (Input)">
               <ZSelect options={AES_ENCODINGS} />
             </AesForm.Item>
 
-            <AesForm.Item name="outputEncoding" label="密文编码 (Output)">
+            <AesForm.Item name="ciphertextEncoding" label="密文编码 (Output)">
               <ZSelect options={AES_ENCODINGS} />
             </AesForm.Item>
           </CardContent>
@@ -387,15 +298,15 @@ export default function AesCryptoPage() {
                   variant="ghost"
                   size="sm"
                   type="button"
-                  onClick={() => copyToClipboard(output)}
-                  disabled={!output}
+                  onClick={copy}
+                  disabled={!result}
                 >
                   <Copy className="w-4 h-4 mr-1" /> 复制
                 </ZButton>
               </div>
               <ZTextarea
                 className="font-mono min-h-32 break-all"
-                value={output}
+                value={result}
                 readOnly
                 placeholder="结果将显示在这里..."
               />
@@ -406,3 +317,75 @@ export default function AesCryptoPage() {
     </ZView>
   );
 }
+
+const parseInput = (input: string, encoding: AesEncodingEnum) => {
+  try {
+    // 清理空白字符，避免 Base64/Hex 解析因换行符报错
+    const cleanInput =
+      encoding === 'Base64' || encoding === 'Hex'
+        ? input.replace(/\s/g, '')
+        : input;
+
+    return CryptoJS.enc[encoding].parse(cleanInput);
+  } catch (e) {
+    throw new Error(`无法使用 ${encoding} 解析输入: ${(e as Error).message}`);
+  }
+};
+
+const formatOutput = (
+  wordArray: CryptoJS.lib.WordArray,
+  encoding: AesEncodingEnum,
+) => {
+  try {
+    return wordArray.toString(CryptoJS.enc[encoding]);
+  } catch (e) {
+    throw new Error(`无法使用 ${encoding} 格式化输出: ${(e as Error).message}`);
+  }
+};
+
+interface AesCryptoParams {
+  text: string;
+  plaintextEncoding: AesEncodingEnum;
+  ciphertextEncoding: AesEncodingEnum;
+  keyParsed: CryptoJS.lib.WordArray;
+  config: CipherOption;
+}
+
+function encrypt({
+  text,
+  plaintextEncoding,
+  ciphertextEncoding,
+  keyParsed,
+  config,
+}: AesCryptoParams) {
+  const textParsed = parseInput(text, plaintextEncoding);
+  // encrypt 接受 WordArray
+  const encrypted = CryptoJS.AES.encrypt(textParsed, keyParsed, config);
+  // 加密结果通常转换为 Base64 或 Hex
+  return formatOutput(encrypted.ciphertext, ciphertextEncoding);
+}
+
+function decrypt({
+  text,
+  ciphertextEncoding,
+  plaintextEncoding,
+  keyParsed,
+  config,
+}: AesCryptoParams) {
+  const textParsed = parseInput(text, ciphertextEncoding);
+  // 解密
+  // decrypt 接受 CipherParams (或 Base64 字符串)
+  // 这里我们传入 WordArray (作为 ciphertext)，需要构建 CipherParams
+  const cipherParams = CryptoJS.lib.CipherParams.create({
+    ciphertext: textParsed,
+  });
+  const decrypted = CryptoJS.AES.decrypt(cipherParams, keyParsed, config);
+
+  console.log(formatOutput(decrypted, plaintextEncoding));
+  return formatOutput(decrypted, plaintextEncoding);
+}
+
+const CryptoStrategy = {
+  encrypt,
+  decrypt,
+} as const;
