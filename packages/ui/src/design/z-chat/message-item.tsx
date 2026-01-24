@@ -73,6 +73,15 @@ const AssistantMessage = React.memo(
     return (
       <ZView className="flex flex-col w-full gap-2 justify-start items-center">
         <ZMarkdown className="w-full" content={message.content} />
+        {!message.isFinish && (
+          <ZView className="flex w-full justify-start">
+            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse delay-75" />
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse delay-150" />
+            </div>
+          </ZView>
+        )}
         <ZView className="flex w-full items-center gap-2 justify-start">
           {message.isFinish && (
             <>

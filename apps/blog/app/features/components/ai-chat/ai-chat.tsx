@@ -4,8 +4,10 @@ import {
   useMemoizedFn,
   ZSelect,
   ZChat,
+  Toggle,
   type Message,
 } from '@zcat/ui';
+import { Brain } from 'lucide-react';
 import React from 'react';
 
 import { AiApi } from '@blog/apis';
@@ -57,22 +59,26 @@ function useChatMessages() {
 
 function useAiChatManager(model: ApiModelName) {
   const [messages, setMessages, addMessage, getMessages] = useChatMessages();
+  const [deepThinking, setDeepThinking] = React.useState(false);
 
   const chatHandlerRef = React.useRef<ReturnType<typeof AiApi.chat> | null>(
     null,
   );
-  const activeRequestIdRef = React.useRef(0);
 
   const systemMessage = React.useMemo(() => {
+    const baseContent =
+      '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。';
+    const deepThinkingContent = deepThinking
+      ? ' 请对用户的问题进行深度思考，提供更详细、更全面的分析，包括多个角度的思考、潜在的解决方案、以及相关的背景知识。'
+      : '';
+
     return {
       role: 'system',
-      content:
-        '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。',
+      content: baseContent + deepThinkingContent,
     } as const;
-  }, []);
+  }, [deepThinking]);
 
   const abort = useMemoizedFn((reason: string) => {
-    activeRequestIdRef.current++;
     chatHandlerRef.current?.abort(reason);
 
     const current = getMessages();
@@ -86,9 +92,7 @@ function useAiChatManager(model: ApiModelName) {
 
   const runAssistantStream = useMemoizedFn(
     async (assistantMessage: Message, chatMessages: Message[]) => {
-      const requestId = ++activeRequestIdRef.current;
       const chatHandler = AiApi.chat(model);
-      chatHandlerRef.current = chatHandler;
 
       assistantMessage.content = '';
       assistantMessage.isFinish = false;
@@ -97,25 +101,25 @@ function useAiChatManager(model: ApiModelName) {
           systemMessage,
           ...chatMessages,
         ]);
-        if (requestId !== activeRequestIdRef.current) {
-          chatHandler.abort('stale request');
-          return;
-        }
-
+        let isThinking = false;
         for await (const message of stream) {
-          if (requestId !== activeRequestIdRef.current) {
-            break;
+          if (message.thinking) {
+            if (!isThinking) {
+              isThinking = true;
+              assistantMessage.content += '<think>';
+            }
+            assistantMessage.content += message.thinking;
+            continue;
+          }
+          if (isThinking) {
+            assistantMessage.content += '</think> \n';
+            isThinking = false;
           }
           assistantMessage.content += message.content;
         }
 
-        if (requestId === activeRequestIdRef.current) {
-          assistantMessage.isFinish = true;
-        }
+        assistantMessage.isFinish = true;
       } catch (error) {
-        if (requestId !== activeRequestIdRef.current) {
-          return;
-        }
         console.error('请求失败:', error);
         assistantMessage.isFinish = true;
         assistantMessage.content = '请求失败';
@@ -174,7 +178,6 @@ function useAiChatManager(model: ApiModelName) {
       return;
     }
 
-    activeRequestIdRef.current++;
     chatHandlerRef.current?.abort('用户重新生成');
 
     const current = getMessages();
@@ -190,11 +193,17 @@ function useAiChatManager(model: ApiModelName) {
     await runAssistantStream(message, contextMessages);
   });
 
+  const toggleDeepThinking = useMemoizedFn(() => {
+    setDeepThinking((prev) => !prev);
+  });
+
   return {
     messages,
     send,
     abort,
     regenerate,
+    deepThinking,
+    toggleDeepThinking,
   } as const;
 }
 
@@ -214,6 +223,15 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       emptyComponent={emptyComponent}
       toolbar={
         <div className="flex items-center gap-2">
+          <Toggle
+            variant="outline"
+            size="sm"
+            pressed={chat.deepThinking}
+            onPressedChange={chat.toggleDeepThinking}
+            aria-label="开启深度思考模式，AI将提供更详细全面的分析"
+          >
+            <Brain className="size-4" />
+          </Toggle>
           <ZSelect
             placeholder="选择模型"
             options={[{ value: 'deepseek', label: 'DeepSeek Chat' }]}

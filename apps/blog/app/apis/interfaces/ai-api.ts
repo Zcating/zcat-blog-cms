@@ -7,12 +7,14 @@ export namespace AiApi {
     choices: {
       delta: {
         content: string;
+        reasoning_content?: string;
       };
     }[];
   }
   export interface ChatMessage {
     role: 'system' | 'user' | 'assistant' | 'function';
     content: string;
+    thinking?: string;
   }
 
   export interface ChatStreamHandler<P> {
@@ -75,6 +77,7 @@ export namespace AiApi {
           controller,
         ).map((chunk) => ({
           role: 'assistant',
+          thinking: chunk?.choices[0].delta.reasoning_content || '',
           content: chunk?.choices[0].delta.content || '',
         }));
       },
