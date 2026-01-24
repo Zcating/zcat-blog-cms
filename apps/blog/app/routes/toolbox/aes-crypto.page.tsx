@@ -1,4 +1,5 @@
 import {
+  Badge,
   ZButton,
   ZView,
   ZSelect,
@@ -13,6 +14,7 @@ import {
   Label,
   copyToClipboard,
   useWatch,
+  cn,
 } from '@zcat/ui';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
 import React from 'react';
@@ -65,6 +67,7 @@ const AesForm = createZForm(AesFormSchema);
 
 export default function AesCryptoPage() {
   const [result, setResult] = React.useState('');
+  const isError = result.startsWith('执行出错:');
 
   const form = AesForm.useForm({
     defaultValues: {
@@ -219,23 +222,29 @@ export default function AesCryptoPage() {
 
             <div className="space-y-2">
               <div className="flex gap-2 items-center">
-                <Label>
+                <Label className={isError ? 'text-destructive' : undefined}>
                   {operationMode === 'encrypt'
                     ? '密文 (Output)'
                     : '明文 (Output)'}
                 </Label>
+                {isError && <Badge variant="destructive">错误</Badge>}
                 <ZButton
                   variant="ghost"
                   size="sm"
                   type="button"
                   onClick={copy}
-                  disabled={!result}
+                  disabled={isError || !result}
                 >
                   <Copy className="w-4 h-4 mr-1" /> 复制
                 </ZButton>
               </div>
               <ZTextarea
-                className="font-mono min-h-32 break-all"
+                className={cn(
+                  'min-h-32 break-all',
+                  isError
+                    ? 'border-destructive focus-visible:ring-destructive/30'
+                    : '',
+                )}
                 value={result}
                 readOnly
                 placeholder="结果将显示在这里..."
