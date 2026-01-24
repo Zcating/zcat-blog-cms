@@ -14,7 +14,6 @@ import {
   copyToClipboard,
   useWatch,
 } from '@zcat/ui';
-import CryptoJS from 'crypto-js';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
 import React from 'react';
 import { z } from 'zod';
@@ -62,12 +61,6 @@ const AesFormSchema = z
     },
   );
 
-interface CipherOption {
-  mode: (typeof CryptoJS.mode)['CBC'];
-  padding: (typeof CryptoJS.pad)['Pkcs7'];
-  iv?: CryptoJS.lib.WordArray;
-}
-
 const AesForm = createZForm(AesFormSchema);
 
 export default function AesCryptoPage() {
@@ -92,8 +85,8 @@ export default function AesCryptoPage() {
 
         setResult(result);
       } catch (error: any) {
-        //
-        console.log(error);
+        const msg = error instanceof Error ? error.message : String(error);
+        setResult('执行出错: ' + msg);
       }
     },
   });
@@ -225,7 +218,7 @@ export default function AesCryptoPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex gap-2 items-center">
                 <Label>
                   {operationMode === 'encrypt'
                     ? '密文 (Output)'

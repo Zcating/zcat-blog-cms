@@ -1,10 +1,12 @@
+import CryptoJS from 'crypto-js';
+
 interface CipherOption {
   mode: (typeof CryptoJS.mode)['CBC'];
   padding: (typeof CryptoJS.pad)['Pkcs7'];
   iv?: CryptoJS.lib.WordArray;
 }
 
-type AesModeEnum = 'CBC' | 'ECB' | 'CFB' | 'OFB' | 'CTR';
+export type AesModeEnum = 'CBC' | 'ECB' | 'CFB' | 'OFB' | 'CTR';
 export const AES_MODES = [
   { label: 'CBC', value: 'CBC' },
   { label: 'ECB', value: 'ECB' },
@@ -69,7 +71,21 @@ const formatOutput = (
   }
 };
 
-interface AesCryptoParams {
+const AES_KEY_BYTE_LENGTHS = [16, 24, 32];
+
+function assertAesKeyLength(
+  key: CryptoJS.lib.WordArray,
+  keyEncoding: AesEncodingEnum,
+) {
+  const keyBytes = key.sigBytes;
+  if (!AES_KEY_BYTE_LENGTHS.includes(keyBytes)) {
+    throw new Error(
+      `AES 密钥长度必须为 16/24/32 字节（128/192/256 bits），当前为 ${keyBytes} 字节（按 ${keyEncoding} 解码后计算）。`,
+    );
+  }
+}
+
+export interface AesCryptoParams {
   mode: OperationModeEnum;
   text: string;
   key: string;
@@ -107,6 +123,7 @@ function encrypt(params: AesCryptoParams) {
   }
 
   const keyParsed = parseInput(key, keyEncoding);
+  assertAesKeyLength(keyParsed, keyEncoding);
 
   const textParsed = parseInput(text, plaintextEncoding);
   // encrypt 接受 WordArray
@@ -140,6 +157,7 @@ function decrypt(params: AesCryptoParams) {
   }
 
   const keyParsed = parseInput(key, keyEncoding);
+  assertAesKeyLength(keyParsed, keyEncoding);
 
   const textParsed = parseInput(text, ciphertextEncoding);
   // 解密
@@ -150,7 +168,15 @@ function decrypt(params: AesCryptoParams) {
   });
   const decrypted = CryptoJS.AES.decrypt(cipherParams, keyParsed, config);
 
-  console.log(formatOutput(decrypted, plaintextEncoding));
+  if (plaintextEncoding === 'Utf8') {
+    try {
+      return decrypted.toString(CryptoJS.enc.Utf8);
+    } catch {
+      const hex = decrypted.toString(CryptoJS.enc.Hex);
+      return `解密成功，但结果不是有效的 UTF-8 文本。已自动转为 Hex 显示。\n结果: ${hex}`;
+    }
+  }
+
   return formatOutput(decrypted, plaintextEncoding);
 }
 
