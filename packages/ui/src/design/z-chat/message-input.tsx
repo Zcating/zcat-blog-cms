@@ -12,6 +12,7 @@ interface MessageInputProps {
   onAbort: () => void;
   loading?: boolean;
   placeholder?: string;
+  toolbar?: React.ReactNode;
 }
 
 export function MessageInput({
@@ -19,9 +20,9 @@ export function MessageInput({
   onAbort,
   loading,
   placeholder,
+  toolbar,
 }: MessageInputProps) {
   const [inputValue, setInputValue] = React.useState('');
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const shortcut = useShortcut();
 
@@ -50,7 +51,6 @@ export function MessageInput({
   return (
     <ZView className="w-xs md:w-md lg:w-2xl flex flex-col my-4 p-2 gap-2 border rounded-lg bg-white shadow-md">
       <ZTextarea
-        ref={textareaRef}
         value={inputValue}
         onValueChange={setInputValue}
         onKeyDown={handleKeyDown}
@@ -59,23 +59,26 @@ export function MessageInput({
         className="flex-1 min-h-10 max-h-20 resize-none border-0 shadow-none focus-visible:ring-0 z-scrollbar"
         rows={1}
       />
-      <ZView className="flex items-center gap-4 self-end">
-        <span className="text-sm font-bold text-muted-foreground">
-          {shortcut}
-        </span>
-        <ZButton
-          onClick={handleAction}
-          size="icon"
-          className="shrink-0"
-          aria-label={loading ? '停止' : '发送'}
-          tooltip={loading ? '停止' : '发送'}
-        >
-          {loading ? (
-            <Loader2Icon className="w-4 h-4 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4" />
-          )}
-        </ZButton>
+      <ZView className="flex items-center gap-4 justify-between">
+        {toolbar ? <ZView className="shrink-0">{toolbar}</ZView> : null}
+        <ZView className="flex items-center gap-4 self-end">
+          <ZView className="text-sm font-bold text-muted-foreground">
+            {shortcut}
+          </ZView>
+          <ZButton
+            onClick={handleAction}
+            size="icon"
+            className="shrink-0"
+            aria-label={loading ? '停止' : '发送'}
+            tooltip={loading ? '停止' : '发送'}
+          >
+            {loading ? (
+              <Loader2Icon className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </ZButton>
+        </ZView>
       </ZView>
     </ZView>
   );
