@@ -88,10 +88,26 @@ function useAiChatManager() {
 
       assistantMessage.content = '';
       assistantMessage.isFinish = false;
-
-      let stream: Awaited<ReturnType<typeof chatHandler.create>>;
       try {
-        stream = await chatHandler.create([systemMessage, ...chatMessages]);
+        const stream = await chatHandler.create([
+          systemMessage,
+          ...chatMessages,
+        ]);
+        if (requestId !== activeRequestIdRef.current) {
+          chatHandler.abort('stale request');
+          return;
+        }
+
+        for await (const message of stream) {
+          if (requestId !== activeRequestIdRef.current) {
+            break;
+          }
+          assistantMessage.content += message.content;
+        }
+
+        if (requestId === activeRequestIdRef.current) {
+          assistantMessage.isFinish = true;
+        }
       } catch {
         if (requestId !== activeRequestIdRef.current) {
           return;
@@ -99,22 +115,6 @@ function useAiChatManager() {
         assistantMessage.isFinish = true;
         assistantMessage.content = '请求失败';
         return;
-      }
-
-      if (requestId !== activeRequestIdRef.current) {
-        chatHandler.abort('stale request');
-        return;
-      }
-
-      for await (const message of stream) {
-        if (requestId !== activeRequestIdRef.current) {
-          break;
-        }
-        assistantMessage.content += message.content;
-      }
-
-      if (requestId === activeRequestIdRef.current) {
-        assistantMessage.isFinish = true;
       }
     },
   );
