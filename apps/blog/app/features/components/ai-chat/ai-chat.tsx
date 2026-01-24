@@ -2,13 +2,17 @@ import {
   cn,
   createObservableMessage,
   useMemoizedFn,
+  ZSelect,
   ZChat,
   type Message,
 } from '@zcat/ui';
 import React from 'react';
 
-// import { AiApi } from '@blog/apis';
-import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
+import { AiApi } from '@blog/apis';
+// import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
+
+import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
+import { checkApiKey, saveApiKey, type ApiModelName } from './api-key-utils';
 
 interface AiChatProps {
   className?: string;
@@ -51,7 +55,7 @@ function useChatMessages() {
   return [messages, setMessagesSafe, addMessage, getMessages] as const;
 }
 
-function useAiChatManager() {
+function useAiChatManager(model: ApiModelName) {
   const [messages, setMessages, addMessage, getMessages] = useChatMessages();
 
   const chatHandlerRef = React.useRef<ReturnType<typeof AiApi.chat> | null>(
@@ -83,7 +87,7 @@ function useAiChatManager() {
   const runAssistantStream = useMemoizedFn(
     async (assistantMessage: Message, chatMessages: Message[]) => {
       const requestId = ++activeRequestIdRef.current;
-      const chatHandler = AiApi.chat();
+      const chatHandler = AiApi.chat(model);
       chatHandlerRef.current = chatHandler;
 
       assistantMessage.content = '';
@@ -108,10 +112,11 @@ function useAiChatManager() {
         if (requestId === activeRequestIdRef.current) {
           assistantMessage.isFinish = true;
         }
-      } catch {
+      } catch (error) {
         if (requestId !== activeRequestIdRef.current) {
           return;
         }
+        console.error('请求失败:', error);
         assistantMessage.isFinish = true;
         assistantMessage.content = '请求失败';
         return;
@@ -120,6 +125,38 @@ function useAiChatManager() {
   );
 
   const send = useMemoizedFn(async (message: Message) => {
+    // 检查API密钥是否存在
+    const hasApiKey = checkApiKey(model);
+
+    if (!hasApiKey) {
+      // 显示API密钥缺失提示
+
+      const shouldSetup = await showApiKeyMissingDialog(model);
+
+      if (!shouldSetup) {
+        // 用户选择稍后设置，不发送消息
+        return;
+      }
+
+      // 显示API密钥输入弹窗
+      const result = await showApiKeyDialog(model);
+
+      if (!result.confirmed || !result.apiKey) {
+        // 用户取消输入，不发送消息
+        return;
+      }
+
+      // 保存API密钥
+      try {
+        saveApiKey(model, result.apiKey);
+      } catch (error) {
+        // 保存失败，不发送消息
+        console.error('保存API密钥失败:', error);
+        return;
+      }
+    }
+
+    // API密钥已存在或已成功设置，继续发送消息
     const userMessage: Message = { ...message, id: createMessageId() };
     const result = addMessage(userMessage);
     const assistantId = createMessageId();
@@ -162,7 +199,9 @@ function useAiChatManager() {
 }
 
 export function AiChat({ className, emptyComponent }: AiChatProps) {
-  const chat = useAiChatManager();
+  const [model, setModel] = React.useState<ApiModelName>('deepseek');
+
+  const chat = useAiChatManager(model);
 
   return (
     <ZChat
@@ -173,6 +212,16 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       onRegenerate={chat.regenerate}
       placeholder="问问都有什么工具..."
       emptyComponent={emptyComponent}
+      toolbar={
+        <div className="flex items-center gap-2">
+          <ZSelect
+            placeholder="选择模型"
+            options={[{ value: 'deepseek', label: 'DeepSeek Chat' }]}
+            value={model}
+            onValueChange={setModel}
+          />
+        </div>
+      }
     />
   );
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
-import { isObject } from '@zcat/ui';
+import { isObject, safeParseJson } from '@zcat/ui';
 
 import {
   findDoubleNewlineIndex,
@@ -66,7 +66,7 @@ export class Stream<Item> implements AsyncIterable<Item> {
           }
 
           if (line) {
-            yield JSON.parse(line.replace('data: ', ''));
+            yield safeParseJson<any>(line.replace('data: ', ''));
           }
         }
         done = true;

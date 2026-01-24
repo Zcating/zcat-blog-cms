@@ -23,6 +23,18 @@ export namespace AiApiMock {
     });
   }
 
+  export function chatWithModel(): ChatStreamHandler<{
+    model: string;
+    messages: ChatMessage[];
+  }> {
+    return createHandler(async (params, controller) => {
+      const stream = createTestStreamResponse(
+        `模型：${params.model}\n收到了${params.messages[params.messages.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？\n${mermaidTestContent}`,
+      );
+      return Stream.from(stream, controller);
+    });
+  }
+
   function createHandler<P>(
     fn: (
       params: P,

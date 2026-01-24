@@ -54,9 +54,9 @@ export function safeObjectURL(data: unknown, defaultValue: string = '') {
   return defaultValue;
 }
 
-export function safeParse<T>(value: unknown): T | null;
-export function safeParse<T>(value: unknown, defaultValue: T): T;
-export function safeParse<T>(
+export function safeParseJson<T>(value: unknown): T | null;
+export function safeParseJson<T>(value: unknown, defaultValue: T): T;
+export function safeParseJson<T>(
   value: unknown,
   defaultValue: T | null = null,
 ): T | null {
