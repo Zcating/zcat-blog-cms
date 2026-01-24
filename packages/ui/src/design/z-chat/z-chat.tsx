@@ -26,6 +26,8 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   onRegenerate?: (message: Message) => void | Promise<void>;
   onAbort?: () => void;
   placeholder?: string;
+  toolbar?: React.ReactNode | React.ComponentType;
+  toolbarClassName?: string;
   emptyComponent?: React.ReactNode | React.ComponentType;
 }
 
@@ -40,6 +42,8 @@ export function ZChat({
   onRegenerate,
   placeholder = 'Type a message...',
   className,
+  toolbar,
+  toolbarClassName,
   emptyComponent: emptyState,
   ...props
 }: ZChatProps) {
@@ -50,9 +54,15 @@ export function ZChat({
   const { scrollRef, isAtBottom, updateIsAtBottom, lockToBottom } =
     useChatAutoScroll();
 
+  const hasToolbar = Boolean(toolbar) || isFunction(toolbar);
+  const renderToolbar = () => safeReactNode(toolbar, () => null);
   const renderEmptyState = () => safeReactNode(emptyState, DefaultEmptyState);
 
-  const { handleSend, handleAbort, loading } = useSender(onSend, onAbort);
+  const { handleSend, handleAbort, handleRegenerate, loading } = useSender(
+    onSend,
+    onAbort,
+    onRegenerate,
+  );
 
   return (
     <ZView
@@ -62,6 +72,11 @@ export function ZChat({
       )}
       {...props}
     >
+      {hasToolbar ? (
+        <ZView className={cn('w-full shrink-0', toolbarClassName)}>
+          {renderToolbar()}
+        </ZView>
+      ) : null}
       <ZView
         ref={scrollRef}
         className="w-full flex-1 overflow-y-auto space-y-6 z-scrollbar py-4 px-4 md:px-20 lg:px-40"
@@ -73,7 +88,7 @@ export function ZChat({
               <MessageItem
                 key={message.id ?? index}
                 message={message}
-                onRegenerate={onRegenerate}
+                onRegenerate={handleRegenerate}
               />
             ))}
       </ZView>
@@ -113,6 +128,7 @@ function DefaultEmptyState() {
 function useSender(
   onSend: ZChatProps['onSend'],
   onAbort?: ZChatProps['onAbort'],
+  onRegenerate?: ZChatProps['onRegenerate'],
 ) {
   const [loading, setLoading] = React.useState(false);
   const handleSend = async (content: string) => {
@@ -128,15 +144,32 @@ function useSender(
   };
 
   const handleAbort = () => {
-    if (isFunction(onAbort)) {
-      onAbort();
-    }
     setLoading(false);
+    if (!isFunction(onAbort)) {
+      return;
+    }
+    onAbort();
+  };
+
+  const handleRegenerate = async (message: Message) => {
+    setLoading(true);
+    try {
+      if (!isFunction(onRegenerate)) {
+        return;
+      }
+      const result = onRegenerate?.(message);
+      if (result instanceof Promise) {
+        await result;
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
     handleSend,
     handleAbort,
+    handleRegenerate,
     loading,
   };
 }

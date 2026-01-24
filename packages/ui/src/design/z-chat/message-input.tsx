@@ -1,4 +1,4 @@
-import { Send, Square } from 'lucide-react';
+import { Loader2Icon, Send, Square } from 'lucide-react';
 import * as React from 'react';
 
 import { ZButton } from '../z-button/z-button';
@@ -71,7 +71,7 @@ export function MessageInput({
           tooltip={loading ? '停止' : '发送'}
         >
           {loading ? (
-            <Square className="w-4 h-4" fill="currentColor" stroke="none" />
+            <Loader2Icon className="w-4 h-4 animate-spin" />
           ) : (
             <Send className="w-4 h-4" />
           )}

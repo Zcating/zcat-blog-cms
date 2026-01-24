@@ -14,7 +14,7 @@ import {
 } from '@zcat/ui';
 import CryptoJS from 'crypto-js';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 export function meta() {
@@ -84,7 +84,17 @@ interface CipherOption {
 const AesForm = createZForm(AesFormSchema);
 
 export default function AesCryptoPage() {
-  const [output, setOutput] = useState('');
+  const [outputByMode, setOutputByMode] = useState<{
+    encrypt: string;
+    decrypt: string;
+  }>({
+    encrypt: '',
+    decrypt: '',
+  });
+  const textCacheRef = useRef<{ encrypt: string; decrypt: string }>({
+    encrypt: '',
+    decrypt: '',
+  });
 
   const form = AesForm.useForm({
     defaultValues: {
@@ -113,6 +123,10 @@ export default function AesCryptoPage() {
           aesMode,
           padding,
         } = data;
+
+        const setOutputForMode = (value: string) => {
+          setOutputByMode((prev) => ({ ...prev, [mode]: value }));
+        };
 
         // Config
         const config: CipherOption = {
@@ -185,7 +199,7 @@ export default function AesCryptoPage() {
             } catch {
               // UTF8 转换失败，尝试 Hex 并提示
               result = decrypted.toString(CryptoJS.enc.Hex);
-              setOutput(
+              setOutputForMode(
                 `解密成功，但结果不是有效的 UTF-8 文本。已自动转为 Hex 显示。\n结果: ${result}`,
               );
               return;
@@ -195,7 +209,7 @@ export default function AesCryptoPage() {
           }
         }
 
-        setOutput(
+        setOutputForMode(
           result ||
             (mode === 'decrypt'
               ? '解密结果为空（可能密钥错误、填充不匹配或密文损坏）'
@@ -209,13 +223,41 @@ export default function AesCryptoPage() {
         } else if (msg.includes('Invalid padding')) {
           msg = '填充无效（密钥错误或填充方式选择错误？）';
         }
-        setOutput('执行出错: ' + msg);
+        setOutputByMode((prev) => ({
+          ...prev,
+          [data.mode]: '执行出错: ' + msg,
+        }));
       }
     },
   });
 
   const operationMode = form.instance.watch('mode');
   const currentAesMode = form.instance.watch('aesMode');
+  const lastModeRef = useRef(operationMode);
+  const output = outputByMode[operationMode] ?? '';
+
+  useEffect(() => {
+    if (lastModeRef.current === operationMode) return;
+
+    const prevMode = lastModeRef.current;
+    textCacheRef.current[prevMode] = form.instance.getValues('text') ?? '';
+
+    lastModeRef.current = operationMode;
+
+    const cachedText = textCacheRef.current[operationMode] ?? '';
+
+    let nextText = cachedText;
+    if (!nextText) {
+      if (operationMode === 'decrypt') {
+        nextText = outputByMode.encrypt ?? '';
+      } else {
+        nextText = outputByMode.decrypt ?? '';
+      }
+    }
+
+    form.instance.setValue('text', nextText);
+    form.instance.clearErrors('text');
+  }, [form.instance, operationMode, outputByMode]);
 
   const copyToClipboard = (text: string) => {
     if (text) {

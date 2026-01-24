@@ -10,11 +10,19 @@ import {
   ZSelect,
   ZView,
   ZToggleGroup,
+  createZForm,
 } from '@zcat/ui';
 import { ArrowDown, Copy, Key, Lock, Unlock } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { z } from 'zod';
 
 let rsaWasmLoaded = false;
+
+const ensureRsaWasmLoaded = async () => {
+  if (rsaWasmLoaded) return;
+  await CryptoJSW.RSA.loadWasm();
+  rsaWasmLoaded = true;
+};
 
 const uint8ArrayToBase64 = (bytes: Uint8Array) => {
   let binary = '';
@@ -26,7 +34,7 @@ const uint8ArrayToBase64 = (bytes: Uint8Array) => {
 };
 
 const base64ToUint8Array = (base64: string) => {
-  const binary_string = window.atob(base64);
+  const binary_string = window.atob(base64.replace(/\s/g, ''));
   const len = binary_string.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
@@ -55,86 +63,130 @@ const MODE_OPTIONS = [
   { value: 'decrypt', label: '私钥解密' },
 ];
 
+const KeyGenSchema = z.object({
+  keySize: z.enum(
+    KEY_SIZE_OPTIONS.map((item) => item.value) as ['1024', '2048'],
+  ),
+  publicKey: z.string().default(''),
+  privateKey: z.string().default(''),
+});
+
+const RsaSchema = z.object({
+  mode: z.enum(
+    MODE_OPTIONS.map((item) => item.value) as ['encrypt', 'decrypt'],
+  ),
+  key: z.string().min(1, '请输入密钥'),
+  text: z.string().min(1, '请输入内容'),
+  outputText: z.string().default(''),
+});
+
+const KeyGenForm = createZForm(KeyGenSchema);
+const RsaForm = createZForm(RsaSchema);
+
 export default function RsaCryptoPage() {
-  // 密钥生成
-  const [keySize, setKeySize] = useState('1024');
-  const [publicKey, setPublicKey] = useState('');
-  const [privateKey, setPrivateKey] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  // 加密/解密
-  const [mode, setMode] = useState<'encrypt' | 'decrypt'>('encrypt');
-  const [inputKey, setInputKey] = useState('');
-  const [inputText, setInputText] = useState('');
-  const [outputText, setOutputText] = useState('');
-
-  const generateKeys = () => {
-    setIsGenerating(true);
-    // 使用 setTimeout 让出主线程，避免 UI 卡死
-    setTimeout(async () => {
+  const rsaForm = RsaForm.useForm({
+    defaultValues: {
+      mode: 'encrypt',
+      key: '',
+      text: '',
+      outputText: '',
+    },
+    onSubmit: async (data) => {
       try {
-        if (!rsaWasmLoaded) {
-          await CryptoJSW.RSA.loadWasm();
-          rsaWasmLoaded = true;
-        }
-        CryptoJSW.RSA.updateRsaKey(parseInt(keySize));
-        const pub = CryptoJSW.RSA.getKeyContent('public', 'pem');
-        const priv = CryptoJSW.RSA.getKeyContent('private', 'pem');
-        setPublicKey(pub);
-        setPrivateKey(priv);
+        await ensureRsaWasmLoaded();
 
-        // 自动填充到操作区
-        if (mode === 'encrypt') {
-          setInputKey(pub);
+        if (data.mode === 'encrypt') {
+          try {
+            const encrypted = CryptoJSW.RSA.encrypt(data.text, {
+              key: data.key,
+              isPublicKey: true,
+              encryptPadding: 'PKCS1V15',
+            });
+            rsaForm.instance.setValue(
+              'outputText',
+              uint8ArrayToBase64(encrypted),
+            );
+          } catch {
+            rsaForm.instance.setValue(
+              'outputText',
+              '加密失败：可能公钥无效或文本过长',
+            );
+          }
         } else {
-          setInputKey(priv);
+          try {
+            const decrypted = CryptoJSW.RSA.decrypt(
+              base64ToUint8Array(data.text),
+              {
+                key: data.key,
+                isPublicKey: false,
+                encryptPadding: 'PKCS1V15',
+              },
+            );
+            rsaForm.instance.setValue(
+              'outputText',
+              new TextDecoder().decode(decrypted),
+            );
+          } catch {
+            rsaForm.instance.setValue(
+              'outputText',
+              '解密失败：可能私钥无效或密文不匹配',
+            );
+          }
         }
       } catch (e) {
+        rsaForm.instance.setValue(
+          'outputText',
+          '处理出错：' + (e as Error).message,
+        );
+      }
+    },
+  });
+
+  const keyGenForm = KeyGenForm.useForm({
+    defaultValues: {
+      keySize: '1024',
+      publicKey: '',
+      privateKey: '',
+    },
+    onSubmit: async (data) => {
+      try {
+        await ensureRsaWasmLoaded();
+        CryptoJSW.RSA.updateRsaKey(parseInt(data.keySize));
+        const pub = CryptoJSW.RSA.getKeyContent('public', 'pem');
+        const priv = CryptoJSW.RSA.getKeyContent('private', 'pem');
+        keyGenForm.instance.setValue('publicKey', pub);
+        keyGenForm.instance.setValue('privateKey', priv);
+
+        const mode = rsaForm.instance.getValues('mode');
+        rsaForm.instance.setValue('key', mode === 'encrypt' ? pub : priv);
+      } catch (e) {
         console.error('生成密钥失败', e);
-      } finally {
-        setIsGenerating(false);
       }
-    }, 100);
-  };
+    },
+  });
 
-  const handleProcess = async () => {
-    if (!inputKey || !inputText) return;
-    try {
-      if (!rsaWasmLoaded) {
-        await CryptoJSW.RSA.loadWasm();
-        rsaWasmLoaded = true;
-      }
+  const publicKey = keyGenForm.instance.watch('publicKey');
+  const privateKey = keyGenForm.instance.watch('privateKey');
+  const outputText = rsaForm.instance.watch('outputText');
 
-      if (mode === 'encrypt') {
-        try {
-          const encrypted = CryptoJSW.RSA.encrypt(inputText, {
-            key: inputKey,
-            isPublicKey: true,
-            encryptPadding: 'PKCS1V15',
-          });
-          setOutputText(uint8ArrayToBase64(encrypted));
-        } catch {
-          setOutputText('加密失败：可能公钥无效或文本过长');
-        }
-      } else {
-        try {
-          const decrypted = CryptoJSW.RSA.decrypt(
-            base64ToUint8Array(inputText),
-            {
-              key: inputKey,
-              isPublicKey: false,
-              encryptPadding: 'PKCS1V15',
-            },
-          );
-          setOutputText(new TextDecoder().decode(decrypted));
-        } catch {
-          setOutputText('解密失败：可能私钥无效或密文不匹配');
-        }
-      }
-    } catch (e) {
-      setOutputText('处理出错：' + (e as Error).message);
+  const operationMode = rsaForm.instance.watch('mode');
+  const lastModeRef = useRef(operationMode);
+  useEffect(() => {
+    if (lastModeRef.current === operationMode) return;
+    lastModeRef.current = operationMode;
+
+    rsaForm.instance.setValue('text', '');
+    rsaForm.instance.clearErrors('text');
+    rsaForm.instance.setValue('outputText', '');
+
+    if (operationMode === 'encrypt' && publicKey) {
+      rsaForm.instance.setValue('key', publicKey);
+      rsaForm.instance.clearErrors('key');
+    } else if (operationMode === 'decrypt' && privateKey) {
+      rsaForm.instance.setValue('key', privateKey);
+      rsaForm.instance.clearErrors('key');
     }
-  };
+  }, [operationMode, privateKey, publicKey, rsaForm.instance]);
 
   const copyToClipboard = (text: string) => {
     if (text) {
@@ -163,60 +215,68 @@ export default function RsaCryptoPage() {
               密钥生成
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 flex-1">
-            <div className="flex items-end gap-4">
-              <div className="flex-1 space-y-2">
-                <Label>密钥长度</Label>
-                <ZSelect
-                  options={KEY_SIZE_OPTIONS}
-                  value={keySize}
-                  onValueChange={setKeySize}
+          <CardContent className="flex-1">
+            <KeyGenForm form={keyGenForm} className="space-y-4">
+              <div className="flex items-end gap-4">
+                <KeyGenForm.Item
+                  name="keySize"
+                  label="密钥长度"
+                  className="flex-1"
+                >
+                  <ZSelect options={KEY_SIZE_OPTIONS} />
+                </KeyGenForm.Item>
+                <ZButton
+                  type="submit"
+                  loading={keyGenForm.instance.formState.isSubmitting}
+                >
+                  {keyGenForm.instance.formState.isSubmitting
+                    ? '生成中...'
+                    : '生成密钥对'}
+                </ZButton>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>公钥 (Public Key)</Label>
+                  <ZButton
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => copyToClipboard(publicKey)}
+                    disabled={!publicKey}
+                  >
+                    <Copy className="w-4 h-4 mr-1" /> 复制
+                  </ZButton>
+                </div>
+                <ZTextarea
+                  className="font-mono text-xs h-32"
+                  value={publicKey}
+                  readOnly
+                  placeholder="-----BEGIN PUBLIC KEY-----..."
                 />
               </div>
-              <ZButton onClick={generateKeys} loading={isGenerating}>
-                {isGenerating ? '生成中...' : '生成密钥对'}
-              </ZButton>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>公钥 (Public Key)</Label>
-                <ZButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(publicKey)}
-                  disabled={!publicKey}
-                >
-                  <Copy className="w-4 h-4 mr-1" /> 复制
-                </ZButton>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>私钥 (Private Key)</Label>
+                  <ZButton
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => copyToClipboard(privateKey)}
+                    disabled={!privateKey}
+                  >
+                    <Copy className="w-4 h-4 mr-1" /> 复制
+                  </ZButton>
+                </div>
+                <ZTextarea
+                  className="font-mono text-xs min-h-32"
+                  value={privateKey}
+                  readOnly
+                  placeholder="-----BEGIN RSA PRIVATE KEY-----..."
+                />
               </div>
-              <ZTextarea
-                className="font-mono text-xs h-32"
-                value={publicKey}
-                readOnly
-                placeholder="-----BEGIN PUBLIC KEY-----..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>私钥 (Private Key)</Label>
-                <ZButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(privateKey)}
-                  disabled={!privateKey}
-                >
-                  <Copy className="w-4 h-4 mr-1" /> 复制
-                </ZButton>
-              </div>
-              <ZTextarea
-                className="font-mono text-xs min-h-32"
-                value={privateKey}
-                readOnly
-                placeholder="-----BEGIN RSA PRIVATE KEY-----..."
-              />
-            </div>
+            </KeyGenForm>
           </CardContent>
         </Card>
 
@@ -224,7 +284,7 @@ export default function RsaCryptoPage() {
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {mode === 'encrypt' ? (
+              {operationMode === 'encrypt' ? (
                 <Lock className="w-5 h-5" />
               ) : (
                 <Unlock className="w-5 h-5" />
@@ -232,82 +292,82 @@ export default function RsaCryptoPage() {
               加解密测试
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 flex-1">
-            <ZToggleGroup
-              type="single"
-              options={MODE_OPTIONS}
-              value={mode}
-              onValueChange={(value) => {
-                const newMode = value as 'encrypt' | 'decrypt';
-                setMode(newMode);
-                if (newMode === 'encrypt' && publicKey) {
-                  setInputKey(publicKey);
-                } else if (newMode === 'decrypt' && privateKey) {
-                  setInputKey(privateKey);
+          <CardContent className="flex-1">
+            <RsaForm form={rsaForm} className="space-y-4">
+              <RsaForm.Item name="mode" label="操作模式">
+                <ZToggleGroup type="single" options={MODE_OPTIONS} />
+              </RsaForm.Item>
+
+              <RsaForm.Item
+                name="key"
+                label={
+                  operationMode === 'encrypt'
+                    ? '公钥 (Public Key)'
+                    : '私钥 (Private Key)'
                 }
-              }}
-            />
+              >
+                <ZTextarea
+                  className="font-mono text-xs min-h-24"
+                  placeholder={
+                    operationMode === 'encrypt'
+                      ? '请输入公钥...'
+                      : '请输入私钥...'
+                  }
+                />
+              </RsaForm.Item>
 
-            <div className="space-y-2">
-              <Label>
-                {mode === 'encrypt'
-                  ? '公钥 (Public Key)'
-                  : '私钥 (Private Key)'}
-              </Label>
-              <ZTextarea
-                className="font-mono text-xs min-h-24"
-                value={inputKey}
-                onValueChange={setInputKey}
-                placeholder={
-                  mode === 'encrypt' ? '请输入公钥...' : '请输入私钥...'
+              <RsaForm.Item
+                name="text"
+                label={
+                  operationMode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'
                 }
-              />
-            </div>
+              >
+                <ZTextarea
+                  className="min-h-24"
+                  placeholder={
+                    operationMode === 'encrypt'
+                      ? '请输入要加密的内容...'
+                      : '请输入要解密的内容...'
+                  }
+                />
+              </RsaForm.Item>
 
-            <div className="space-y-2">
-              <Label>
-                {mode === 'encrypt' ? '明文 (Input)' : '密文 (Input)'}
-              </Label>
-              <ZTextarea
-                className="min-h-24"
-                value={inputText}
-                onValueChange={setInputText}
-                placeholder={
-                  mode === 'encrypt'
-                    ? '请输入要加密的内容...'
-                    : '请输入要解密的内容...'
-                }
-              />
-            </div>
-
-            <div className="flex justify-center">
-              <ZButton className="w-full" onClick={handleProcess}>
-                <ArrowDown className="w-4 h-4 mr-2" />
-                {mode === 'encrypt' ? '执行加密' : '执行解密'}
-              </ZButton>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>
-                  {mode === 'encrypt' ? '密文 (Output)' : '明文 (Output)'}
-                </Label>
+              <div className="flex justify-center">
                 <ZButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(outputText)}
-                  disabled={!outputText}
+                  className="w-full"
+                  type="submit"
+                  loading={rsaForm.instance.formState.isSubmitting}
                 >
-                  <Copy className="w-4 h-4 mr-1" /> 复制
+                  <ArrowDown className="w-4 h-4 mr-2" />
+                  {operationMode === 'encrypt' ? '执行加密' : '执行解密'}
                 </ZButton>
               </div>
-              <ZTextarea
-                className="min-h-24 break-all"
-                value={outputText}
-                readOnly
-                placeholder="结果将显示在这里..."
-              />
-            </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>
+                    {operationMode === 'encrypt'
+                      ? '密文 (Output)'
+                      : '明文 (Output)'}
+                  </Label>
+                  <ZButton
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => copyToClipboard(outputText)}
+                    disabled={!outputText}
+                  >
+                    <Copy className="w-4 h-4 mr-1" /> 复制
+                  </ZButton>
+                </div>
+                <ZTextarea
+                  className="min-h-24 break-all"
+                  value={outputText}
+                  readOnly
+                  placeholder="结果将显示在这里..."
+                />
+              </div>
+            </RsaForm>
           </CardContent>
         </Card>
       </div>
