@@ -18,7 +18,7 @@ export interface ApiKeyDialogResult {
 
 /**
  * 显示API密钥输入弹窗
- * @param props 弹窗配置
+ * @param modelName 模型名称
  * @returns Promise<ApiKeyDialogResult> 用户操作结果
  */
 export async function showApiKeyDialog(
@@ -33,18 +33,6 @@ export async function showApiKeyDialog(
     };
 
     const handleConfirm = () => {
-      if (!apiKeyValue.trim()) {
-        hasError = true;
-        // 重新渲染以显示错误状态
-        ZDialog.show({
-          title,
-          content,
-          footer: renderFooter,
-          onClose: handleClose,
-        });
-        return;
-      }
-
       resolve({
         confirmed: true,
         apiKey: apiKeyValue.trim(),

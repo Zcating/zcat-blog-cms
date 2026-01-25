@@ -30,40 +30,61 @@ export namespace AiApi {
   type ChatModelName = 'deepseek';
 
   const models = {
-    deepseek: async (
-      params: ChatMessage[],
-      deepThinking: boolean,
-      controller: AbortController,
-    ) => {
-      const token = getToken('deepseek');
-      if (!token) {
-        throw new Error(`Model deepseek API key not found`);
-      }
-      return await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          model: deepThinking ? 'deepseek-chat' : 'deepseek-reasoner',
-          messages: params,
-          stream: true,
-          tools: [],
-          tool_choice: 'auto',
-        }),
-        signal: controller.signal,
-      });
+    deepseek: {
+      run: async (
+        apiKey: string,
+        params: ChatMessage[],
+        deepThinking: boolean,
+        controller: AbortController,
+      ) => {
+        if (!apiKey) {
+          throw new Error(`Model deepseek API key not found`);
+        }
+        return await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: deepThinking ? 'deepseek-chat' : 'deepseek-reasoner',
+            messages: params,
+            stream: true,
+            tools: [],
+            tool_choice: 'auto',
+          }),
+          signal: controller.signal,
+        });
+      },
+      async test(apiKey?: string) {
+        const token = apiKey;
+        if (!token) {
+          throw new Error(`Model deepseek API key not found`);
+        }
+        const response = await fetch('https://api.deepseek.com/models', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const result = (await response.json()) as { error?: string };
+        return !!result.error;
+      },
     },
   };
 
   /**
    * 与 AI 模型进行聊天
    */
-  export function chat(modelName: ChatModelName): ChatMessagesHandler {
+  export function chat(
+    modelName: ChatModelName,
+    apiKey: string,
+  ): ChatMessagesHandler {
     return createHandler(
       async (params: ChatMessage[], deepThinking: boolean, controller) => {
-        const response = await models[modelName](
+        const response = await models[modelName].run(
+          apiKey,
           params,
           deepThinking,
           controller,
@@ -84,8 +105,8 @@ export namespace AiApi {
     );
   }
 
-  function getToken(modelName: ChatModelName) {
-    return localStorage.getItem(`model-${modelName}-api-key`);
+  export async function test(modelName: ChatModelName, apiKey?: string) {
+    return await models[modelName].test(apiKey);
   }
 }
 

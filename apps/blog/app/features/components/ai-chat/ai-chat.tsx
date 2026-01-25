@@ -18,6 +18,8 @@ import {
   saveApiKey,
   type ApiModelName,
   API_MODELS,
+  apiKeyPromption,
+  getApiKey,
 } from './ai-model-utils';
 import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
 
@@ -97,7 +99,7 @@ function useAiChatManager(model: ApiModelName) {
 
   const runAssistantStream = useMemoizedFn(
     async (assistantMessage: Message, chatMessages: Message[]) => {
-      const chatHandler = AiApi.chat(model);
+      const chatHandler = AiApi.chat(model, getApiKey(model));
 
       assistantMessage.content = '';
       assistantMessage.isFinish = false;
@@ -134,35 +136,9 @@ function useAiChatManager(model: ApiModelName) {
   );
 
   const send = useMemoizedFn(async (message: Message) => {
-    // 检查API密钥是否存在
-    const hasApiKey = checkApiKey(model);
-
-    if (!hasApiKey) {
-      // 显示API密钥缺失提示
-
-      const shouldSetup = await showApiKeyMissingDialog(model);
-
-      if (!shouldSetup) {
-        // 用户选择稍后设置，不发送消息
-        return;
-      }
-
-      // 显示API密钥输入弹窗
-      const result = await showApiKeyDialog(model);
-
-      if (!result.confirmed || !result.apiKey) {
-        // 用户取消输入，不发送消息
-        return;
-      }
-
-      // 保存API密钥
-      try {
-        saveApiKey(model, result.apiKey);
-      } catch (error) {
-        // 保存失败，不发送消息
-        console.error('保存API密钥失败:', error);
-        return;
-      }
+    const isSuccess = await apiKeyPromption(model);
+    if (!isSuccess) {
+      return;
     }
 
     // API密钥已存在或已成功设置，继续发送消息
