@@ -1,4 +1,4 @@
-import { safeParse } from '@zcat/ui';
+import { safeParseJson } from '@zcat/ui';
 
 import { HttpClient } from '../http';
 
@@ -21,7 +21,10 @@ export namespace UserApi {
     const result = await HttpClient.get('cms/user-info');
     return {
       name: result.name,
-      contact: safeParse<Contact>(result.contact, { email: '', github: '' }),
+      contact: safeParseJson<Contact>(result.contact, {
+        email: '',
+        github: '',
+      }),
       occupation: result.occupation,
       avatar: result.avatar,
       aboutMe: result.aboutMe,
@@ -42,7 +45,10 @@ export namespace UserApi {
 
     return {
       name: result.name,
-      contact: safeParse<Contact>(result.contact, { email: '', github: '' }),
+      contact: safeParseJson<Contact>(result.contact, {
+        email: '',
+        github: '',
+      }),
       occupation: result.occupation,
       avatar: result.avatar,
       aboutMe: result.aboutMe,
