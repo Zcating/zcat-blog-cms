@@ -4,6 +4,10 @@
 
 export type ApiModelName = 'deepseek';
 
+export const API_MODELS: CommonOption<ApiModelName>[] = [
+  { value: 'deepseek', label: '深度求索' },
+];
+
 /**
  * 获取API密钥存储键名
  */

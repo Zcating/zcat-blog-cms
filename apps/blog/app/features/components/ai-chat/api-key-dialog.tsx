@@ -1,6 +1,6 @@
-import { ZButton, ZDialog, ZInput } from '@zcat/ui';
+import { Label, ZButton, ZDialog, ZInput } from '@zcat/ui';
 
-import type { ApiModelName } from './api-key-utils';
+import type { ApiModelName } from './ai-model-utils';
 
 export interface ApiKeyDialogProps {
   /** 模型名称 */
@@ -88,9 +88,9 @@ export async function showApiKeyDialog(
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="api-key-input" className="text-sm font-medium">
+          <Label htmlFor="api-key-input" className="text-sm font-medium">
             API密钥
-          </label>
+          </Label>
           <ZInput
             id="api-key-input"
             type="password"

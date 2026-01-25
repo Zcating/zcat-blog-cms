@@ -7,14 +7,19 @@ import {
   Toggle,
   type Message,
 } from '@zcat/ui';
-import { Brain } from 'lucide-react';
+import { AtomIcon } from 'lucide-react';
 import React from 'react';
 
 import { AiApi } from '@blog/apis';
 // import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
 
+import {
+  checkApiKey,
+  saveApiKey,
+  type ApiModelName,
+  API_MODELS,
+} from './ai-model-utils';
 import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
-import { checkApiKey, saveApiKey, type ApiModelName } from './api-key-utils';
 
 interface AiChatProps {
   className?: string;
@@ -223,6 +228,12 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       emptyComponent={emptyComponent}
       toolbar={
         <div className="flex items-center gap-2">
+          <ZSelect
+            placeholder="选择模型"
+            options={API_MODELS}
+            value={model}
+            onValueChange={setModel}
+          />
           <Toggle
             variant="outline"
             size="sm"
@@ -230,14 +241,8 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
             onPressedChange={chat.toggleDeepThinking}
             aria-label="开启深度思考模式，AI将提供更详细全面的分析"
           >
-            <Brain className="size-4" />
+            <AtomIcon className="size-4" />
           </Toggle>
-          <ZSelect
-            placeholder="选择模型"
-            options={[{ value: 'deepseek', label: 'DeepSeek Chat' }]}
-            value={model}
-            onValueChange={setModel}
-          />
         </div>
       }
     />
