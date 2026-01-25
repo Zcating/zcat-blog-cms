@@ -26,6 +26,8 @@ export interface ZDialogContentProps {
   /** DialogContent 容器样式 */
   contentContainerClassName?: string;
 
+  backdropClose?: boolean;
+
   /** 弹窗关闭后的回调 */
   onClose?: () => void;
 }
@@ -74,6 +76,7 @@ export const DialogContainer = React.forwardRef<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className={props.contentContainerClassName}
+        backdropClose={props.backdropClose}
         onAnimationEnd={handleAnimationEnd}
       >
         {props.title && (

@@ -18,6 +18,8 @@ export interface ZDialogAlertProps {
   content: React.ReactNode;
 
   confirmText?: string;
+
+  backdropClose?: boolean;
 }
 
 export interface ZDialogConfirmProps {
@@ -29,6 +31,8 @@ export interface ZDialogConfirmProps {
   confirmText?: string;
 
   cancelText?: string;
+
+  backdropClose?: boolean;
 }
 
 function createPortal() {
@@ -50,7 +54,6 @@ function createPortal() {
 
 function createDialog(props: ZDialogContentProps) {
   const portal = createPortal();
-  const resolvers = Promise.withResolvers<void>();
 
   let containerRef: ContaienrRef | null = null;
   const setContaienrRef = (ref: ContaienrRef) => {
@@ -60,7 +63,6 @@ function createDialog(props: ZDialogContentProps) {
   const dialogRef = {
     close: () => {
       containerRef?.close();
-      resolvers.resolve();
     },
   };
 
@@ -81,39 +83,53 @@ function createDialog(props: ZDialogContentProps) {
       onDismiss={portal.destroy}
     />,
   );
-
-  return resolvers.promise;
 }
 
 export const ZDialog = {
   alert: async (alertProps: ZDialogAlertProps) => {
-    await createDialog({
+    const resolver = Promise.withResolvers<void>();
+    createDialog({
       title: alertProps.title,
       content: alertProps.content,
       footer: (props) => (
         <React.Fragment>
-          <ZButton onClick={props.onClose}>
+          <ZButton
+            onClick={() => {
+              props.onClose();
+              resolver.resolve();
+            }}
+          >
             {alertProps.confirmText || '确定'}
           </ZButton>
         </React.Fragment>
       ),
+      onClose: () => {
+        resolver.resolve();
+      },
     });
+    return resolver.promise;
   },
 
   confirm: async (confirmProps: ZDialogConfirmProps) => {
-    let isConfirmed = false;
-    await createDialog({
+    const resolver = Promise.withResolvers<boolean>();
+    createDialog({
       title: confirmProps.title,
       content: confirmProps.content,
       footer: (props) => (
         <React.Fragment>
-          <ZButton onClick={props.onClose} variant="outline">
+          <ZButton
+            onClick={() => {
+              props.onClose();
+              resolver.resolve(false);
+            }}
+            variant="outline"
+          >
             {confirmProps.cancelText || '取消'}
           </ZButton>
           <ZButton
             onClick={() => {
-              isConfirmed = true;
               props.onClose();
+              resolver.resolve(true);
             }}
           >
             {confirmProps.confirmText || '确定'}
@@ -121,7 +137,7 @@ export const ZDialog = {
         </React.Fragment>
       ),
     });
-    return isConfirmed;
+    return resolver.promise;
   },
 
   /**

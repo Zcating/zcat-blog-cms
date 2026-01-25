@@ -18,6 +18,10 @@ export interface ZMarkdownProps {
 }
 
 const MarkdownComponents: Components = {
+  pre: ({ node, className, children }) => {
+    return <pre className={cn('mb-4!', className)}>{children}</pre>;
+  },
+
   code: ({ node, className, children }) => {
     const match = /language-(\w+)/.exec(className || '');
     const language = safeArray<string>(match)[1] ?? '';
@@ -54,7 +58,7 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
         'prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:underline',
         'prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground',
         'prose-code:border-none prose-code:text-black',
-        'prose-pre:m-0! prose-pre:bg-transparent',
+        'prose-pre:mb-4 prose-pre:bg-transparent',
         'prose-ul:text-foreground prose-ol:text-foreground',
         'prose-li:text-foreground',
         'prose-table:border prose-table:border-border',
