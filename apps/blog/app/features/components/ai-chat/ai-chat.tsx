@@ -242,6 +242,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
             aria-label="开启深度思考模式，AI将提供更详细全面的分析"
           >
             <AtomIcon className="size-4" />
+            <p>深度思考</p>
           </Toggle>
         </div>
       }
