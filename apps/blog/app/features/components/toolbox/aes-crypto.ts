@@ -1,4 +1,4 @@
-import CryptoJS from 'crypto-js';
+import CryptoJS from '@originjs/crypto-js-wasm';
 
 interface CipherOption {
   mode: (typeof CryptoJS.mode)['CBC'];
