@@ -22,10 +22,10 @@ export function getApiKeyStorageKey(apiModel: ApiModelName): string {
 /**
  * 检查指定UI模型的API密钥是否存在
  */
-export function checkApiKey(model: ApiModelName): boolean {
+export async function checkApiKey(model: ApiModelName): Promise<boolean> {
   const storageKey = getApiKeyStorageKey(model);
-  const apiKey = localStorage.getItem(storageKey);
-  return !!apiKey && apiKey.trim().length > 0;
+  const apiKey = localStorage.getItem(storageKey) ?? '';
+  return AiApi.test(model, apiKey);
 }
 
 /**
@@ -57,31 +57,10 @@ export function deleteApiKey(model: ApiModelName): void {
   localStorage.removeItem(storageKey);
 }
 
-/**
- * 获取所有已保存的API密钥信息
- */
-export function getAllApiKeys(): Array<{
-  model: ApiModelName;
-  storageKey: string;
-  hasKey: boolean;
-}> {
-  const models: ApiModelName[] = ['deepseek'];
-
-  return models.map((model) => {
-    const storageKey = getApiKeyStorageKey(model);
-    const hasKey = checkApiKey(model);
-
-    return {
-      model,
-      storageKey,
-      hasKey,
-    };
-  });
-}
-
 export async function apiKeyPromption(model: ApiModelName): Promise<boolean> {
   // 检查API密钥是否存在
-  const hasApiKey = checkApiKey(model);
+  const hasApiKey = await checkApiKey(model);
+  console.log('hasApiKey', hasApiKey);
   if (hasApiKey) {
     return true;
   }
@@ -94,18 +73,18 @@ export async function apiKeyPromption(model: ApiModelName): Promise<boolean> {
   }
 
   // 显示API密钥输入弹窗
-  const result = await showApiKeyDialog(model);
+  const apiKey = await showApiKeyDialog(model);
 
-  if (!result.confirmed || !result.apiKey) {
+  if (!apiKey) {
     // 用户取消输入，不发送消息
     return false;
   }
 
   // 保存API密钥
   try {
-    const isSuccess = await AiApi.test(model, result.apiKey);
+    const isSuccess = await AiApi.test(model, apiKey);
     if (isSuccess) {
-      saveApiKey(model, result.apiKey);
+      saveApiKey(model, apiKey);
     }
     return isSuccess;
   } catch (error) {

@@ -14,14 +14,11 @@ import { AiApi } from '@blog/apis';
 // import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
 
 import {
-  checkApiKey,
-  saveApiKey,
   type ApiModelName,
   API_MODELS,
   apiKeyPromption,
   getApiKey,
 } from './ai-model-utils';
-import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
 
 interface AiChatProps {
   className?: string;

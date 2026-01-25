@@ -56,10 +56,9 @@ export namespace AiApi {
           signal: controller.signal,
         });
       },
-      async test(apiKey?: string) {
-        const token = apiKey;
+      async test(token?: string) {
         if (!token) {
-          throw new Error(`Model deepseek API key not found`);
+          return false;
         }
         const response = await fetch('https://api.deepseek.com/models', {
           method: 'GET',
@@ -69,7 +68,7 @@ export namespace AiApi {
           },
         });
         const result = (await response.json()) as { error?: string };
-        return !!result.error;
+        return !result.error;
       },
     },
   };
