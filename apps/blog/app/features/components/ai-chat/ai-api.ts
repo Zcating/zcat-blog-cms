@@ -1,6 +1,6 @@
 import { isObject } from '@zcat/ui';
 
-import { Stream } from '../utils/stream';
+import { Stream } from '../../../apis/utils/stream';
 
 export namespace AiApi {
   interface ChatCompletion {
@@ -18,18 +18,26 @@ export namespace AiApi {
   }
 
   export interface ChatStreamHandler<P> {
-    create(
-      params: P,
-      deepThinking?: boolean,
-    ): Promise<Stream<AiApi.ChatMessage>>;
+    create(params: P, deepThinking?: boolean): Promise<Stream<ChatMessage>>;
     abort(reason?: string): void;
   }
 
   export type ChatMessagesHandler = ChatStreamHandler<ChatMessage[]>;
 
   type ChatModelName = 'deepseek';
+  type ChatModels = {
+    [x in ChatModelName]: {
+      run(
+        apiKey: string,
+        params: ChatMessage[],
+        deepThinking: boolean,
+        controller: AbortController,
+      ): Promise<Stream<ChatMessage>>;
+      test(token?: string): Promise<boolean>;
+    };
+  };
 
-  const models = {
+  const models: ChatModels = {
     deepseek: {
       run: async (
         apiKey: string,
@@ -40,21 +48,36 @@ export namespace AiApi {
         if (!apiKey) {
           throw new Error(`Model deepseek API key not found`);
         }
-        return await fetch('https://api.deepseek.com/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
+        const response = await fetch(
+          'https://api.deepseek.com/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: deepThinking ? 'deepseek-chat' : 'deepseek-reasoner',
+              messages: params,
+              stream: true,
+              tools: [],
+              tool_choice: 'auto',
+            }),
+            signal: controller.signal,
           },
-          body: JSON.stringify({
-            model: deepThinking ? 'deepseek-chat' : 'deepseek-reasoner',
-            messages: params,
-            stream: true,
-            tools: [],
-            tool_choice: 'auto',
-          }),
-          signal: controller.signal,
-        });
+        );
+        const stream = response.body;
+        if (!stream) {
+          throw new Error('Response body is null');
+        }
+        return Stream.from<ChatCompletion | null>(
+          response.body,
+          controller,
+        ).map((chunk) => ({
+          role: 'assistant',
+          thinking: chunk?.choices[0].delta.reasoning_content || '',
+          content: chunk?.choices[0].delta.content || '',
+        }));
       },
       async test(token?: string) {
         if (!token) {
@@ -73,6 +96,8 @@ export namespace AiApi {
     },
   };
 
+  export function registerModel() {}
+
   /**
    * 与 AI 模型进行聊天
    */
@@ -81,25 +106,8 @@ export namespace AiApi {
     apiKey: string,
   ): ChatMessagesHandler {
     return createHandler(
-      async (params: ChatMessage[], deepThinking: boolean, controller) => {
-        const response = await models[modelName].run(
-          apiKey,
-          params,
-          deepThinking,
-          controller,
-        );
-        const stream = response.body;
-        if (!stream) {
-          throw new Error('Response body is null');
-        }
-        return Stream.from<ChatCompletion | null>(
-          response.body,
-          controller,
-        ).map((chunk) => ({
-          role: 'assistant',
-          thinking: chunk?.choices[0].delta.reasoning_content || '',
-          content: chunk?.choices[0].delta.content || '',
-        }));
+      (params: ChatMessage[], deepThinking: boolean, controller) => {
+        return models[modelName].run(apiKey, params, deepThinking, controller);
       },
     );
   }

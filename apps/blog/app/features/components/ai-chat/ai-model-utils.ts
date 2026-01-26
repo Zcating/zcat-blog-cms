@@ -2,8 +2,7 @@
  * AI模型API密钥工具函数
  */
 
-import { AiApi } from '@blog/apis';
-
+import { AiApi } from './ai-api';
 import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
 
 export type ApiModelName = 'deepseek';

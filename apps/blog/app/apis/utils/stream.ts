@@ -85,6 +85,11 @@ export class Stream<Item> implements AsyncIterable<Item> {
     return new Stream(iterator, controller);
   }
 
+  /**
+   * Applies a function to each item in the stream and returns a new stream of the results.
+   * @param fn The function to apply to each item in the stream.
+   * @returns A new stream of the results of applying the function to each item in the stream.
+   */
   map<R>(fn: (item: Item) => R): Stream<R> {
     const self = this;
     return new Stream(async function* () {

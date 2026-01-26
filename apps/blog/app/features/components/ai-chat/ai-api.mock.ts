@@ -1,4 +1,4 @@
-import { Stream } from '../utils/stream';
+import { Stream } from '@blog/apis/utils/stream';
 
 export namespace AiApiMock {
   export interface ChatMessage {

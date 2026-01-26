@@ -13,7 +13,7 @@ export class LineDecoder {
 
   buffer: Uint8Array;
   #carriageReturnIndex: number | null;
-  textDecoder: TextDecoder; // TextDecoder found in browsers; not typed to avoid pulling in either "dom" or "node" types.
+  textDecoder: TextDecoder;
 
   constructor() {
     this.textDecoder = new TextDecoder('utf8');

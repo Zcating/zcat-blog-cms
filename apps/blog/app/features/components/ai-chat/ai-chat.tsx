@@ -6,13 +6,14 @@ import {
   ZChat,
   Toggle,
   type Message,
+  useBoolean,
+  useToggleValue,
 } from '@zcat/ui';
 import { AtomIcon } from 'lucide-react';
 import React from 'react';
 
-import { AiApi } from '@blog/apis';
 // import { AiApiMock as AiApi } from '@blog/apis/interfaces/ai-api.mock';
-
+import { AiApi } from './ai-api';
 import {
   type ApiModelName,
   API_MODELS,
@@ -32,61 +33,35 @@ function createMessageId() {
 function useChatMessages() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const messagesRef = React.useRef<Message[]>(messages);
-
-  React.useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
-  const setMessagesSafe = useMemoizedFn(
-    (updater: Message[] | ((prev: Message[]) => Message[])) => {
-      setMessages((prev) => {
-        const next =
-          typeof updater === 'function'
-            ? (updater as (prev: Message[]) => Message[])(prev)
-            : updater;
-        messagesRef.current = next;
-        return next;
-      });
-    },
-  );
-
   const addMessage = useMemoizedFn((message: Message) => {
     const next = [...messagesRef.current, message];
-    setMessagesSafe(next);
+    setMessages(next);
     return next;
   });
 
-  const getMessages = useMemoizedFn(() => messagesRef.current);
-
-  return [messages, setMessagesSafe, addMessage, getMessages] as const;
+  return [messages, setMessages, addMessage] as const;
 }
 
 function useAiChatManager(model: ApiModelName) {
-  const [messages, setMessages, addMessage, getMessages] = useChatMessages();
-  const [deepThinking, setDeepThinking] = React.useState(false);
+  const [deepThinking, toggleDeepThinking] = useToggleValue(false);
+  const [messages, setMessages, addMessage] = useChatMessages();
 
   const chatHandlerRef = React.useRef<ReturnType<typeof AiApi.chat> | null>(
     null,
   );
 
   const systemMessage = React.useMemo(() => {
-    const baseContent =
-      '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。';
-    const deepThinkingContent = deepThinking
-      ? ' 请对用户的问题进行深度思考，提供更详细、更全面的分析，包括多个角度的思考、潜在的解决方案、以及相关的背景知识。'
-      : '';
-
     return {
       role: 'system',
-      content: baseContent + deepThinkingContent,
+      content:
+        '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。',
     } as const;
-  }, [deepThinking]);
+  }, []);
 
   const abort = useMemoizedFn((reason: string) => {
     chatHandlerRef.current?.abort(reason);
 
-    const current = getMessages();
-    const lastMessage = current[current.length - 1];
+    const lastMessage = messages[messages.length - 1];
     if (!lastMessage || lastMessage.role === 'user') {
       return;
     }
@@ -94,43 +69,44 @@ function useAiChatManager(model: ApiModelName) {
     lastMessage.content = '用户暂停生成';
   });
 
-  const runAssistantStream = useMemoizedFn(
-    async (assistantMessage: Message, chatMessages: Message[]) => {
-      const chatHandler = AiApi.chat(model, getApiKey(model));
-
-      assistantMessage.content = '';
-      assistantMessage.isFinish = false;
-      try {
-        const stream = await chatHandler.create([
-          systemMessage,
-          ...chatMessages,
-        ]);
-        let isThinking = false;
-        for await (const message of stream) {
-          if (message.thinking) {
-            if (!isThinking) {
-              isThinking = true;
-              assistantMessage.content += '```think\n';
-            }
-            assistantMessage.content += message.thinking;
-            continue;
+  const runAssistantStream = useMemoizedFn(async (chatMessages: Message[]) => {
+    chatHandlerRef.current = AiApi.chat(model, getApiKey(model));
+    const assistantMessage = messages[messages.length - 1];
+    if (!assistantMessage || assistantMessage.role !== 'assistant') {
+      return;
+    }
+    assistantMessage.content = '';
+    assistantMessage.isFinish = false;
+    try {
+      const stream = await chatHandlerRef.current.create(
+        [systemMessage, ...chatMessages],
+        deepThinking,
+      );
+      let isThinking = false;
+      for await (const message of stream) {
+        if (message.thinking) {
+          if (!isThinking) {
+            isThinking = true;
+            assistantMessage.content += '```think\n';
           }
-          if (isThinking) {
-            assistantMessage.content += '\n```\n';
-            isThinking = false;
-          }
-          assistantMessage.content += message.content;
+          assistantMessage.content += message.thinking;
+          continue;
         }
-
-        assistantMessage.isFinish = true;
-      } catch (error) {
-        console.error('请求失败:', error);
-        assistantMessage.isFinish = true;
-        assistantMessage.content = '请求失败';
-        return;
+        if (isThinking) {
+          assistantMessage.content += '\n```\n';
+          isThinking = false;
+        }
+        assistantMessage.content += message.content;
       }
-    },
-  );
+
+      assistantMessage.isFinish = true;
+    } catch (error) {
+      console.error('请求失败:', error);
+      assistantMessage.isFinish = true;
+      assistantMessage.content = '请求失败';
+      return;
+    }
+  });
 
   const send = useMemoizedFn(async (message: Message) => {
     const isSuccess = await apiKeyPromption(model);
@@ -141,14 +117,13 @@ function useAiChatManager(model: ApiModelName) {
     // API密钥已存在或已成功设置，继续发送消息
     const userMessage: Message = { ...message, id: createMessageId() };
     const result = addMessage(userMessage);
-    const assistantId = createMessageId();
     const assistantMessage: Message = createObservableMessage({
-      id: assistantId,
+      id: createMessageId(),
       role: 'assistant',
       content: '',
     });
     addMessage(assistantMessage);
-    await runAssistantStream(assistantMessage, result);
+    await runAssistantStream(result);
   });
 
   const regenerate = useMemoizedFn(async (message: Message) => {
@@ -158,21 +133,16 @@ function useAiChatManager(model: ApiModelName) {
 
     chatHandlerRef.current?.abort('用户重新生成');
 
-    const current = getMessages();
-    const index = current.findIndex((m) => m.id && m.id === message.id);
+    const index = messages.findIndex((m) => m.id && m.id === message.id);
     if (index === -1) {
       return;
     }
 
-    const nextMessages = current.slice(0, index + 1);
+    const nextMessages = messages.slice(0, index + 1);
     setMessages(nextMessages);
 
     const contextMessages = nextMessages.slice(0, index);
     await runAssistantStream(message, contextMessages);
-  });
-
-  const toggleDeepThinking = useMemoizedFn(() => {
-    setDeepThinking((prev) => !prev);
   });
 
   return {

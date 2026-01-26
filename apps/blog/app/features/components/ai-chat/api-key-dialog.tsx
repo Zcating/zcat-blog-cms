@@ -1,7 +1,7 @@
 import { Label, ZButton, ZDialog, ZInput } from '@zcat/ui';
 import React from 'react';
 
-import { AiApi } from '@blog/apis';
+import { AiApi } from './ai-api';
 
 import type { ApiModelName } from './ai-model-utils';
 
@@ -135,7 +135,7 @@ export async function showApiKeyDialog(
     onClose: () => {
       resolvers.resolve('');
     },
-    backdropClose: true,
+    backdropClose: false,
   });
 
   return resolvers.promise;
