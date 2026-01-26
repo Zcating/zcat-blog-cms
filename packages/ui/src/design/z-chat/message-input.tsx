@@ -1,4 +1,4 @@
-import { Loader2Icon, Send, Square } from 'lucide-react';
+import { Loader2Icon, Send } from 'lucide-react';
 import * as React from 'react';
 
 import { ZButton } from '../z-button/z-button';

@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { useMemoizedFn, useMount } from '@zcat/ui/hooks';
-import { throttle } from '@zcat/ui/utils';
 
 export interface UseChatAutoScrollOptions {
   bottomTolerance?: number;

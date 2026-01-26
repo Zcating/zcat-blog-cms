@@ -17,12 +17,10 @@ export namespace AiApi {
     thinking?: string;
   }
 
-  export interface ChatStreamHandler<P> {
-    create(params: P, deepThinking?: boolean): Promise<Stream<ChatMessage>>;
+  export interface ChatStreamHandler {
+    create(deepThinking?: boolean): Promise<Stream<ChatMessage>>;
     abort(reason?: string): void;
   }
-
-  export type ChatMessagesHandler = ChatStreamHandler<ChatMessage[]>;
 
   type ChatModelName = 'deepseek';
   type ChatModels = {
@@ -104,12 +102,12 @@ export namespace AiApi {
   export function chat(
     modelName: ChatModelName,
     apiKey: string,
-  ): ChatMessagesHandler {
-    return createHandler(
-      (params: ChatMessage[], deepThinking: boolean, controller) => {
-        return models[modelName].run(apiKey, params, deepThinking, controller);
-      },
-    );
+    messages: ChatMessage[],
+    deepThinking: boolean,
+  ): ChatStreamHandler {
+    return createHandler((controller) => {
+      return models[modelName].run(apiKey, messages, deepThinking, controller);
+    });
   }
 
   export async function test(modelName: ChatModelName, apiKey?: string) {
@@ -117,21 +115,24 @@ export namespace AiApi {
   }
 }
 
-function createHandler<P>(
-  fn: (
-    params: P,
-    deepThinking: boolean,
-    controller: AbortController,
-  ) => Promise<Stream<AiApi.ChatMessage>>,
-): AiApi.ChatStreamHandler<P> {
-  const controller = new AbortController();
+function createHandler(
+  fn: (controller: AbortController) => Promise<Stream<AiApi.ChatMessage>>,
+): AiApi.ChatStreamHandler {
+  let controller: AbortController | null;
   const handler = {
-    create(params: P, deepThinking?: boolean) {
-      return fn(params, !!deepThinking, controller);
+    create() {
+      if (!controller) {
+        controller = new AbortController();
+      }
+      return fn(controller);
     },
     abort(reason?: string) {
-      controller.abort(reason);
+      if (controller) {
+        controller.abort(reason);
+        controller = null;
+      }
     },
   };
+
   return handler;
 }

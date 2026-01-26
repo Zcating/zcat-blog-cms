@@ -21,10 +21,19 @@ export function getApiKeyStorageKey(apiModel: ApiModelName): string {
 /**
  * 检查指定UI模型的API密钥是否存在
  */
-export async function checkApiKey(model: ApiModelName): Promise<boolean> {
+export async function checkApiKey(model: ApiModelName): Promise<string> {
   const storageKey = getApiKeyStorageKey(model);
-  const apiKey = localStorage.getItem(storageKey) ?? '';
-  return AiApi.test(model, apiKey);
+  const apiKey = localStorage.getItem(storageKey);
+  if (!apiKey) {
+    return '';
+  }
+
+  const isSuccess = await AiApi.test(model, apiKey);
+  if (!isSuccess) {
+    return '';
+  }
+
+  return apiKey;
 }
 
 /**
@@ -56,39 +65,38 @@ export function deleteApiKey(model: ApiModelName): void {
   localStorage.removeItem(storageKey);
 }
 
-export async function apiKeyPromption(model: ApiModelName): Promise<boolean> {
+export async function apiKeyPromption(model: ApiModelName): Promise<string> {
   // 检查API密钥是否存在
-  const hasApiKey = await checkApiKey(model);
-  console.log('hasApiKey', hasApiKey);
-  if (hasApiKey) {
-    return true;
+  const apiKey = await checkApiKey(model);
+  if (apiKey) {
+    return apiKey;
   }
 
   const shouldSetup = await showApiKeyMissingDialog(model);
 
   if (!shouldSetup) {
     // 用户选择稍后设置，不发送消息
-    return false;
+    return '';
   }
 
   // 显示API密钥输入弹窗
-  const apiKey = await showApiKeyDialog(model);
+  const inputedApiKey = await showApiKeyDialog(model);
 
-  if (!apiKey) {
+  if (!inputedApiKey) {
     // 用户取消输入，不发送消息
-    return false;
+    return '';
   }
 
   // 保存API密钥
   try {
-    const isSuccess = await AiApi.test(model, apiKey);
+    const isSuccess = await AiApi.test(model, inputedApiKey);
     if (isSuccess) {
-      saveApiKey(model, apiKey);
+      saveApiKey(model, inputedApiKey);
     }
-    return isSuccess;
+    return isSuccess ? inputedApiKey : '';
   } catch (error) {
     // 保存失败，不发送消息
     console.error('保存API密钥失败:', error);
-    return false;
+    return '';
   }
 }

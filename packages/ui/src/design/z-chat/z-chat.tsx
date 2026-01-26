@@ -8,20 +8,15 @@ import { cn } from '../../shadcn/lib/utils';
 import { ZButton } from '../z-button/z-button';
 import { ZView } from '../z-view/z-view';
 
+import { Message } from './message';
 import { MessageInput } from './message-input';
-import { MessageItem } from './message-item';
-import { observeMessage } from './observable-message';
 import { useChatAutoScroll } from './use-chat-auto-scroll';
-
-export interface Message {
-  id?: string;
-  role: 'user' | 'assistant' | 'system' | 'function';
-  content: string;
-  isFinish?: boolean;
-}
+import { ZChatController } from './use-chat-controller';
+import { useChatMessages } from './use-chat-messages';
+import { ZChatBubble } from './z-chat-bubble';
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
-  messages: Message[];
+  controller: ZChatController;
   onSend: (message: Message) => void | Promise<void>;
   onRegenerate?: (message: Message) => void | Promise<void>;
   onAbort?: () => void;
@@ -30,12 +25,8 @@ export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   emptyComponent?: React.ReactNode | React.ComponentType;
 }
 
-export function createObservableMessage(message: Message): Message {
-  return observeMessage(message);
-}
-
 export function ZChat({
-  messages,
+  controller,
   onSend,
   onAbort,
   onRegenerate,
@@ -45,10 +36,6 @@ export function ZChat({
   emptyComponent: emptyState,
   ...props
 }: ZChatProps) {
-  const renderedMessages = React.useMemo(() => {
-    return messages.map(observeMessage);
-  }, [messages]);
-
   const { scrollRef, isAtBottom, updateIsAtBottom, lockToBottom } =
     useChatAutoScroll();
 
@@ -59,6 +46,8 @@ export function ZChat({
     onAbort,
     onRegenerate,
   );
+
+  const messages = useChatMessages(controller);
 
   return (
     <ZView
@@ -73,12 +62,13 @@ export function ZChat({
         className="w-full flex-1 overflow-y-auto space-y-6 z-scrollbar py-4 px-4 md:px-20 lg:px-40"
         onScroll={updateIsAtBottom}
       >
-        {renderedMessages.length === 0
+        {messages.length === 0
           ? renderEmptyState()
-          : renderedMessages.map((message, index) => (
-              <MessageItem
+          : messages.map((message, index) => (
+              <ZChatBubble
                 key={message.id ?? index}
                 message={message}
+                regenerable={index !== messages.length - 1}
                 onRegenerate={handleRegenerate}
               />
             ))}
