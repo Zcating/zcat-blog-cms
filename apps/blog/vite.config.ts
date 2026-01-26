@@ -19,11 +19,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    resolve: {
-      alias: {
-        crypto: 'crypto-browserify',
-      },
-    },
     define: {
       global: 'globalThis',
     },
