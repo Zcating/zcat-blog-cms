@@ -6,18 +6,19 @@ import {
   CardTitle,
   ZTextarea,
   ZView,
+  ZToggleGroup,
+  ZMarkdown,
   useMemoizedFn,
   useWatch,
   copyToClipboard,
-  ZMarkdown,
 } from '@zcat/ui';
-import { Copy, FileCode } from 'lucide-react';
+import { Copy, Eye, FileCode, FileText } from 'lucide-react';
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import remarkRehype from 'remark-rehype';
+
+const VIEW_MODE_OPTIONS: CommonOption<string>[] = [
+  { value: 'html', label: <FileCode className="size-5" /> },
+  { value: 'preview', label: <Eye className="size-5" /> },
+];
 
 export function meta() {
   return [
@@ -34,6 +35,8 @@ export default function MarkdownToHtmlPage() {
   const [htmlContent, setHtmlContent] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [isConverting, setIsConverting] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState('html');
 
   const convertToHtml = useMemoizedFn(async (markdown: string) => {
     if (!markdown.trim()) {
@@ -44,19 +47,31 @@ export default function MarkdownToHtmlPage() {
 
     setIsConverting(true);
     try {
-      const [unified, remarkParse, rehypeStringify] = await Promise.all([
+      const [
+        unified,
+        remarkParse,
+        rehypeStringify,
+        remarkMath,
+        remarkGfm,
+        remarkRehype,
+        rehypeKatex,
+      ] = await Promise.all([
         import('unified'),
         import('remark-parse'),
         import('rehype-stringify'),
+        import('remark-math'),
+        import('remark-gfm'),
+        import('remark-rehype'),
+        import('rehype-katex'),
       ]);
 
       const processor = unified
         .unified()
         .use(remarkParse.default)
-        .use(remarkMath)
-        .use(remarkGfm)
-        .use(remarkRehype)
-        .use(rehypeKatex)
+        .use(remarkMath.default)
+        .use(remarkGfm.default)
+        .use(remarkRehype.default)
+        .use(rehypeKatex.default)
         .use(rehypeStringify.default);
 
       const result = await processor.process(markdown);
@@ -70,9 +85,61 @@ export default function MarkdownToHtmlPage() {
     }
   });
 
-  useWatch([inputMarkdown], (markdown) => {
-    convertToHtml(markdown);
+  const exportToPdf = useMemoizedFn(async () => {
+    if (!inputMarkdown.trim()) return;
+
+    setIsExporting(true);
+    try {
+      const [{ snapdom }, { jsPDF }] = await Promise.all([
+        import('@zumer/snapdom'),
+        import('jspdf'),
+      ]);
+
+      const element = document.getElementById('pdf-content');
+      if (element) {
+        const result = await snapdom(element, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+        });
+
+        const pngImage = await result.toPng();
+        const imgData = pngImage.src;
+
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pdfWidth;
+        const imgHeight = (pngImage.height * pdfWidth) / pngImage.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+
+        pdf.save('markdown-document.pdf');
+      }
+    } catch (e) {
+      console.error('PDF 导出失败:', e);
+    } finally {
+      setIsExporting(false);
+    }
   });
+
+  useWatch([inputMarkdown], convertToHtml);
 
   return (
     <ZView className="p-4 space-y-6 h-full overflow-y-auto">
@@ -84,7 +151,7 @@ export default function MarkdownToHtmlPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <ZView className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -94,66 +161,80 @@ export default function MarkdownToHtmlPage() {
           </CardHeader>
           <CardContent className="space-y-4 flex-1">
             <ZTextarea
-              className="min-h-80 font-mono text-sm resize-none"
+              className="min-h-4/5 font-mono text-sm resize-none"
               style={{ fieldSizing: 'fixed' } as React.CSSProperties}
               value={inputMarkdown}
               onValueChange={setInputMarkdown}
-              placeholder="请输入 Markdown"
+              placeholder=""
             />
           </CardContent>
         </Card>
 
         <Card className="flex flex-col">
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileCode className="w-5 h-5" />
-              HTML 输出
+              {viewMode === 'html' ? 'HTML 输出' : '预览'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 flex-1">
+            <ZToggleGroup
+              type="single"
+              options={VIEW_MODE_OPTIONS}
+              value={viewMode}
+              onValueChange={setViewMode}
+            />
             {error && (
               <ZView className="text-destructive text-sm bg-destructive/10 p-2 rounded">
                 解析错误: {error}
               </ZView>
             )}
-            <ZTextarea
-              className="min-h-80 font-mono text-sm resize-none"
-              style={{ fieldSizing: 'fixed' } as React.CSSProperties}
-              value={htmlContent}
-              readOnly
-              placeholder="HTML 结果..."
-            />
-            <ZButton
-              className="w-full"
-              onClick={() => copyToClipboard(htmlContent)}
-              disabled={!htmlContent || isConverting}
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              复制 HTML 源码
-            </ZButton>
+            {viewMode === 'html' ? (
+              <>
+                <ZTextarea
+                  className="min-h-96 font-mono text-sm resize-none"
+                  style={{ fieldSizing: 'fixed' } as React.CSSProperties}
+                  value={htmlContent}
+                  readOnly
+                  placeholder="HTML 结果..."
+                />
+                <ZButton
+                  className="w-full"
+                  onClick={() => copyToClipboard(htmlContent)}
+                  disabled={!htmlContent || isConverting}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  复制 HTML 源码
+                </ZButton>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div
+                  id="pdf-content"
+                  className="border rounded-md p-4 prose prose-sm max-w-none dark:prose-invert"
+                  style={{ height: 'auto', overflow: 'visible' }}
+                >
+                  {inputMarkdown ? (
+                    <ZMarkdown content={inputMarkdown} />
+                  ) : (
+                    <ZView className="text-muted-foreground text-sm py-8 text-center">
+                      请在左侧输入 Markdown 内容以查看预览
+                    </ZView>
+                  )}
+                </div>
+                <ZButton
+                  className="w-full"
+                  onClick={exportToPdf}
+                  disabled={!inputMarkdown || isExporting}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {isExporting ? '导出中...' : '导出为 PDF'}
+                </ZButton>
+              </div>
+            )}
           </CardContent>
         </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileCode className="w-5 h-5" />
-            预览
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {inputMarkdown ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <ZMarkdown content={inputMarkdown} />
-            </div>
-          ) : (
-            <ZView className="text-muted-foreground text-sm py-8 text-center">
-              请在左侧输入 Markdown 内容以查看预览
-            </ZView>
-          )}
-        </CardContent>
-      </Card>
+      </ZView>
     </ZView>
   );
 }

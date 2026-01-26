@@ -57,6 +57,10 @@ export default defineConfig(({ mode }) => {
               if (id.includes('zcat')) {
                 return 'zcat-ui';
               }
+
+              if (id.includes('html2pdf')) {
+                return 'html2pdf';
+              }
               return 'vendor';
             }
             return 'app';

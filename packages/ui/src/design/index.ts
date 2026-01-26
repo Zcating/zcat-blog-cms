@@ -30,7 +30,7 @@ export {};
 
 declare global {
   interface CommonOption<T = string> {
-    label: string;
+    label: React.ReactNode;
     value: T;
   }
 }
