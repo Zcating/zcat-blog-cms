@@ -111,7 +111,7 @@ function useAiChatManager(model: ApiModelName) {
     chatHandlerRef.current = AiApi.chat(
       model,
       apiKey,
-      [systemMessage, ...controller.json],
+      [systemMessage, ...controller.json()],
       deepThinking,
     );
 

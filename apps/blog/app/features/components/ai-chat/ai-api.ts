@@ -55,7 +55,7 @@ export namespace AiApi {
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: deepThinking ? 'deepseek-chat' : 'deepseek-reasoner',
+              model: deepThinking ? 'deepseek-reasoner' : 'deepseek-chat',
               messages: params,
               stream: true,
               tools: [],

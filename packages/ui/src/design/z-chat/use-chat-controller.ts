@@ -18,12 +18,12 @@ export class ZChatController {
     this._listeners.forEach((fn) => fn(copy));
   }
 
-  get json() {
-    return this._messages.map((msg) => msg.json);
-  }
-
   get messages() {
     return this._messages;
+  }
+
+  json() {
+    return this._messages.map((msg) => msg.json);
   }
 
   subscribe(listener: (messages: MessageImpl[]) => void) {
