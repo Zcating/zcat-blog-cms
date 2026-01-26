@@ -9,8 +9,9 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 ENV HUSKY=0
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=ui install --frozen-lockfile
 RUN pnpm --filter=ui run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=blog install --frozen-lockfile
 RUN pnpm --filter=blog run build
 RUN pnpm deploy --filter=blog --prod --lagacy /prod/blog
 
