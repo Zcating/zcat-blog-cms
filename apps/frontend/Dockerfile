@@ -13,7 +13,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=ui install --fro
 RUN pnpm --filter=ui run build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter=frontend install --frozen-lockfile
 RUN pnpm --filter=frontend run build
-RUN pnpm deploy --filter=frontend --prod --lagacy /prod/frontend
+RUN pnpm deploy --filter=frontend --prod --legacy /prod/frontend
 
 FROM base AS frontend
 COPY --from=build /prod/frontend /prod/frontend
