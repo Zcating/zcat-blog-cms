@@ -28,6 +28,10 @@ export default [
       'toolbox/qrcode-generator',
       'routes/toolbox/qrcode-generator.page.tsx',
     ),
+    route(
+      'toolbox/markdown-to-html',
+      'routes/toolbox/markdown-to-html.page.tsx',
+    ),
   ]),
   route('gallery/:id', 'routes/index/gallery.id.tsx'),
 ] satisfies RouteConfig;

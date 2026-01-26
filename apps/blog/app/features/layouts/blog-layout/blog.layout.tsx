@@ -7,7 +7,7 @@ import { BlogHeader } from './blog-header';
 
 export default function BlogLayout() {
   return (
-    <ZView className="h-full w-full [--header-height:calc(--spacing(20))] [--footer-height:calc(--spacing(10))]">
+    <ZView className="h-full w-full">
       <BlogHeader />
       <BlogContent>
         <Outlet />

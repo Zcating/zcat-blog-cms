@@ -17,6 +17,8 @@ body {
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
+  --header-height: calc(--spacing(12));
+  --footer-height: calc(--spacing(10));
 }
 
 

@@ -9,6 +9,7 @@ import {
 } from '@zcat/ui';
 import {
   FileJsonIcon,
+  FileCode,
   Globe,
   IdCard,
   Image as ImageIcon,
@@ -37,6 +38,12 @@ export default function ToolboxHomePage() {
 }
 
 const items = [
+  {
+    title: 'Markdown 转 HTML',
+    description: '将 Markdown 转换为 HTML 源码，支持 GFM 和数学公式。',
+    to: '/toolbox/markdown-to-html',
+    Icon: FileCode,
+  },
   {
     title: 'IP 查询',
     description: '查询当前网络 IP 地址及归属地信息。',
@@ -70,7 +77,7 @@ const items = [
 ] as const;
 
 const EmptyStateComponent = () => (
-  <ZView className="p-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ZView className="p-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
     {items.map((item) => (
       <Link
         key={item.to}

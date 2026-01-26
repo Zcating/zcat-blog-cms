@@ -45,12 +45,6 @@ const items: ZSidebarOption[] = [
 ];
 
 export default function ToolboxLayout() {
-  const classNames = cn(
-    'h-full w-full overflow-hidden',
-    '[--header-height:calc(--spacing(20))]',
-    '[--footer-height:calc(--spacing(10))]',
-  );
-
   const renderItem = (item: ZSidebarOption) => {
     if (item.value) {
       return (
@@ -64,7 +58,7 @@ export default function ToolboxLayout() {
 
   return (
     <ZSidebar
-      className={classNames}
+      className="h-full w-full overflow-hidden"
       options={items}
       renderItem={renderItem}
       header={ToolbarHeader}
