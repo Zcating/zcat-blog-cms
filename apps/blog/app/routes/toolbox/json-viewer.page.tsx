@@ -8,7 +8,7 @@ import {
   ZView,
   ZTree,
   type CascaderOption,
-  ZMessage,
+  ZNotification,
 } from '@zcat/ui';
 import { ArrowRight, Braces, FileJson } from 'lucide-react';
 import { useState } from 'react';
@@ -114,12 +114,12 @@ export default function JsonViewerPage() {
       const options = jsonToTreeOptions(parsed);
       setTreeData(options);
       setError(null);
-      ZMessage.success('JSON 解析成功');
+      ZNotification.success('JSON 解析成功');
     } catch (e) {
       console.error(e);
       setError((e as Error).message);
       setTreeData([]);
-      ZMessage.error('JSON 格式错误');
+      ZNotification.error('JSON 格式错误');
     }
   };
 

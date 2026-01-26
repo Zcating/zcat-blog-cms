@@ -1,4 +1,4 @@
-import { ZMessage } from '@zcat/ui';
+import { ZNotification } from '@zcat/ui';
 import React from 'react';
 import {
   isRouteErrorResponse,
@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       HttpClient.subscribeErrorEvent((error) => {
         // TODO: 处理错误
         // navigate('/error');
-        ZMessage.error(error.message);
+        ZNotification.error(error.message);
         console.log('error', error);
       }),
     ];

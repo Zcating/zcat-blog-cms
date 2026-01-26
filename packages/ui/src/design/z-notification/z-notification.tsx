@@ -28,7 +28,7 @@ async function install() {
   // };
 }
 
-export const ZMessage = {
+export const ZNotification = {
   async show(message: string) {
     await install();
     toast(message);
@@ -58,4 +58,4 @@ export const ZMessage = {
   },
 };
 
-export const ZMessageToaster = Toaster;
+export const ZNotificationToaster = Toaster;

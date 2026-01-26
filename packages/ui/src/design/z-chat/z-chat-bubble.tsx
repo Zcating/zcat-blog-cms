@@ -6,7 +6,7 @@ import { copyToClipboard } from '@zcat/ui/utils';
 import { cn } from '../../shadcn/lib/utils';
 import { ZButton } from '../z-button/z-button';
 import { ZMarkdown } from '../z-markdown';
-import { ZMessage } from '../z-message';
+import { ZNotification } from '../z-notification';
 import { ZView } from '../z-view/z-view';
 
 import { useChatMessage } from './use-chat-message';
@@ -49,9 +49,9 @@ const AssistantBubble = React.memo(
       }
       try {
         await copyToClipboard(text);
-        await ZMessage.success('已复制');
+        await ZNotification.success('已复制');
       } catch {
-        await ZMessage.error('复制失败');
+        await ZNotification.error('复制失败');
       }
     };
 

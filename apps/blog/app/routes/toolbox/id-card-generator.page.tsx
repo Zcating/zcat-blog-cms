@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  ZMessage,
+  ZNotification,
   ZButton,
 } from '@zcat/ui';
 import dayjs from 'dayjs';
@@ -70,9 +70,9 @@ export default function IdCardGeneratorPage() {
     try {
       if (idNumbers.length === 0) return;
       await navigator.clipboard.writeText(idNumbers.join('\n'));
-      ZMessage.success('已复制到剪贴板');
+      ZNotification.success('已复制到剪贴板');
     } catch (e) {
-      ZMessage.error('复制失败');
+      ZNotification.error('复制失败');
     }
   };
 

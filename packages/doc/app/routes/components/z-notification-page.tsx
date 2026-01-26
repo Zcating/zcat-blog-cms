@@ -1,4 +1,4 @@
-import { ZButton, ZMessage } from '@zcat/ui';
+import { ZButton, ZNotification } from '@zcat/ui';
 
 import { ApiTable } from '../../features';
 
@@ -64,30 +64,30 @@ export default function MessagePage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">基础用法</h2>
         <div className="flex flex-wrap gap-4">
-          <ZButton onClick={() => ZMessage.success('操作成功')}>
+          <ZButton onClick={() => ZNotification.success('操作成功')}>
             成功提示
           </ZButton>
           <ZButton
-            onClick={() => ZMessage.error('操作失败')}
+            onClick={() => ZNotification.error('操作失败')}
             variant="destructive"
           >
             失败提示
           </ZButton>
           <ZButton
-            onClick={() => ZMessage.info('这是一条信息')}
+            onClick={() => ZNotification.info('这是一条信息')}
             variant="outline"
           >
             信息提示
           </ZButton>
           <ZButton
-            onClick={() => ZMessage.warning('这是一条警告')}
+            onClick={() => ZNotification.warning('这是一条警告')}
             variant="secondary"
           >
             警告提示
           </ZButton>
           <ZButton
             onClick={async () => {
-              const close = await ZMessage.loading('加载中...');
+              const close = await ZNotification.loading('加载中...');
               setTimeout(() => {
                 close();
               }, 5000);
@@ -99,11 +99,11 @@ export default function MessagePage() {
         </div>
         <div className="rounded-md bg-muted p-4">
           <pre className="text-sm">
-            {`ZMessage.success('操作成功');
-ZMessage.error('操作失败');
-ZMessage.info('这是一条信息');
-ZMessage.warning('这是一条警告');
-ZMessage.loading('加载中...');`}
+            {`ZNotification.success('操作成功');
+ZNotification.error('操作失败');
+ZNotification.info('这是一条信息');
+ZNotification.warning('这是一条警告');
+ZNotification.loading('加载中...');`}
           </pre>
         </div>
       </div>
@@ -118,7 +118,8 @@ ZMessage.loading('加载中...');`}
         <div className="flex flex-wrap gap-4">
           <ZButton
             onClick={async () => {
-              const close = await ZMessage.loading('加载中... (3秒后自动关闭)');
+              const close =
+                await ZNotification.loading('加载中... (3秒后自动关闭)');
               setTimeout(() => {
                 close();
               }, 3000);
@@ -130,7 +131,7 @@ ZMessage.loading('加载中...');`}
         </div>
         <div className="rounded-md bg-muted p-4">
           <pre className="text-sm">
-            {`const close = ZMessage.loading('加载中...');
+            {`const close = ZNotification.loading('加载中...');
 // 在适当的时机调用 close() 关闭提示
 setTimeout(() => {
   close();
@@ -142,12 +143,12 @@ setTimeout(() => {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">普通提示</h2>
         <div className="flex flex-wrap gap-4">
-          <ZButton onClick={() => ZMessage.show('这是一条普通提示')}>
+          <ZButton onClick={() => ZNotification.show('这是一条普通提示')}>
             普通提示
           </ZButton>
         </div>
         <div className="rounded-md bg-muted p-4">
-          <pre className="text-sm">{`ZMessage.show('这是一条普通提示');`}</pre>
+          <pre className="text-sm">{`ZNotification.show('这是一条普通提示');`}</pre>
         </div>
       </div>
 

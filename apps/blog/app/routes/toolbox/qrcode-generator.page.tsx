@@ -10,7 +10,7 @@ import {
   ZQRCode,
   ZSelect,
   ZCheckbox,
-  ZMessage,
+  ZNotification,
 } from '@zcat/ui';
 import { Download, QrCode } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -59,7 +59,7 @@ export default function QrCodeGeneratorPage() {
     mode: 'onChange', // 实时更新
     onSubmit: (data) => {
       setQrData(data);
-      ZMessage.success('配置已保存');
+      ZNotification.success('配置已保存');
     },
   });
 
@@ -74,7 +74,7 @@ export default function QrCodeGeneratorPage() {
   const handleDownload = (format: 'png' | 'svg') => {
     const svg = svgRef.current;
     if (!svg) {
-      ZMessage.error('无法获取二维码元素');
+      ZNotification.error('无法获取二维码元素');
       return;
     }
 
