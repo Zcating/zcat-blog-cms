@@ -6,6 +6,8 @@ import remarkMath from 'remark-math';
 import { cn } from '@zcat/ui/shadcn';
 import { safeArray } from '@zcat/ui/utils';
 
+import { ZView } from '../z-view';
+
 import { CodeBlock } from './code-block';
 import { ZThinking } from './z-thinking';
 
@@ -15,6 +17,7 @@ import 'katex/dist/katex.min.css';
 export interface ZMarkdownProps {
   content: string;
   className?: string;
+  placeholder?: React.ReactNode;
 }
 
 const MarkdownComponents: Components = {
@@ -47,7 +50,9 @@ const MarkdownComponents: Components = {
   },
 };
 
-export function ZMarkdown({ content, className }: ZMarkdownProps) {
+export function ZMarkdown({ content, className, placeholder }: ZMarkdownProps) {
+  const isEmpty = !content && placeholder;
+
   return (
     <article
       data-slot="markdown"
@@ -68,13 +73,19 @@ export function ZMarkdown({ content, className }: ZMarkdownProps) {
         className,
       )}
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]} // 渲染数学公式
-        components={MarkdownComponents}
-      >
-        {content}
-      </ReactMarkdown>
+      {isEmpty ? (
+        <ZView className="text-muted-foreground text-sm py-8 text-center">
+          {placeholder}
+        </ZView>
+      ) : (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          rehypePlugins={[rehypeKatex]}
+          components={MarkdownComponents}
+        >
+          {content}
+        </ReactMarkdown>
+      )}
     </article>
   );
 }
