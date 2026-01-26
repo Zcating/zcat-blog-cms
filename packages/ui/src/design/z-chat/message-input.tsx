@@ -5,6 +5,7 @@ import { ZButton } from '../z-button/z-button';
 import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';
 
+import { useSentHistory } from './use-sent-history';
 import { useShortcut } from './use-shortcut';
 
 interface MessageInputProps {
@@ -23,12 +24,14 @@ export function MessageInput({
   toolbar,
 }: MessageInputProps) {
   const [inputValue, setInputValue] = React.useState('');
+  const { history, addMessage, goBack, goForward, reset } = useSentHistory();
 
   const shortcut = useShortcut();
 
   const handleSend = () => {
     if (inputValue.trim() && !loading) {
       onSend(inputValue);
+      addMessage(inputValue);
       setInputValue('');
     }
   };
@@ -37,7 +40,24 @@ export function MessageInput({
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length > 0) {
+        const result = goBack();
+        if (result !== null) {
+          setInputValue(result);
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const result = goForward();
+      setInputValue(result ?? '');
     }
+  };
+
+  const handleValueChange = (value: string) => {
+    setInputValue(value);
+    reset();
   };
 
   const handleAction = () => {
@@ -52,7 +72,7 @@ export function MessageInput({
     <ZView className="w-xs md:w-md lg:w-2xl flex flex-col my-4 p-2 gap-2 border rounded-lg bg-white shadow-md">
       <ZTextarea
         value={inputValue}
-        onValueChange={setInputValue}
+        onValueChange={handleValueChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={loading}
