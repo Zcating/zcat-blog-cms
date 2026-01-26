@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm --filter=ui run build
 RUN pnpm --filter=frontend run build
-RUN pnpm deploy --filter=frontend --prod /prod/frontend
+RUN pnpm deploy --filter=frontend --prod --lagacy /prod/frontend
 
 FROM base AS frontend
 COPY --from=build /prod/frontend /prod/frontend

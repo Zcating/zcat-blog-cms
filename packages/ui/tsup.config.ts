@@ -9,6 +9,7 @@ export default defineConfig((options) => ({
   injectStyle: false,
   dts: false,
   clean: !options.watch,
+  // clean: true,
   splitting: true,
   treeshake: true,
   tsconfig: './tsconfig.build.json',

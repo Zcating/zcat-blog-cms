@@ -12,7 +12,7 @@ ENV HUSKY=0
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm --filter=ui run build
 RUN pnpm --filter=blog run build
-RUN pnpm deploy --filter=blog --prod /prod/blog
+RUN pnpm deploy --filter=blog --prod --lagacy /prod/blog
 
 FROM base AS blog
 COPY --from=build /prod/blog /prod/blog

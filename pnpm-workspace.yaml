@@ -2,11 +2,10 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
-syncInjectedDepsAfterScripts:
-  - build
-  - dist
-
-injectWorkspacePackages: true
+# injectWorkspacePackages: true
+# syncInjectedDepsAfterScripts:
+#   - build
+#   - dist
 
 
 ignoredBuiltDependencies:

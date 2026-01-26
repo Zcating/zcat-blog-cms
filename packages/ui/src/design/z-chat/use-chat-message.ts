@@ -8,8 +8,8 @@ export function useChatMessage<T extends keyof Message>(
 ) {
   const [value, setValue] = React.useState<Message[T]>(message[prop]);
   React.useEffect(() => {
-    const unsubscribe = message.subscribe<T>((prop, value) => {
-      if (prop !== prop) {
+    const unsubscribe = message.subscribe<T>((innerProp, value) => {
+      if (innerProp !== prop) {
         return;
       }
       setValue(value);

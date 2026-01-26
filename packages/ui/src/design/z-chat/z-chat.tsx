@@ -68,7 +68,7 @@ export function ZChat({
               <ZChatBubble
                 key={message.id ?? index}
                 message={message}
-                regenerable={index !== messages.length - 1}
+                regenerable={index === messages.length - 1}
                 onRegenerate={handleRegenerate}
               />
             ))}
