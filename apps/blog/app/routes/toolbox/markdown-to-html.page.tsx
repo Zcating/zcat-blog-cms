@@ -11,6 +11,7 @@ import {
   useMemoizedFn,
   useWatch,
   copyToClipboard,
+  Badge,
 } from '@zcat/ui';
 import { Copy, Eye, FileCode, FileText } from 'lucide-react';
 import React from 'react';
@@ -95,45 +96,55 @@ export default function MarkdownToHtmlPage() {
         import('jspdf'),
       ]);
 
-      const element = document.getElementById('pdf-content');
-      if (element) {
-        const result = await snapdom(element, {
-          scale: 2,
-          backgroundColor: '#ffffff',
-        });
+      const element = document.getElementById('markdown-preview');
+      if (!element) {
+        throw new Error('PDF 内容元素不存在，请确保已切换到预览模式');
+      }
 
-        const pngImage = await result.toPng();
-        const imgData = pngImage.src;
+      const computedStyle = window.getComputedStyle(element);
+      if (!computedStyle.width || computedStyle.width === '0px') {
+        throw new Error('PDF 内容元素尺寸无效，请确保内容已完全渲染');
+      }
 
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
-        });
+      const result = await snapdom(element, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+      });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pngImage = await result.toPng();
+      const imgData = pngImage.src;
 
-        const imgWidth = pdfWidth;
-        const imgHeight = (pngImage.height * pdfWidth) / pngImage.width;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
 
-        let heightLeft = imgHeight;
-        let position = 0;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
+      const imgWidth = pdfWidth;
+      const imgHeight = (pngImage.height * pdfWidth) / pngImage.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pdfHeight;
-        }
-
-        pdf.save('markdown-document.pdf');
       }
+
+      pdf.save('markdown-document.pdf');
     } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : 'PDF 导出失败，请确保已切换到预览模式';
       console.error('PDF 导出失败:', e);
+      setError(errorMessage);
     } finally {
       setIsExporting(false);
     }
@@ -142,7 +153,7 @@ export default function MarkdownToHtmlPage() {
   useWatch([inputMarkdown], convertToHtml);
 
   return (
-    <ZView className="p-4 space-y-6 h-full overflow-y-auto">
+    <ZView className="p-4 space-y-6 flex flex-col h-full">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">Markdown 转 HTML</h1>
         <p className="text-sm text-muted-foreground">
@@ -151,17 +162,17 @@ export default function MarkdownToHtmlPage() {
         </p>
       </div>
 
-      <ZView className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="flex flex-col">
+      <ZView className="flex-1 flex gap-6">
+        <Card className="flex-1 flex flex-col overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileCode className="w-5 h-5" />
+              <FileCode className="size-5" />
               Markdown 输入
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 flex-1">
+          <CardContent className="flex-1 overflow-y-auto">
             <ZTextarea
-              className="min-h-4/5 font-mono text-sm resize-none"
+              className="h-full font-mono text-sm resize-none"
               style={{ fieldSizing: 'fixed' } as React.CSSProperties}
               value={inputMarkdown}
               onValueChange={setInputMarkdown}
@@ -170,29 +181,25 @@ export default function MarkdownToHtmlPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
+        <Card className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileCode className="w-5 h-5" />
               {viewMode === 'html' ? 'HTML 输出' : '预览'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 flex-1">
+          <CardContent className="space-y-4 flex-1 flex flex-col overflow-hidden">
             <ZToggleGroup
               type="single"
               options={VIEW_MODE_OPTIONS}
               value={viewMode}
               onValueChange={setViewMode}
             />
-            {error && (
-              <ZView className="text-destructive text-sm bg-destructive/10 p-2 rounded">
-                解析错误: {error}
-              </ZView>
-            )}
+            {error && <Badge variant="destructive">解析错误: {error}</Badge>}
             {viewMode === 'html' ? (
               <>
                 <ZTextarea
-                  className="min-h-96 font-mono text-sm resize-none"
+                  className="flex-1 font-mono text-sm resize-none"
                   style={{ fieldSizing: 'fixed' } as React.CSSProperties}
                   value={htmlContent}
                   readOnly
@@ -208,20 +215,14 @@ export default function MarkdownToHtmlPage() {
                 </ZButton>
               </>
             ) : (
-              <div className="space-y-4">
-                <div
-                  id="pdf-content"
-                  className="border rounded-md p-4 prose prose-sm max-w-none dark:prose-invert"
-                  style={{ height: 'auto', overflow: 'visible' }}
-                >
-                  {inputMarkdown ? (
-                    <ZMarkdown content={inputMarkdown} />
-                  ) : (
-                    <ZView className="text-muted-foreground text-sm py-8 text-center">
-                      请在左侧输入 Markdown 内容以查看预览
-                    </ZView>
-                  )}
-                </div>
+              <>
+                <ZView id="markdown-preview" className="flex-1 overflow-y-auto">
+                  <ZMarkdown
+                    className="h-[200px]"
+                    content={inputMarkdown}
+                    placeholder="请在左侧输入 Markdown 内容以查看预览"
+                  />
+                </ZView>
                 <ZButton
                   className="w-full"
                   onClick={exportToPdf}
@@ -230,7 +231,7 @@ export default function MarkdownToHtmlPage() {
                   <FileText className="w-4 h-4 mr-2" />
                   {isExporting ? '导出中...' : '导出为 PDF'}
                 </ZButton>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
