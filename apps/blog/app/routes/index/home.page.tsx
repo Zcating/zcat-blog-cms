@@ -9,6 +9,7 @@ import {
   ZSelect,
   StaggerReveal,
   Calendar,
+  RainbowBorder,
 } from '@zcat/ui';
 import { useState } from 'react';
 import { createSearchParams, Link, useNavigate } from 'react-router';
@@ -93,11 +94,13 @@ export default function HomePage(props: Route.ComponentProps) {
         >
           <Card data-home-left-card="true" className="w-xs">
             <CardHeader className="flex justify-center">
-              <ZAvatar
-                alt={userInfo.name}
-                src={userInfo.avatar}
-                fallback={userInfo.name}
-              />
+              <RainbowBorder className="rounded-full">
+                <ZAvatar
+                  alt={userInfo.name}
+                  src={userInfo.avatar}
+                  fallback={userInfo.name}
+                />
+              </RainbowBorder>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 items-center">
               <p className="text-2xl font-bold">{userInfo.name}</p>
