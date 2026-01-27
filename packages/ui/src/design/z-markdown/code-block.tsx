@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/static-components */
 import React from 'react';
 
+import { cn } from '@zcat/ui/shadcn';
+
 import { ZMermaidCode } from './z-mermaid';
 import { ZSyntaxHighlighterCode } from './z-syntax-highlighter';
 import { ZThinking } from './z-thinking';
@@ -42,7 +44,11 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const Renderer = useGetRenderer(language, customCodeComponents);
   return (
-    <Renderer language={language} className={className} {...props}>
+    <Renderer
+      className={cn('not-prose', className)}
+      language={language}
+      {...props}
+    >
       {children}
     </Renderer>
   );

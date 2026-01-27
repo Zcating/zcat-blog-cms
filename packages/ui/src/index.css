@@ -179,6 +179,20 @@ code::after {
   content: '' !important;
 }
 
+
+ul, ol {
+  list-style-type: none;
+  margin: 0;            
+  padding: 0;           
+}
+
+
+li {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
   --header-height: calc(--spacing(16));
   --footer-height: calc(--spacing(10));

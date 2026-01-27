@@ -73,12 +73,10 @@ function Executable({ code }: ZExecutableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <div ref={containerRef} className="p-4 bg-background rounded border">
-          {renderedElement}
-        </div>
-      </div>
       {error && <ZcatUi.Badge variant="destructive">{error}</ZcatUi.Badge>}
+      <div ref={containerRef} className="p-4">
+        {renderedElement}
+      </div>
     </div>
   );
 }
@@ -107,7 +105,6 @@ const VIEW_MODE_OPTIONS: CommonOption<ViewMode>[] = [
 
 export function ExecutableCodeBlock({
   children,
-  language = 'typescript',
   className,
 }: ZExecutableCodeProps) {
   const [isCollapsed, onToggleCollapsed] = ZcatUi.useToggleValue(false);
@@ -126,7 +123,7 @@ export function ExecutableCodeBlock({
     <ZcatUi.Card className={ZcatUi.cn('py-0 gap-0', className)}>
       <ZcatUi.CardHeader className="flex items-center bg-accent/50 justify-between px-4 py-2">
         <ZcatUi.CardTitle className="text-markdown-code-lang">
-          {language}
+          typescript
         </ZcatUi.CardTitle>
         <ZcatUi.CardAction className="flex items-center gap-2">
           <ZcatUi.ZToggleGroup
@@ -146,13 +143,14 @@ export function ExecutableCodeBlock({
       </ZcatUi.CardHeader>
       <ZcatUi.CardContent className="py-3">
         <ZcatUi.FoldAnimation isOpen={!isCollapsed}>
-          {viewMode === 'code' ? (
+          <div className={viewMode === 'code' ? 'hidden' : 'block'}>
+            <Executable code={code} />
+          </div>
+          <div className={viewMode === 'code' ? 'block' : 'hidden'}>
             <ZcatUi.ZSyntaxHighlighter language="tsx">
               {code}
             </ZcatUi.ZSyntaxHighlighter>
-          ) : (
-            <Executable code={code} />
-          )}
+          </div>
         </ZcatUi.FoldAnimation>
       </ZcatUi.CardContent>
     </ZcatUi.Card>

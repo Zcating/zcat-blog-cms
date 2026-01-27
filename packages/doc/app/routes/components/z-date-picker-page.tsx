@@ -1,77 +1,67 @@
-import { ZDatePicker } from '@zcat/ui';
-import dayjs from 'dayjs';
-import React from 'react';
+import { useConstant, ZMarkdown } from '@zcat/ui';
 
-import { ApiTable } from '../../features';
+import { ExecutableCodeBlock } from '~/features';
 
-import type { Route } from './+types/z-date-picker-page';
-
-export function meta(_: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Date Picker - @zcat/ui' },
     { name: 'description', content: 'Date Picker component documentation' },
   ];
 }
 
-const apiData = [
-  {
-    attribute: 'value',
-    type: 'dayjs.Dayjs',
-    default: '-',
-    description: '当前选中的日期（受控）',
-  },
-  {
-    attribute: 'defaultValue',
-    type: 'dayjs.Dayjs',
-    default: '-',
-    description: '默认选中的日期（非受控）',
-  },
-  {
-    attribute: 'onValueChange',
-    type: '(date: dayjs.Dayjs) => void',
-    default: '-',
-    description: '日期改变时的回调',
-  },
-  {
-    attribute: 'placeholder',
-    type: 'string',
-    default: '"选择日期"',
-    description: '输入框占位符',
-  },
-];
+const exampleContent = `
+# Date Picker 日期选择器
 
-export default function ZDatePickerPage() {
+用于选择或输入日期。
+
+## Basic Usage
+
+\`\`\`typescript-demo
+import { ZDatePicker } from '@zcat/ui';
+import dayjs from 'dayjs';
+import React from 'react';
+
+export function DemoComponent() {
   const [date, setDate] = React.useState<dayjs.Dayjs | undefined>();
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Date Picker 日期选择器
-        </h1>
-        <p className="text-muted-foreground">用于选择或输入日期。</p>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-4 p-4 border rounded-lg">
+        <ZDatePicker
+          placeholder="选择日期"
+          value={date}
+          onValueChange={(v) => {
+            console.log('Selected:', v?.format('YYYY-MM-DD'));
+            setDate(v);
+          }}
+        />
+        <span className="text-sm text-muted-foreground">
+          当前值: {date?.format('YYYY-MM-DD') || '-'}
+        </span>
       </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">基本用法</h2>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 p-4 border rounded-lg">
-            <ZDatePicker
-              placeholder="选择日期"
-              value={date}
-              onValueChange={(v) => {
-                console.log('Selected:', v?.format('YYYY-MM-DD'));
-                setDate(v);
-              }}
-            />
-            <span className="text-sm text-muted-foreground">
-              当前值: {date?.format('YYYY-MM-DD') || '-'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <ApiTable data={apiData} />
     </div>
+  );
+}
+\`\`\`
+
+## API
+
+| Attribute | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| value | dayjs.Dayjs | - | 当前选中的日期（受控） |
+| defaultValue | dayjs.Dayjs | - | 默认选中的日期（非受控） |
+| onValueChange | (date: dayjs.Dayjs) => void | - | 日期改变时的回调 |
+| placeholder | string | '选择日期' | 输入框占位符 |
+`;
+
+export default function ZDatePickerPage() {
+  return (
+    <ZMarkdown
+      className="pb-40"
+      content={exampleContent}
+      customCodeComponents={useConstant(() => ({
+        'typescript-demo': ExecutableCodeBlock,
+      }))}
+    />
   );
 }

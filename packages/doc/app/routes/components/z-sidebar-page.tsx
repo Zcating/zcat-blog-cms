@@ -1,95 +1,22 @@
-import { ZMarkdown } from '@zcat/ui';
+import { useConstant, ZMarkdown } from '@zcat/ui';
 
-import { ApiTable } from '~/features';
+import { ExecutableCodeBlock } from '~/features';
 
-import type { Route } from './+types/z-sidebar-page';
-
-export function meta(_: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Sidebar - @zcat/ui' },
     { name: 'description', content: 'Sidebar component documentation' },
   ];
 }
 
-const sidebarProps = [
-  {
-    attribute: 'options',
-    type: 'ZSidebarOption[]',
-    default: '-',
-    description: '侧边栏菜单配置数组',
-  },
-  {
-    attribute: 'renderItem',
-    type: '(item: ZSidebarItemConfig) => React.ReactNode',
-    default: '-',
-    description: '自定义菜单项渲染函数',
-  },
-  {
-    attribute: 'header',
-    type: 'React.ReactNode',
-    default: '-',
-    description: '顶部导航栏内容（吸顶）',
-  },
-  {
-    attribute: 'sidebarHeader',
-    type: 'React.ReactNode',
-    default: '-',
-    description: '侧边栏顶部内容',
-  },
-  {
-    attribute: 'sidebarFooter',
-    type: 'React.ReactNode',
-    default: '-',
-    description: '侧边栏底部内容',
-  },
-  {
-    attribute: 'footer',
-    type: 'React.ReactNode',
-    default: '-',
-    description: '主内容区域底部内容',
-  },
-  {
-    attribute: 'children',
-    type: 'React.ReactNode',
-    default: '-',
-    description: '主内容区域',
-  },
-];
+const exampleContent = `
+# Sidebar 侧边栏布局
 
-const sidebarOptionProps = [
-  {
-    attribute: 'label',
-    type: 'string',
-    default: '-',
-    description: '菜单项显示的文本',
-  },
-  {
-    attribute: 'value',
-    type: 'string',
-    default: '-',
-    description: '菜单项的值（可选，通常用于路由）',
-  },
-  {
-    attribute: 'icon',
-    type: 'React.ComponentType',
-    default: '-',
-    description: '菜单项图标组件',
-  },
-  {
-    attribute: 'children',
-    type: 'ZSidebarOption[]',
-    default: '-',
-    description: '子菜单项配置',
-  },
-  {
-    attribute: 'open',
-    type: 'boolean',
-    default: '-',
-    description: '是否默认展开（仅对有子菜单的项有效）',
-  },
-];
+提供了一套标准的侧边栏布局结构，包含头部、侧边栏菜单和内容区域。
 
-const usageCode = `\`\`\`typescript
+## Usage
+
+\`\`\`typescript
 import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
 import { Home, Settings, User } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
@@ -142,28 +69,38 @@ export default function Layout() {
   );
 }
 \`\`\`
+
+## ZSidebar Props
+
+| Attribute | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| options | ZSidebarOption[] | - | 侧边栏菜单配置数组 |
+| renderItem | (item: ZSidebarItemConfig) => React.ReactNode | - | 自定义菜单项渲染函数 |
+| header | React.ReactNode | - | 顶部导航栏内容（吸顶） |
+| sidebarHeader | React.ReactNode | - | 侧边栏顶部内容 |
+| sidebarFooter | React.ReactNode | - | 侧边栏底部内容 |
+| footer | React.ReactNode | - | 主内容区域底部内容 |
+| children | React.ReactNode | - | 主内容区域 |
+
+## ZSidebarOption Props
+
+| Attribute | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| label | string | - | 菜单项显示的文本 |
+| value | string | - | 菜单项的值 |
+| icon | React.ComponentType | - | 菜单项图标组件 |
+| children | ZSidebarOption[] | - | 子菜单项配置 |
+| open | boolean | - | 是否默认展开 |
 `;
 
 export default function ZSidebarPage() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Sidebar 侧边栏布局
-        </h1>
-        <p className="text-muted-foreground">
-          提供了一套标准的侧边栏布局结构，包含头部、侧边栏菜单和内容区域。
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">使用示例</h2>
-        <div className="rounded-md border p-4 bg-muted/50">
-          <ZMarkdown content={usageCode} />
-        </div>
-      </div>
-      <ApiTable title="ZSidebarProps 参数参考" data={sidebarProps} />
-      <ApiTable title="ZSidebarOption 参数参考" data={sidebarOptionProps} />
-    </div>
+    <ZMarkdown
+      className="pb-40"
+      content={exampleContent}
+      customCodeComponents={useConstant(() => ({
+        'typescript-demo': ExecutableCodeBlock,
+      }))}
+    />
   );
 }

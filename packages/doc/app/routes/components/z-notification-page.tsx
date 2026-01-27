@@ -1,170 +1,77 @@
-import { ZButton, ZNotification } from '@zcat/ui';
+import { useConstant, ZMarkdown } from '@zcat/ui';
 
-import { ApiTable } from '../../features';
+import { ExecutableCodeBlock } from '~/features';
 
-import type { Route } from './+types/z-message-page';
-
-export function meta(_: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Message - @zcat/ui' },
-    {
-      name: 'description',
-      content: 'Toast message component documentation',
-    },
+    { name: 'description', content: 'Toast message component documentation' },
   ];
 }
 
-const messageMethods = [
-  {
-    attribute: 'show',
-    type: '(message: string)',
-    default: 'void',
-    description: '显示普通提示',
-  },
-  {
-    attribute: 'success',
-    type: '(message: string)',
-    default: 'void',
-    description: '显示成功提示',
-  },
-  {
-    attribute: 'error',
-    type: '(message: string)',
-    default: 'void',
-    description: '显示错误提示',
-  },
-  {
-    attribute: 'info',
-    type: '(message: string)',
-    default: 'void',
-    description: '显示信息提示',
-  },
-  {
-    attribute: 'warning',
-    type: '(message: string)',
-    default: 'void',
-    description: '显示警告提示',
-  },
-  {
-    attribute: 'loading',
-    type: '(message: string)',
-    default: '() => void',
-    description: '显示加载提示，返回关闭函数',
-  },
-];
+const exampleContent = `
+# Message 消息提示
+
+全局展示操作反馈信息。
+
+## Basic Usage
+
+\`\`\`typescript-demo
+import { ZButton, ZNotification } from '@zcat/ui';
+
+export function DemoComponent() {
+  return (
+    <div className="flex flex-wrap gap-4">
+      <ZButton onClick={() => ZNotification.success('操作成功')}>成功提示</ZButton>
+      <ZButton onClick={() => ZNotification.error('操作失败')} variant="destructive">失败提示</ZButton>
+      <ZButton onClick={() => ZNotification.info('这是一条信息')} variant="outline">信息提示</ZButton>
+      <ZButton onClick={() => ZNotification.warning('这是一条警告')} variant="secondary">警告提示</ZButton>
+    </div>
+  );
+}
+\`\`\`
+
+## Loading
+
+\`\`\`typescript-demo
+import { ZButton, ZNotification } from '@zcat/ui';
+
+export function DemoComponent() {
+  const showLoading = async () => {
+    const close = await ZNotification.loading('加载中...');
+    setTimeout(() => {
+      close();
+    }, 3000);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-4">
+      <ZButton onClick={showLoading} variant="outline">加载提示</ZButton>
+    </div>
+  );
+}
+\`\`\`
+
+## Methods
+
+| Method | Parameters | Description |
+| :--- | :--- | :--- |
+| show | message: string | 显示普通提示 |
+| success | message: string | 显示成功提示 |
+| error | message: string | 显示错误提示 |
+| info | message: string | 显示信息提示 |
+| warning | message: string | 显示警告提示 |
+| loading | message: string | 显示加载提示，返回关闭函数 |
+`;
 
 export default function MessagePage() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Message 消息提示</h1>
-        <p className="text-muted-foreground">全局展示操作反馈信息。</p>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">基础用法</h2>
-        <div className="flex flex-wrap gap-4">
-          <ZButton onClick={() => ZNotification.success('操作成功')}>
-            成功提示
-          </ZButton>
-          <ZButton
-            onClick={() => ZNotification.error('操作失败')}
-            variant="destructive"
-          >
-            失败提示
-          </ZButton>
-          <ZButton
-            onClick={() => ZNotification.info('这是一条信息')}
-            variant="outline"
-          >
-            信息提示
-          </ZButton>
-          <ZButton
-            onClick={() => ZNotification.warning('这是一条警告')}
-            variant="secondary"
-          >
-            警告提示
-          </ZButton>
-          <ZButton
-            onClick={async () => {
-              const close = await ZNotification.loading('加载中...');
-              setTimeout(() => {
-                close();
-              }, 5000);
-            }}
-            variant="outline"
-          >
-            加载提示
-          </ZButton>
-        </div>
-        <div className="rounded-md bg-muted p-4">
-          <pre className="text-sm">
-            {`ZNotification.success('操作成功');
-ZNotification.error('操作失败');
-ZNotification.info('这是一条信息');
-ZNotification.warning('这是一条警告');
-ZNotification.loading('加载中...');`}
-          </pre>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          手动关闭 Loading
-        </h2>
-        <p className="text-muted-foreground">
-          loading 方法会返回一个关闭函数，调用它可以手动关闭提示。
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <ZButton
-            onClick={async () => {
-              const close =
-                await ZNotification.loading('加载中... (3秒后自动关闭)');
-              setTimeout(() => {
-                close();
-              }, 3000);
-            }}
-            variant="outline"
-          >
-            自动关闭 Loading
-          </ZButton>
-        </div>
-        <div className="rounded-md bg-muted p-4">
-          <pre className="text-sm">
-            {`const close = ZNotification.loading('加载中...');
-// 在适当的时机调用 close() 关闭提示
-setTimeout(() => {
-  close();
-}, 3000);`}
-          </pre>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">普通提示</h2>
-        <div className="flex flex-wrap gap-4">
-          <ZButton onClick={() => ZNotification.show('这是一条普通提示')}>
-            普通提示
-          </ZButton>
-        </div>
-        <div className="rounded-md bg-muted p-4">
-          <pre className="text-sm">{`ZNotification.show('这是一条普通提示');`}</pre>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">自定义位置</h2>
-        <div className="flex flex-wrap gap-4">
-          <p className="text-sm text-muted-foreground">
-            位置配置在 ZToaster 组件上，默认为 bottom-right。
-          </p>
-        </div>
-      </div>
-
-      <ApiTable
-        data={messageMethods}
-        headers={['方法', '参数', '返回值', '说明']}
-      />
-    </div>
+    <ZMarkdown
+      className="pb-40"
+      content={exampleContent}
+      customCodeComponents={useConstant(() => ({
+        'typescript-demo': ExecutableCodeBlock,
+      }))}
+    />
   );
 }

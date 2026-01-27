@@ -4,6 +4,8 @@ import React, { useRef } from 'react';
 
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 
+import { useConstant } from '../hooks';
+
 export interface FoldAnimationProps {
   /**
    * 是否展开
@@ -42,9 +44,9 @@ export function FoldAnimation({
 
     if (isOpen) {
       // 展开动画
-      gsap.fromTo(
+      gsap.to(
         el,
-        { height: 0, opacity: 0 },
+        // { height: 0, opacity: 0 },
         { height: 'auto', opacity: 1, duration, ease: 'power2.out' },
       );
     } else {
@@ -58,10 +60,12 @@ export function FoldAnimation({
     }
   }, [isOpen]);
 
+  const initClass = useConstant(() => (isOpen ? '' : 'h-0 opacity-0'));
+
   return (
     <div
       ref={contentRef}
-      className={cn('overflow-hidden h-0 opacity-0', className)}
+      className={cn('overflow-hidden', initClass, className)}
       style={style}
     >
       {children}

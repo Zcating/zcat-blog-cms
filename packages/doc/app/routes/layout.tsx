@@ -157,7 +157,9 @@ export default function Layout() {
         <header className="h-full flex shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="font-medium">@zcat/ui 文档</div>
+          <Link className="font-medium cursor-pointer" to="/">
+            @zcat/ui 文档
+          </Link>
         </header>
       }
       options={sidebarOptions}

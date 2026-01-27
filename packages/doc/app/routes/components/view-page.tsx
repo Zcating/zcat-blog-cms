@@ -1,55 +1,55 @@
-import { ZView } from '@zcat/ui';
+import { useConstant, ZMarkdown } from '@zcat/ui';
 
-import { ApiTable } from '../../features';
+import { ExecutableCodeBlock } from '~/features';
 
-import type { Route } from './+types/view-page';
-
-export function meta(_: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'View - @zcat/ui' },
     { name: 'description', content: 'View component documentation' },
   ];
 }
 
-const apiData = [
-  {
-    attribute: 'backgroundColor',
-    type: 'string',
-    default: '-',
-    description: '背景颜色',
-  },
-  {
-    attribute: '...props',
-    type: 'React.HTMLAttributes',
-    default: '-',
-    description: '支持所有原生 div 属性（如 className, style, onClick 等）',
-  },
-];
+const exampleContent = `
+# View 视图
+
+基础容器组件，用于布局和内容包裹。
+
+## Basic Usage
+
+\`\`\`typescript-demo
+import { ZView } from '@zcat/ui';
+
+export function DemoComponent() {
+  return (
+    <div className="flex flex-col gap-4">
+      <ZView className="p-4 border rounded-md">Default View</ZView>
+      <ZView
+        className="p-4 rounded-md text-white"
+        backgroundColor="#3b82f6"
+      >
+        View with background color
+      </ZView>
+    </div>
+  );
+}
+\`\`\`
+
+## API
+
+| Attribute | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| backgroundColor | string | - | 背景颜色 |
+| ...props | React.HTMLAttributes | - | 支持所有原生 div 属性 |
+`;
 
 export default function ViewPage() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">View 视图</h1>
-        <p className="text-muted-foreground">
-          基础容器组件，用于布局和内容包裹。
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold tracking-tight">Basic Usage</h2>
-        <div className="flex flex-col gap-4">
-          <ZView className="p-4 border rounded-md">Default View</ZView>
-          <ZView
-            className="p-4 rounded-md text-white"
-            backgroundColor="#3b82f6"
-          >
-            View with background color
-          </ZView>
-        </div>
-      </div>
-
-      <ApiTable data={apiData} />
-    </div>
+    <ZMarkdown
+      className="pb-40"
+      content={exampleContent}
+      customCodeComponents={useConstant(() => ({
+        'typescript-demo': ExecutableCodeBlock,
+      }))}
+    />
   );
 }
