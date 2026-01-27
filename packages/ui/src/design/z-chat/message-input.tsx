@@ -1,6 +1,7 @@
 import { Loader2Icon, Send } from 'lucide-react';
 import * as React from 'react';
 
+import { RainbowBorder } from '../../animation';
 import { ZButton } from '../z-button/z-button';
 import { ZTextarea } from '../z-textarea/z-textarea';
 import { ZView } from '../z-view/z-view';
@@ -69,37 +70,39 @@ export function MessageInput({
   };
 
   return (
-    <ZView className="w-xs md:w-md lg:w-2xl flex flex-col my-4 p-2 gap-2 border rounded-lg bg-white shadow-md">
-      <ZTextarea
-        value={inputValue}
-        onValueChange={handleValueChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={loading}
-        className="flex-1 min-h-10 max-h-20 resize-none border-0 shadow-none focus-visible:ring-0 z-scrollbar"
-        rows={1}
-      />
-      <ZView className="flex items-center gap-4 justify-between">
-        {toolbar ? <ZView className="shrink-0">{toolbar}</ZView> : null}
-        <ZView className="flex-1 flex items-center gap-4 justify-end">
-          <ZView className="text-sm font-bold text-muted-foreground">
-            {shortcut}
+    <RainbowBorder duration={3} strokeWidth={2}>
+      <ZView className="w-xs md:w-md lg:w-2xl flex flex-col my-10 p-2 gap-2 border rounded-lg shadow-md bg-background">
+        <ZTextarea
+          value={inputValue}
+          onValueChange={handleValueChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={loading}
+          className="flex-1 min-h-10 max-h-20 resize-none border-0 shadow-none focus-visible:ring-0 z-scrollbar"
+          rows={1}
+        />
+        <ZView className="flex items-center gap-4 justify-between">
+          {toolbar ? <ZView className="shrink-0">{toolbar}</ZView> : null}
+          <ZView className="flex-1 flex items-center gap-4 justify-end">
+            <ZView className="text-sm font-bold text-muted-foreground">
+              {shortcut}
+            </ZView>
+            <ZButton
+              onClick={handleAction}
+              size="icon"
+              className="shrink-0"
+              aria-label={loading ? '停止' : '发送'}
+              tooltip={loading ? '停止' : '发送'}
+            >
+              {loading ? (
+                <Loader2Icon className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </ZButton>
           </ZView>
-          <ZButton
-            onClick={handleAction}
-            size="icon"
-            className="shrink-0"
-            aria-label={loading ? '停止' : '发送'}
-            tooltip={loading ? '停止' : '发送'}
-          >
-            {loading ? (
-              <Loader2Icon className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </ZButton>
         </ZView>
       </ZView>
-    </ZView>
+    </RainbowBorder>
   );
 }
