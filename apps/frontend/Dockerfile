@@ -18,5 +18,5 @@ RUN pnpm deploy --filter=frontend --prod --legacy /prod/frontend
 FROM base AS frontend
 COPY --from=build /prod/frontend /prod/frontend
 WORKDIR /prod/frontend
-EXPOSE 9090
+EXPOSE 3000
 CMD [ "sh", "-c", "npm run start" ]
