@@ -1,45 +1,48 @@
 /* eslint-disable react-hooks/static-components */
 import React from 'react';
 
-import { ZExecutableCode } from './z-executable-code';
 import { ZMermaidCode } from './z-mermaid';
 import { ZSyntaxHighlighterCode } from './z-syntax-highlighter';
 import { ZThinking } from './z-thinking';
 
 const rendererRegistry: Record<string, React.FC<any>> = {
   mermaid: ZMermaidCode,
-  'typescript-demo': ZExecutableCode,
   think: ZThinking,
   default: ZSyntaxHighlighterCode,
 };
 
-function useGetRenderer(language: string) {
-  return rendererRegistry[language.toLowerCase()] || rendererRegistry.default;
+export function registerCodeComponent(name: string, component: React.FC<any>) {
+  rendererRegistry[name.toLowerCase()] = component;
+}
+
+function useGetRenderer(
+  language: string,
+  customCodeComponents?: Record<string, React.ComponentType<any> | undefined>,
+) {
+  return (
+    customCodeComponents?.[language.toLowerCase()] ||
+    rendererRegistry[language.toLowerCase()] ||
+    rendererRegistry.default
+  );
 }
 
 export interface CodeBlockProps {
   language: string;
   children: React.ReactNode;
   className?: string;
-  extraComponents?: Record<string, React.ComponentType<any>>;
+  customCodeComponents?: Record<string, React.ComponentType<any> | undefined>;
 }
 
 export function CodeBlock({
   language = '',
   children,
   className,
-  extraComponents,
+  customCodeComponents,
   ...props
 }: CodeBlockProps) {
-  const Renderer = useGetRenderer(language);
-  console.log(language, Renderer);
+  const Renderer = useGetRenderer(language, customCodeComponents);
   return (
-    <Renderer
-      language={language}
-      className={className}
-      extraComponents={extraComponents}
-      {...props}
-    >
+    <Renderer language={language} className={className} {...props}>
       {children}
     </Renderer>
   );

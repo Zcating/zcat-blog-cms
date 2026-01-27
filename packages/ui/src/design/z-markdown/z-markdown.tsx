@@ -16,7 +16,7 @@ import { safeArray } from '@zcat/ui/utils';
 
 import { ZView } from '../z-view';
 
-import { CodeBlock } from './code-block';
+import { CodeBlock, registerCodeComponent } from './code-block';
 
 // 引入 KaTeX 样式
 import 'katex/dist/katex.min.css';
@@ -25,14 +25,14 @@ export interface ZMarkdownProps {
   content: string;
   className?: string;
   placeholder?: React.ReactNode;
-  extraComponents?: Record<string, React.ComponentType<any>>;
+  customCodeComponents?: Record<string, React.ComponentType<any>>;
 }
 
 export function ZMarkdown({
   content,
   className,
   placeholder,
-  extraComponents,
+  customCodeComponents,
 }: ZMarkdownProps) {
   const isEmpty = !content && placeholder;
 
@@ -44,12 +44,11 @@ export function ZMarkdown({
     code: ({ node, className: codeClassName, children }) => {
       const match = /language-([\w-]+)/.exec(codeClassName || '');
       const language = safeArray<string>(match)[1] ?? '';
-      console.log(codeClassName, language);
       return (
         <CodeBlock
           language={language}
           className={codeClassName}
-          extraComponents={extraComponents}
+          customCodeComponents={customCodeComponents}
         >
           {children}
         </CodeBlock>
