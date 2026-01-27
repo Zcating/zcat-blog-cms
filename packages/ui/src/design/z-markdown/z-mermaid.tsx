@@ -1,9 +1,11 @@
 import React from 'react';
 
 import { useWatch, useAsyncImport } from '@zcat/ui/hooks';
-import { cn } from '@zcat/ui/shadcn/lib/utils';
+import { cn } from '@zcat/ui/shadcn';
 
 import { ZView } from '../z-view';
+
+import { ZCodeCard } from './z-code-card';
 
 import type { Mermaid } from 'mermaid';
 
@@ -13,6 +15,7 @@ function generateId() {
 
 export interface ZMermaidProps {
   children: string;
+  language?: string;
   className?: string;
 }
 
@@ -26,7 +29,6 @@ const mermaidImporter = async () => {
     fontFamily: 'inherit',
     suppressErrorRendering: true,
   });
-  // Override parseError to prevent console logging and default behavior
   mermaid.parseError = () => {};
   return mermaid;
 };
@@ -42,12 +44,8 @@ export function ZMermaid({ children, className }: ZMermaidProps) {
     }
     const id = `mermaid-${generateId()}`;
     try {
-      // Pass suppressErrors: true to prevent default error handling side effects
-      // mermaid.parse returns Promise<boolean> in some versions or throws
-      // We handle both cases
       const valid = await mermaid.parse(children, { suppressErrors: true });
 
-      // If parse returns false explicitly (unlikely with suppressErrors: true in recent versions but possible)
       if (valid === false) {
         throw new Error('Mermaid parsing failed');
       }
@@ -57,13 +55,11 @@ export function ZMermaid({ children, className }: ZMermaidProps) {
       }
       setSvg(result.svg);
     } catch {
-      // Defensive cleanup: remove any error element Mermaid might have injected into the body
       const errorElement = document.querySelector(`[id^="d${id}"]`);
       if (errorElement) {
         errorElement.remove();
       }
 
-      // Also check for generic mermaid error elements
       const genericError = document.querySelector('#dmermaid-error');
       if (genericError) {
         genericError.remove();
@@ -72,12 +68,24 @@ export function ZMermaid({ children, className }: ZMermaidProps) {
   });
 
   return (
-    <ZView className="relative">
+    <ZView className={cn('relative', className)}>
       <ZView
         className="flex flex-col items-center"
         dangerouslySetInnerHTML={{ __html: svg }}
       />
       <ZView ref={ref} className="absolute h-0 w-0" />
     </ZView>
+  );
+}
+
+export function ZMermaidCode({
+  language = 'mermaid',
+  children,
+  className,
+}: ZMermaidProps) {
+  return (
+    <ZCodeCard language={language} className={className}>
+      <ZMermaid>{children}</ZMermaid>
+    </ZCodeCard>
   );
 }

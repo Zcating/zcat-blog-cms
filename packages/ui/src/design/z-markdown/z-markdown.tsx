@@ -17,7 +17,6 @@ import { safeArray } from '@zcat/ui/utils';
 import { ZView } from '../z-view';
 
 import { CodeBlock } from './code-block';
-import { ZThinking } from './z-thinking';
 
 // 引入 KaTeX 样式
 import 'katex/dist/katex.min.css';
@@ -43,13 +42,9 @@ export function ZMarkdown({
     },
 
     code: ({ node, className: codeClassName, children }) => {
-      const match = /language-(\w+)/.exec(codeClassName || '');
+      const match = /language-([\w-]+)/.exec(codeClassName || '');
       const language = safeArray<string>(match)[1] ?? '';
-
-      if (language === 'think') {
-        return <ZThinking>{children}</ZThinking>;
-      }
-
+      console.log(codeClassName, language);
       return (
         <CodeBlock
           language={language}

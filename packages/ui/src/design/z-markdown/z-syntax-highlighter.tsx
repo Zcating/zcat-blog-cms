@@ -9,6 +9,7 @@ import { useAsyncImport, useWatch } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn/lib/utils';
 
 import { getLanguageLoader } from './language-loader-map';
+import { ZCodeCard } from './z-code-card';
 
 export interface ZSyntaxHighlighterProps extends SyntaxHighlighterProps {
   children: string;
@@ -30,6 +31,7 @@ const vsStyleImporter = async () => {
 export function ZSyntaxHighlighter({
   language = '',
   children,
+  className,
   ...props
 }: ZSyntaxHighlighterProps) {
   const SyntaxHighlighter = useAsyncImport<typeof PrismAsyncLight>(
@@ -76,7 +78,7 @@ export function ZSyntaxHighlighter({
         position: 'absolute',
         left: 0,
         top: 0,
-        width: '3em',
+        width: '2em',
         textAlign: 'right',
         paddingRight: '1em',
         userSelect: 'none',
@@ -94,12 +96,11 @@ type CustomPreProps = React.ComponentProps<'pre'>;
 function CustomPre({ className, style, ...props }: CustomPreProps) {
   return (
     <pre
-      style={{ margin: 0, padding: '0px 12px' }}
+      style={{ margin: 0, padding: '0px' }}
       className={cn(
         'border-0 bg-transparent overflow-hidden text-left whitespace-pre-wrap wrap-break-word tab-size-[4]',
         className,
       )}
-      // style={style}
       {...props}
     />
   );
@@ -114,5 +115,17 @@ function CustomCode({ className, style, ...props }: CustomCodeProps) {
       className="text-[16px] text-left whitespace-pre-wrap wrap-break-word tab-size-[4]"
       {...props}
     />
+  );
+}
+
+export function ZSyntaxHighlighterCode({
+  language,
+  children,
+  className,
+}: ZSyntaxHighlighterProps) {
+  return (
+    <ZCodeCard language={language} className={className}>
+      <ZSyntaxHighlighter language={language}>{children}</ZSyntaxHighlighter>
+    </ZCodeCard>
   );
 }
