@@ -9,9 +9,7 @@ import { ZMarkdown } from '../z-markdown';
 import { ZNotification } from '../z-notification';
 import { ZView } from '../z-view/z-view';
 
-import { useChatMessage } from './use-chat-message';
-
-import type { MessageImpl } from './message';
+import { MessageImpl, useChatMessage } from './use-chat-message';
 
 interface CommonBubbleProps {
   message: MessageImpl;

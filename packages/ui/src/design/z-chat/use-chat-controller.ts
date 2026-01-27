@@ -1,8 +1,6 @@
-import React from 'react';
+import { useConstant } from '@zcat/ui/hooks';
 
-import { MessageImpl } from './message';
-
-import type { Message } from './message';
+import { Message, MessageImpl } from './use-chat-message';
 
 export class ZChatController {
   private _messages: MessageImpl[];
@@ -54,6 +52,5 @@ export class ZChatController {
 }
 
 export function useZChatController(initialMessages: Message[] = []) {
-  const [array] = React.useState(() => new ZChatController(initialMessages));
-  return array;
+  return useConstant(() => new ZChatController(initialMessages));
 }

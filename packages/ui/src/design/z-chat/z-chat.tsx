@@ -8,17 +8,18 @@ import { cn } from '../../shadcn/lib/utils';
 import { ZButton } from '../z-button/z-button';
 import { ZView } from '../z-view/z-view';
 
-import { Message } from './message';
 import { MessageInput } from './message-input';
 import { useChatAutoScroll } from './use-chat-auto-scroll';
 import { ZChatController } from './use-chat-controller';
+import { Message } from './use-chat-message';
 import { useChatMessages } from './use-chat-messages';
+import { useZChatSender } from './use-chat-sender';
 import { ZChatBubble } from './z-chat-bubble';
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   controller: ZChatController;
   onSend: (message: Message) => void | Promise<void>;
-  onRegenerate?: (message: Message) => void | Promise<void>;
+  onRegenerate?: () => void | Promise<void>;
   onAbort?: () => void;
   placeholder?: string;
   toolbar?: React.ReactNode;
@@ -41,7 +42,7 @@ export function ZChat({
 
   const renderEmptyState = () => safeReactNode(emptyState, DefaultEmptyState);
 
-  const { handleSend, handleAbort, handleRegenerate, loading } = useSender(
+  const { handleSend, handleAbort, handleRegenerate, loading } = useZChatSender(
     onSend,
     onAbort,
     onRegenerate,
@@ -105,53 +106,4 @@ function DefaultEmptyState() {
       <p className="opacity-50 text-sm">暂无消息，开始一个新的对话吧</p>
     </ZView>
   );
-}
-
-function useSender(
-  onSend: ZChatProps['onSend'],
-  onAbort?: ZChatProps['onAbort'],
-  onRegenerate?: ZChatProps['onRegenerate'],
-) {
-  const [loading, setLoading] = React.useState(false);
-  const handleSend = async (content: string) => {
-    setLoading(true);
-    try {
-      const result = onSend({ role: 'user', content });
-      if (result instanceof Promise) {
-        await result;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAbort = () => {
-    setLoading(false);
-    if (!isFunction(onAbort)) {
-      return;
-    }
-    onAbort();
-  };
-
-  const handleRegenerate = async (message: Message) => {
-    setLoading(true);
-    try {
-      if (!isFunction(onRegenerate)) {
-        return;
-      }
-      const result = onRegenerate?.(message);
-      if (result instanceof Promise) {
-        await result;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    handleSend,
-    handleAbort,
-    handleRegenerate,
-    loading,
-  };
 }
