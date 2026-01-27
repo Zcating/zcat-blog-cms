@@ -1,5 +1,5 @@
 import * as ZcatUi from '@zcat/ui';
-import { Code, Eye } from 'lucide-react';
+import { Code, Copy, Eye, Check } from 'lucide-react';
 import * as lucideReact from 'lucide-react';
 import React from 'react';
 import * as Sucrase from 'sucrase';
@@ -109,6 +109,7 @@ export function ExecutableCodeBlock({
 }: ZExecutableCodeProps) {
   const [isCollapsed, onToggleCollapsed] = ZcatUi.useToggleValue(false);
   const [viewMode, setViewMode] = React.useState<ViewMode>('preview');
+  const [isCopied, setIsCopied] = React.useState(false);
   const code = children;
 
   const handleViewChange = ZcatUi.useMemoizedFn((value: string) => {
@@ -119,19 +120,28 @@ export function ExecutableCodeBlock({
     setViewMode(option.value);
   });
 
+  const handleCopy = ZcatUi.useMemoizedFn(async () => {
+    await navigator.clipboard.writeText(code);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  });
+
   return (
     <ZcatUi.Card className={ZcatUi.cn('py-0 gap-0', className)}>
       <ZcatUi.CardHeader className="flex items-center bg-accent/50 justify-between px-4 py-2">
         <ZcatUi.CardTitle className="text-markdown-code-lang">
           typescript
         </ZcatUi.CardTitle>
-        <ZcatUi.CardAction className="flex items-center gap-2">
+        <ZcatUi.CardAction className="flex items-center gap-3">
           <ZcatUi.ZToggleGroup
             type="single"
             value={viewMode}
             onValueChange={handleViewChange}
             options={VIEW_MODE_OPTIONS}
           />
+          <ZcatUi.Button size="sm" variant="outline" onClick={handleCopy}>
+            {isCopied ? <Check size={14} /> : <Copy size={14} />}
+          </ZcatUi.Button>
           <ZcatUi.Button
             size="sm"
             variant="outline"

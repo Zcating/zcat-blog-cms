@@ -1,22 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Textarea - @zcat/ui' },
-    { name: 'description', content: 'Textarea component documentation' },
-  ];
-}
-
-const exampleContent = `
 # Textarea 文本域
 
 用于输入多行文本的表单控件，支持受控模式。
 
 ## Basic Usage
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZTextarea } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -26,11 +14,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Controlled
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZTextarea } from '@zcat/ui';
 import { useState } from 'react';
 
@@ -48,11 +36,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Disabled
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZTextarea } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -62,7 +50,7 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## API
 
@@ -72,16 +60,3 @@ export function DemoComponent() {
 | onValueChange | (value: string) => void | - | 值改变时的回调 |
 | placeholder | string | - | 占位文本 |
 | disabled | boolean | false | 是否禁用 |
-`;
-
-export default function TextareaPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

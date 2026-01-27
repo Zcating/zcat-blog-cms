@@ -1,15 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-const exampleContent = `
 # Avatar 头像
 
 用来代表用户或事物的图标、图片或字符。
 
 ## Basic Usage
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZAvatar } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -23,11 +18,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Sizes
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZAvatar } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -63,11 +58,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Fallbacks
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZAvatar } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -78,7 +73,7 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## API
 
@@ -87,24 +82,4 @@ export function DemoComponent() {
 | src | string | - | 图片地址 |
 | alt | string | - | 图片无法显示时的替代文本（必须） |
 | fallback | ReactNode | - | 图片加载失败或未设置时显示的内容 |
-| size | 'sm' \\| 'md' \\| 'lg' | 'md' | 头像尺寸 |
-`;
-
-export function meta() {
-  return [
-    { title: 'Avatar - @zcat/ui' },
-    { name: 'description', content: 'Avatar component documentation' },
-  ];
-}
-
-export default function AvatarPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}
+| size | 'sm' \| 'md' \| 'lg' | 'md' | 头像尺寸 |

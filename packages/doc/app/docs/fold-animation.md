@@ -1,18 +1,3 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: '折叠动画 - @zcat/ui' },
-    {
-      name: 'description',
-      content: 'FoldAnimation 动画组件文档',
-    },
-  ];
-}
-
-const exampleContent = `
 # FoldAnimation
 
 用于平滑展开和收起内容的动画组件，基于 GSAP 实现。常用于手风琴、折叠面板等场景。
@@ -21,7 +6,7 @@ const exampleContent = `
 
 通过控制 \`isOpen\` 属性 (boolean) 来切换展开和收起状态。
 
-\`\`\`typescript-demo
+```typescript-demo
 import { Button, FoldAnimation } from '@zcat/ui';
 import { useState } from 'react';
 
@@ -43,13 +28,13 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Custom Duration
 
 使用 \`duration\` 属性 (number) 自定义动画持续时间，单位为秒。
 
-\`\`\`typescript-demo
+```typescript-demo
 import { Button, FoldAnimation, ZView } from '@zcat/ui';
 import { useState } from 'react';
 
@@ -69,17 +54,12 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
-`;
+```
 
-export default function FoldAnimationPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}
+## API
+
+| Attribute | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| isOpen | boolean | - | 控制展开/收起状态 |
+| duration | number | 0.3 | 动画持续时间（秒） |
+| children | React.ReactNode | - | 动画内容 |

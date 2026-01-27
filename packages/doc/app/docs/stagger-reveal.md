@@ -1,18 +1,3 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: '交错动画 - @zcat/ui' },
-    {
-      name: 'description',
-      content: 'StaggerReveal animation component documentation',
-    },
-  ];
-}
-
-const exampleContent = `
 # StaggerReveal
 
 依次显示元素的交错动画组件，基于 GSAP 实现。
@@ -21,7 +6,7 @@ const exampleContent = `
 
 默认从左侧滑入 (\`direction="left"\`)。需要提供 \`selector\` 属性来指定需要动画的子元素。
 
-\`\`\`typescript-demo
+```typescript-demo
 import { StaggerReveal, ZView } from '@zcat/ui';
 
 function DemoBox({ index }: { index: number }) {
@@ -41,13 +26,13 @@ export function DemoComponent() {
     </StaggerReveal>
   );
 }
-\`\`\`
+```
 
 ## Direction
 
 可以设置不同的动画进入方向。
 
-\`\`\`typescript-demo
+```typescript-demo
 import { StaggerReveal, ZView } from '@zcat/ui';
 
 function DemoBox({ index }: { index: number }) {
@@ -88,13 +73,13 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Custom Options
 
 可以通过 \`duration\` (持续时间), \`stagger\` (间隔时间), \`ease\` (缓动函数) 来调整动画效果。
 
-\`\`\`typescript-demo
+```typescript-demo
 import { StaggerReveal, ZView } from '@zcat/ui';
 
 function DemoBox({ index }: { index: number }) {
@@ -121,29 +106,16 @@ export function DemoComponent() {
     </StaggerReveal>
   );
 }
-\`\`\`
+```
 
 ## API
 
 | Attribute | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | selector | string | - | CSS 选择器，用于选择需要执行动画的子元素 |
-| direction | 'left' \\| 'right' \\| 'top' \\| 'bottom' | 'left' | 动画进入的方向 |
+| direction | 'left' \| 'right' \| 'top' \| 'bottom' | 'left' | 动画进入的方向 |
 | duration | number | 0.85 | 动画持续时间（秒） |
 | stagger | number | 0.06 | 每个元素动画之间的间隔时间（秒） |
 | ease | string | 'power2.out' | GSAP 缓动函数 |
 | dependencies | unknown[] | [] | 依赖项数组，当依赖项变化时重新执行动画 |
 | className | string | - | 自定义类名 |
-`;
-
-export default function StaggerRevealPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

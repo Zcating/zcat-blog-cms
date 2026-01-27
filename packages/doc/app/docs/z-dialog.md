@@ -1,25 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Dialog - @zcat/ui' },
-    {
-      name: 'description',
-      content: 'Imperative Dialog component documentation',
-    },
-  ];
-}
-
-const exampleContent = `
 # Dialog 弹窗
 
 基于命令式的弹窗组件，无需在组件中维护 open 状态。
 
 ## Basic Usage
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton, ZDialog } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -46,11 +31,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Custom Content
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton, ZDialog } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -78,7 +63,7 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## API
 
@@ -89,16 +74,3 @@ export function DemoComponent() {
 | footer | React.FC<{ onClose: () => void }> | - | 自定义底部区域 |
 | contentContainerClassName | string | - | DialogContent 容器样式类名 |
 | onClose | () => void | - | 弹窗关闭后的回调 |
-`;
-
-export default function DialogPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

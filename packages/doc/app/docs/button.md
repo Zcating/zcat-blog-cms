@@ -1,22 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Button - @zcat/ui' },
-    { name: 'description', content: 'Button component documentation' },
-  ];
-}
-
-const exampleContent = `
 # Button 按钮
 
 常用的操作按钮。
 
 ## Variants
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -31,11 +19,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Sizes
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -48,11 +36,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Icon Sizes
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -64,26 +52,13 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## API
 
 | Attribute | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| variant | 'default' \\| 'destructive' \\| 'outline' \\| 'secondary' \\| 'ghost' \\| 'link' | 'default' | 按钮样式变体 |
-| size | 'default' \\| 'sm' \\| 'lg' \\| 'xl' \\| 'icon' \\| 'icon-sm' \\| 'icon-lg' | 'default' | 按钮尺寸 |
+| variant | 'default' \| 'destructive' \| 'outline' \| 'secondary' \| 'ghost' \| 'link' | 'default' | 按钮样式变体 |
+| size | 'default' \| 'sm' \| 'lg' \| 'xl' \| 'icon' \| 'icon-sm' \| 'icon-lg' | 'default' | 按钮尺寸 |
 | asChild | boolean | false | 是否作为子组件渲染 |
 | ...props | React.ButtonHTMLAttributes | - | 支持所有原生 button 属性 |
-`;
-
-export default function ButtonPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

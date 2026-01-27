@@ -1,22 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Message - @zcat/ui' },
-    { name: 'description', content: 'Toast message component documentation' },
-  ];
-}
-
-const exampleContent = `
 # Message 消息提示
 
 全局展示操作反馈信息。
 
 ## Basic Usage
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton, ZNotification } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -29,11 +17,11 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Loading
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZButton, ZNotification } from '@zcat/ui';
 
 export function DemoComponent() {
@@ -50,7 +38,7 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## Methods
 
@@ -62,16 +50,3 @@ export function DemoComponent() {
 | info | message: string | 显示信息提示 |
 | warning | message: string | 显示警告提示 |
 | loading | message: string | 显示加载提示，返回关闭函数 |
-`;
-
-export default function MessagePage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

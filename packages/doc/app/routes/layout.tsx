@@ -109,7 +109,7 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '分页',
-        value: 'pagination',
+        value: '/pagination',
       },
     ],
   },

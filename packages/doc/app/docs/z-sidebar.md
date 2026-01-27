@@ -1,22 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Sidebar - @zcat/ui' },
-    { name: 'description', content: 'Sidebar component documentation' },
-  ];
-}
-
-const exampleContent = `
 # Sidebar 侧边栏布局
 
 提供了一套标准的侧边栏布局结构，包含头部、侧边栏菜单和内容区域。
 
 ## Usage
 
-\`\`\`typescript
+```typescript
 import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
 import { Home, Settings, User } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
@@ -51,7 +39,7 @@ export default function Layout() {
       );
     }
     return (
-      <Link to={\`/\${item.value}\`} className="flex items-center gap-3">
+      <Link to={`/${item.value}`} className="flex items-center gap-3">
         {item.icon && <item.icon className="size-4" />}
         <span>{item.label}</span>
       </Link>
@@ -68,7 +56,7 @@ export default function Layout() {
     </ZSidebar>
   );
 }
-\`\`\`
+```
 
 ## ZSidebar Props
 
@@ -91,16 +79,3 @@ export default function Layout() {
 | icon | React.ComponentType | - | 菜单项图标组件 |
 | children | ZSidebarOption[] | - | 子菜单项配置 |
 | open | boolean | - | 是否默认展开 |
-`;
-
-export default function ZSidebarPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}

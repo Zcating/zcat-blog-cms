@@ -47,7 +47,7 @@ export function FoldAnimation({
       gsap.to(
         el,
         // { height: 0, opacity: 0 },
-        { height: 'auto', opacity: 1, duration, ease: 'power2.out' },
+        { height: 'auto', opacity: 100, duration, ease: 'power2.out' },
       );
     } else {
       // 收起动画
@@ -60,7 +60,9 @@ export function FoldAnimation({
     }
   }, [isOpen]);
 
-  const initClass = useConstant(() => (isOpen ? '' : 'h-0 opacity-0'));
+  const initClass = useConstant(() =>
+    isOpen ? 'h-auto opacity-100' : 'h-0 opacity-0',
+  );
 
   return (
     <div

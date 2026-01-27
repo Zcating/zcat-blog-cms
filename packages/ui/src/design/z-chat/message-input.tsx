@@ -81,7 +81,7 @@ export function MessageInput({
       />
       <ZView className="flex items-center gap-4 justify-between">
         {toolbar ? <ZView className="shrink-0">{toolbar}</ZView> : null}
-        <ZView className="flex items-center gap-4 self-end">
+        <ZView className="flex-1 flex items-center gap-4 justify-end">
           <ZView className="text-sm font-bold text-muted-foreground">
             {shortcut}
           </ZView>

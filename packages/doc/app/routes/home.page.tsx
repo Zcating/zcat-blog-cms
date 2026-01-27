@@ -1,7 +1,7 @@
 import { ZButton } from '@zcat/ui';
 import { Link } from 'react-router';
 
-import type { Route } from './+types/home-page';
+import type { Route } from './+types/home.page';
 
 export function meta() {
   return [

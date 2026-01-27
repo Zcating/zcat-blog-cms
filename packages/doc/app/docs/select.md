@@ -1,22 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
-
-import { ExecutableCodeBlock } from '~/features';
-
-export function meta() {
-  return [
-    { title: 'Select - @zcat/ui' },
-    { name: 'description', content: 'Select component documentation' },
-  ];
-}
-
-const exampleContent = `
 # Select 选择器
 
 下拉选择器，用于从列表中选择一个选项。
 
 ## Basic Usage
 
-\`\`\`typescript-demo
+```typescript-demo
 import { ZSelect } from '@zcat/ui';
 
 const options = [
@@ -46,27 +34,14 @@ export function DemoComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ## API
 
 | Attribute | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| options | \\{ label: React.ReactNode; value: T \\}[] | - | 选项列表 |
+| options | \{ label: React.ReactNode; value: T \}[] | - | 选项列表 |
 | value | T | - | 当前选中的值 |
 | onValueChange | (value: T) => void | - | 值变化时的回调 |
 | placeholder | string | - | 占位文本 |
 | className | string | - | 自定义类名 |
-`;
-
-export default function SelectPage() {
-  return (
-    <ZMarkdown
-      className="pb-40"
-      content={exampleContent}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
-    />
-  );
-}
