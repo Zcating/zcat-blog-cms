@@ -1,4 +1,4 @@
-import { ZMarkdown } from '@zcat/ui';
+import { ZButton, ZMarkdown } from '@zcat/ui';
 
 import { ApiTable } from '~/features';
 
@@ -69,6 +69,29 @@ $$
 ## 链接
 
 [ZCat UI](https://github.com/zcat-ui)
+
+## 可执行代码块 (typescript-demo)
+
+\`\`\`typescript-demo
+function DemoComponent() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div style={{ padding: '16px', textAlign: 'center' }}>
+      <h3 style={{ marginBottom: '12px' }}>计数器示例</h3>
+      <p style={{ marginBottom: '12px' }}>当前计数: {count}</p>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+        <ZButton variant="default" onClick={() => setCount(count + 1)}>
+          +1
+        </ZButton>
+        <ZButton variant="outline" onClick={() => setCount(count - 1)}>
+          -1
+        </ZButton>
+      </div>
+    </div>
+  );
+}
+\`\`\`
 `;
 
 const apiData = [
@@ -99,7 +122,7 @@ export default function ZMarkdownPage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">示例</h2>
         <div className="border rounded-lg p-6 bg-card">
-          <ZMarkdown content={exampleContent} />
+          <ZMarkdown content={exampleContent} extraComponents={{ ZButton }} />
         </div>
       </div>
 

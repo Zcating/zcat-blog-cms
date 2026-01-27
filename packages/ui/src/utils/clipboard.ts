@@ -1,5 +1,7 @@
-export async function copyToClipboard(text: string) {
-  if (!text) {
+import { isString } from './is-types';
+
+export async function copyToClipboard(text: unknown) {
+  if (!isString(text)) {
     return;
   }
 

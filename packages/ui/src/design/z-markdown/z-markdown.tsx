@@ -4,6 +4,14 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
 import { cn } from '@zcat/ui/shadcn';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@zcat/ui/shadcn/ui/table';
 import { safeArray } from '@zcat/ui/utils';
 
 import { ZView } from '../z-view';
@@ -18,40 +26,66 @@ export interface ZMarkdownProps {
   content: string;
   className?: string;
   placeholder?: React.ReactNode;
+  extraComponents?: Record<string, React.ComponentType<any>>;
 }
 
-const MarkdownComponents: Components = {
-  pre: ({ node, className, children }) => {
-    return <pre className={cn('mb-4!', className)}>{children}</pre>;
-  },
-
-  code: ({ node, className, children }) => {
-    const match = /language-(\w+)/.exec(className || '');
-    const language = safeArray<string>(match)[1] ?? '';
-
-    // Handle think tags
-    if (language === 'think') {
-      return <ZThinking>{children}</ZThinking>;
-    }
-
-    return (
-      <CodeBlock language={language} className={className}>
-        {children}
-      </CodeBlock>
-    );
-  },
-  // 自定义链接渲染
-  a({ href, children, ...props }) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
-        {children}
-      </a>
-    );
-  },
-};
-
-export function ZMarkdown({ content, className, placeholder }: ZMarkdownProps) {
+export function ZMarkdown({
+  content,
+  className,
+  placeholder,
+  extraComponents,
+}: ZMarkdownProps) {
   const isEmpty = !content && placeholder;
+
+  const MarkdownComponents: Components = {
+    pre: ({ node, className: preClassName, children }) => {
+      return <pre className={cn('mb-4!', preClassName)}>{children}</pre>;
+    },
+
+    code: ({ node, className: codeClassName, children }) => {
+      const match = /language-(\w+)/.exec(codeClassName || '');
+      const language = safeArray<string>(match)[1] ?? '';
+
+      if (language === 'think') {
+        return <ZThinking>{children}</ZThinking>;
+      }
+
+      return (
+        <CodeBlock
+          language={language}
+          className={codeClassName}
+          extraComponents={extraComponents}
+        >
+          {children}
+        </CodeBlock>
+      );
+    },
+    a({ href, children, ...props }) {
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+          {children}
+        </a>
+      );
+    },
+    table({ children }) {
+      return <Table className="my-4">{children}</Table>;
+    },
+    thead({ children }) {
+      return <TableHeader>{children}</TableHeader>;
+    },
+    tbody({ children }) {
+      return <TableBody>{children}</TableBody>;
+    },
+    tr({ children }) {
+      return <TableRow>{children}</TableRow>;
+    },
+    th({ children, ...props }) {
+      return <TableHead {...props}>{children}</TableHead>;
+    },
+    td({ children, ...props }) {
+      return <TableCell {...props}>{children}</TableCell>;
+    },
+  };
 
   return (
     <article
@@ -66,9 +100,6 @@ export function ZMarkdown({ content, className, placeholder }: ZMarkdownProps) {
         'prose-pre:mb-4 prose-pre:bg-transparent',
         'prose-ul:text-foreground prose-ol:text-foreground',
         'prose-li:text-foreground',
-        'prose-table:border prose-table:border-border',
-        'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2',
-        'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2',
         'prose-hr:border-border',
         className,
       )}

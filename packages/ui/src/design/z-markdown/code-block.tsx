@@ -17,6 +17,7 @@ import { copyToClipboard } from '@zcat/ui/utils';
 
 import { Button } from '../../shadcn/ui/button';
 
+import { ZExecutableCode } from './z-executable-code';
 import { ZMermaid } from './z-mermaid';
 import { ZSyntaxHighlighter } from './z-syntax-highlighter';
 
@@ -24,11 +25,13 @@ export interface CodeBlockProps {
   language: string;
   children: React.ReactNode;
   className?: string;
+  extraComponents?: Record<string, React.ComponentType<any>>;
 }
 
 // Renderer Registry
 const rendererRegistry: Record<string, React.FC<any>> = {
   mermaid: ZMermaid,
+  'typescript-demo': ZExecutableCode,
   default: ZSyntaxHighlighter,
 };
 
@@ -40,19 +43,13 @@ export function CodeBlock({
   language = '',
   children,
   className,
+  extraComponents,
   ...props
 }: CodeBlockProps) {
   const [isCollapsed, onToggleCollapsed] = useToggleValue(true);
 
   const onCopy = async () => {
-    try {
-      if (typeof children !== 'string') {
-        return;
-      }
-      await copyToClipboard(children);
-    } catch {
-      return;
-    }
+    await copyToClipboard(children);
   };
 
   // Determine which renderer to use
@@ -79,9 +76,14 @@ export function CodeBlock({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="py-3">
+      <CardContent className="py-3 px-0!">
         <FoldAnimation isOpen={isCollapsed}>
-          <Renderer language={language} className={className} {...props}>
+          <Renderer
+            language={language}
+            className={className}
+            extraComponents={extraComponents}
+            {...props}
+          >
             {children}
           </Renderer>
         </FoldAnimation>

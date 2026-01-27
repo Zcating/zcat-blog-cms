@@ -1,10 +1,13 @@
+import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import { cva } from 'class-variance-authority';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@zcat/ui/shadcn';
 
 import type React from 'react';
 
-interface ZAvatarProps {
+interface ZAvatarProps extends React.ComponentProps<
+  typeof AvatarPrimitive.Root
+> {
   size?: 'sm' | 'md' | 'lg';
   src?: string;
   alt: string;
@@ -25,10 +28,11 @@ const avatar = cva('w-32 h-32', {
 });
 
 export function ZAvatar(props: ZAvatarProps) {
+  const { size, src, alt, fallback, ...restProps } = props;
   return (
-    <Avatar className={avatar({ size: props.size })}>
-      <AvatarImage src={props.src} alt={props.alt} />
-      <AvatarFallback>{props.fallback}</AvatarFallback>
+    <Avatar className={avatar({ size })} {...restProps}>
+      <AvatarImage src={src} alt={alt} />
+      <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
   );
 }

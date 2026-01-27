@@ -30,6 +30,9 @@
   "scripts": {
     "build": "tsx ./scripts/build.ts",
     "dev": "tsx ./scripts/dev.ts",
+    "dev:e2e": "vite --config ./e2e/vite.config.ts",
+    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:e2e:ui": "playwright test --config playwright.config.ts --ui",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --ext .ts,.tsx ./src --max-warnings 0 --fix"
   },
@@ -72,6 +75,7 @@
     "react-day-picker": "^9.13.0",
     "react-hook-form": "^7.58.1",
     "sonner": "^2.0.7",
+    "sucrase": "^3.35.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.18",
     "tsup": "^8.5.1",
@@ -80,10 +84,13 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@types/node": "^24.10.4",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vite": "^6.3.3"
   }
 }

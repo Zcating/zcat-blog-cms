@@ -37,6 +37,8 @@
     "scripts/**/*"
   ],
   "exclude": [
-    "tsup.config.ts"
+    "tsup.config.ts",
+    "e2e/**/*",
+    "playwright.config.ts"
   ]
 }
