@@ -1,6 +1,6 @@
 import { isObject } from '@zcat/ui';
 
-import { Stream } from '../../../apis/utils/stream';
+import { Stream } from '../../utils/stream/stream';
 
 export namespace AiApi {
   interface ChatCompletion {
