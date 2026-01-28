@@ -1,4 +1,4 @@
-import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
+import { safeNumber, ZButton, ZDialog, ZGrid } from '@zcat/ui';
 import React from 'react';
 import zod from 'zod';
 
@@ -29,7 +29,7 @@ interface AlbumPhotoFormData {
 }
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const id = Number(params.id);
+  const id = safeNumber(params.id);
   if (isNaN(id)) {
     throw new Error('Not Found');
   }

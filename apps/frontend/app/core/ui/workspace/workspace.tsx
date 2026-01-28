@@ -9,7 +9,7 @@ interface WorkspaceProps {
 
 export function Workspace(props: WorkspaceProps) {
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6 pb-10">
       <div className="text-2xl font-bold">{props.title}</div>
       {props.description && <div>{props.description}</div>}
       {props.operation && <div className="flex gap-5">{props.operation}</div>}

@@ -1,3 +1,4 @@
+import { usePropsValue, useWatch } from '@zcat/ui';
 import React from 'react';
 
 import { removeArray, updateArray } from '../utils';
@@ -17,12 +18,17 @@ export function useOptimisticArray<T, U = unknown>(
   initialValue: T[],
   reduce: (prev: T[], data: U) => T[],
 ) {
-  const [state, setState] = React.useState<T[]>(initialValue);
+  // 初始化状态时，将初始值设置为状态值
+  const [state, setState] = usePropsValue({
+    value: initialValue,
+    defaultValue: initialValue,
+  });
+
   const [optimisticState, setOptimisticState] = React.useOptimistic(
     state,
     reduce,
   );
-  //
+
   const commitState = React.useCallback<ArrayStateDispatch<T>>((...args) => {
     switch (args[0]) {
       case 'remove':
@@ -34,6 +40,7 @@ export function useOptimisticArray<T, U = unknown>(
       case 'batchUpdate':
         return setState((prev) => updateArray(prev, args[1]));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return [optimisticState, setOptimisticState, commitState] as const;

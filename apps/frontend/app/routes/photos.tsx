@@ -1,4 +1,12 @@
-import { ZButton, ZDialog, ZGrid, ZPagination, ZSelect } from '@zcat/ui';
+import {
+  ZButton,
+  ZDialog,
+  ZGrid,
+  ZPagination,
+  ZSelect,
+  ZView,
+  safeNumber,
+} from '@zcat/ui';
 import React from 'react';
 import z from 'zod';
 
@@ -13,6 +21,8 @@ import {
   Workspace,
   useOptimisticArray,
   type PhotoCardData,
+  usePaginationAction,
+  PAGE_SIZE_OPTIONS,
 } from '@cms/core';
 
 import type { Route } from './+types/photos';
@@ -36,44 +46,29 @@ const useSchemeForm = createSchemaForm({
   }),
 });
 
-const PAGE_SIZE_OPTIONS = [
-  { label: '每页 10 条', value: '10' },
-  { label: '每页 20 条', value: '20' },
-  { label: '每页 50 条', value: '50' },
-];
-
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const url = new URL(request.url);
-  const page = Number(url.searchParams.get('page')) || 1;
-  const pageSize = Number(url.searchParams.get('pageSize')) || 20;
+  const page = safeNumber(url.searchParams.get('page'), 1);
+  const pageSize = safeNumber(url.searchParams.get('pageSize'), 20);
 
   const result = await PhotosApi.getPhotos({ page, pageSize });
-
   return {
-    photos: result.data as PhotoCardData[],
-    pagination: {
-      page: result.page,
-      pageSize: result.pageSize,
-      totalPages: result.totalPages,
-    },
+    pagination: result,
+    page,
+    pageSize,
   };
 }
 
 export default function Photos(props: Route.ComponentProps) {
-  const [searchParams, setSearchParams] = React.useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      page: Number(params.get('page')) || 1,
-      pageSize: Number(params.get('pageSize')) || 20,
-    };
-  });
+  const currentPage = props.loaderData.page;
+  const currentPageSize = props.loaderData.pageSize;
 
-  const initialPage = searchParams.page;
-  const initialPageSize = searchParams.pageSize;
+  const pagination = props.loaderData.pagination;
 
-  const [photos, setOptimisticPhotos, commitPhotos] = useOptimisticArray(
-    props.loaderData.photos,
-    (prev, data: PhotoFormData) => {
+  const action = usePaginationAction(currentPageSize);
+
+  const [optimisticPhotos, setOptimisticPhotos, commitPhotos] =
+    useOptimisticArray(pagination.data, (prev, data: PhotoFormData) => {
       const tempPhoto: PhotoCardData = {
         id: data.id || -Date.now(),
         name: data.name,
@@ -87,74 +82,7 @@ export default function Photos(props: Route.ComponentProps) {
         return prev.map((p) => (p.id === data.id ? tempPhoto : p));
       }
       return [...prev, tempPhoto];
-    },
-  );
-
-  const [photosData, setPhotosData] = React.useState(photos);
-  const [currentPage, setCurrentPage] = React.useState(initialPage);
-  const [itemsPerPage, setItemsPerPage] = React.useState(initialPageSize);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [totalPages, setTotalPages] = React.useState(
-    props.loaderData.pagination.totalPages,
-  );
-
-  const fetchPhotos = React.useCallback(
-    async (page: number, pageSize: number) => {
-      setIsLoading(true);
-      try {
-        const result = await PhotosApi.getPhotos({ page, pageSize });
-        setPhotosData(
-          result.data.map((photo) => ({
-            ...photo,
-            createdAt: photo.createdAt?.toString(),
-            updatedAt: photo.updatedAt?.toString(),
-          })) as PhotoCardData[],
-        );
-        setTotalPages(result.totalPages);
-      } catch (error) {
-        console.error('获取照片列表失败', error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [setPhotosData, setTotalPages],
-  );
-
-  const handlePageChange = React.useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      setSearchParams({
-        page: page,
-        pageSize: itemsPerPage,
-      });
-      fetchPhotos(page, itemsPerPage);
-    },
-    [itemsPerPage, fetchPhotos],
-  );
-
-  const handlePageSizeChange = React.useCallback(
-    (value: string) => {
-      const pageSize = Number(value);
-      setItemsPerPage(pageSize);
-      setCurrentPage(1);
-      setSearchParams({ page: 1, pageSize });
-      fetchPhotos(1, pageSize);
-    },
-    [fetchPhotos],
-  );
-
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && currentPage > 1) {
-        handlePageChange(currentPage - 1);
-      } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
-        handlePageChange(currentPage + 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, totalPages, handlePageChange]);
+    });
 
   const create = useSchemeForm({
     title: '新增照片',
@@ -172,7 +100,6 @@ export default function Photos(props: Route.ComponentProps) {
             return;
           }
           commitPhotos('update', photo);
-          fetchPhotos(currentPage, itemsPerPage);
         } catch (error) {
           console.error(error);
           commitPhotos('rollback');
@@ -196,7 +123,6 @@ export default function Photos(props: Route.ComponentProps) {
           }
 
           commitPhotos('update', photo);
-          fetchPhotos(currentPage, itemsPerPage);
         } catch (error) {
           console.log(error);
           commitPhotos('rollback');
@@ -226,7 +152,6 @@ export default function Photos(props: Route.ComponentProps) {
       });
       await PhotosApi.deletePhoto(data.id);
       commitPhotos('remove', data);
-      fetchPhotos(currentPage, itemsPerPage);
     });
   };
 
@@ -235,38 +160,34 @@ export default function Photos(props: Route.ComponentProps) {
       title="照片"
       operation={<ZButton onClick={() => create()}>新增</ZButton>}
     >
-      {isLoading && photosData.length === 0 ? (
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
-          加载中...
-        </div>
-      ) : photosData.length === 0 ? (
+      {optimisticPhotos.length === 0 ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           暂无照片
         </div>
       ) : (
-        <>
+        <ZView className="space-y-10">
           <ZGrid
             cols={5}
-            items={photosData}
+            items={optimisticPhotos}
             columnClassName="px-0"
             renderItem={(item) => (
               <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
             )}
           />
-          <div className="mt-4 flex items-center justify-between">
+          <ZView className="flex items-center justify-center gap-5">
             <ZSelect
-              value={itemsPerPage.toString()}
               options={PAGE_SIZE_OPTIONS}
-              onValueChange={handlePageSizeChange}
+              value={currentPageSize.toString()}
+              onValueChange={action.onPageSizeChange}
               className="w-40"
             />
             <ZPagination
               page={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
+              totalPages={pagination.totalPages}
+              onPageChange={action.onPageChange}
             />
-          </div>
-        </>
+          </ZView>
+        </ZView>
       )}
     </Workspace>
   );
