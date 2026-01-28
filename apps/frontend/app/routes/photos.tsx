@@ -1,12 +1,4 @@
-import {
-  ZButton,
-  ZDialog,
-  ZGrid,
-  ZPagination,
-  ZSelect,
-  ZView,
-  safeNumber,
-} from '@zcat/ui';
+import { ZButton, ZDialog, ZGrid, ZView, safeNumber } from '@zcat/ui';
 import React from 'react';
 import z from 'zod';
 
@@ -17,12 +9,10 @@ import {
   createInput,
   createSchemaForm,
   OssAction,
+  PaginationWorkspace,
   PhotoCard,
-  Workspace,
   useOptimisticArray,
   type PhotoCardData,
-  usePaginationAction,
-  PAGE_SIZE_OPTIONS,
 } from '@cms/core';
 
 import type { Route } from './+types/photos';
@@ -60,12 +50,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export default function Photos(props: Route.ComponentProps) {
-  const currentPage = props.loaderData.page;
-  const currentPageSize = props.loaderData.pageSize;
-
   const pagination = props.loaderData.pagination;
-
-  const action = usePaginationAction(currentPageSize);
 
   const [optimisticPhotos, setOptimisticPhotos, commitPhotos] =
     useOptimisticArray(pagination.data, (prev, data: PhotoFormData) => {
@@ -156,39 +141,27 @@ export default function Photos(props: Route.ComponentProps) {
   };
 
   return (
-    <Workspace
+    <PaginationWorkspace
       title="照片"
       operation={<ZButton onClick={() => create()}>新增</ZButton>}
+      pageSize={pagination.pageSize}
+      totalPages={pagination.totalPages}
+      page={pagination.page}
     >
       {optimisticPhotos.length === 0 ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           暂无照片
         </div>
       ) : (
-        <ZView className="space-y-10">
-          <ZGrid
-            cols={5}
-            items={optimisticPhotos}
-            columnClassName="px-0"
-            renderItem={(item) => (
-              <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
-            )}
-          />
-          <ZView className="flex items-center justify-center gap-5">
-            <ZSelect
-              options={PAGE_SIZE_OPTIONS}
-              value={currentPageSize.toString()}
-              onValueChange={action.onPageSizeChange}
-              className="w-40"
-            />
-            <ZPagination
-              page={currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={action.onPageChange}
-            />
-          </ZView>
-        </ZView>
+        <ZGrid
+          cols={5}
+          items={optimisticPhotos}
+          columnClassName="px-0"
+          renderItem={(item) => (
+            <PhotoCard data={item} onEdit={edit} onDelete={deletePhoto} />
+          )}
+        />
       )}
-    </Workspace>
+    </PaginationWorkspace>
   );
 }

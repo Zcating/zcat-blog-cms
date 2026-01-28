@@ -6,17 +6,12 @@ import {
 } from '@ant-design/icons';
 import { Line, Column } from '@ant-design/plots';
 import { Card, CardContent, CardHeader, CardTitle, ZButton } from '@zcat/ui';
-import React from 'react';
 
 import { StatisticsApi } from '@cms/api';
 
 import type { Route } from './+types/dashboard';
 
-// 模拟API调用 - 实际项目中应该从API获取数据
-
 export async function clientLoader({ request }: Route.LoaderArgs) {
-  // 在实际项目中，这里应该调用API获取统计数据
-  // const statisticsApi = new StatisticsApi();
   const [summary, chartData, detailData] = await Promise.all([
     StatisticsApi.getSummary(),
     StatisticsApi.getChartData(),

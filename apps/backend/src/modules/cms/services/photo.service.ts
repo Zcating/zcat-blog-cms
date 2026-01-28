@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { isNumber } from 'class-validator';
 
 import { OssService, PrismaService } from '@backend/common';
+import { PaginateResult } from '@backend/model';
 import { Photo } from '@backend/prisma';
 
 import {
   CreateAlbumPhotoDto,
   CreatePhotoDto,
+  GetPhotosDto,
   UpdateAlbumPhotoDto,
   UpdateAlbumPhotoResultDto,
   UpdatePhotoDto,
@@ -39,17 +41,17 @@ export class PhotoService {
   }
 
   async getPhotosWithPagination(
-    albumId?: number | null,
-    page: number = 1,
-    pageSize: number = 20,
-  ) {
+    dto: GetPhotosDto,
+  ): Promise<PaginateResult<Photo>> {
+    const { albumId, page, pageSize } = dto;
+
     if (isNumber(albumId) && albumId <= 0) {
       return {
         data: [],
-        total: 0,
         page,
         pageSize,
         totalPages: 0,
+        total: 0,
       };
     }
 
@@ -71,10 +73,10 @@ export class PhotoService {
 
     return {
       data: photos.map((photo) => this.transformPhoto(photo)),
-      total,
       page,
       pageSize,
       totalPages,
+      total,
     };
   }
 

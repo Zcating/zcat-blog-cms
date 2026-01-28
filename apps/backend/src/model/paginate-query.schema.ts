@@ -24,4 +24,5 @@ export interface PaginateResult<T> {
   totalPages: number;
   page: number;
   pageSize: number;
+  total: number;
 }

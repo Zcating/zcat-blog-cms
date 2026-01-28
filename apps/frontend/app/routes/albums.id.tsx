@@ -11,11 +11,11 @@ import {
   createSchemaForm,
   createTextArea,
   OssAction,
+  PaginationWorkspace,
   PhotoCard,
   showPhotoSelector,
   useLoadingFn,
   useOptimisticArray,
-  Workspace,
   type PhotoCardData,
 } from '@cms/core';
 
@@ -28,7 +28,13 @@ interface AlbumPhotoFormData {
   albumId: number;
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+export async function clientLoader({
+  params,
+  request,
+}: Route.ClientLoaderArgs) {
+  const url = new URL(request.url);
+  const page = safeNumber(url.searchParams.get('page'), 1);
+  const pageSize = safeNumber(url.searchParams.get('pageSize'), 20);
   const id = safeNumber(params.id);
   if (isNaN(id)) {
     throw new Error('Not Found');
@@ -41,8 +47,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
   const albumPhotoPagination = await PhotosApi.getPhotos({
     albumId: id,
-    page: 1,
-    pageSize: 20,
+    page,
+    pageSize,
   });
 
   const reminderPhotos = await PhotosApi.getEmptyAlbumPhotos();
@@ -188,7 +194,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const coverSetter = useCoverSetter(album);
 
   return (
-    <Workspace
+    <PaginationWorkspace
       title={`相册名称：${album.name}`}
       description={`相册描述：${album.description}`}
       operation={
@@ -202,6 +208,9 @@ export default function AlbumsId(props: Route.ComponentProps) {
           </ZButton>
         </div>
       }
+      pageSize={albumPhotoPagination.pageSize}
+      totalPages={albumPhotoPagination.totalPages}
+      page={albumPhotoPagination.page}
     >
       <ZGrid
         items={photos}
@@ -223,7 +232,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
           />
         )}
       />
-    </Workspace>
+    </PaginationWorkspace>
   );
 }
 

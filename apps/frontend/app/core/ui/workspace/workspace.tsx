@@ -1,6 +1,6 @@
 import type React from 'react';
 
-interface WorkspaceProps {
+export interface WorkspaceProps {
   title: string;
   description?: string;
   operation?: React.ReactNode;

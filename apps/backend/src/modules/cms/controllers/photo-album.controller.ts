@@ -6,12 +6,20 @@ import {
   Param,
   UseGuards,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
 import { PrismaService } from '@backend/common';
-import { createResult, ResultCode, ResultData } from '@backend/model';
+import {
+  createResult,
+  PaginateQueryDto,
+  PaginateResult,
+  ResultCode,
+  ResultData,
+} from '@backend/model';
 import { PhotoAlbum } from '@backend/prisma';
+import { createPaginate } from '@backend/utils';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import {
@@ -39,17 +47,62 @@ export class PhotoAlbumController {
    * @returns 相册列表
    */
   @Get()
-  async findAll(): Promise<ResultData<ReturnPhotoAlbumDto[]>> {
+  @ApiOperation({ summary: '获取所有相册' })
+  @ApiResponse({ status: 200, description: '成功获取相册列表' })
+  async findAll(
+    @Query() dto: PaginateQueryDto,
+  ): Promise<ResultData<PaginateResult<ReturnPhotoAlbumDto>>> {
     try {
       this.logger.log('开始获取所有相册');
-      const albums = await this.photoService.getAlbums();
+
+      const [albums, total] = await Promise.all([
+        this.prismaService.photoAlbum.findMany({
+          orderBy: { createdAt: 'desc' },
+          ...createPaginate(dto.page, dto.pageSize),
+        }),
+        this.prismaService.photoAlbum.count(),
+      ]);
+
+      const coverIds = albums
+        .map((album) => album.coverId)
+        .filter((id): id is number => id !== null);
+
+      const covers =
+        coverIds.length > 0
+          ? await this.prismaService.photo.findMany({
+              where: { id: { in: coverIds } },
+            })
+          : [];
+
+      const result: ReturnPhotoAlbumDto[] = albums.map((album) => {
+        const foundedCover = covers.find((cover) => cover.id === album.coverId);
+        const cover = foundedCover
+          ? this.photoService.transformPhoto(foundedCover)
+          : null;
+        return {
+          id: album.id,
+          name: album.name,
+          description: album.description,
+          coverId: album.coverId,
+          createdAt: album.createdAt,
+          updatedAt: album.updatedAt,
+          available: album.available,
+          cover,
+        };
+      });
 
       this.logger.log(`成功获取 ${albums.length} 个相册`);
 
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: albums,
+        data: {
+          data: result,
+          totalPages: Math.ceil(total / dto.pageSize),
+          page: dto.page,
+          pageSize: dto.pageSize,
+          total,
+        },
       });
     } catch (error) {
       this.logger.error('获取相册列表失败', error);

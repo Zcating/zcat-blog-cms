@@ -1,6 +1,7 @@
 import { HttpClient } from '../http/http-client';
 
 import type { PhotosApi } from './photos-api';
+import type { PaginateResult } from './types';
 
 export namespace AlbumsApi {
   export interface PhotoAlbum {
@@ -36,9 +37,15 @@ export namespace AlbumsApi {
     available?: boolean;
   }
 
-  // PhotoAlbum API functions
-  export async function getPhotoAlbums(): Promise<PhotoAlbum[]> {
-    return HttpClient.get<PhotoAlbum[]>('cms/photo-albums');
+  export interface GetPhotoAlbumsParams {
+    page?: number;
+    pageSize?: number;
+  }
+
+  export async function getPhotoAlbums(
+    params?: GetPhotoAlbumsParams,
+  ): Promise<PaginateResult<PhotoAlbum>> {
+    return HttpClient.get('cms/photo-albums', params);
   }
 
   export async function getPhotoAlbum(id: number): Promise<PhotoAlbumDetail> {

@@ -1,4 +1,4 @@
-import { ZButton, ZGrid } from '@zcat/ui';
+import { ZButton, ZGrid, safeNumber } from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
 import zod from 'zod';
@@ -12,8 +12,7 @@ import {
   createSchemaForm,
   createTextArea,
   useOptimisticArray,
-  Workspace,
-  type PhotoAlbumData,
+  PaginationWorkspace,
 } from '@cms/core';
 
 import type { Route } from './+types/albums';
@@ -25,9 +24,18 @@ interface AlbumFormValues {
   description: string;
 }
 
-export async function clientLoader() {
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const url = new URL(request.url);
+  const page = safeNumber(url.searchParams.get('page'), 1);
+  const pageSize = safeNumber(url.searchParams.get('pageSize'), 10);
+
+  const pagination = await AlbumsApi.getPhotoAlbums({
+    page,
+    pageSize,
+  });
+
   return {
-    albums: (await AlbumsApi.getPhotoAlbums()) as PhotoAlbumData[],
+    pagination,
   };
 }
 
@@ -37,8 +45,9 @@ export async function clientLoader() {
  * @returns
  */
 export default function Albums(props: Route.ComponentProps) {
+  const { pagination } = props.loaderData;
   const [albums, setOptimisticAlbums, commitAlbums] = useOptimisticArray(
-    props.loaderData.albums,
+    pagination.data,
     (state, values: AlbumFormValues) => {
       if (values.id !== 0) {
         return state.map((album) => {
@@ -69,6 +78,7 @@ export default function Albums(props: Route.ComponentProps) {
       ];
     },
   );
+
   const navigate = useNavigate();
 
   const create = useAlbumForm({
@@ -115,7 +125,7 @@ export default function Albums(props: Route.ComponentProps) {
   };
 
   return (
-    <Workspace
+    <PaginationWorkspace
       title="相册列表"
       operation={
         <ZButton
@@ -131,6 +141,9 @@ export default function Albums(props: Route.ComponentProps) {
           新增相册
         </ZButton>
       }
+      pageSize={pagination.pageSize}
+      totalPages={pagination.totalPages}
+      page={pagination.page}
     >
       <ZGrid
         items={albums}
@@ -144,7 +157,7 @@ export default function Albums(props: Route.ComponentProps) {
           />
         )}
       />
-    </Workspace>
+    </PaginationWorkspace>
   );
 }
 

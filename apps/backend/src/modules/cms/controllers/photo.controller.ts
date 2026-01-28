@@ -29,6 +29,7 @@ import { JwtAuthGuard } from '../jwt-auth.guard';
 import {
   CreateAlbumPhotoDto,
   CreatePhotoDto,
+  GetPhotosDto,
   UpdateAlbumPhotoDto,
   UpdateAlbumPhotoResultDto,
   UpdatePhotoDto,
@@ -47,38 +48,22 @@ export class PhotoController {
   constructor(private photoService: PhotoService) {}
 
   @Get()
-  @ApiOperation({ summary: '获取所有照片（支持分页）' })
+  @ApiOperation({ summary: '获取所有照片' })
   @ApiResponse({ status: 200, description: '成功获取照片列表' })
   async findAll(
-    @Query() dto: PaginateQueryDto,
-    @Query('albumId', new ParseIntPipe({ optional: true })) albumId?: number,
+    @Query() dto: GetPhotosDto,
   ): Promise<ResultData<PaginateResult<Photo>>> {
     try {
-      this.logger.log(
-        `开始获取照片，页码: ${dto.page}, 每页数量: ${dto.pageSize}`,
-      );
+      this.logger.log('开始获取所有照片');
 
-      const result = await this.photoService.getPhotosWithPagination(
-        albumId,
-        dto.page,
-        dto.pageSize,
-      );
+      const result = await this.photoService.getPhotosWithPagination(dto);
 
-      this.logger.log(
-        `成功获取 ${result.data.length} 张照片，总数: ${result.total}`,
-      );
-
-      const paginationResult: PaginateResult<Photo> = {
-        data: result.data,
-        totalPages: result.totalPages,
-        page: result.page,
-        pageSize: result.pageSize,
-      };
+      this.logger.log(`成功获取 ${result.total} 张照片`);
 
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: paginationResult,
+        data: result,
       });
     } catch (error) {
       this.logger.error('获取照片列表失败', error);

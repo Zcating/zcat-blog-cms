@@ -48,6 +48,7 @@ export class ArticleService {
       totalPages: Math.ceil(total / dto.pageSize),
       page: dto.page,
       pageSize: dto.pageSize,
+      total,
     };
   }
 

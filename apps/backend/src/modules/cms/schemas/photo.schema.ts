@@ -1,6 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
+import { PaginateQuerySchema } from '@backend/model';
+
 export const CreatePhotoDtoSchema = z.object({
   name: z.string().min(1, '照片名称不能为空').max(32),
   albumId: z.coerce.number().int().optional(),
@@ -28,9 +30,15 @@ export const UpdatePhotoDtoSchema = z.object({
   thumbnailUrl: z.string().optional(),
 });
 
+export const GetPhotosDtoSchema = z.object({
+  albumId: z.coerce.number().int().positive().optional(),
+  ...PaginateQuerySchema.shape,
+});
+
 export class CreatePhotoDto extends createZodDto(CreatePhotoDtoSchema) {}
 export class AddPhotosDto extends createZodDto(AddPhotosDtoSchema) {}
 export class UpdatePhotoDto extends createZodDto(UpdatePhotoDtoSchema) {}
+export class GetPhotosDto extends createZodDto(GetPhotosDtoSchema) {}
 
 export interface UpdateAlbumPhotoResultDto {
   id: number;

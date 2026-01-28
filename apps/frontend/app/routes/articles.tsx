@@ -5,20 +5,26 @@ import {
   CardTitle,
   ZButton,
   ZDialog,
-  ZPagination,
+  safeNumber,
 } from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
 import { ArticlesApi } from '@cms/api';
-import { useLoadingFn, Workspace } from '@cms/core';
+import { PaginationWorkspace, useLoadingFn } from '@cms/core';
 
 import type { Route } from './+types/articles';
 
-export async function clientLoader() {
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const url = new URL(request.url);
+  const page = safeNumber(url.searchParams.get('page'), 1);
+  const pageSize = safeNumber(url.searchParams.get('pageSize'), 10);
+
   const pagination = await ArticlesApi.getArticles({
-    page: 1,
+    page,
+    pageSize,
   });
+
   return { pagination };
 }
 
@@ -27,22 +33,23 @@ export function ErrorBoundary() {
 }
 
 export default function Articles(props: Route.ComponentProps) {
-  const pagination = props.loaderData.pagination;
+  const { pagination } = props.loaderData;
 
   const [articles, setArticles] = React.useState(pagination.data);
-  const [page, setPage] = React.useState(1);
 
   const navigate = useNavigate();
+
   const handleClick = () => {
     navigate('/articles/edit');
   };
+
   const deleteArticles = useLoadingFn(async (article: ArticlesApi.Article) => {
     if (!article.id) {
       return;
     }
     const isConfirmed = await ZDialog.confirm({
       title: '温馨提示',
-      content: `确定删除文章“${article.title}”吗？`,
+      content: `确定删除文章"${article.title}"吗？`,
     });
     if (!isConfirmed) {
       return;
@@ -51,18 +58,13 @@ export default function Articles(props: Route.ComponentProps) {
     setArticles((prev) => prev.filter((item) => item.id !== article.id));
   });
 
-  const handlePageChange = useLoadingFn(async (page: number) => {
-    const result = await ArticlesApi.getArticles({
-      page: page,
-    });
-    setArticles(result.data);
-    setPage(page);
-  });
-
   return (
-    <Workspace
+    <PaginationWorkspace
       title="文章列表"
       operation={<ZButton onClick={handleClick}>新增文章</ZButton>}
+      pageSize={pagination.pageSize}
+      totalPages={pagination.totalPages}
+      page={pagination.page}
     >
       <div className="flex flex-col gap-5">
         {articles.map((article) => (
@@ -91,14 +93,7 @@ export default function Articles(props: Route.ComponentProps) {
             </CardContent>
           </Card>
         ))}
-        <div className="mt-10 mr-10 flex justify-end">
-          <ZPagination
-            page={page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
       </div>
-    </Workspace>
+    </PaginationWorkspace>
   );
 }

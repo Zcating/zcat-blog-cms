@@ -8,7 +8,7 @@ import {
 export default [
   index('routes/home.tsx'),
   route('login', 'routes/login.tsx'),
-  layout('routes/cms-layout.tsx', [
+  layout('layouts/cms-layout.tsx', [
     route('dashboard', 'routes/dashboard.tsx'),
     route('articles', 'routes/articles.tsx'),
     route('articles/:id', 'routes/articles.id.tsx'),
