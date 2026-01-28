@@ -169,6 +169,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       toolbar={
         <div className="flex items-center gap-2">
           <ZSelect
+            size="sm"
             placeholder="选择模型"
             options={API_MODELS}
             value={model}

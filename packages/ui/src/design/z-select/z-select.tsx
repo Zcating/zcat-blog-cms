@@ -1,6 +1,7 @@
 import * as Shadcn from '@zcat/ui/shadcn/ui/select';
 
 interface ZSelectProps<T extends string = string> {
+  size?: 'md' | 'sm' | 'lg';
   className?: string;
   placeholder?: string;
   options: CommonOption<T>[];
@@ -9,6 +10,7 @@ interface ZSelectProps<T extends string = string> {
 }
 
 export function ZSelect<T extends string = string>({
+  size,
   className,
   placeholder,
   options,
@@ -26,7 +28,7 @@ export function ZSelect<T extends string = string>({
   };
   return (
     <Shadcn.Select value={value} onValueChange={handleChange}>
-      <Shadcn.SelectTrigger className={className}>
+      <Shadcn.SelectTrigger size={size} className={className}>
         <Shadcn.SelectValue placeholder={placeholder} />
       </Shadcn.SelectTrigger>
       <Shadcn.SelectContent>
