@@ -77,10 +77,7 @@ export default function Articles(props: Route.ComponentProps) {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <ZButton
-                  variant="secondary"
-                  onClick={() => navigate(`/articles/${article.id}`)}
-                >
+                <ZButton onClick={() => navigate(`/articles/${article.id}`)}>
                   详情
                 </ZButton>
                 <ZButton

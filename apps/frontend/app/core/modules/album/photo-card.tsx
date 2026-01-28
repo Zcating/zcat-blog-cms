@@ -58,7 +58,7 @@ export function PhotoCard(props: PhotoCardProps) {
       onMouseOver={hover}
       onMouseLeave={leave}
     >
-      <div className="relative w-full aspect-4/3 bg-muted">
+      <div className="relative w-full aspect-square bg-muted">
         <ZImagePreload
           className="w-full h-full"
           src={srcUrl}

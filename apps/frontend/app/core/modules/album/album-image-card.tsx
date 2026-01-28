@@ -26,7 +26,7 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
 
   return (
     <Card className="relative overflow-hidden gap-0 py-0">
-      <div className="relative w-full aspect-4/3 bg-muted">
+      <div className="relative w-full aspect-square bg-muted">
         <ZImagePreload
           className="w-full h-full"
           src={data.cover?.url}
@@ -36,9 +36,7 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
       </div>
       <CardContent className="px-4 py-4 space-y-2">
         <CardTitle className="text-base">{data.name}</CardTitle>
-        {data.description ? (
-          <p className="text-sm text-muted-foreground">{data.description}</p>
-        ) : null}
+        <p className="h-10 text-sm text-muted-foreground">{data.description}</p>
         <div className="flex justify-end gap-2 pt-2">
           <ZButton onClick={handleEdit}>编辑</ZButton>
           <ZButton variant="outline" onClick={handleDetail}>
