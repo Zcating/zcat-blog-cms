@@ -3,17 +3,15 @@ import {
   useConstant,
   ZMarkdown,
   type ZMarkdownComponents,
+  type ZMarkdownCodeProps,
 } from '@zcat/ui';
 import React from 'react';
 
 import { ExecutableCodeBlock } from '~/features';
 
-import type { Route } from './+types/index.page';
+import { DOCUMENT_CONFIGURES } from '../docs';
 
-interface MarkdownConfig {
-  title: string;
-  contentImporter: () => Promise<typeof import('*.md?raw')>;
-}
+import type { Route } from './+types/index.page';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
@@ -26,81 +24,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export async function clientLoader({ params }: Route.LoaderArgs) {
-  const componentName = params.component || 'button';
-
-  const configures: Record<string, MarkdownConfig | undefined> = {
-    button: {
-      title: 'Button',
-      contentImporter: () => import('../docs/button.md?raw'),
-    },
-    select: {
-      title: 'Select',
-      contentImporter: () => import('../docs/select.md?raw'),
-    },
-    pagination: {
-      title: 'Pagination',
-      contentImporter: () => import('../docs/pagination.md?raw'),
-    },
-    view: {
-      title: 'View',
-      contentImporter: () => import('../docs/view.md?raw'),
-    },
-    avatar: {
-      title: 'Avatar',
-      contentImporter: () => import('../docs/avatar.md?raw'),
-    },
-    'z-image': {
-      title: 'Image',
-      contentImporter: () => import('../docs/z-image.md?raw'),
-    },
-    'z-waterfall': {
-      title: 'Waterfall',
-      contentImporter: () => import('../docs/z-waterfall.md?raw'),
-    },
-    cascader: {
-      title: 'Cascader',
-      contentImporter: () => import('../docs/cascader.md?raw'),
-    },
-    'z-date-picker': {
-      title: 'Date Picker',
-      contentImporter: () => import('../docs/z-date-picker.md?raw'),
-    },
-    markdown: {
-      title: 'Markdown',
-      contentImporter: () => import('../docs/markdown.md?raw'),
-    },
-    'z-dialog': {
-      title: 'Dialog',
-      contentImporter: () => import('../docs/z-dialog.md?raw'),
-    },
-    'z-notification': {
-      title: 'Message',
-      contentImporter: () => import('../docs/z-notification.md?raw'),
-    },
-    'z-chat': {
-      title: 'Chat',
-      contentImporter: () => import('../docs/z-chat.md?raw'),
-    },
-    'z-textarea': {
-      title: 'Textarea',
-      contentImporter: () => import('../docs/z-textarea.md?raw'),
-    },
-    'z-sidebar': {
-      title: 'Sidebar',
-      contentImporter: () => import('../docs/z-sidebar.md?raw'),
-    },
-    'stagger-reveal': {
-      title: 'StaggerReveal',
-      contentImporter: () => import('../docs/stagger-reveal.md?raw'),
-    },
-    'fold-animation': {
-      title: 'FoldAnimation',
-      contentImporter: () => import('../docs/fold-animation.md?raw'),
-    },
-  };
+  const componentName = (params.component ||
+    'button') as keyof typeof DOCUMENT_CONFIGURES;
 
   try {
-    const configure = configures[componentName];
+    const configure = DOCUMENT_CONFIGURES[componentName];
     if (!configure) {
       throw new Error(`文档 ${componentName} 不存在`);
     }
@@ -118,16 +46,9 @@ export async function clientLoader({ params }: Route.LoaderArgs) {
 function patchComponents(components: ZMarkdownComponents) {
   return {
     ...components,
-    code: (props) => {
+    code: (props: ZMarkdownCodeProps) => {
       if (props.language === 'typescript-demo') {
-        return (
-          <ExecutableCodeBlock
-            language={props.language}
-            className={props.className}
-          >
-            {props.children}
-          </ExecutableCodeBlock>
-        );
+        return <ExecutableCodeBlock {...props} />;
       }
       return components.code(props);
     },

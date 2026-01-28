@@ -5,7 +5,7 @@ import React from 'react';
 import * as Sucrase from 'sucrase';
 
 interface ZExecutableCodeProps {
-  children: string;
+  children?: React.ReactNode;
   language?: string;
   className?: string;
 }
@@ -110,7 +110,7 @@ export function ExecutableCodeBlock({
   const [isCollapsed, onToggleCollapsed] = ZcatUi.useToggleValue(false);
   const [viewMode, setViewMode] = React.useState<ViewMode>('preview');
   const [isCopied, setIsCopied] = React.useState(false);
-  const code = children;
+  const code = ZcatUi.safeString(children);
 
   const handleViewChange = ZcatUi.useMemoizedFn((value: string) => {
     const option = VIEW_MODE_OPTIONS.find((item) => item.value === value);

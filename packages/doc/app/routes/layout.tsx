@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
 
+import { DOCUMENT_CONFIGURES } from '../docs';
+
 const sidebarOptions: ZSidebarOption[] = [
   {
     label: '通用',
@@ -23,11 +25,11 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '按钮',
-        value: 'button',
+        value: DOCUMENT_CONFIGURES.button.to,
       },
       {
         label: '视图',
-        value: 'view',
+        value: DOCUMENT_CONFIGURES.view.to,
       },
     ],
   },
@@ -37,7 +39,7 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '侧边栏',
-        value: 'z-sidebar',
+        value: DOCUMENT_CONFIGURES['z-sidebar'].to,
       },
     ],
   },
@@ -47,19 +49,19 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '文本域',
-        value: 'z-textarea',
+        value: DOCUMENT_CONFIGURES['z-textarea'].to,
       },
       {
         label: '选择器',
-        value: 'select',
+        value: DOCUMENT_CONFIGURES.select.to,
       },
       {
         label: '级联选择',
-        value: 'cascader',
+        value: DOCUMENT_CONFIGURES['z-cascader'].to,
       },
       {
         label: '日期选择器',
-        value: 'z-date-picker',
+        value: DOCUMENT_CONFIGURES['z-date-picker'].to,
       },
     ],
   },
@@ -69,15 +71,15 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '头像',
-        value: 'avatar',
+        value: DOCUMENT_CONFIGURES['z-avatar'].to,
       },
       {
         label: '图片',
-        value: 'z-image',
+        value: DOCUMENT_CONFIGURES['z-image'].to,
       },
       {
         label: '瀑布流',
-        value: 'z-waterfall',
+        value: DOCUMENT_CONFIGURES['z-waterfall'].to,
       },
       {
         label: 'Markdown',
@@ -85,7 +87,7 @@ const sidebarOptions: ZSidebarOption[] = [
       },
       {
         label: '聊天',
-        value: 'z-chat',
+        value: DOCUMENT_CONFIGURES['z-chat'].to,
       },
     ],
   },
@@ -95,11 +97,11 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '弹窗',
-        value: 'z-dialog',
+        value: DOCUMENT_CONFIGURES['z-dialog'].to,
       },
       {
         label: '消息提示',
-        value: 'z-message',
+        value: DOCUMENT_CONFIGURES['z-notification'].to,
       },
     ],
   },
@@ -109,7 +111,7 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '分页',
-        value: '/pagination',
+        value: DOCUMENT_CONFIGURES.pagination.to,
       },
     ],
   },
@@ -119,11 +121,11 @@ const sidebarOptions: ZSidebarOption[] = [
     children: [
       {
         label: '交错显示',
-        value: 'stagger-reveal',
+        value: DOCUMENT_CONFIGURES['stagger-reveal'].to,
       },
       {
         label: '折叠动画',
-        value: 'fold-animation',
+        value: DOCUMENT_CONFIGURES['fold-animation'].to,
       },
     ],
   },

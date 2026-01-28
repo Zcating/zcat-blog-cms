@@ -22,11 +22,9 @@ function useGetRenderer(language: string) {
   return rendererRegistry[language.toLowerCase()] || rendererRegistry.unknown!;
 }
 
-export interface CodeBlockProps {
+export type CodeBlockProps = React.ComponentProps<'code'> & {
   language: string;
-  children: React.ReactNode;
-  className?: string;
-}
+};
 
 export function CodeBlock({
   language = '',

@@ -1,4 +1,4 @@
-# Message 消息提示
+# Notification 消息提示
 
 全局展示操作反馈信息。
 
