@@ -93,7 +93,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
 
   // 全屏预览
   const handleFullscreen = async (photo: PhotosApi.Photo) => {
-    await ZDialog.show({
+    ZDialog.show({
       contentContainerClassName:
         'p-2 w-full max-w-3xl sm:max-w-3xl min-h-[50vh] max-h-[80vh] overflow-hidden',
       content: (
@@ -256,7 +256,7 @@ export async function showPhotoSelector(props: PhotoSelectorModalProps) {
     resolvers.resolve(value);
   };
 
-  await ZDialog.show({
+  ZDialog.show({
     title: '选择照片',
     contentContainerClassName:
       'p-4 h-[70vh] w-[70vw] max-w-[calc(100%-2rem)] sm:max-w-[70vw] flex flex-col overflow-hidden',

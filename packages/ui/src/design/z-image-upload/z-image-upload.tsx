@@ -1,5 +1,7 @@
 import React from 'react';
+import { DefaultValues } from 'react-hook-form';
 
+import { usePropsValue } from '@zcat/ui/hooks';
 import { IconPhoto } from '@zcat/ui/icons';
 import { cn } from '@zcat/ui/shadcn';
 
@@ -9,7 +11,7 @@ const DEFAULT_IMAGE_TYPES = ['image/png', 'image/jpeg'];
 
 export interface ZImageUploadProps {
   className?: string;
-  value?: string | Blob;
+  value?: string;
   onChange?: (url: string) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   accept?: string;
@@ -29,54 +31,27 @@ export function ZImageUpload(props: ZImageUploadProps) {
   } = props;
 
   const fileRef = React.useRef<HTMLInputElement>(null);
-  const ownedObjectUrlRef = React.useRef<string | null>(null);
 
-  const [imageUrl, setImageUrl] = React.useState<string>('');
-
-  React.useEffect(() => {
-    if (ownedObjectUrlRef.current) {
-      URL.revokeObjectURL(ownedObjectUrlRef.current);
-      ownedObjectUrlRef.current = null;
-    }
-
-    if (value instanceof Blob) {
-      const url = URL.createObjectURL(value);
-      ownedObjectUrlRef.current = url;
-      setImageUrl(url);
-      return;
-    }
-
-    setImageUrl(typeof value === 'string' ? value : '');
-  }, [value]);
-
-  React.useEffect(() => {
-    return () => {
-      if (ownedObjectUrlRef.current) {
-        URL.revokeObjectURL(ownedObjectUrlRef.current);
-        ownedObjectUrlRef.current = null;
-      }
-    };
-  }, []);
+  const [imageUrl, setImageUrl] = usePropsValue({
+    defaultValue: '',
+    value,
+    onChange,
+  });
 
   const handlePick = () => {
-    if (disabled) return;
+    if (disabled) {
+      return;
+    }
     fileRef.current?.click();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-
     if (!file) return;
     if (!types.includes(file.type)) return;
 
-    if (ownedObjectUrlRef.current) {
-      URL.revokeObjectURL(ownedObjectUrlRef.current);
-      ownedObjectUrlRef.current = null;
-    }
-
     const url = URL.createObjectURL(file);
-    ownedObjectUrlRef.current = url;
     setImageUrl(url);
     onChange?.(url);
   };

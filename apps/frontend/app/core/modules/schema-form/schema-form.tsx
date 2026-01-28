@@ -8,7 +8,6 @@ import type {
   SchemaFieldsRecord,
   SchemaFieldsZodValues,
 } from './schema-field';
-import type { DefaultValues } from 'react-hook-form';
 
 /**
  * 基于Zod schema的表单组件 props
@@ -62,7 +61,7 @@ export function createSchemaForm<Fields extends SchemaFieldsRecord>(
     } = props;
 
     const form = SchemaForm.useForm({
-      defaultValues: initialValues as DefaultValues<SchemaFieldsData<Fields>>,
+      defaultValues: initialValues as any,
       onSubmit: onSubmit,
     });
     return (

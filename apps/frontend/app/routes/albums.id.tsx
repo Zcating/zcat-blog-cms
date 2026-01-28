@@ -90,24 +90,25 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const addPhoto = usePhotoForm({
     title: '新增照片',
     async onSubmit(data) {
-      // 先添加到 optimisticState 中，等待服务器返回结果
-      addOptimisticPhoto(data);
-
-      try {
-        const photo = await OssAction.createAlbumPhoto({
-          name: data.name,
-          image: data.image,
-          albumId: data.albumId,
-        });
-        if (!photo) {
+      React.startTransition(async () => {
+        // 先添加到 optimisticState 中，等待服务器返回结果
+        addOptimisticPhoto(data);
+        try {
+          const photo = await OssAction.createAlbumPhoto({
+            name: data.name,
+            image: data.image,
+            albumId: album.id,
+          });
+          if (!photo) {
+            commitPhoto('rollback');
+            return;
+          }
+          commitPhoto('update', photo);
+        } catch (error) {
+          console.error(error);
           commitPhoto('rollback');
-          return;
         }
-        commitPhoto('update', photo);
-      } catch (error) {
-        console.error(error);
-        commitPhoto('rollback');
-      }
+      });
     },
   });
 
@@ -116,25 +117,27 @@ export default function AlbumsId(props: Route.ComponentProps) {
     title: '编辑照片',
     confirmText: '保存',
     async onSubmit(data) {
-      // 先添加到 optimisticState 中，等待服务器返回结果
-      addOptimisticPhoto(data);
+      React.startTransition(async () => {
+        // 先添加到 optimisticState 中，等待服务器返回结果
+        addOptimisticPhoto(data);
 
-      try {
-        const photo = await OssAction.updatePhoto({
-          id: data.id,
-          name: data.name,
-          image: data.image,
-          albumId: data.albumId,
-        });
-        if (!photo) {
+        try {
+          const photo = await OssAction.updatePhoto({
+            id: data.id,
+            name: data.name,
+            image: data.image,
+            albumId: album.id,
+          });
+          if (!photo) {
+            commitPhoto('rollback');
+            return;
+          }
+          commitPhoto('update', photo);
+        } catch (error) {
+          console.error(error);
           commitPhoto('rollback');
-          return;
         }
-        commitPhoto('update', photo);
-      } catch (error) {
-        console.error(error);
-        commitPhoto('rollback');
-      }
+      });
     },
   });
 
@@ -147,12 +150,14 @@ export default function AlbumsId(props: Route.ComponentProps) {
       return;
     }
 
-    await AlbumsApi.addPhotos({
-      albumId: album.id,
-      photoIds: selectedPhotos.map((photo) => photo.id),
-    });
+    React.startTransition(async () => {
+      await AlbumsApi.addPhotos({
+        albumId: album.id,
+        photoIds: selectedPhotos.map((photo) => photo.id),
+      });
 
-    commitPhoto('batchUpdate', selectedPhotos);
+      commitPhoto('batchUpdate', selectedPhotos);
+    });
   };
 
   // 删除照片
@@ -169,8 +174,10 @@ export default function AlbumsId(props: Route.ComponentProps) {
       return;
     }
 
-    await OssAction.deletePhoto(photo.id);
-    commitPhoto('remove', photo);
+    React.startTransition(async () => {
+      await OssAction.deletePhoto(photo.id);
+      commitPhoto('remove', photo);
+    });
   };
 
   // 设为封面
@@ -183,7 +190,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
       operation={
         <div className="flex flex-wrap gap-2">
           <ZButton onClick={() => editAlbum(album)}>编辑相册</ZButton>
-          <ZButton variant="secondary" onClick={() => addPhoto()}>
+          <ZButton variant="outline" onClick={() => addPhoto()}>
             添加照片
           </ZButton>
           <ZButton variant="outline" onClick={selectPhoto}>

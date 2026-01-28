@@ -33,8 +33,9 @@ export function PhotoCard(props: PhotoCardProps) {
     setVisible(false);
   };
 
-  const fullscreen = async (photo: PhotosApi.Photo) => {
-    await ZDialog.show({
+  const fullscreen = (photo: PhotosApi.Photo) => {
+    const resolvers = Promise.withResolvers<void>();
+    ZDialog.show({
       title: photo.name,
       contentContainerClassName: 'max-w-3xl',
       content: (
@@ -45,7 +46,10 @@ export function PhotoCard(props: PhotoCardProps) {
           contentMode="contain"
         />
       ),
+      onClose: () => resolvers.resolve(),
     });
+
+    return resolvers.promise;
   };
 
   return (

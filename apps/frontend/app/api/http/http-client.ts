@@ -20,6 +20,7 @@ export namespace HttpClient {
     path: string,
     body: Record<string, any> | FormData,
   ): Promise<T> {
+    log('POST request', path, body);
     const headers = new Headers({
       Authorization: Cookies.get('token') || '',
     });
@@ -36,6 +37,7 @@ export namespace HttpClient {
       body: bodyData,
       headers: headers,
     });
+    log('POST response', path, result);
     return result.data;
   }
 
@@ -119,4 +121,11 @@ export namespace HttpClient {
 
     return result;
   }
+}
+
+function log(...args: any[]) {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+  console.log(...args);
 }
