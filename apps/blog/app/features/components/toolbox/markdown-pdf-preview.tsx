@@ -79,7 +79,7 @@ export function MarkdownPdfPreview({
 
   return (
     <>
-      <ZView id="markdown-preview" className="flex-1 overflow-y-auto">
+      <ZView className="flex-1 overflow-y-auto">
         <ZMarkdown
           className="h-[200px]"
           content={markdown}

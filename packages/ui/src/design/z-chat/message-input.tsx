@@ -10,7 +10,7 @@ import { useSentHistory } from './use-sent-history';
 import { useShortcut } from './use-shortcut';
 
 interface MessageInputProps {
-  onSend: (content: string) => void;
+  onSend: (content: string) => boolean | Promise<boolean>;
   onAbort: () => void;
   loading?: boolean;
   placeholder?: string;
@@ -29,12 +29,16 @@ export function MessageInput({
 
   const shortcut = useShortcut();
 
-  const handleSend = () => {
-    if (inputValue.trim() && !loading) {
-      onSend(inputValue);
-      addMessage(inputValue);
-      setInputValue('');
+  const handleSend = async () => {
+    if (!inputValue || loading) {
+      return;
     }
+    const result = await onSend(inputValue);
+    if (!result) {
+      return;
+    }
+    addMessage(inputValue);
+    setInputValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

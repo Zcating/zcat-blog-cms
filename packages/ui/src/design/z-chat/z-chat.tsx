@@ -18,7 +18,7 @@ import { ZChatBubble } from './z-chat-bubble';
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   controller: ZChatController;
-  onSend: (message: Message) => void | Promise<void>;
+  onSend: (message: Message) => boolean | Promise<boolean>;
   onRegenerate?: () => void | Promise<void>;
   onAbort?: () => void;
   placeholder?: string;

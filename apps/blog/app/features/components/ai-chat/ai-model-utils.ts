@@ -2,6 +2,8 @@
  * AI模型API密钥工具函数
  */
 
+import { ZNotification } from '@zcat/ui';
+
 import { AiApi } from './ai-api';
 import { showApiKeyDialog, showApiKeyMissingDialog } from './api-key-dialog';
 
@@ -74,6 +76,7 @@ export async function apiKeyPromption(
   model?: ApiModelName,
 ): Promise<ApiKeyPromptionResult | null> {
   if (!model) {
+    ZNotification.error('请选择AI模型');
     return null;
   }
 

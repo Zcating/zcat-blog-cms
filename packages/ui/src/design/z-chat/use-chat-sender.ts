@@ -11,12 +11,9 @@ export function useZChatSender(
 ) {
   const [loading, setLoading] = React.useState(false);
   const handleSend = async (content: string) => {
-    setLoading(true);
     try {
-      const result = onSend({ role: 'user', content });
-      if (result instanceof Promise) {
-        await result;
-      }
+      setLoading(true);
+      return await onSend({ role: 'user', content });
     } finally {
       setLoading(false);
     }

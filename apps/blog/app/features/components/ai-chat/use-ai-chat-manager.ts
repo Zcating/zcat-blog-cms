@@ -72,10 +72,8 @@ export function useAiChatManager(model?: ApiModelName) {
 
         assistantMessage.setFinish(true);
       } catch (error) {
-        console.error('请求失败:', error);
         assistantMessage.setFinish(true);
         assistantMessage.setContent('请求失败');
-        return;
       }
     },
   );
@@ -83,9 +81,8 @@ export function useAiChatManager(model?: ApiModelName) {
   const send = useMemoizedFn(async (message: Message) => {
     const result = await apiKeyPromption(model);
     if (!result) {
-      return;
+      return false;
     }
-
     // API密钥已存在或已成功设置，继续发送消息
     controller.add({
       ...message,
@@ -99,17 +96,21 @@ export function useAiChatManager(model?: ApiModelName) {
       deepThinking,
     );
 
-    const stream = await chatHandlerRef.current.create();
+    // 创建流并处理响应
+    // 让 runAssistantStream 异步执行
+    chatHandlerRef.current.create().then((stream) => {
+      const assistantMessage: MessageImpl = controller.add({
+        id: createMessageId(),
+        role: 'assistant',
+        content: '',
+      });
 
-    const assistantMessage: MessageImpl = controller.add({
-      id: createMessageId(),
-      role: 'assistant',
-      content: '',
+      assistantMessageHandlerRef.current = assistantMessage;
+
+      return runAssistantStream(stream, assistantMessage);
     });
 
-    assistantMessageHandlerRef.current = assistantMessage;
-
-    runAssistantStream(stream, assistantMessage);
+    return true;
   });
 
   const regenerate = useMemoizedFn(async () => {
@@ -123,7 +124,7 @@ export function useAiChatManager(model?: ApiModelName) {
 
     const stream = await chatHandler.create();
 
-    runAssistantStream(stream, assistantMessage);
+    await runAssistantStream(stream, assistantMessage);
   });
 
   return {
