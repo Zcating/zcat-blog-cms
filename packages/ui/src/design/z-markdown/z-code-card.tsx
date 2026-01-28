@@ -55,7 +55,7 @@ export function ZCodeCard({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="py-3">
+      <CardContent className="py-3 px-1">
         <FoldAnimation isOpen={isCollapsed}>{children}</FoldAnimation>
       </CardContent>
     </Card>

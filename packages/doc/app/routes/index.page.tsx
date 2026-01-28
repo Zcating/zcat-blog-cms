@@ -1,4 +1,10 @@
-import { useConstant, ZMarkdown } from '@zcat/ui';
+import {
+  safeArray,
+  useConstant,
+  ZMarkdown,
+  type ZMarkdownComponents,
+} from '@zcat/ui';
+import React from 'react';
 
 import { ExecutableCodeBlock } from '~/features';
 
@@ -109,6 +115,25 @@ export async function clientLoader({ params }: Route.LoaderArgs) {
   }
 }
 
+function patchComponents(components: ZMarkdownComponents) {
+  return {
+    ...components,
+    code: (props) => {
+      if (props.language === 'typescript-demo') {
+        return (
+          <ExecutableCodeBlock
+            language={props.language}
+            className={props.className}
+          >
+            {props.children}
+          </ExecutableCodeBlock>
+        );
+      }
+      return components.code(props);
+    },
+  };
+}
+
 export default function DocsPage(props: Route.ComponentProps) {
   const { content } = props.loaderData;
 
@@ -116,9 +141,7 @@ export default function DocsPage(props: Route.ComponentProps) {
     <ZMarkdown
       className="pb-40"
       content={content}
-      customCodeComponents={useConstant(() => ({
-        'typescript-demo': ExecutableCodeBlock,
-      }))}
+      components={patchComponents}
     />
   );
 }

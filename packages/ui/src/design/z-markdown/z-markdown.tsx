@@ -1,3 +1,4 @@
+import React from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@zcat/ui/shadcn/ui/table';
-import { safeArray } from '@zcat/ui/utils';
+import { isFunction, safeArray } from '@zcat/ui/utils';
 
 import { ZView } from '../z-view';
 
@@ -21,67 +22,88 @@ import { CodeBlock } from './code-block';
 // 引入 KaTeX 样式
 import 'katex/dist/katex.min.css';
 
+export type ZMarkdownCodeProps = React.ComponentProps<'code'> & {
+  language: string;
+};
+
+export type ZMarkdownComponents = Omit<Components, 'code'> & {
+  code: (props: ZMarkdownCodeProps) => React.ReactNode;
+};
+
+type NextComponents =
+  | ZMarkdownComponents
+  | ((prev: ZMarkdownComponents) => ZMarkdownComponents);
+
 export interface ZMarkdownProps {
   content: string;
   style?: React.CSSProperties;
   className?: string;
   placeholder?: React.ReactNode;
-  customCodeComponents?: Record<string, React.ComponentType<any>>;
+  components?: NextComponents;
 }
 
-export function ZMarkdown({
+const MarkdownComponents: ZMarkdownComponents = {
+  pre: ({ node, className: preClassName, children }) => {
+    return <pre className={cn('mb-4!', preClassName)}>{children}</pre>;
+  },
+  code: CodeBlock,
+  a({ href, children, ...props }) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
+    );
+  },
+  table({ className, ...props }) {
+    return <Table className={cn('my-4', className)} {...props} />;
+  },
+  thead: TableHeader,
+  tbody: TableBody,
+  tr: TableRow,
+  th: TableHead,
+  td: TableCell,
+};
+
+const useComposeComponents = (
+  prev: ZMarkdownComponents,
+  next?: NextComponents,
+): Components => {
+  const composedComponents = React.useMemo(() => {
+    if (isFunction(next)) {
+      return next(prev);
+    }
+    if (next) {
+      return { ...prev, ...next };
+    }
+    return prev;
+  }, [prev, next]);
+
+  return React.useMemo(() => {
+    return {
+      ...composedComponents,
+      code: (props: React.ComponentProps<'code'>) => {
+        const match = /language-([\w-]+)/.exec(props.className || '');
+        const language = safeArray<string>(match)[1] || 'default';
+        return composedComponents.code({
+          ...props,
+          language,
+          className: cn(`not-prose`, props.className),
+        });
+      },
+    };
+  }, [composedComponents]);
+};
+
+export const ZMarkdown = React.memo(function ZMarkdown({
   content,
   style,
   className,
   placeholder,
-  customCodeComponents,
+  components,
 }: ZMarkdownProps) {
   const isEmpty = !content && placeholder;
 
-  const MarkdownComponents: Components = {
-    pre: ({ node, className: preClassName, children }) => {
-      return <pre className={cn('mb-4!', preClassName)}>{children}</pre>;
-    },
-
-    code: ({ node, className: codeClassName, children }) => {
-      const match = /language-([\w-]+)/.exec(codeClassName || '');
-      const language = safeArray<string>(match)[1] || 'default';
-      return (
-        <CodeBlock
-          language={language}
-          className={codeClassName}
-          customCodeComponents={customCodeComponents}
-        >
-          {children}
-        </CodeBlock>
-      );
-    },
-    a({ href, children, ...props }) {
-      return (
-        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
-          {children}
-        </a>
-      );
-    },
-    table({ children }) {
-      return <Table className="my-4">{children}</Table>;
-    },
-    thead({ children }) {
-      return <TableHeader>{children}</TableHeader>;
-    },
-    tbody({ children }) {
-      return <TableBody>{children}</TableBody>;
-    },
-    tr({ children }) {
-      return <TableRow>{children}</TableRow>;
-    },
-    th({ children, ...props }) {
-      return <TableHead {...props}>{children}</TableHead>;
-    },
-    td({ children, ...props }) {
-      return <TableCell {...props}>{children}</TableCell>;
-    },
-  };
+  const mergedComponents = useComposeComponents(MarkdownComponents, components);
 
   return (
     <article
@@ -109,11 +131,11 @@ export function ZMarkdown({
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}
-          components={MarkdownComponents}
+          components={mergedComponents}
         >
           {content}
         </ReactMarkdown>
       )}
     </article>
   );
-}
+});

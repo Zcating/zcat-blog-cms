@@ -18,32 +18,23 @@ export function registerCodeComponent(name: string, component: React.FC<any>) {
   rendererRegistry[name.toLowerCase()] = component;
 }
 
-function useGetRenderer(
-  language: string,
-  customCodeComponents?: Record<string, React.ComponentType<any> | undefined>,
-) {
-  return (
-    customCodeComponents?.[language.toLowerCase()] ||
-    rendererRegistry[language.toLowerCase()] ||
-    rendererRegistry.unknown!
-  );
+function useGetRenderer(language: string) {
+  return rendererRegistry[language.toLowerCase()] || rendererRegistry.unknown!;
 }
 
 export interface CodeBlockProps {
   language: string;
   children: React.ReactNode;
   className?: string;
-  customCodeComponents?: Record<string, React.ComponentType<any> | undefined>;
 }
 
 export function CodeBlock({
   language = '',
   children,
   className,
-  customCodeComponents,
   ...props
 }: CodeBlockProps) {
-  const Renderer = useGetRenderer(language, customCodeComponents);
+  const Renderer = useGetRenderer(language);
   return (
     <Renderer
       className={cn('not-prose', className)}
