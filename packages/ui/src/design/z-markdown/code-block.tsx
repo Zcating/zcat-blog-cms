@@ -7,10 +7,11 @@ import { ZMermaidCode } from './z-mermaid';
 import { ZSyntaxHighlighterCode } from './z-syntax-highlighter';
 import { ZThinking } from './z-thinking';
 
-const rendererRegistry: Record<string, React.FC<any>> = {
+const rendererRegistry: Record<string, React.FC<any> | undefined> = {
   mermaid: ZMermaidCode,
   think: ZThinking,
-  default: ZSyntaxHighlighterCode,
+  unknown: ZSyntaxHighlighterCode,
+  default: (props: React.ComponentProps<'code'>) => <code {...props} />,
 };
 
 export function registerCodeComponent(name: string, component: React.FC<any>) {
@@ -24,7 +25,7 @@ function useGetRenderer(
   return (
     customCodeComponents?.[language.toLowerCase()] ||
     rendererRegistry[language.toLowerCase()] ||
-    rendererRegistry.default
+    rendererRegistry.unknown!
   );
 }
 

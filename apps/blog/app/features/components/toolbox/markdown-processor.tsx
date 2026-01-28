@@ -4,6 +4,7 @@ import {
   useMemoizedFn,
   copyToClipboard,
   useWatch,
+  ZView,
 } from '@zcat/ui';
 import { Copy } from 'lucide-react';
 import React, { useState } from 'react';
@@ -72,7 +73,7 @@ export function MarkdownProcessor({
   useWatch([markdown], convertToHtml);
 
   return (
-    <>
+    <ZView className="flex flex-col h-full gap-6">
       <ZTextarea
         className="flex-1 font-mono text-sm resize-none"
         style={{ fieldSizing: 'fixed' } as React.CSSProperties}
@@ -88,6 +89,6 @@ export function MarkdownProcessor({
         <Copy className="w-4 h-4 mr-2" />
         复制 HTML 源码
       </ZButton>
-    </>
+    </ZView>
   );
 }

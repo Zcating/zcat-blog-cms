@@ -16,13 +16,14 @@ import { safeArray } from '@zcat/ui/utils';
 
 import { ZView } from '../z-view';
 
-import { CodeBlock, registerCodeComponent } from './code-block';
+import { CodeBlock } from './code-block';
 
 // 引入 KaTeX 样式
 import 'katex/dist/katex.min.css';
 
 export interface ZMarkdownProps {
   content: string;
+  style?: React.CSSProperties;
   className?: string;
   placeholder?: React.ReactNode;
   customCodeComponents?: Record<string, React.ComponentType<any>>;
@@ -30,6 +31,7 @@ export interface ZMarkdownProps {
 
 export function ZMarkdown({
   content,
+  style,
   className,
   placeholder,
   customCodeComponents,
@@ -43,7 +45,7 @@ export function ZMarkdown({
 
     code: ({ node, className: codeClassName, children }) => {
       const match = /language-([\w-]+)/.exec(codeClassName || '');
-      const language = safeArray<string>(match)[1] ?? '';
+      const language = safeArray<string>(match)[1] || 'default';
       return (
         <CodeBlock
           language={language}
@@ -84,6 +86,7 @@ export function ZMarkdown({
   return (
     <article
       data-slot="markdown"
+      style={style}
       className={cn(
         'prose prose-zinc max-w-none',
         'prose-headings:font-bold prose-headings:text-foreground',
