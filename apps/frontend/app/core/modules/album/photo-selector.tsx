@@ -92,7 +92,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   };
 
   // 全屏预览
-  const handleFullscreen = async (photo: PhotosApi.Photo) => {
+  const handleFullscreen = (photo: PhotosApi.Photo) => {
     ZDialog.show({
       contentContainerClassName:
         'p-2 w-full max-w-3xl sm:max-w-3xl min-h-[50vh] max-h-[80vh] overflow-hidden',
