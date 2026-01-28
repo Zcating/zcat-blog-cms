@@ -38,6 +38,46 @@ export class PhotoService {
     return photos.map((photo) => this.transformPhoto(photo));
   }
 
+  async getPhotosWithPagination(
+    albumId?: number | null,
+    page: number = 1,
+    pageSize: number = 20,
+  ) {
+    if (isNumber(albumId) && albumId <= 0) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+      };
+    }
+
+    const where = {
+      albumId: albumId,
+    };
+
+    const [photos, total] = await Promise.all([
+      this.prisma.photo.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.photo.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      data: photos.map((photo) => this.transformPhoto(photo)),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
+
   /**
    * 获取照片详情
    * @param id 照片ID

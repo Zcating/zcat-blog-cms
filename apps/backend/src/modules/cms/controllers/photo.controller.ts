@@ -16,7 +16,13 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 
-import { createResult, ResultCode, ResultData } from '@backend/model';
+import {
+  createResult,
+  PaginateQueryDto,
+  PaginateResult,
+  ResultCode,
+  ResultData,
+} from '@backend/model';
 import { Photo } from '@backend/prisma';
 
 import { JwtAuthGuard } from '../jwt-auth.guard';
@@ -41,22 +47,38 @@ export class PhotoController {
   constructor(private photoService: PhotoService) {}
 
   @Get()
-  @ApiOperation({ summary: '获取所有照片' })
+  @ApiOperation({ summary: '获取所有照片（支持分页）' })
   @ApiResponse({ status: 200, description: '成功获取照片列表' })
   async findAll(
+    @Query() dto: PaginateQueryDto,
     @Query('albumId', new ParseIntPipe({ optional: true })) albumId?: number,
-  ): Promise<ResultData<Photo[]>> {
+  ): Promise<ResultData<PaginateResult<Photo>>> {
     try {
-      this.logger.log('开始获取所有照片');
+      this.logger.log(
+        `开始获取照片，页码: ${dto.page}, 每页数量: ${dto.pageSize}`,
+      );
 
-      const photos = await this.photoService.getPhotos(albumId);
+      const result = await this.photoService.getPhotosWithPagination(
+        albumId,
+        dto.page,
+        dto.pageSize,
+      );
 
-      this.logger.log(`成功获取 ${photos.length} 张照片`);
+      this.logger.log(
+        `成功获取 ${result.data.length} 张照片，总数: ${result.total}`,
+      );
+
+      const paginationResult: PaginateResult<Photo> = {
+        data: result.data,
+        totalPages: result.totalPages,
+        page: result.page,
+        pageSize: result.pageSize,
+      };
 
       return createResult({
         code: ResultCode.Success,
         message: '成功',
-        data: photos,
+        data: paginationResult,
       });
     } catch (error) {
       this.logger.error('获取照片列表失败', error);

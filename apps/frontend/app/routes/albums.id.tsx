@@ -39,21 +39,25 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     throw new Error('Not Found');
   }
 
-  const albumPhotos = await PhotosApi.getPhotos(id);
+  const albumPhotoPagination = await PhotosApi.getPhotos({
+    albumId: id,
+    page: 1,
+    pageSize: 20,
+  });
 
   const reminderPhotos = await PhotosApi.getEmptyAlbumPhotos();
 
   return {
     album,
-    albumPhotos,
+    albumPhotoPagination,
     reminderPhotos,
   };
 }
 
 export default function AlbumsId(props: Route.ComponentProps) {
-  const { album, albumPhotos, reminderPhotos } = props.loaderData;
+  const { album, albumPhotoPagination, reminderPhotos } = props.loaderData;
   const [photos, addOptimisticPhoto, commitPhoto] = useOptimisticArray(
-    albumPhotos,
+    albumPhotoPagination.data,
     (prev, data: AlbumPhotoFormData) => {
       const tempPhoto: PhotoCardData = {
         id: data.id || -Date.now(),

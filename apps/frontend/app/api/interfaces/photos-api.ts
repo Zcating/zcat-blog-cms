@@ -1,5 +1,7 @@
 import { HttpClient } from '../http/http-client';
 
+import type { PaginateResult } from './types';
+
 export namespace PhotosApi {
   export interface Photo {
     id: number;
@@ -10,6 +12,12 @@ export namespace PhotosApi {
     isCover?: boolean;
     createdAt?: string;
     updatedAt?: string;
+  }
+
+  export interface GetPhotosParams {
+    albumId?: number;
+    page?: number;
+    pageSize?: number;
   }
 
   export interface CreatePhotoParams {
@@ -35,8 +43,14 @@ export namespace PhotosApi {
   }
 
   // Photo API functions
-  export async function getPhotos(albumId?: number): Promise<Photo[]> {
-    return HttpClient.get<Photo[]>('cms/photos', { albumId });
+  export async function getPhotos(
+    params?: GetPhotosParams,
+  ): Promise<PaginateResult<Photo>> {
+    return HttpClient.get<PaginateResult<Photo>>('cms/photos', {
+      albumId: params?.albumId,
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 20,
+    });
   }
 
   export async function getEmptyAlbumPhotos(): Promise<Photo[]> {
