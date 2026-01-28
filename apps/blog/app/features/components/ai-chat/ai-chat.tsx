@@ -2,6 +2,8 @@ import { cn, ZSelect, ZChat, Toggle } from '@zcat/ui';
 import { AtomIcon } from 'lucide-react';
 import React from 'react';
 
+import { useLocalStorageState } from '@blog/features/hooks';
+
 import { type ApiModelName, API_MODELS } from './ai-model-utils';
 import { useAiChatManager } from './use-ai-chat-manager';
 
@@ -11,7 +13,10 @@ interface AiChatProps {
 }
 
 export function AiChat({ className, emptyComponent }: AiChatProps) {
-  const [model, setModel] = React.useState<ApiModelName>();
+  const [model, setModel] = useLocalStorageState<ApiModelName | undefined>(
+    'ai-model',
+    undefined,
+  );
 
   const chat = useAiChatManager(model);
 
