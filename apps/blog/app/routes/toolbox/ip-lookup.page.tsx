@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
   isObject,
+  Skeleton,
   ZTextarea,
   ZView,
 } from '@zcat/ui';
@@ -55,7 +56,6 @@ export default function IpLookupPage() {
       }
       setInfo(data);
     } catch (err) {
-      console.error(err);
       // Fallback: 尝试仅获取 IP
       try {
         const res2 = await fetch('https://api.ipify.org?format=json');
@@ -66,6 +66,7 @@ export default function IpLookupPage() {
         setError('无法连接到 IP 查询服务');
       }
     } finally {
+      await Promise.tick(2000);
       setLoading(false);
     }
   };
@@ -129,10 +130,14 @@ export default function IpLookupPage() {
                 IP 地址
               </p>
               <div className="flex items-center gap-2">
-                <p className="text-3xl font-bold tracking-tight">
-                  {loading ? '查询中...' : info?.ip || '--'}
-                </p>
-                {info?.ip && (
+                {loading ? (
+                  <Skeleton className="h-9 w-40" />
+                ) : (
+                  <p className="text-3xl font-bold tracking-tight">
+                    {info?.ip || '--'}
+                  </p>
+                )}
+                {!loading && info?.ip && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -190,41 +195,70 @@ export default function IpLookupPage() {
             />
           </div>
 
-          {!loading && info && (
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              {info.country_name && (
-                <div className="space-y-1">
-                  <span className="text-muted-foreground block">国家/地区</span>
-                  <span className="font-medium">{info.country_name}</span>
-                </div>
-              )}
-              {info.region && (
-                <div className="space-y-1">
-                  <span className="text-muted-foreground block">省份/区域</span>
-                  <span className="font-medium">{info.region}</span>
-                </div>
-              )}
-              {info.city && (
-                <div className="space-y-1">
-                  <span className="text-muted-foreground block">城市</span>
-                  <span className="font-medium">{info.city}</span>
-                </div>
-              )}
-              {info.org && (
-                <div className="space-y-1">
-                  <span className="text-muted-foreground block">
-                    运营商/组织
-                  </span>
-                  <span className="font-medium">{info.org}</span>
-                </div>
-              )}
-              {info.timezone && (
-                <div className="space-y-1">
-                  <span className="text-muted-foreground block">时区</span>
-                  <span className="font-medium">{info.timezone}</span>
-                </div>
-              )}
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-16" />
+              </div>
             </div>
+          ) : (
+            info && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {info.country_name && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground block">
+                      国家/地区
+                    </span>
+                    <span className="font-medium">{info.country_name}</span>
+                  </div>
+                )}
+                {info.region && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground block">
+                      省份/区域
+                    </span>
+                    <span className="font-medium">{info.region}</span>
+                  </div>
+                )}
+                {info.city && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground block">城市</span>
+                    <span className="font-medium">{info.city}</span>
+                  </div>
+                )}
+                {info.org && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground block">
+                      运营商/组织
+                    </span>
+                    <span className="font-medium">{info.org}</span>
+                  </div>
+                )}
+                {info.timezone && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground block">时区</span>
+                    <span className="font-medium">{info.timezone}</span>
+                  </div>
+                )}
+              </div>
+            )
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}

@@ -32,7 +32,7 @@ function createMessageId() {
   return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 }
 
-function useAiChatManager(model: ApiModelName) {
+function useAiChatManager(model?: ApiModelName) {
   const controller = useZChatController();
 
   const [deepThinking, toggleDeepThinking] = useToggleValue(false);
@@ -97,8 +97,8 @@ function useAiChatManager(model: ApiModelName) {
   );
 
   const send = useMemoizedFn(async (message: Message) => {
-    const apiKey = await apiKeyPromption(model);
-    if (!apiKey) {
+    const result = await apiKeyPromption(model);
+    if (!result) {
       return;
     }
 
@@ -109,8 +109,8 @@ function useAiChatManager(model: ApiModelName) {
     });
 
     chatHandlerRef.current = AiApi.chat(
-      model,
-      apiKey,
+      result.model,
+      result.apiKey,
       [systemMessage, ...controller.json()],
       deepThinking,
     );
@@ -153,7 +153,7 @@ function useAiChatManager(model: ApiModelName) {
 }
 
 export function AiChat({ className, emptyComponent }: AiChatProps) {
-  const [model, setModel] = React.useState<ApiModelName>('deepseek');
+  const [model, setModel] = React.useState<ApiModelName>();
 
   const chat = useAiChatManager(model);
 

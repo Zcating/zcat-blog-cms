@@ -65,18 +65,29 @@ export function deleteApiKey(model: ApiModelName): void {
   localStorage.removeItem(storageKey);
 }
 
-export async function apiKeyPromption(model: ApiModelName): Promise<string> {
+interface ApiKeyPromptionResult {
+  model: ApiModelName;
+  apiKey: string;
+}
+
+export async function apiKeyPromption(
+  model?: ApiModelName,
+): Promise<ApiKeyPromptionResult | null> {
+  if (!model) {
+    return null;
+  }
+
   // 检查API密钥是否存在
   const apiKey = await checkApiKey(model);
   if (apiKey) {
-    return apiKey;
+    return { model, apiKey };
   }
 
   const shouldSetup = await showApiKeyMissingDialog(model);
 
   if (!shouldSetup) {
     // 用户选择稍后设置，不发送消息
-    return '';
+    return null;
   }
 
   // 显示API密钥输入弹窗
@@ -84,19 +95,20 @@ export async function apiKeyPromption(model: ApiModelName): Promise<string> {
 
   if (!inputedApiKey) {
     // 用户取消输入，不发送消息
-    return '';
+    return null;
   }
 
   // 保存API密钥
   try {
     const isSuccess = await AiApi.test(model, inputedApiKey);
-    if (isSuccess) {
-      saveApiKey(model, inputedApiKey);
+    if (!isSuccess) {
+      return null;
     }
-    return isSuccess ? inputedApiKey : '';
+    saveApiKey(model, inputedApiKey);
+    return { model, apiKey: inputedApiKey };
   } catch (error) {
     // 保存失败，不发送消息
     console.error('保存API密钥失败:', error);
-    return '';
+    return null;
   }
 }
