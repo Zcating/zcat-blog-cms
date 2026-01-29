@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "pnpm run db:generate:prod && nest build",
+    "build": "pnpm run db:generate:prod && NODE_ENV=production nest build",
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
     "start": "node dist/src/main",

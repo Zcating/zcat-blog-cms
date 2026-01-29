@@ -17,12 +17,7 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
       // 使配置在整个应用中全局可用
       isGlobal: true,
       // 按优先级加载环境文件
-      envFilePath: [
-        '.env',
-        '.env.local',
-        '.env.development',
-        '.env.production',
-      ],
+      envFilePath: ['.env', '.env.local', `.env.${process.env.NODE_ENV}`],
     }),
     CommonModule,
     // ServeStaticModule.forRoot({
