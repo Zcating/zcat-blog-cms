@@ -23,6 +23,8 @@ import {
   useLocation,
 } from 'react-router';
 
+const FRONTEND_VERSION = '1.0.0';
+
 export function ErrorBoundary() {
   const error = useRouteError();
   const navigate = useNavigate();
@@ -141,6 +143,11 @@ function Layout(props: LayoutProps) {
       renderItem={renderItem}
       currentValue={location.pathname}
       isActive={isActive}
+      sidebarFooter={
+        <div className="text-xs text-muted-foreground text-center py-4">
+          v{FRONTEND_VERSION}
+        </div>
+      }
     >
       <ZView className="flex flex-1 flex-col gap-4 p-4">{props.children}</ZView>
     </ZSidebar>
