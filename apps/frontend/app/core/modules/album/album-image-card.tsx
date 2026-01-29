@@ -26,14 +26,13 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
 
   return (
     <Card className="relative overflow-hidden gap-0 py-0">
-      <div className="relative w-full aspect-square bg-muted">
-        <ZImagePreload
-          className="w-full h-full"
-          src={data.cover?.url}
-          alt={data.name}
-          contentMode="cover"
-        />
-      </div>
+      <ZImagePreload
+        className="w-full h-full bg-muted"
+        imageClassName="aspect-square"
+        src={data.cover?.url}
+        alt={data.name}
+        contentMode="cover"
+      />
       <CardContent className="px-4 py-4 space-y-2">
         <CardTitle className="text-base">{data.name}</CardTitle>
         <p className="h-10 text-sm text-muted-foreground">{data.description}</p>

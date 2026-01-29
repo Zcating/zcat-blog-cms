@@ -58,14 +58,13 @@ export function PhotoCard(props: PhotoCardProps) {
       onMouseOver={hover}
       onMouseLeave={leave}
     >
-      <div className="relative w-full aspect-square bg-muted">
-        <ZImagePreload
-          className="w-full h-full"
-          src={srcUrl}
-          alt={props.data.name}
-          contentMode="cover"
-        />
-      </div>
+      <ZImagePreload
+        className="w-full h-full bg-muted"
+        imageClassName="aspect-square"
+        src={srcUrl}
+        alt={props.data.name}
+        contentMode="cover"
+      />
       <CardContent className="px-4 py-4">
         <CardTitle className="text-base">{props.data.name}</CardTitle>
         <div className="mt-3 flex gap-2">
