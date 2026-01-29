@@ -7,6 +7,7 @@ interface StateActionTypes<T = unknown> {
   remove: ['remove', T];
   update: ['update', T];
   batchUpdate: ['batchUpdate', T[]];
+  set: ['set', T[]];
   rollback: ['rollback'];
 }
 
@@ -19,10 +20,8 @@ export function useOptimisticArray<T, U = unknown>(
   reduce: (prev: T[], data: U) => T[],
 ) {
   // 初始化状态时，将初始值设置为状态值
-  const [state, setState] = usePropsValue({
-    value: initialValue,
-    defaultValue: initialValue,
-  });
+  const [state, setState] = React.useState<T[]>([]);
+  useWatch([initialValue], setState);
 
   const [optimisticState, setOptimisticState] = React.useOptimistic(
     state,
@@ -39,8 +38,9 @@ export function useOptimisticArray<T, U = unknown>(
         return setState((prev) => [...prev]);
       case 'batchUpdate':
         return setState((prev) => updateArray(prev, args[1]));
+      case 'set':
+        return setState(args[1]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return [optimisticState, setOptimisticState, commitState] as const;

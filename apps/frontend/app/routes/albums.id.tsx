@@ -115,7 +115,6 @@ export default function AlbumsId(props: Route.ComponentProps) {
           }
           commitPhoto('update', photo);
         } catch (error) {
-          console.error(error);
           commitPhoto('rollback');
         }
       });
