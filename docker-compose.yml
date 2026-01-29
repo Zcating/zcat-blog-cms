@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: ./apps/backend/Dockerfile
       target: backend
-    image: cms_backend:latest
+    image: ${DOCKER_REGISTRY:-103.84.110.53:5000}/cms_backend:latest
     container_name: cms_backend
     restart: unless-stopped
     stdin_open: true
@@ -31,7 +31,7 @@ services:
     ports:
       - '9090:9090'
     env_file:
-      - ./apps/backend/.env.production
+      - .env.deploy
     depends_on:
       cms_pg:
         condition: service_healthy
@@ -43,7 +43,7 @@ services:
       context: .
       dockerfile: ./apps/frontend/Dockerfile
       target: frontend
-    image: cms_frontend:latest
+    image: ${DOCKER_REGISTRY:-103.84.110.53:5000}/cms_frontend:latest
     container_name: cms_frontend
     restart: unless-stopped
     stdin_open: true
@@ -51,7 +51,7 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - ./apps/frontend/.env.production
+      - .env.deploy
     networks:
       - app-network
 
@@ -60,13 +60,13 @@ services:
       context: .
       dockerfile: ./apps/blog/Dockerfile
       target: blog
-    image: cms_blog:latest
+    image: ${DOCKER_REGISTRY:-103.84.110.53:5000}/cms_blog:latest
     container_name: blog
     restart: unless-stopped
     stdin_open: true
     tty: true
     env_file:
-      - ./apps/blog/.env.production
+      - .env.deploy
     ports:
       - '1024:1024'
     networks:
