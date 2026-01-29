@@ -2,6 +2,7 @@ import {
   Separator,
   SidebarTrigger,
   ZSidebar,
+  ZStickyHeader,
   ZView,
   type ZSidebarOption,
 } from '@zcat/ui';
@@ -133,11 +134,11 @@ function Layout(props: LayoutProps) {
   return (
     <ZSidebar
       header={
-        <header className="bg-background flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="font-medium">ZCAT CMS</div>
-        </header>
+        <ZStickyHeader className="items-center">
+          <SidebarTrigger className="mx-2" />
+          <Separator orientation="vertical" className="h-4" />
+          <div className="ml-10 font-medium">ZCAT CMS</div>
+        </ZStickyHeader>
       }
       options={menuItems}
       renderItem={renderItem}
@@ -149,7 +150,11 @@ function Layout(props: LayoutProps) {
         </div>
       }
     >
-      <ZView className="flex flex-1 flex-col gap-4 p-4">{props.children}</ZView>
+      <ZView className="w-full h-full flex flex-col relative overflow-hidden">
+        <ZView className="absolute top-0 left-0 bottom-0 right-0 overflow-auto">
+          {props.children}
+        </ZView>
+      </ZView>
     </ZSidebar>
   );
 }
