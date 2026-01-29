@@ -6,6 +6,7 @@
     "dev": "react-router dev --mode development",
     "dev:prod": "react-router dev --mode production",
     "build": "react-router build --mode production",
+    "start:dev": "npx cross-env PORT=1024 react-router-serve ./build/server/index.js",
     "start": "PORT=1024 react-router-serve ./build/server/index.js",
     "pretypecheck": "pnpm --filter=@zcat/ui run build",
     "typecheck": "react-router typegen && tsc",

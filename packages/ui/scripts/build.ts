@@ -22,5 +22,6 @@ const tscCode = await run('pnpm', [
   '-p',
   'tsconfig.build.json',
   '--emitDeclarationOnly',
+  '--skipLibCheck',
 ]);
 process.exit(tscCode);

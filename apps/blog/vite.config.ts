@@ -31,39 +31,59 @@ export default defineConfig(({ mode }) => {
         'cipher-base',
         'hash-base',
         'asn1.js',
+        'mermaid',
+        'cytoscape',
+        'dagre',
+        'graphlib',
+        'unified',
+        'react-markdown',
+        'remark-parse',
+        'remark-math',
+        'remark-gfm',
+        'remark-rehype',
+        'rehype-stringify',
+        'rehype-katex',
       ],
+      noExternal: ['@zcat/ui'],
     },
     build: {
       chunkSizeWarningLimit: 2000,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (
-                id.includes('mermaid') ||
-                id.includes('cytoscape') ||
-                id.includes('katex') ||
-                id.includes('dagre') ||
-                id.includes('graphlib')
-              ) {
-                return 'diagram';
-              }
-              if (id.includes('crypto-js') || id.includes('cipher-base')) {
-                return 'crypto';
-              }
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'react';
-              }
-              if (id.includes('zcat')) {
-                return 'zcat-ui';
-              }
-
-              if (id.includes('html2pdf')) {
-                return 'html2pdf';
-              }
-              return 'vendor';
+            if (!id.includes('node_modules')) {
+              return 'app';
             }
-            return 'app';
+            if (
+              id.includes('mermaid') ||
+              id.includes('cytoscape') ||
+              id.includes('dagre') ||
+              id.includes('graphlib')
+            ) {
+              return 'diagram';
+            }
+            if (id.includes('crypto-js') || id.includes('cipher-base')) {
+              return 'crypto';
+            }
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react';
+            }
+            if (id.includes('zcat')) {
+              return 'zcat-ui';
+            }
+
+            if (
+              id.includes('katex') ||
+              id.includes('rehype-katex') ||
+              id.includes('remark-math') ||
+              id.includes('remark-gfm') ||
+              id.includes('remark-rehype') ||
+              id.includes('rehype-stringify') ||
+              id.includes('react-markdown')
+            ) {
+              return 'react-markdown';
+            }
+            return 'vendor';
           },
         },
       },

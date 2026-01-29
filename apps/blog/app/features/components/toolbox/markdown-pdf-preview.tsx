@@ -2,7 +2,6 @@ import { ZButton, ZView, ZMarkdown, useMemoizedFn, useMount } from '@zcat/ui';
 import { snapdom } from '@zumer/snapdom';
 import { FileText, Download, X } from 'lucide-react';
 import React from 'react';
-import { unknown } from 'zod';
 
 export interface MarkdownPdfPreviewProps {
   markdown: string;
