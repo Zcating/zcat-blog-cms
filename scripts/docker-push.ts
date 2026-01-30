@@ -38,16 +38,6 @@ const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
 ) as Record<string, any>;
 
-/**
- * SSH 配置 schema - 使用 zod 进行类型验证
- */
-const SSHConfigSchema = z.object({
-  host: z.string().min(1, 'SSH 主机地址不能为空'),
-  port: z.number().min(1).max(65535, 'SSH 端口号无效（应为 1-65535）'),
-  user: z.string().min(1, 'SSH 用户名不能为空'),
-  password: z.string().min(1, 'SSH 密码不能为空'),
-});
-
 interface StepError {
   success: false;
   error: string;
@@ -87,6 +77,15 @@ function unifyErrorFrom(error: unknown) {
     stack: errorStack,
   };
 }
+
+/**
+ * SSH 配置 schema - 使用 zod 进行类型验证
+ */
+const SSHConfigSchema = z.object({
+  host: z.string().min(1, 'SSH 主机地址不能为空'),
+  port: z.number().min(1).max(65535, 'SSH 端口号无效（应为 1-65535）'),
+  user: z.string().min(1, 'SSH 用户名不能为空'),
+});
 
 /**
  * SSH 配置类型定义
@@ -146,19 +145,17 @@ function generateConfig(
   options: Record<string, any>,
 ): StepResult<DeployConfig> {
   const envConfig = loadEnvConfig(options.envFile || '.env.deploy');
-
   const result = DeployConfigSchema.safeParse({
-    dockerRegistry: envConfig.DOCKER_REGISTRY,
-    projectName: envConfig.PROJECT_NAME,
+    dockerRegistry: envConfig.DOCKER_REGISTRY || '',
+    projectName: envConfig.PROJECT_NAME || '',
     sshConfig: {
-      host: envConfig.SSH_HOST,
+      host: envConfig.SSH_HOST || '',
       port: parseInt(envConfig.SSH_PORT || '22', 10),
-      user: envConfig.SSH_USER,
-      password: envConfig.SSH_PASSWORD,
+      user: envConfig.SSH_USER || '',
     },
-    remoteDir: envConfig.REMOTE_DIR,
+    remoteDir: envConfig.REMOTE_DIR || '',
     dryRun: envConfig.DRY_RUN || false,
-    skipConfirm: envConfig.SKIP_CONFIRM || false,
+    skipConfirm: options.yes || false,
     skipBuild: envConfig.SKIP_BUILD || false,
   });
   if (!result.success) {
@@ -168,6 +165,7 @@ function generateConfig(
     colorError(`配置验证失败: ${errorMessages}`);
     return createStepError(errorMessages);
   }
+  console.log(result.data);
   return createStepSuccess(result.data);
 }
 
@@ -317,7 +315,11 @@ async function runBuild(
     return { success: true, output: '构建已跳过', error: undefined };
   }
 
-  return executeCommand('执行项目构建', 'docker-compose build', config.dryRun);
+  return executeCommand(
+    '执行项目构建',
+    `docker compose --env-file ${config.envFile} build`,
+    config.dryRun,
+  );
 }
 
 /**
@@ -333,6 +335,8 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
 
   const composeFilePath = 'docker-compose.yml';
   const scriptPath = './scripts/docker-push.sh';
+  const backendEnvFilePath = './apps/backend/.env.production';
+
   if (!fs.existsSync(scriptPath)) {
     return createStepError(`脚本不存在: ${scriptPath}`);
   }
@@ -345,6 +349,7 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
     PROJECT_NAME: config.projectName,
     COMPOSE_FILE: composeFilePath,
     ENV_FILE: config.envFile,
+    BACKEND_ENV_FILE: backendEnvFilePath,
   };
 
   colorInfo('开始构建项目...');

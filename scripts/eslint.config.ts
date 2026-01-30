@@ -19,7 +19,7 @@ export default defineConfig([
       parserOptions: {
         projectService: true,
         // @ts-ignore
-        tsconfigRootDir: import.meta.url,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },
