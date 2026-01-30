@@ -5,7 +5,7 @@ services:
     container_name: cms_pg
     restart: unless-stopped
     env_file:
-      - .env.deploy
+      - .env.deploy.dev
     ports:
       - '5432:5432'
     volumes:
@@ -21,9 +21,9 @@ services:
   backend:
     build:
       context: .
-      dockerfile: ./apps/backend/Dockerfile
+      dockerfile: ./apps/backend/Dockerfile.dev
       target: backend
-    image: ${DOCKER_REGISTRY}/cms_backend:latest
+    image: cms_backend:latest
     container_name: cms_backend
     restart: unless-stopped
     stdin_open: true
@@ -31,7 +31,8 @@ services:
     ports:
       - '9090:9090'
     env_file:
-      - .env.deploy
+      - .env.deploy.dev
+      - apps/backend/.env.development
     depends_on:
       cms_pg:
         condition: service_healthy
@@ -41,9 +42,9 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./apps/frontend/Dockerfile
+      dockerfile: ./apps/frontend/Dockerfile.dev
       target: frontend
-    image: ${DOCKER_REGISTRY}/cms_frontend:latest
+    image: cms_frontend:latest
     container_name: cms_frontend
     restart: unless-stopped
     stdin_open: true
@@ -51,22 +52,22 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - .env.deploy
+      - .env.deploy.dev
     networks:
       - app-network
 
   blog:
     build:
       context: .
-      dockerfile: ./apps/blog/Dockerfile
+      dockerfile: ./apps/blog/Dockerfile.dev
       target: blog
-    image: ${DOCKER_REGISTRY}/cms_blog:latest
+    image: ${DOCKER_REGISTRY}cms_blog:latest
     container_name: blog
     restart: unless-stopped
     stdin_open: true
     tty: true
     env_file:
-      - .env.deploy
+      - .env.deploy.dev
     ports:
       - '1024:1024'
     networks:

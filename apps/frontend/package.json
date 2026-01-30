@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=2048' react-router build --mode production",
-    "dev": "react-router dev --mode development",
+    "dev": "dotenv -e .env -- react-router dev",
+    "build:dev": "react-router build --mode development",
+    "build": "react-router build --mode production",
     "start": "react-router-serve ./build/server/index.js",
     "pretypecheck": "pnpm --filter=@zcat/ui run build",
     "typecheck": "react-router typegen && tsc",

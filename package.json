@@ -17,11 +17,15 @@
     "build:backend": "pnpm --filter=backend run build",
     "build:frontend": "pnpm --filter=frontend run build",
     "build:blog": "pnpm --filter=blog run build",
-    "docker:build": "docker compose up -d --build",
-    "docker:build:db": "docker compose up -d --build cms_pg",
-    "docker:build:backend": "docker compose up -d --build backend",
-    "docker:build:frontend": "docker compose up -d --build frontend",
-    "docker:build:blog": "docker compose up -d --build blog"
+    "docker:dev": "docker compose -f docker-compose.dev.yaml up -d --build",
+    "docker:dev:db": "pnpm run docker:dev cms_pg",
+    "docker:dev:backend": "pnpm run docker:dev backend",
+    "docker:dev:frontend": "pnpm run docker:dev frontend",
+    "docker:dev:blog": "pnpm run docker:dev blog",
+    "docker:build": "tsx ./scripts/docker-push.ts --env-file .env.deploy",
+    "docker:build:backend": "pnpm run docker:build -p backend",
+    "docker:build:frontend": "pnpm run docker:build -p frontend",
+    "docker:build:blog": "pnpm run docker:build -p blog"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +34,9 @@
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.5",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.3",
@@ -46,8 +53,8 @@
   },
   "dependencies": {
     "dotenv": "^16.5.0",
-    "katex": "^0.16.23",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "zod": "^4.0.17"
   },
   "engines": {
     "node": ">=22.4.0",
@@ -69,9 +76,6 @@
     ],
     "packages/doc/**/*.{js,ts,tsx}": [
       "pnpm --filter doc exec eslint --fix"
-    ],
-    "!(apps|packages)/**/*.{js,ts,tsx}": [
-      "eslint --fix"
     ]
   }
 }

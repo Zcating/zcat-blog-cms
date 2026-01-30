@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*", "test/**/*", "scripts/**/*"],
+  "include": ["src/**/*", "test/**/*", "generated/**/*", "__test__/**/*", "scripts/**/*", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "module": "commonjs",

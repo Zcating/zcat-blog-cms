@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev --mode development",
+    "dev": "dotenv -e .env -- react-router dev",
     "dev:prod": "react-router dev --mode production",
+    "build:dev": "react-router build --mode development",
     "build": "react-router build --mode production",
     "start:dev": "npx cross-env PORT=1024 react-router-serve ./build/server/index.js",
     "start": "PORT=1024 react-router-serve ./build/server/index.js",
