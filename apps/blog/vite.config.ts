@@ -71,18 +71,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes('zcat')) {
               return 'zcat-ui';
             }
-
-            if (
-              id.includes('katex') ||
-              id.includes('rehype-katex') ||
-              id.includes('remark-math') ||
-              id.includes('remark-gfm') ||
-              id.includes('remark-rehype') ||
-              id.includes('rehype-stringify') ||
-              id.includes('react-markdown')
-            ) {
-              return 'react-markdown';
-            }
             return 'vendor';
           },
         },
