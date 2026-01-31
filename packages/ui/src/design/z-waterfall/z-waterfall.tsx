@@ -1,41 +1,68 @@
 import { cva } from 'class-variance-authority';
 import React from 'react';
 
+import { useScreenSize } from '@zcat/ui/hooks';
 import { cn } from '@zcat/ui/shadcn';
+import { isNumber } from '@zcat/ui/utils';
 
 import { ZView } from '../z-view';
+
+type WaterfallSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+type WaterfallColumnCountConfig = {
+  [key in WaterfallSize]?: number;
+};
 
 const waterfallGap = cva('flex gap-4 w-full', {
   variants: {
     gap: {
-      sm: 'gap-4',
-      md: 'gap-8',
-      lg: 'gap-12',
-      xl: 'gap-16',
-      '2xl': 'gap-24',
-      '3xl': 'gap-32',
-      '4xl': 'gap-40',
+      xs: 'gap-1',
+      sm: 'gap-2',
+      md: 'gap-4',
+      lg: 'gap-8',
+      xl: 'gap-12',
     },
   },
 });
-export type WaterfallGap = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 
 export interface ZWaterfallProps<
   T,
 > extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   data: T[];
-  columns: number;
-  columnGap?: WaterfallGap;
-  rowGap?: WaterfallGap;
+  columnCountConfig: WaterfallColumnCountConfig;
+  columnCount?: number;
+  columnGap?: WaterfallSize;
+  rowGap?: WaterfallSize;
   renderItem: (item: T, index: number) => React.ReactNode;
 }
-export function ZWaterfall<T>(props: ZWaterfallProps<T>) {
-  const { className, data, columns, columnGap, rowGap, renderItem, ...rest } =
-    props;
-  const groups = useWaterfallGroup(data, columns);
+
+interface ZWaterfallComponent extends React.ForwardRefExoticComponent<
+  ZWaterfallProps<any> & React.RefAttributes<HTMLDivElement>
+> {
+  <T>(
+    props: ZWaterfallProps<T> & React.RefAttributes<HTMLDivElement>,
+  ): React.ReactNode;
+}
+
+export const ZWaterfall = React.forwardRef<
+  HTMLDivElement,
+  ZWaterfallProps<any>
+>((props, ref) => {
+  const {
+    className,
+    data,
+    columnCountConfig,
+    columnCount = 3,
+    columnGap,
+    rowGap,
+    renderItem,
+    ...rest
+  } = props;
+  const groups = useWaterfallGroup(data, columnCount, columnCountConfig);
   return (
     <ZView
+      ref={ref}
       className={cn(className, waterfallGap({ gap: columnGap }))}
       {...rest}
     >
@@ -53,17 +80,26 @@ export function ZWaterfall<T>(props: ZWaterfallProps<T>) {
       ))}
     </ZView>
   );
-}
+}) as ZWaterfallComponent;
 
-function useWaterfallGroup<T>(data: T[], columns: number) {
+ZWaterfall.displayName = 'ZWaterfall';
+
+function useWaterfallGroup<T>(
+  data: T[],
+  columnCount: number,
+  columnCountConfig?: WaterfallColumnCountConfig,
+) {
+  const screenSizeCount = useScreenSize(columnCountConfig);
   return React.useMemo(() => {
+    const count = screenSizeCount ?? columnCount;
+
     return data.reduce((acc, cur, index) => {
-      const accIndex = index % columns;
+      const accIndex = index % count;
       if (acc[accIndex] === undefined) {
         acc[accIndex] = [];
       }
       acc[accIndex].push(cur);
       return acc;
     }, [] as T[][]);
-  }, [data, columns]);
+  }, [data, columnCount, screenSizeCount]);
 }

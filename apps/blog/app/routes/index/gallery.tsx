@@ -52,7 +52,8 @@ export default function GalleryPage(props: Route.ComponentProps) {
         >
           <ZWaterfall
             data-gallery-item="true"
-            columns={3}
+            columnCountConfig={{ sm: 2, lg: 3 }}
+            columnCount={4}
             data={pagination.data}
             renderItem={(gallery) => (
               <PhotoItem value={gallery} onClick={handleClick} />

@@ -12,3 +12,4 @@ export * from './use-adapt-element';
 export * from './use-async-import';
 export * from './use-async';
 export * from './use-constant';
+export * from './use-screen-size';
