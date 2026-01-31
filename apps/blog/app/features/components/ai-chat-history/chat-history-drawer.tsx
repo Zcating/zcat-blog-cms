@@ -56,12 +56,12 @@ export function ChatHistoryDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
       {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-      <DrawerContent>
+      <DrawerContent className="flex flex-col gap-4">
         <DrawerHeader>
           <DrawerTitle>对话历史</DrawerTitle>
           <DrawerDescription>查看和管理您的历史对话</DrawerDescription>
         </DrawerHeader>
-        <ZView className="px-4 pb-4 max-h-[60vh] overflow-y-auto">
+        <ZView className="px-4 max-h-[60vh] overflow-y-auto">
           {histories.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <p className="text-sm">暂无历史对话</p>
@@ -105,8 +105,8 @@ export function ChatHistoryDrawer({
             </div>
           )}
         </ZView>
-        <DrawerClose asChild>
-          <ZButton variant="outline" className="w-full mx-4 mb-4">
+        <DrawerClose className="w-full px-4">
+          <ZButton variant="outline" className="w-full">
             关闭
           </ZButton>
         </DrawerClose>
