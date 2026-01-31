@@ -27,7 +27,7 @@
  * SSH_PASSWORD=your_password           # SSH 密码（必填）
  */
 
-import { exec, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
@@ -36,6 +36,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { z } from 'zod';
 
+import { normalizeError, normalizeShellCommand } from './normalize';
 import {
   colorSuccess,
   colorError,
@@ -43,50 +44,11 @@ import {
   colorInfo,
   colorCommand,
 } from './script-logger';
+import { StepResult, createStepError, createStepSuccess } from './step-result';
 
 const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
 ) as Record<string, any>;
-
-interface StepError {
-  success: false;
-  error: string;
-}
-
-interface StepSuccess<T> {
-  success: true;
-  data: T;
-}
-
-type StepResult<T> = StepSuccess<T> | StepError;
-
-/**
- * 创建部署错误信息
- * @param message - 错误消息
- * @returns 错误对象，如果 message 为空则返回 undefined
- */
-function createStepError(message: string): StepError {
-  return { success: false, error: message };
-}
-
-function createStepSuccess<T>(data: T): StepSuccess<T> {
-  return { success: true, data };
-}
-
-function unifyErrorFrom(error: unknown) {
-  let errorMessage = '';
-  let errorStack = '';
-  if (error instanceof Error) {
-    errorMessage = error.message;
-    errorStack = error.stack || '';
-  } else {
-    errorMessage = String(error);
-  }
-  return {
-    message: errorMessage,
-    stack: errorStack,
-  };
-}
 
 /**
  * SSH 配置 schema - 使用 zod 进行类型验证
@@ -226,11 +188,11 @@ async function executeCommand(
   description: string,
   command: string,
   dryRun: boolean,
-): Promise<{ success: boolean; output: string; error?: string }> {
+): Promise<StepResult<string>> {
   if (dryRun) {
     colorInfo(`[Dry Run] ${description}`);
     colorCommand(command);
-    return { success: true, output: command, error: undefined };
+    return createStepSuccess(command);
   }
 
   colorInfo(description);
@@ -253,11 +215,18 @@ async function executeCommand(
     });
 
     child.stdout.on('end', (data: any) => {
-      resolve({ success: true, output, error: undefined });
+      resolve(createStepSuccess(output));
     });
 
     child.stdout.on('error', (error: any) => {
       colorError(`${description} 标准输出错误: ${error.message}`);
+      resolve(createStepError(error.message));
+    });
+
+    child.on('close', (code: number) => {
+      if (code !== 0) {
+        resolve(createStepError(`命令退出码: ${code}`));
+      }
     });
   });
 }
@@ -275,46 +244,23 @@ async function runBashScript(
   scriptPath: string,
   envVars: Record<string, string>,
   dryRun: boolean,
-): Promise<{ success: boolean; output: string; error?: string }> {
-  const envVarsStr = Object.entries(envVars)
-    .filter(([, v]) => v !== undefined && v !== '')
-    .map(([k, v]) => `${k}=${v}`)
-    .join(' ');
+): Promise<StepResult<string>> {
+  const commandResult = normalizeShellCommand(scriptPath, envVars);
 
-  const platform = process.platform;
-  let command: string;
-
-  if (platform === 'darwin' || platform === 'linux') {
-    command = `bash -c "${envVarsStr} ${scriptPath}"`;
-  } else if (platform === 'win32') {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        exec('wsl --version', (error) => {
-          if (error) {
-            reject(new Error('WSL not found'));
-          } else {
-            resolve();
-          }
-        });
-      });
-      command = `wsl -e bash -c "${envVarsStr} ${scriptPath}"`;
-    } catch {
-      return {
-        success: false,
-        output: '',
-        error:
-          'WSL 未安装或不可用。请确保 Windows Subsystem for Linux 已安装并启用。',
-      };
-    }
-  } else {
-    return {
-      success: false,
-      output: '',
-      error: `不支持的操作系统: ${platform}`,
-    };
+  if (!commandResult.success) {
+    return createStepError(commandResult.error);
   }
 
-  return executeCommand(description, command, dryRun);
+  const execResult = await executeCommand(
+    description,
+    commandResult.data,
+    dryRun,
+  );
+  if (!execResult.success) {
+    return createStepError(execResult.error || '未知错误');
+  }
+
+  return createStepSuccess(execResult.data);
 }
 
 /**
@@ -322,11 +268,9 @@ async function runBashScript(
  * @param config - 部署配置对象
  * @returns 执行结果对象，包含 success、output 和 error 属性
  */
-async function runBuild(
-  config: DeployConfig,
-): Promise<{ success: boolean; output: string; error?: string }> {
+async function runBuild(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
-    return { success: true, output: '构建已跳过', error: undefined };
+    return createStepSuccess('构建已跳过');
   }
   return executeCommand(
     '执行项目构建',
@@ -340,11 +284,9 @@ async function runBuild(
  * @param config - 部署配置对象
  * @returns 执行结果对象，包含 success、output 和 error 属性
  */
-async function runPush(
-  config: DeployConfig,
-): Promise<{ success: boolean; output: string; error?: string }> {
+async function runPush(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
-    return { success: true, output: '推送已跳过', error: undefined };
+    return createStepSuccess('推送已跳过');
   }
   return executeCommand(
     '推送镜像到仓库',
@@ -462,7 +404,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  const { message, stack } = unifyErrorFrom(error);
+  const { message, stack } = normalizeError(error);
 
   colorError(`未捕获的异常: ${message}`);
   if (stack) {

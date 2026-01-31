@@ -13,6 +13,7 @@
     "dev:backend": "pnpm --filter=backend run dev",
     "dev:frontend": "pnpm --filter=frontend run dev",
     "dev:blog": "pnpm --filter=blog run dev",
+    "dev:blog:prod": "pnpm --filter=blog run dev:prod",
     "build": "pnpm -r run build",
     "build:backend": "pnpm --filter=backend run build",
     "build:frontend": "pnpm --filter=frontend run build",
@@ -34,6 +35,7 @@
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.5",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/shelljs": "^0.10.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "dotenv-cli": "^11.0.0",
@@ -48,6 +50,7 @@
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "shelljs": "^0.10.0",
     "ts-node": "^10.9.2",
     "typescript-eslint": "^8.52.0"
   },
