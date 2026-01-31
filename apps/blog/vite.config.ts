@@ -27,8 +27,6 @@ export default defineConfig(({ mode }) => {
     ssr: {
       external: [
         '@originjs/crypto-js-wasm',
-        'cipher-base',
-        'hash-base',
         'asn1.js',
         'mermaid',
         'cytoscape',
@@ -61,7 +59,7 @@ export default defineConfig(({ mode }) => {
             ) {
               return 'diagram';
             }
-            if (id.includes('crypto-js') || id.includes('cipher-base')) {
+            if (id.includes('crypto-js')) {
               return 'crypto';
             }
             if (id.includes('react') || id.includes('react-dom')) {
