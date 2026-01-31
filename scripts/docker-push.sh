@@ -85,7 +85,7 @@ fi
 
 if [ -n "${BACKEND_ENV_FILE}" ] && [ -f "${BACKEND_ENV_FILE}" ]; then
     log "INFO" "  上传 ${BACKEND_ENV_FILE}..."
-    if ! scp -o ConnectTimeout=30 "${BACKEND_ENV_FILE}" "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}/.env.backend.production" 2>&1 | tee -a "${LOG_FILE}"; then
+    if ! scp -o ConnectTimeout=30 "${BACKEND_ENV_FILE}" "${SSH_USER}@${SSH_HOST}:${REMOTE_DIR}/apps/backend/.env.production" 2>&1 | tee -a "${LOG_FILE}"; then
         log_error "上传后端环境文件失败"
         exit 1
     fi

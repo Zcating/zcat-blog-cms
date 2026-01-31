@@ -32,7 +32,7 @@ services:
       - '9090:9090'
     env_file:
       - .env.deploy
-      - .env.backend.production
+      - apps/backend/.env.production
     depends_on:
       cms_pg:
         condition: service_healthy

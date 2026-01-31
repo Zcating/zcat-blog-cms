@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /**
  * @fileoverview Docker 部署脚本 - SSH 远程服务器部署工具
  * @description 该脚本用于通过 SSH 连接到远程服务器并执行 Docker 容器部署
@@ -25,7 +27,7 @@
  * SSH_PASSWORD=your_password           # SSH 密码（必填）
  */
 
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
@@ -33,6 +35,14 @@ import * as readline from 'readline';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import { z } from 'zod';
+
+import {
+  colorSuccess,
+  colorError,
+  colorWarning,
+  colorInfo,
+  colorCommand,
+} from './script-logger';
 
 const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
@@ -147,7 +157,7 @@ function generateConfig(
   const envConfig = loadEnvConfig(options.envFile || '.env.deploy');
   const result = DeployConfigSchema.safeParse({
     dockerRegistry: envConfig.DOCKER_REGISTRY || '',
-    projectName: envConfig.PROJECT_NAME || '',
+    projectName: options.projectName || '',
     sshConfig: {
       host: envConfig.SSH_HOST || '',
       port: parseInt(envConfig.SSH_PORT || '22', 10),
@@ -165,48 +175,7 @@ function generateConfig(
     colorError(`配置验证失败: ${errorMessages}`);
     return createStepError(errorMessages);
   }
-  console.log(result.data);
   return createStepSuccess(result.data);
-}
-
-/**
- * 打印成功消息（绿色）
- * @param message - 要打印的消息
- */
-function colorSuccess(...message: string[]): void {
-  console.log(chalk.green('✓ ') + message.join('\n'));
-}
-
-/**
- * 打印错误消息（红色）
- * @param message - 要打印的消息
- */
-function colorError(...message: string[]): void {
-  console.error(chalk.red('✗ ') + message.join('\n'));
-}
-
-/**
- * 打印警告消息（黄色）
- * @param message - 要打印的消息
- */
-function colorWarning(...message: string[]): void {
-  console.warn(chalk.yellow('⚠ ') + message.join('\n'));
-}
-
-/**
- * 打印信息消息（青色）
- * @param message - 要打印的消息
- */
-function colorInfo(...message: string[]): void {
-  console.log(chalk.cyan('ℹ ') + message.join(' '));
-}
-
-/**
- * 打印命令（洋红色）
- * @param cmd - 要打印的命令
- */
-function colorCommand(cmd: string): void {
-  console.log(chalk.magenta('$ ') + cmd);
 }
 
 /**
@@ -219,14 +188,12 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
     return true;
   }
 
-  console.log(
-    chalk.cyan(`\n📋 部署配置摘要:
+  colorInfo(`部署配置摘要:
    Docker Registry: ${config.dockerRegistry}
    SSH Host: ${config.sshConfig.user}@${config.sshConfig.host}:${config.sshConfig.port}
    Remote Directory: ${config.remoteDir}
-   Skip Build: ${config.skipBuild ? chalk.yellow('是') : chalk.green('否')}
-   Dry Run Mode: ${config.dryRun ? chalk.yellow('启用') : chalk.green('禁用')}`),
-  );
+   Skip Build: ${config.skipBuild ? '是' : '否'}
+   Dry Run Mode: ${config.dryRun ? '启用' : '禁用'}`);
 
   return new Promise((resolve) => {
     const rl = readline.createInterface({
@@ -268,15 +235,39 @@ async function executeCommand(
   colorCommand(command);
 
   return new Promise((resolve) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        const errorMsg = stderr || error.message;
-        colorError(`${description} 失败: ${errorMsg}`);
-        resolve({ success: false, output: stdout, error: errorMsg });
-      } else {
-        colorSuccess(`${description} 完成`);
-        resolve({ success: true, output: stdout, error: undefined });
+    const [cmd, ...args] = command.split(' ');
+    const child = spawn(cmd, args, { shell: true });
+
+    let output = '';
+    child.stdout.on('data', (data: any) => {
+      if (!data) {
+        return;
       }
+      const text = data.toString();
+      output += text;
+      process.stdout.write(text);
+    });
+
+    child.stderr.on('data', (data: any) => {
+      if (!data) {
+        return;
+      }
+      process.stderr.write(data.toString());
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        colorSuccess(`${description} 完成`);
+        resolve({ success: true, output, error: undefined });
+      } else {
+        colorError(`${description} 失败，退出码: ${code}`);
+        resolve({ success: false, output, error: `退出码: ${code}` });
+      }
+    });
+
+    child.on('error', (error) => {
+      colorError(`${description} 执行错误: ${error.message}`);
+      resolve({ success: false, output, error: error.message });
     });
   });
 }
@@ -314,10 +305,28 @@ async function runBuild(
   if (config.skipBuild) {
     return { success: true, output: '构建已跳过', error: undefined };
   }
-
+  console.log(config);
   return executeCommand(
     '执行项目构建',
-    `docker compose --env-file ${config.envFile} build`,
+    `docker compose --env-file ${config.envFile} build ${config.projectName}`,
+    config.dryRun,
+  );
+}
+
+/**
+ * 执行推送命令 - 对镜像进行 tag 并推送到镜像仓库
+ * @param config - 部署配置对象
+ * @returns 执行结果对象，包含 success、output 和 error 属性
+ */
+async function runPush(
+  config: DeployConfig,
+): Promise<{ success: boolean; output: string; error?: string }> {
+  if (config.skipBuild) {
+    return { success: true, output: '推送已跳过', error: undefined };
+  }
+  return executeCommand(
+    '推送镜像到仓库',
+    `docker compose --env-file ${config.envFile} push ${config.projectName}`,
     config.dryRun,
   );
 }
@@ -331,7 +340,7 @@ async function runBuild(
  * @returns 错误信息对象，如果有错误则包含 error 属性
  */
 async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
-  console.log(chalk.cyan('\n🚀 开始 Docker 部署...\n'));
+  colorInfo('开始 Docker 部署...');
 
   const composeFilePath = 'docker-compose.yml';
   const scriptPath = './scripts/docker-push.sh';
@@ -358,6 +367,12 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
     return createStepError(`构建失败: ${buildResult.error}`);
   }
 
+  colorInfo('推送镜像到仓库...');
+  const pushResult = await runPush(config);
+  if (!pushResult.success) {
+    return createStepError(`推送失败: ${pushResult.error}`);
+  }
+
   colorInfo('执行部署脚本...');
   const result = await runBashScript(
     '部署脚本',
@@ -369,8 +384,7 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
     return createStepError(`部署脚本执行失败: ${result.error}`);
   }
 
-  console.log(chalk.green('\n✅ 部署完成！\n'));
-  colorSuccess(`应用已在 ${config.sshConfig.host} 上部署成功`);
+  colorSuccess('部署完成！', `应用已在 ${config.sshConfig.host} 上部署成功`);
 
   return createStepSuccess(undefined);
 }
