@@ -238,6 +238,8 @@ async function executeCommand(
     const [cmd, ...args] = command.split(' ');
     const child = spawn(cmd, args, { shell: true });
 
+    child.stdin.end();
+
     let output = '';
     child.stdout.on('data', (data: any) => {
       if (!data) {
@@ -248,26 +250,12 @@ async function executeCommand(
       process.stdout.write(text);
     });
 
-    child.stderr.on('data', (data: any) => {
-      if (!data) {
-        return;
-      }
-      process.stderr.write(data.toString());
+    child.stdout.on('end', (data: any) => {
+      resolve({ success: true, output, error: undefined });
     });
 
-    child.on('close', (code) => {
-      if (code === 0) {
-        colorSuccess(`${description} 完成`);
-        resolve({ success: true, output, error: undefined });
-      } else {
-        colorError(`${description} 失败，退出码: ${code}`);
-        resolve({ success: false, output, error: `退出码: ${code}` });
-      }
-    });
-
-    child.on('error', (error) => {
-      colorError(`${description} 执行错误: ${error.message}`);
-      resolve({ success: false, output, error: error.message });
+    child.stdout.on('error', (error: any) => {
+      colorError(`${description} 标准输出错误: ${error.message}`);
     });
   });
 }
