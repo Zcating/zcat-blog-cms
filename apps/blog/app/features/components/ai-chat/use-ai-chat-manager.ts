@@ -1,11 +1,17 @@
 import {
+  type Message,
   MessageImpl,
   useMemoizedFn,
   useToggleValue,
   useZChatController,
-  type Message,
 } from '@zcat/ui';
 import React from 'react';
+
+import {
+  createChatHistory,
+  getChatHistory,
+  updateChatHistory,
+} from '../ai-chat-history/chat-history-storage';
 
 import { AiApi } from './ai-api';
 import { apiKeyPromption, type ApiModelName } from './ai-model-utils';
@@ -26,6 +32,8 @@ export function useAiChatManager(model?: ApiModelName) {
   );
 
   const assistantMessageHandlerRef = React.useRef<MessageImpl | null>(null);
+
+  const currentHistoryIdRef = React.useRef<string | null>(null);
 
   const systemMessage = React.useMemo(() => {
     return {
@@ -78,12 +86,50 @@ export function useAiChatManager(model?: ApiModelName) {
     },
   );
 
+  const saveCurrentHistory = useMemoizedFn(async () => {
+    const messages = controller.json();
+    if (messages.length === 0 || !currentHistoryIdRef.current) {
+      return;
+    }
+
+    await updateChatHistory(currentHistoryIdRef.current, {
+      messages,
+    });
+  });
+
+  const loadHistory = useMemoizedFn(async (historyId: string) => {
+    const history = await getChatHistory(historyId);
+    if (!history) {
+      return false;
+    }
+
+    controller.clear();
+    history.messages.forEach((msg) => controller.add(msg));
+    currentHistoryIdRef.current = historyId;
+
+    return true;
+  });
+
+  const startNewChat = useMemoizedFn(() => {
+    controller.clear();
+    currentHistoryIdRef.current = null;
+  });
+
   const send = useMemoizedFn(async (message: Message) => {
     const result = await apiKeyPromption(model);
     if (!result) {
       return false;
     }
-    // API密钥已存在或已成功设置，继续发送消息
+
+    if (!currentHistoryIdRef.current) {
+      const newHistory = await createChatHistory({
+        messages: [message],
+      });
+      currentHistoryIdRef.current = newHistory.id;
+    } else {
+      await saveCurrentHistory();
+    }
+
     controller.add({
       ...message,
       id: createMessageId(),
@@ -96,8 +142,6 @@ export function useAiChatManager(model?: ApiModelName) {
       deepThinking,
     );
 
-    // 创建流并处理响应
-    // 让 runAssistantStream 异步执行
     chatHandlerRef.current.create().then((stream) => {
       const assistantMessage: MessageImpl = controller.add({
         id: createMessageId(),
@@ -134,5 +178,9 @@ export function useAiChatManager(model?: ApiModelName) {
     regenerate,
     deepThinking,
     toggleDeepThinking,
-  } as const;
+    loadHistory,
+    startNewChat,
+    saveCurrentHistory,
+    currentHistoryId: currentHistoryIdRef.current,
+  };
 }

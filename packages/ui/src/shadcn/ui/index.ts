@@ -23,3 +23,4 @@ export * from './checkbox';
 export * from './toggle';
 export * from './toggle-group';
 export * from './table';
+export * from './drawer';

@@ -31,6 +31,7 @@
     "dayjs": "^1.11.13",
     "embla-carousel-react": "^8.6.0",
     "es-toolkit": "^1.39.8",
+    "idb": "^8.0.3",
     "isbot": "^5.1.27",
     "jspdf": "^4.0.0",
     "katex": "^0.16.23",
