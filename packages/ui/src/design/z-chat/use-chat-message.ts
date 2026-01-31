@@ -75,7 +75,7 @@ export class MessageImpl implements Message {
 export function useChatMessage<T extends keyof Message>(
   message: MessageImpl,
   prop: T,
-  throttleMs: number = 300,
+  throttleMs: number = 100,
 ) {
   const [value, setValue] = React.useState<Message[T]>(() => message[prop]);
   const pendingRef = React.useRef<Message[T] | null>(null);
