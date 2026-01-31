@@ -49,7 +49,6 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
   const handleStartNewChat = useCallback(() => {
     chat.startNewChat();
-    setHistoryDrawerOpen(false);
   }, [chat]);
 
   return (

@@ -1,12 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai/react';
+import { useEffect, useCallback } from 'react';
 
 import {
-  createChatHistory,
-  deleteChatHistory,
-  getChatHistory,
-  getChatHistorySummaries,
-  updateChatHistory,
-} from './chat-history-storage';
+  chatHistoriesAtom,
+  chatHistoriesHasMoreAtom,
+  chatHistoriesLoadingAtom,
+  createChatHistoryAtom,
+  getChatHistoryAtom,
+  deleteChatHistoryAtom,
+  loadChatHistoriesAtom,
+  loadMoreChatHistoriesAtom,
+  refreshChatHistoriesAtom,
+  updateChatHistoryAtom,
+} from './chat-history-atoms';
 
 import type {
   ChatHistory,
@@ -29,93 +35,22 @@ interface UseChatHistoryReturn {
   hasMore: boolean;
 }
 
-const PAGE_SIZE = 20;
-
 export function useChatHistory(): UseChatHistoryReturn {
-  const [histories, setHistories] = useState<ChatHistorySummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const histories = useAtomValue(chatHistoriesAtom);
+  const loading = useAtomValue(chatHistoriesLoadingAtom);
+  const hasMore = useAtomValue(chatHistoriesHasMoreAtom);
 
-  const loadHistories = useCallback(
-    async (reset: boolean = false) => {
-      setLoading(true);
-      try {
-        const currentOffset = reset ? 0 : offset;
-        const newHistories = await getChatHistorySummaries(
-          PAGE_SIZE,
-          currentOffset,
-        );
-
-        if (reset) {
-          setHistories(newHistories);
-          setOffset(PAGE_SIZE);
-        } else {
-          setHistories((prev) => [...prev, ...newHistories]);
-          setOffset((prev) => prev + PAGE_SIZE);
-        }
-
-        setHasMore(newHistories.length === PAGE_SIZE);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [offset],
-  );
-
-  const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
-    await loadHistories(false);
-  }, [loading, hasMore, loadHistories]);
-
-  const refresh = useCallback(async () => {
-    await loadHistories(true);
-  }, [loadHistories]);
+  const loadHistories = useSetAtom(loadChatHistoriesAtom);
+  const loadMore = useSetAtom(loadMoreChatHistoriesAtom);
+  const refresh = useSetAtom(refreshChatHistoriesAtom);
+  const createHistory = useSetAtom(createChatHistoryAtom);
+  const getHistory = useSetAtom(getChatHistoryAtom);
+  const updateHistory = useSetAtom(updateChatHistoryAtom);
+  const deleteHistory = useSetAtom(deleteChatHistoryAtom);
 
   useEffect(() => {
     loadHistories(true);
-  }, []);
-
-  const createHistory = useCallback(
-    async (params: CreateChatHistoryParams): Promise<ChatHistory> => {
-      const chat = await createChatHistory(params);
-      await refresh();
-      return chat;
-    },
-    [refresh],
-  );
-
-  const getHistory = useCallback(
-    async (id: string): Promise<ChatHistory | undefined> => {
-      return getChatHistory(id);
-    },
-    [],
-  );
-
-  const updateHistory = useCallback(
-    async (
-      id: string,
-      updates: Partial<ChatHistory>,
-    ): Promise<ChatHistory | undefined> => {
-      const updated = await updateChatHistory(id, updates);
-      if (updated) {
-        await refresh();
-      }
-      return updated;
-    },
-    [refresh],
-  );
-
-  const deleteHistory = useCallback(
-    async (id: string): Promise<boolean> => {
-      const deleted = await deleteChatHistory(id);
-      if (deleted) {
-        await refresh();
-      }
-      return deleted;
-    },
-    [refresh],
-  );
+  }, [loadHistories]);
 
   return {
     histories,
