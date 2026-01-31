@@ -29,6 +29,25 @@ cleanup() {
 
 trap cleanup EXIT
 
+check_sshpass() {
+    if ! command -v sshpass &> /dev/null; then
+        echo "错误: 未找到 sshpass 命令"
+        echo ""
+        echo "请安装 sshpass:"
+        echo "  # Ubuntu/Debian"
+        echo "  sudo apt install sshpass"
+        echo ""
+        echo "  # macOS (Homebrew)"
+        echo "  brew install hudochenkov/sshpass/sshpass"
+        echo ""
+        echo "  # Windows (WSL)"
+        echo "  sudo apt install sshpass"
+        exit 1
+    fi
+}
+
+check_sshpass
+
 SSH_HOST="${SSH_HOST:-}"
 SSH_USER="${SSH_USER:-}"
 SSH_PASSWORD="${SSH_PASSWORD:-}"

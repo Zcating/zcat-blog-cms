@@ -280,7 +280,40 @@ async function runBashScript(
     .filter(([, v]) => v !== undefined && v !== '')
     .map(([k, v]) => `${k}=${v}`)
     .join(' ');
-  const command = `wsl -e bash -c "${envVarsStr} ${scriptPath}"`;
+
+  const platform = process.platform;
+  let command: string;
+
+  if (platform === 'darwin' || platform === 'linux') {
+    command = `bash -c "${envVarsStr} ${scriptPath}"`;
+  } else if (platform === 'win32') {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        exec('wsl --version', (error) => {
+          if (error) {
+            reject(new Error('WSL not found'));
+          } else {
+            resolve();
+          }
+        });
+      });
+      command = `wsl -e bash -c "${envVarsStr} ${scriptPath}"`;
+    } catch {
+      return {
+        success: false,
+        output: '',
+        error:
+          'WSL 未安装或不可用。请确保 Windows Subsystem for Linux 已安装并启用。',
+      };
+    }
+  } else {
+    return {
+      success: false,
+      output: '',
+      error: `不支持的操作系统: ${platform}`,
+    };
+  }
+
   return executeCommand(description, command, dryRun);
 }
 
