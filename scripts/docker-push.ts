@@ -113,6 +113,7 @@ const DeployConfigSchema = z.object({
     .default(''),
   projectName: z.string().optional().default(''),
   sshConfig: SSHConfigSchema,
+  sshPassword: z.string().optional().default(''),
   remoteDir: z
     .string()
     .regex(/^\/[\w/.-]*$/, '远程目录路径必须是绝对路径（以 / 开头）'),
@@ -163,6 +164,7 @@ function generateConfig(
       port: parseInt(envConfig.SSH_PORT || '22', 10),
       user: envConfig.SSH_USER || '',
     },
+    sshPassword: envConfig.SSH_PASSWORD || '',
     remoteDir: envConfig.REMOTE_DIR || '',
     dryRun: envConfig.DRY_RUN || false,
     skipConfirm: options.yes || false,
@@ -340,6 +342,7 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
   const envVars = {
     SSH_HOST: config.sshConfig.host,
     SSH_USER: config.sshConfig.user,
+    SSH_PASSWORD: config.sshPassword,
     SSH_PORT: String(config.sshConfig.port),
     REMOTE_DIR: config.remoteDir,
     PROJECT_NAME: config.projectName,
