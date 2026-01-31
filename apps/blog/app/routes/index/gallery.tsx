@@ -59,9 +59,6 @@ export default function GalleryPage(props: Route.ComponentProps) {
               <PhotoItem value={gallery} onClick={handleClick} />
             )}
           />
-          <Button data-gallery-item="true" size="xl">
-            SHOW MORE
-          </Button>
         </StaggerReveal>
       </ZView>
     </ZView>
