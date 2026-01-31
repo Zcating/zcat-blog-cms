@@ -305,7 +305,6 @@ async function runBuild(
   if (config.skipBuild) {
     return { success: true, output: '构建已跳过', error: undefined };
   }
-  console.log(config);
   return executeCommand(
     '执行项目构建',
     `docker compose --env-file ${config.envFile} build ${config.projectName}`,
