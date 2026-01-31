@@ -43,7 +43,7 @@ export function useAiChatManager(model?: ApiModelName) {
     } as const;
   }, []);
 
-  const abort = useMemoizedFn((reason: string) => {
+  const abort = useMemoizedFn(async (reason: string) => {
     const chatHandler = chatHandlerRef.current;
     const assistantMessage = assistantMessageHandlerRef.current;
     if (!assistantMessage || !chatHandler) {
@@ -53,6 +53,8 @@ export function useAiChatManager(model?: ApiModelName) {
     chatHandler.abort(reason);
     assistantMessage.setFinish(true);
     assistantMessage.setContent('用户暂停生成');
+
+    await saveCurrentHistory();
   });
 
   const runAssistantStream = useMemoizedFn(
@@ -151,7 +153,9 @@ export function useAiChatManager(model?: ApiModelName) {
 
       assistantMessageHandlerRef.current = assistantMessage;
 
-      return runAssistantStream(stream, assistantMessage);
+      return runAssistantStream(stream, assistantMessage).then(() => {
+        saveCurrentHistory();
+      });
     });
 
     return true;
@@ -169,6 +173,7 @@ export function useAiChatManager(model?: ApiModelName) {
     const stream = await chatHandler.create();
 
     await runAssistantStream(stream, assistantMessage);
+    await saveCurrentHistory();
   });
 
   return {
