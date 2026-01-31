@@ -75,16 +75,45 @@ export class MessageImpl implements Message {
 export function useChatMessage<T extends keyof Message>(
   message: MessageImpl,
   prop: T,
+  throttleMs: number = 300,
 ) {
-  const [value, setValue] = React.useState<Message[T]>(message[prop]);
+  const [value, setValue] = React.useState<Message[T]>(() => message[prop]);
+  const pendingRef = React.useRef<Message[T] | null>(null);
+  const timerRef = React.useRef<number | null>(null);
+
+  const flush = React.useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (pendingRef.current !== null) {
+      setValue(pendingRef.current);
+      pendingRef.current = null;
+    }
+  }, []);
+
   React.useEffect(() => {
     const unsubscribe = message.subscribe<T>((innerProp, value) => {
       if (innerProp !== prop) {
         return;
       }
-      setValue(value);
+      pendingRef.current = value;
+
+      if (timerRef.current === null) {
+        timerRef.current = window.setTimeout(() => {
+          flush();
+        }, throttleMs);
+      }
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribe();
+      flush();
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message, prop]);
 
   return value;
