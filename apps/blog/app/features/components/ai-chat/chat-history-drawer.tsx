@@ -1,4 +1,4 @@
-import { ZButton, ZView } from '@zcat/ui';
+import { useMemoizedFn, ZButton, ZView } from '@zcat/ui';
 import {
   Drawer,
   DrawerClose,
@@ -11,9 +11,9 @@ import {
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { useChatHistory } from './use-chat-history';
+import { useChatHistoryStore } from './use-chat-history-store';
 
 import type { ChatHistorySummary } from './chat-history-types';
 
@@ -30,28 +30,19 @@ export function ChatHistoryDrawer({
   onSelectHistory,
   trigger,
 }: ChatHistoryDrawerProps) {
-  const { histories, loading, loadMore, refresh, deleteHistory } =
-    useChatHistory();
+  const histories = useChatHistoryStore((state) => state.histories);
 
-  const handleSelect = useCallback(
-    (history: ChatHistorySummary) => {
-      onSelectHistory?.(history);
-      onOpenChange?.(false);
-    },
-    [onSelectHistory, onOpenChange],
-  );
+  const handleSelect = useMemoizedFn((history: ChatHistorySummary) => {
+    onSelectHistory?.(history);
+    onOpenChange?.(false);
+  });
 
-  const handleDelete = useCallback(
+  const handleDelete = useMemoizedFn(
     async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
       e.stopPropagation();
-      await deleteHistory(id);
+      await useChatHistoryStore.getState().deleteChatHistory(id);
     },
-    [deleteHistory],
   );
-
-  const handleRefresh = useCallback(async () => {
-    await refresh();
-  }, [refresh]);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -62,7 +53,7 @@ export function ChatHistoryDrawer({
           <DrawerDescription>查看和管理您的历史对话</DrawerDescription>
         </DrawerHeader>
         <ZView className="px-4 max-h-[60vh] overflow-y-auto">
-          {histories.length === 0 && !loading ? (
+          {histories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <p className="text-sm">暂无历史对话</p>
             </div>
@@ -97,11 +88,6 @@ export function ChatHistoryDrawer({
                   </ZButton>
                 </div>
               ))}
-              {loading && (
-                <div className="flex justify-center py-4">
-                  <div className="size-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
             </div>
           )}
         </ZView>

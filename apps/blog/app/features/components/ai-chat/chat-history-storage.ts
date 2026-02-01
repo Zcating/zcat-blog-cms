@@ -55,6 +55,8 @@ export async function createChatHistory(
     id: crypto.randomUUID(),
     title,
     messages,
+    model: params.model,
+    deepThinking: params.deepThinking || false,
     createdAt: now,
     updatedAt: now,
   };
@@ -83,6 +85,8 @@ export async function getChatHistorySummaries(
     title: chat.title,
     preview:
       chat.messages.find((m) => m.role === 'user')?.content.slice(0, 100) || '',
+    deepThinking: chat.deepThinking,
+    model: chat.model,
     createdAt: chat.createdAt,
     updatedAt: chat.updatedAt,
   }));

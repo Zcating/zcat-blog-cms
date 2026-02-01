@@ -6,23 +6,25 @@ import {
   ZButton,
   Separator,
   ZView,
+  type Message,
+  useMemoizedFn,
+  ZNotification,
+  useMount,
 } from '@zcat/ui';
 import {
   AtomIcon,
-  BubblesIcon,
-  History,
   MessageCircleIcon,
   MessageCirclePlusIcon,
-  Plus,
 } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 
-import { useLocalStorageState } from '@blog/features/hooks';
-
-import { ChatHistoryDrawer, type ChatHistorySummary } from '../ai-chat-history';
-
-import { type ApiModelName, API_MODELS } from './ai-model-utils';
+import { AiApi } from './ai-api';
+import { apiKeyPromption } from './api-key-promption';
+import { ChatHistoryDrawer } from './chat-history-drawer';
 import { useAiChatManager } from './use-ai-chat-manager';
+import { useChatHistoryStore } from './use-chat-history-store';
+
+import type { ChatHistorySummary } from './chat-history-types';
 
 interface AiChatProps {
   className?: string;
@@ -30,33 +32,97 @@ interface AiChatProps {
 }
 
 export function AiChat({ className, emptyComponent }: AiChatProps) {
-  const [model, setModel] = useLocalStorageState<ApiModelName | undefined>(
-    'ai-model',
-    undefined,
-  );
+  const [conversationId, setConversationId] = useState('');
+
+  const [deepThinking, setDeepThinking] = useState(false);
+  const [model, setModel] = useState<AiApi.ChatModelName>();
 
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
 
-  const chat = useAiChatManager(model);
+  const chat = useAiChatManager(conversationId);
 
-  const handleSelectHistory = useCallback(
+  const handleSelectHistory = useMemoizedFn(
     async (history: ChatHistorySummary) => {
-      await chat.saveCurrentHistory();
-      await chat.loadHistory(history.id);
+      useChatHistoryStore.getState().updateChatHistory(conversationId, {
+        deepThinking,
+        model,
+        messages: chat.controller.json(),
+      });
+
+      console.log('handleSelectHistory', {
+        conversationId,
+        deepThinking,
+        model,
+        messages: chat.controller.json(),
+      });
+
+      setConversationId(history.id);
+      const current = await useChatHistoryStore
+        .getState()
+        .getChatHistory(history.id);
+      if (!current) {
+        return;
+      }
+
+      console.log('handleSelectHistory current', {
+        conversationId: history.id,
+        deepThinking,
+        model,
+        messages: current.messages,
+      });
+
+      chat.changeConversation({
+        conversationId: history.id,
+        messages: current.messages,
+      });
+      setModel(current.model);
+      setDeepThinking(current.deepThinking);
     },
-    [chat],
   );
 
-  const handleStartNewChat = useCallback(() => {
-    chat.startNewChat();
-  }, [chat]);
+  const handleStartNewChat = useMemoizedFn(() => {
+    useChatHistoryStore.getState().updateChatHistory(conversationId, {
+      deepThinking,
+      model,
+      messages: chat.controller.json(),
+    });
+    setConversationId('');
+    chat.controller.clear();
+  });
+
+  const handleSend = useMemoizedFn(async (message: Message) => {
+    const result = await apiKeyPromption(model);
+    if (!result) {
+      ZNotification.error('请先配置 API key');
+      return false;
+    }
+
+    if (!conversationId) {
+      const history = await useChatHistoryStore.getState().createChatHistory({
+        model: result.model,
+        messages: [message],
+        title: message.content,
+        deepThinking,
+      });
+      setConversationId(history.id);
+    }
+
+    return chat.send({
+      conversationId: conversationId,
+      model: result.model,
+      deepThinking,
+      message: message,
+    });
+  });
+
+  useMount(() => useChatHistoryStore.getState().loadChatHistories());
 
   return (
     <>
       <ZChat
         className={cn('overflow-hidden', className)}
         controller={chat.controller}
-        onSend={chat.send}
+        onSend={handleSend}
         onAbort={() => chat.abort('用户取消')}
         onRegenerate={chat.regenerate}
         placeholder="问问都有什么工具..."
@@ -67,15 +133,15 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
               <ZSelect
                 size="sm"
                 placeholder="选择模型"
-                options={API_MODELS}
+                options={AiApi.API_MODELS}
                 value={model}
                 onValueChange={setModel}
               />
               <Toggle
                 variant="outline"
                 size="sm"
-                pressed={chat.deepThinking}
-                onPressedChange={chat.toggleDeepThinking}
+                pressed={deepThinking}
+                onPressedChange={setDeepThinking}
                 aria-label="开启深度思考模式，AI将提供更详细全面的分析"
               >
                 <AtomIcon className="size-4" />

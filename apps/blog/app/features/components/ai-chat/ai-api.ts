@@ -22,7 +22,7 @@ export namespace AiApi {
     abort(reason?: string): void;
   }
 
-  type ChatModelName = 'deepseek';
+  export type ChatModelName = 'deepseek';
   type ChatModels = {
     [x in ChatModelName]: {
       run(
@@ -94,6 +94,10 @@ export namespace AiApi {
     },
   };
 
+  export const API_MODELS: CommonOption<ChatModelName>[] = [
+    { value: 'deepseek', label: '深度求索' },
+  ];
+
   export function registerModel() {}
 
   /**
@@ -101,11 +105,14 @@ export namespace AiApi {
    */
   export function chat(
     modelName: ChatModelName,
-    apiKey: string,
     messages: ChatMessage[],
     deepThinking: boolean,
   ): ChatStreamHandler {
     return createHandler((controller) => {
+      const apiKey = getApiKey(modelName);
+      if (!apiKey) {
+        throw new Error(`Model ${modelName} API key not found`);
+      }
       return models[modelName].run(apiKey, messages, deepThinking, controller);
     });
   }
@@ -113,13 +120,60 @@ export namespace AiApi {
   export async function test(modelName: ChatModelName, apiKey?: string) {
     return await models[modelName].test(apiKey);
   }
+
+  /**
+   * 检查指定UI模型的API密钥是否存在
+   */
+  export async function checkApiKey(model: ChatModelName): Promise<string> {
+    const storageKey = getApiKeyStorageKey(model);
+    const apiKey = localStorage.getItem(storageKey);
+    if (!apiKey) {
+      return '';
+    }
+
+    const isSuccess = await AiApi.test(model, apiKey);
+    if (!isSuccess) {
+      return '';
+    }
+
+    return apiKey;
+  }
+
+  /**
+   * 获取指定UI模型的API密钥
+   */
+  export function getApiKey(model: ChatModelName): string {
+    const storageKey = getApiKeyStorageKey(model);
+    return localStorage.getItem(storageKey) ?? '';
+  }
+
+  /**
+   * 保存API密钥
+   */
+  export function saveApiKey(model: ChatModelName, apiKey: string): void {
+    const storageKey = getApiKeyStorageKey(model);
+
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error('API密钥不能为空');
+    }
+
+    localStorage.setItem(storageKey, apiKey.trim());
+  }
+
+  /**
+   * 删除API密钥
+   */
+  export function deleteApiKey(model: ChatModelName): void {
+    const storageKey = getApiKeyStorageKey(model);
+    localStorage.removeItem(storageKey);
+  }
 }
 
 function createHandler(
   fn: (controller: AbortController) => Promise<Stream<AiApi.ChatMessage>>,
 ): AiApi.ChatStreamHandler {
   let controller: AbortController | null;
-  const handler = {
+  return {
     create() {
       if (!controller) {
         controller = new AbortController();
@@ -133,6 +187,11 @@ function createHandler(
       }
     },
   };
+}
 
-  return handler;
+/**
+ * 获取API密钥存储键名
+ */
+function getApiKeyStorageKey(model: AiApi.ChatModelName): string {
+  return `model-${model}-api-key`;
 }

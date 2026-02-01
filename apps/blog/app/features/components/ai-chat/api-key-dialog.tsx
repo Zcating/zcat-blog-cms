@@ -3,11 +3,9 @@ import React from 'react';
 
 import { AiApi } from './ai-api';
 
-import type { ApiModelName } from './ai-model-utils';
-
 export interface ApiKeyDialogProps {
   /** 模型名称 */
-  modelName: ApiModelName;
+  modelName: AiApi.ChatModelName;
   /** 模型显示名称 */
   modelDisplayName: string;
 }
@@ -107,7 +105,7 @@ function ApiKeyContent({ onSubmit, onClose }: ApiKeyContentProps) {
  * @returns Promise<ApiKeyDialogResult> 用户操作结果
  */
 export async function showApiKeyDialog(
-  modelName: ApiModelName,
+  modelName: AiApi.ChatModelName,
 ): Promise<string> {
   const resolvers = Promise.withResolvers<string>();
 
@@ -148,7 +146,7 @@ export async function showApiKeyDialog(
  * @returns Promise<boolean> 用户是否要立即设置API密钥
  */
 export async function showApiKeyMissingDialog(
-  modelName: ApiModelName,
+  modelName: AiApi.ChatModelName,
 ): Promise<boolean> {
   return ZDialog.confirm({
     title: 'API密钥缺失',
