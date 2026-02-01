@@ -48,6 +48,9 @@ export class MessageImpl implements Message {
   }
 
   setContent(content: string) {
+    if (this.content === content) {
+      return;
+    }
     this.content = content;
     this._listeners.forEach((fn) => fn('content', this.content));
   }
@@ -58,6 +61,9 @@ export class MessageImpl implements Message {
   }
 
   setFinish(finish: boolean = true) {
+    if (this.isFinish === finish) {
+      return;
+    }
     this.isFinish = finish;
     this._listeners.forEach((fn) => fn('isFinish', finish));
   }

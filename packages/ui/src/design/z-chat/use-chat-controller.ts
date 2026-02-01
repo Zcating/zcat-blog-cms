@@ -20,6 +20,10 @@ export class ZChatController {
     return this._messages;
   }
 
+  get lastMessage(): MessageImpl | undefined {
+    return this._messages[this._messages.length - 1];
+  }
+
   json() {
     return this._messages.map((msg) => msg.json);
   }
@@ -29,6 +33,11 @@ export class ZChatController {
     return () => {
       this._listeners.delete(listener);
     };
+  }
+
+  set(messages: (Message | MessageImpl)[]) {
+    this._messages = messages.map(MessageImpl.from);
+    this._notify();
   }
 
   add(message: Message | MessageImpl): MessageImpl {
