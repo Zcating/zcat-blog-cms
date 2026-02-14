@@ -54,6 +54,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
     showChatHistoryDrawer({
       data: currentState.histories,
+      selectedId: conversationId,
       onSelect: async (history) => {
         // 保存当前对话
         currentState.updateChatHistory(conversationId, {

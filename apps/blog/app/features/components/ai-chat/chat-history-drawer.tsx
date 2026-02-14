@@ -1,13 +1,13 @@
 import { useMemoizedFn, ZButton, ZDrawer, ZView } from '@zcat/ui';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { Trash2 } from 'lucide-react';
 import React from 'react';
+
+import { ChatHistoryItem } from './chat-history-item';
 
 import type { ChatHistorySummary } from './chat-history-types';
 
 export interface ChatHistoryContentProps {
   data: ChatHistorySummary[];
+  selectedId?: string;
   onClose?: () => void;
   onSelect?: (history: ChatHistorySummary) => void;
   onDelete?: (id: string) => Promise<boolean>;
@@ -15,6 +15,7 @@ export interface ChatHistoryContentProps {
 
 export function ChatHistoryContent({
   data,
+  selectedId,
   onClose,
   onSelect,
   onDelete,
@@ -40,31 +41,13 @@ export function ChatHistoryContent({
       ) : (
         <div className="space-y-2">
           {data.map((history) => (
-            <div
+            <ChatHistoryItem
               key={history.id}
-              onClick={() => handleSelect(history)}
-              className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{history.title}</p>
-                <p className="text-xs text-muted-foreground truncate mt-1">
-                  {history.preview || '暂无消息'}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {format(history.updatedAt, 'yyyy-MM-dd HH:mm', {
-                    locale: zhCN,
-                  })}
-                </p>
-              </div>
-              <ZButton
-                variant="ghost"
-                size="icon-sm"
-                onClick={(e) => handleDelete(e, history.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-              >
-                <Trash2 className="size-4" />
-              </ZButton>
-            </div>
+              history={history}
+              isSelected={history.id === selectedId}
+              onSelect={handleSelect}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
@@ -74,6 +57,7 @@ export function ChatHistoryContent({
 
 interface ShowChatHistoryDrawerProps {
   data: ChatHistorySummary[];
+  selectedId?: string;
   onSelect: (history: ChatHistorySummary) => void;
   onDelete: (id: string) => Promise<boolean>;
 }
@@ -90,6 +74,7 @@ export function showChatHistoryDrawer(props: ShowChatHistoryDrawerProps) {
     content: ({ onClose }) => (
       <ChatHistoryContent
         data={props.data}
+        selectedId={props.selectedId}
         onClose={onClose}
         onSelect={props.onSelect}
         onDelete={props.onDelete}
