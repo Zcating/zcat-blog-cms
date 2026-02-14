@@ -111,7 +111,6 @@ export function useAiChatManager(id: string) {
       return;
     }
     unsubscriptionRef.current = chatTask.subscribe((event) => {
-      console.log(event);
       last.setContent(event.content);
       last.setFinish(event.isFinish);
     });

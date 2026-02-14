@@ -1,7 +1,8 @@
 import { ChevronsDown, MessageSquare } from 'lucide-react';
 import React from 'react';
 
-import { isFunction, safeReactNode } from '@zcat/ui/utils';
+import { useMemoizedFn } from '@zcat/ui/hooks';
+import { safeReactNode } from '@zcat/ui/utils';
 
 import { ShrinkDownAnimation } from '../../animation';
 import { cn } from '../../shadcn/lib/utils';
@@ -37,6 +38,8 @@ export function ZChat({
   emptyComponent: emptyState,
   ...props
 }: ZChatProps) {
+  const messages = useChatMessages(controller);
+
   const { scrollRef, isAtBottom, updateIsAtBottom, lockToBottom } =
     useChatAutoScroll();
 
@@ -48,7 +51,10 @@ export function ZChat({
     onRegenerate,
   );
 
-  const messages = useChatMessages(controller);
+  const send = useMemoizedFn(async (content: string) => {
+    lockToBottom();
+    return handleSend(content);
+  });
 
   return (
     <ZView
@@ -88,7 +94,7 @@ export function ZChat({
           </ZButton>
         </ShrinkDownAnimation>
         <MessageInput
-          onSend={handleSend}
+          onSend={send}
           onAbort={handleAbort}
           loading={loading}
           placeholder={placeholder}
