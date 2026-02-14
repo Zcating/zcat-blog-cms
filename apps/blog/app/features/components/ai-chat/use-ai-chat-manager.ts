@@ -25,6 +25,8 @@ export function useAiChatManager(id: string) {
 
   const chatActionRef = React.useRef<ChatTaskSlice | null>(null);
 
+  const unsubscriptionRef = React.useRef<Teardown | null>(null);
+
   /**
    * 发送用户消息并处理 AI 助手的响应
    * @param message 用户发送的消息
@@ -91,6 +93,11 @@ export function useAiChatManager(id: string) {
    * @returns 是否成功切换会话
    */
   function changeConversation(params: ConversationChangeParams) {
+    if (unsubscriptionRef.current) {
+      unsubscriptionRef.current();
+      unsubscriptionRef.current = null;
+    }
+
     controller.set(params.messages);
 
     const chatTask = useChatStore.getState().recover(id);
@@ -103,7 +110,8 @@ export function useAiChatManager(id: string) {
     if (!last || last.role !== 'assistant') {
       return;
     }
-    chatTask.subscribe((event) => {
+    unsubscriptionRef.current = chatTask.subscribe((event) => {
+      console.log(event);
       last.setContent(event.content);
       last.setFinish(event.isFinish);
     });
