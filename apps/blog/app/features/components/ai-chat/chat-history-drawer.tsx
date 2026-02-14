@@ -1,45 +1,45 @@
-import { useMemoizedFn, ZButton, ZView } from '@zcat/ui';
+import { useMemoizedFn, ZButton, ZDrawer, ZView } from '@zcat/ui';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { useChatHistoryStore } from './use-chat-history-store';
-
 import type { ChatHistorySummary } from './chat-history-types';
 
 export interface ChatHistoryContentProps {
+  data: ChatHistorySummary[];
   onClose?: () => void;
-  onSelectHistory?: (history: ChatHistorySummary) => void;
+  onSelect?: (history: ChatHistorySummary) => void;
+  onDelete?: (id: string) => Promise<boolean>;
 }
 
 export function ChatHistoryContent({
+  data,
   onClose,
-  onSelectHistory,
+  onSelect,
+  onDelete,
 }: ChatHistoryContentProps) {
-  const histories = useChatHistoryStore((state) => state.histories);
-
   const handleSelect = useMemoizedFn((history: ChatHistorySummary) => {
-    onSelectHistory?.(history);
+    onSelect?.(history);
     onClose?.();
   });
 
   const handleDelete = useMemoizedFn(
     async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
       e.stopPropagation();
-      await useChatHistoryStore.getState().deleteChatHistory(id);
+      onDelete?.(id);
     },
   );
 
   return (
     <ZView className="max-h-[60vh] overflow-y-auto">
-      {histories.length === 0 ? (
+      {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <p className="text-sm">暂无历史对话</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {histories.map((history) => (
+          {data.map((history) => (
             <div
               key={history.id}
               onClick={() => handleSelect(history)}
@@ -70,4 +70,35 @@ export function ChatHistoryContent({
       )}
     </ZView>
   );
+}
+
+interface ShowChatHistoryDrawerProps {
+  data: ChatHistorySummary[];
+  onSelect: (history: ChatHistorySummary) => void;
+  onDelete: (id: string) => Promise<boolean>;
+}
+
+/**
+ * 显示对话历史抽屉
+ * @param props 抽屉属性
+ */
+export function showChatHistoryDrawer(props: ShowChatHistoryDrawerProps) {
+  ZDrawer.show({
+    title: '对话历史',
+    description: '查看和管理您的历史对话',
+    direction: 'right',
+    content: ({ onClose }) => (
+      <ChatHistoryContent
+        data={props.data}
+        onClose={onClose}
+        onSelect={props.onSelect}
+        onDelete={props.onDelete}
+      />
+    ),
+    footer: ({ onClose }) => (
+      <ZButton variant="outline" className="w-full" onClick={onClose}>
+        关闭
+      </ZButton>
+    ),
+  });
 }

@@ -10,7 +10,6 @@ import {
   useMemoizedFn,
   ZNotification,
   useMount,
-  ZDrawer,
 } from '@zcat/ui';
 import {
   AtomIcon,
@@ -21,7 +20,7 @@ import React, { useState } from 'react';
 
 import { AiApi } from './ai-api';
 import { apiKeyPromption } from './api-key-promption';
-import { ChatHistoryContent } from './chat-history-drawer';
+import { showChatHistoryDrawer } from './chat-history-drawer';
 import { useAiChatManager } from './use-ai-chat-manager';
 import { useChatHistoryStore } from './use-chat-history-store';
 
@@ -40,45 +39,6 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
   const chat = useAiChatManager(conversationId);
 
-  const handleSelectHistory = useMemoizedFn(
-    async (history: ChatHistorySummary) => {
-      useChatHistoryStore.getState().updateChatHistory(conversationId, {
-        deepThinking,
-        model,
-        messages: chat.controller.json(),
-      });
-
-      console.log('handleSelectHistory', {
-        conversationId,
-        deepThinking,
-        model,
-        messages: chat.controller.json(),
-      });
-
-      setConversationId(history.id);
-      const current = await useChatHistoryStore
-        .getState()
-        .getChatHistory(history.id);
-      if (!current) {
-        return;
-      }
-
-      console.log('handleSelectHistory current', {
-        conversationId: history.id,
-        deepThinking,
-        model,
-        messages: current.messages,
-      });
-
-      chat.changeConversation({
-        conversationId: history.id,
-        messages: current.messages,
-      });
-      setModel(current.model);
-      setDeepThinking(current.deepThinking);
-    },
-  );
-
   const handleStartNewChat = useMemoizedFn(() => {
     useChatHistoryStore.getState().updateChatHistory(conversationId, {
       deepThinking,
@@ -90,24 +50,32 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
   });
 
   const handleOpenHistory = useMemoizedFn(() => {
-    ZDrawer.show({
-      title: '对话历史',
-      description: '查看和管理您的历史对话',
-      direction: 'right',
-      content: ({ onClose }) => (
-        <ChatHistoryContent
-          onClose={onClose}
-          onSelectHistory={(history) => {
-            handleSelectHistory(history);
-            onClose();
-          }}
-        />
-      ),
-      footer: ({ onClose }) => (
-        <ZButton variant="outline" className="w-full" onClick={onClose}>
-          关闭
-        </ZButton>
-      ),
+    const currentState = useChatHistoryStore.getState();
+
+    showChatHistoryDrawer({
+      data: currentState.histories,
+      onSelect: async (history) => {
+        // 保存当前对话
+        currentState.updateChatHistory(conversationId, {
+          deepThinking,
+          model,
+          messages: chat.controller.json(),
+        });
+
+        const current = await currentState.getChatHistory(history.id);
+        if (!current) {
+          return;
+        }
+
+        chat.changeConversation({
+          conversationId: history.id,
+          messages: current.messages,
+        });
+        setConversationId(history.id);
+        setModel(current.model);
+        setDeepThinking(current.deepThinking);
+      },
+      onDelete: currentState.deleteChatHistory,
     });
   });
 
@@ -149,7 +117,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
         placeholder="问问都有什么工具..."
         emptyComponent={emptyComponent}
         toolbar={
-          <div className="flex items-center gap-1 h-full">
+          <ZView className="flex items-center gap-1 h-full">
             <ZView className="flex items-center gap-1">
               <ZSelect
                 size="sm"
@@ -170,7 +138,7 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
               </Toggle>
             </ZView>
             <Separator orientation="vertical" className="h-4" />
-            <div className="flex items-center gap-1">
+            <ZView className="flex items-center gap-1">
               <ZButton
                 variant="outline"
                 size="sm"
@@ -189,8 +157,8 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
                 <MessageCircleIcon className="size-4" />
                 历史对话
               </ZButton>
-            </div>
-          </div>
+            </ZView>
+          </ZView>
         }
       />
     </>
