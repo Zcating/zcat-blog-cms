@@ -1,7 +1,4 @@
-import { ZNotification } from '@zcat/ui';
 import { create } from 'zustand';
-
-import { apiKeyPromption } from '../ai-chat/api-key-promption';
 
 import { AiApi } from './ai-api';
 
@@ -145,9 +142,7 @@ interface ChatParams {
   messages: AiApi.ChatMessage[];
 }
 
-interface ConversationState {
-  id: string;
-}
+interface ConversationState {}
 
 interface ConversationAction {
   chat: (params: ChatParams) => Promise<ChatTaskSlice>;
@@ -192,7 +187,6 @@ export const useChatStore = create<ConversationStore>((set, get) => {
   }
 
   return {
-    id: '',
     chat,
     recover,
     saveState,

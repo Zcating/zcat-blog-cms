@@ -1,10 +1,4 @@
-import {
-  type Message,
-  MessageImpl,
-  useMemoizedFn,
-  useWatch,
-  useZChatController,
-} from '@zcat/ui';
+import { type Message, useMemoizedFn, useZChatController } from '@zcat/ui';
 import React from 'react';
 
 import { AiApi } from './ai-api';
