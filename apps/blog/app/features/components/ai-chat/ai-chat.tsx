@@ -10,6 +10,7 @@ import {
   useMemoizedFn,
   ZNotification,
   useMount,
+  ZDrawer,
 } from '@zcat/ui';
 import {
   AtomIcon,
@@ -20,7 +21,7 @@ import React, { useState } from 'react';
 
 import { AiApi } from './ai-api';
 import { apiKeyPromption } from './api-key-promption';
-import { ChatHistoryDrawer } from './chat-history-drawer';
+import { ChatHistoryContent } from './chat-history-drawer';
 import { useAiChatManager } from './use-ai-chat-manager';
 import { useChatHistoryStore } from './use-chat-history-store';
 
@@ -36,8 +37,6 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
 
   const [deepThinking, setDeepThinking] = useState(false);
   const [model, setModel] = useState<AiApi.ChatModelName>();
-
-  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
 
   const chat = useAiChatManager(conversationId);
 
@@ -88,6 +87,28 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
     });
     setConversationId('');
     chat.controller.clear();
+  });
+
+  const handleOpenHistory = useMemoizedFn(() => {
+    ZDrawer.show({
+      title: '对话历史',
+      description: '查看和管理您的历史对话',
+      direction: 'right',
+      content: ({ onClose }) => (
+        <ChatHistoryContent
+          onClose={onClose}
+          onSelectHistory={(history) => {
+            handleSelectHistory(history);
+            onClose();
+          }}
+        />
+      ),
+      footer: ({ onClose }) => (
+        <ZButton variant="outline" className="w-full" onClick={onClose}>
+          关闭
+        </ZButton>
+      ),
+    });
   });
 
   const handleSend = useMemoizedFn(async (message: Message) => {
@@ -159,24 +180,18 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
                 <MessageCirclePlusIcon className="size-4" />
                 新对话
               </ZButton>
-              <Toggle
+              <ZButton
                 variant="outline"
                 size="sm"
-                pressed={historyDrawerOpen}
-                onPressedChange={setHistoryDrawerOpen}
+                onClick={handleOpenHistory}
                 aria-label="查看历史对话"
               >
                 <MessageCircleIcon className="size-4" />
                 历史对话
-              </Toggle>
+              </ZButton>
             </div>
           </div>
         }
-      />
-      <ChatHistoryDrawer
-        open={historyDrawerOpen}
-        onOpenChange={setHistoryDrawerOpen}
-        onSelectHistory={handleSelectHistory}
       />
     </>
   );
