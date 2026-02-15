@@ -33,6 +33,11 @@ export function useAiChatManager(id: string) {
    * @returns 是否成功发送消息
    */
   const send = useMemoizedFn(async (form: AiChatForm) => {
+    if (unsubscriptionRef.current) {
+      unsubscriptionRef.current();
+      unsubscriptionRef.current = null;
+    }
+
     controller.add({
       ...form.message,
       id: createMessageId(),
@@ -52,7 +57,7 @@ export function useAiChatManager(id: string) {
         id: createMessageId(),
       });
 
-      chatActionRef.current.subscribe((event) => {
+      unsubscriptionRef.current = chatActionRef.current.subscribe((event) => {
         last.setContent(event.content);
         last.setFinish(event.isFinish);
       });
@@ -110,6 +115,7 @@ export function useAiChatManager(id: string) {
     if (!last || last.role !== 'assistant') {
       return;
     }
+
     unsubscriptionRef.current = chatTask.subscribe((event) => {
       last.setContent(event.content);
       last.setFinish(event.isFinish);

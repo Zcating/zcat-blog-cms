@@ -1,6 +1,8 @@
 import { ZNavigationMenu, ZStickyHeader } from '@zcat/ui';
 import { Link, useLocation } from 'react-router';
 
+import { MENU_OPTIONS } from '../options';
+
 export function BlogHeader() {
   const { pathname } = useLocation();
 
@@ -14,13 +16,7 @@ export function BlogHeader() {
   return (
     <ZStickyHeader>
       <ZNavigationMenu
-        options={[
-          { to: '/', title: '首页' },
-          { to: '/post-board', title: '文章' },
-          { to: '/gallery', title: '相册' },
-          { to: '/toolbox', title: '工具箱' },
-          { to: '/about', title: '关于' },
-        ]}
+        options={MENU_OPTIONS}
         renderItem={(item, index) => {
           const isActive = checkIsActive(item.to);
           return (

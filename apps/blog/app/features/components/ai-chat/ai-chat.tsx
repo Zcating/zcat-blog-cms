@@ -24,8 +24,6 @@ import { showChatHistoryDrawer } from './chat-history-drawer';
 import { useAiChatManager } from './use-ai-chat-manager';
 import { useChatHistoryStore } from './use-chat-history-store';
 
-import type { ChatHistorySummary } from './chat-history-types';
-
 interface AiChatProps {
   className?: string;
   emptyComponent?: React.ReactNode | React.ComponentType;
@@ -56,6 +54,10 @@ export function AiChat({ className, emptyComponent }: AiChatProps) {
       data: currentState.histories,
       selectedId: conversationId,
       onSelect: async (history) => {
+        if (history.id === conversationId) {
+          return;
+        }
+
         // 保存当前对话
         currentState.updateChatHistory(conversationId, {
           deepThinking,

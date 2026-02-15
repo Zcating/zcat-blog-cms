@@ -42,6 +42,10 @@ export function MessageInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (loading) {
+      return;
+    }
+
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSend();
@@ -97,6 +101,7 @@ export function MessageInput({
               className="shrink-0"
               aria-label={loading ? '停止' : '发送'}
               tooltip={loading ? '停止' : '发送'}
+              disabled={loading}
             >
               {loading ? (
                 <Loader2Icon className="w-4 h-4 animate-spin" />

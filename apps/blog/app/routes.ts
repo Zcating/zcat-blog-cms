@@ -11,6 +11,7 @@ export default [
     route('post-board/:id', 'routes/index/post-board.id.tsx'),
     route('about', 'routes/index/about.tsx'),
     route('gallery', 'routes/index/gallery.tsx'),
+    route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
   ]),
   layout('features/layouts/toolbox-layout/toolbox.layout.tsx', [
     route('toolbox', 'routes/toolbox/home.page.tsx'),

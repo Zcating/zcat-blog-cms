@@ -4,17 +4,12 @@ import {
   ZStickyHeader,
   Separator,
   useSidebar,
+  ZView,
 } from '@zcat/ui';
 import { SidebarIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
-const menuOptions = [
-  { to: '/', title: '首页' },
-  { to: '/post-board', title: '文章' },
-  { to: '/gallery', title: '相册' },
-  { to: '/toolbox', title: '工具箱' },
-  { to: '/about', title: '关于' },
-];
+import { MENU_OPTIONS } from '../options';
 
 export function ToolbarHeader() {
   const { toggleSidebar } = useSidebar();
@@ -29,7 +24,7 @@ export function ToolbarHeader() {
 
   return (
     <ZStickyHeader>
-      <div className="flex h-full w-full items-center gap-2 px-4">
+      <ZView className="flex h-full w-full items-center gap-2 px-4">
         <Button
           className="h-8 w-8"
           variant="ghost"
@@ -40,7 +35,7 @@ export function ToolbarHeader() {
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
         <ZNavigationMenu
-          options={menuOptions}
+          options={MENU_OPTIONS}
           renderItem={(option, index) => {
             const isActive = checkIsActive(option.to);
             return (
@@ -58,7 +53,7 @@ export function ToolbarHeader() {
             );
           }}
         />
-      </div>
+      </ZView>
     </ZStickyHeader>
   );
 }

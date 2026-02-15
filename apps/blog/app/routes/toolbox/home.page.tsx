@@ -17,26 +17,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router';
 
-import { AiChat } from '@blog/features';
-
-export function meta() {
-  return [
-    { title: '工具箱' },
-    {
-      name: 'description',
-      content: '常用功能入口',
-    },
-  ];
-}
-
-export default function ToolboxHomePage() {
-  return (
-    <ZView className="h-full">
-      <AiChat emptyComponent={EmptyStateComponent} />
-    </ZView>
-  );
-}
-
 const items = [
   {
     title: 'Markdown 转 HTML',
@@ -76,27 +56,39 @@ const items = [
   },
 ] as const;
 
-const EmptyStateComponent = () => (
-  <ZView className="p-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-    {items.map((item) => (
-      <Link
-        key={item.to}
-        to={item.to}
-        className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <Card className="h-full transition-shadow hover:shadow-md">
-          <CardHeader>
-            <CardTitle className="text-lg">{item.title}</CardTitle>
-            <CardDescription>{item.description}</CardDescription>
-            <CardAction>
-              <item.Icon className="text-muted-foreground size-5" />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <ZView className="text-muted-foreground text-sm">立即使用</ZView>
-          </CardContent>
-        </Card>
-      </Link>
-    ))}
-  </ZView>
-);
+export function meta() {
+  return [
+    { title: '工具箱' },
+    {
+      name: 'description',
+      content: '常用功能入口',
+    },
+  ];
+}
+
+export default function ToolboxHomePage() {
+  return (
+    <ZView className="p-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <Link
+          key={item.to}
+          to={item.to}
+          className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Card className="h-full transition-shadow hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">{item.title}</CardTitle>
+              <CardDescription>{item.description}</CardDescription>
+              <CardAction>
+                <item.Icon className="text-muted-foreground size-5" />
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <ZView className="text-muted-foreground text-sm">立即使用</ZView>
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
+    </ZView>
+  );
+}
