@@ -69,27 +69,27 @@ interface ChatParams {
   messages: AiApi.ChatMessage[];
 }
 
-class AiChatManager {
-  conversationTasks = new Map<string, ChatTask>();
+export namespace AiChatManager {
+  const conversationTasks = new Map<string, ChatTask>();
 
-  async recover(conversationId: string) {
-    const task = this.conversationTasks.get(conversationId)!;
+  export async function recover(conversationId: string) {
+    const task = conversationTasks.get(conversationId)!;
     if (task) {
       task.reset('');
     }
   }
 
-  async send(params: ChatParams) {
+  export async function send(params: ChatParams) {
     const streamHandler = AiApi.chat(
       params.model,
       [SYSTEM_PROMPT, ...params.messages],
       params.deepThinking,
     );
 
-    let task = this.conversationTasks.get(params.conversationId)!;
+    let task = conversationTasks.get(params.conversationId)!;
     if (!task) {
       task = new ChatTask();
-      this.conversationTasks.set(params.conversationId, task);
+      conversationTasks.set(params.conversationId, task);
     }
 
     async function runAssistantStream() {

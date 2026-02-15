@@ -40,11 +40,14 @@ export const useChatHistoryStore = create<
 
   loadChatHistories: async (resetData: boolean = false) => {
     const { loading, offset, hasMore } = get();
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     const actualOffset = resetData ? 0 : offset;
-    if (!resetData && !hasMore) return;
-
+    if (!resetData && !hasMore) {
+      return;
+    }
     set({ loading: true });
 
     try {
@@ -95,7 +98,23 @@ export const useChatHistoryStore = create<
   updateChatHistory: async (id: string, updates: Partial<ChatHistory>) => {
     const updated = await AiChatHistoryApi.updateChatHistory(id, updates);
     if (updated) {
-      await get().refreshChatHistories();
+      set((state) => ({
+        histories: state.histories.map((h) =>
+          h.id === id
+            ? {
+                ...h,
+                title: updated.title,
+                preview:
+                  updated.messages
+                    .find((m) => m.role === 'user')
+                    ?.content.slice(0, 100) || '',
+                deepThinking: updated.deepThinking,
+                model: updated.model,
+                updatedAt: updated.updatedAt,
+              }
+            : h,
+        ),
+      }));
     }
     return updated;
   },
