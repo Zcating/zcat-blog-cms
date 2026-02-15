@@ -109,7 +109,7 @@ export function ZSidebar(props: ZSidebarProps) {
           <SidebarFooter>{adaptedSidebarFooter}</SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <ZView className="h-sidebar-content">{children}</ZView>
+          <ZView className="h-content-height">{children}</ZView>
         </SidebarInset>
       </ZView>
     </SidebarProvider>

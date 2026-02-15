@@ -12,6 +12,9 @@ export default [
     route('about', 'routes/index/about.tsx'),
     route('gallery', 'routes/index/gallery.tsx'),
   ]),
+  layout('features/layouts/views/ai-chat.layout.tsx', [
+    route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
+  ]),
   layout('features/layouts/views/toolbox.layout.tsx', [
     route('toolbox', 'routes/toolbox/home.page.tsx'),
     route('toolbox/base64-to-image', 'routes/toolbox/base64-to-image.page.tsx'),
@@ -33,6 +36,5 @@ export default [
       'routes/toolbox/markdown-to-html.page.tsx',
     ),
   ]),
-  route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
   route('gallery/:id', 'routes/index/gallery.id.tsx'),
 ] satisfies RouteConfig;

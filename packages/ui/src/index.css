@@ -240,14 +240,10 @@ li {
   height: var(--footer-height);
 }
 
-.h-sidebar-height {
-  height: calc(100vh - var(--header-height));  
-}
-
-.h-sidebar-content {
+.h-content-height {
   height: calc(100vh - var(--header-height));
 }
 
-.min-h-sidebar-content {
+.min-h-content-height {
   min-height: calc(100vh - var(--header-height));
 }

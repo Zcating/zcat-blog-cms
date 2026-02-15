@@ -1,17 +1,16 @@
 import { ZView } from '@zcat/ui';
 import { Outlet } from 'react-router';
 
-import { LayoutFooter, LayoutHeader } from '../components';
+import { LayoutHeader } from '../components';
 import { MENU_OPTIONS } from '../stores';
 
-export default function BlogLayout() {
+export default function AiChatLayout() {
   return (
     <ZView className="h-full w-full">
       <LayoutHeader options={MENU_OPTIONS} />
-      <ZView className="min-h-content-height py-4 relative bg-background">
+      <ZView className="h-content-height relative bg-background">
         <Outlet />
       </ZView>
-      <LayoutFooter />
     </ZView>
   );
 }

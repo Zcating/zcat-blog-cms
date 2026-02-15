@@ -3,19 +3,13 @@ import {
   ZSelect,
   ZChat,
   Toggle,
-  ZButton,
-  Separator,
   ZView,
   type Message,
   useMemoizedFn,
   ZNotification,
   useMount,
 } from '@zcat/ui';
-import {
-  AtomIcon,
-  MessageCircleIcon,
-  MessageCirclePlusIcon,
-} from 'lucide-react';
+import { AtomIcon } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { AiApi } from '../apis/ai-api';
@@ -43,7 +37,10 @@ export const AiChat = React.forwardRef<AiChatRef, AiChatProps>(
 
     const chat = useAiChatManager(conversationId);
 
-    const handleStartNewChat = useMemoizedFn(() => {
+    /**
+     * 开始新的对话
+     */
+    const startNewChat = useMemoizedFn(() => {
       useChatHistoryStore.getState().updateChatHistory(conversationId, {
         deepThinking,
         model,
@@ -81,11 +78,9 @@ export const AiChat = React.forwardRef<AiChatRef, AiChatProps>(
       setDeepThinking(current.deepThinking);
     });
 
-    React.useImperativeHandle(ref, () => ({
-      loadConversation,
-      startNewChat: handleStartNewChat,
-    }));
-
+    /**
+     * 发送消息
+     */
     const handleSend = useMemoizedFn(async (message: Message) => {
       const result = await apiKeyPromption(model);
       if (!result) {
@@ -112,6 +107,11 @@ export const AiChat = React.forwardRef<AiChatRef, AiChatProps>(
     });
 
     useMount(() => useChatHistoryStore.getState().loadChatHistories());
+
+    React.useImperativeHandle(ref, () => ({
+      loadConversation,
+      startNewChat,
+    }));
 
     return (
       <>
