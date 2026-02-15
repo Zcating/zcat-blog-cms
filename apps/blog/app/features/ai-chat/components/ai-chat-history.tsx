@@ -1,10 +1,65 @@
 import { ZButton, cn, useMemoizedFn } from '@zcat/ui';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import type { ChatHistorySummary } from '../chat-history-types';
+
+export interface AiChatHistoryProps {
+  histories: ChatHistorySummary[];
+  selectedId: string;
+  onSelect: (history: ChatHistorySummary) => void;
+  onDelete: (e: React.MouseEvent<HTMLButtonElement>, id: string) => void;
+  onNewChat: () => void;
+  className?: string;
+}
+
+export function AiChatHistory({
+  histories,
+  selectedId,
+  onSelect,
+  onDelete,
+  onNewChat,
+  className,
+}: AiChatHistoryProps) {
+  return (
+    <div
+      className={cn(
+        'w-80 shrink-0 flex flex-col border-r bg-muted/10',
+        className,
+      )}
+    >
+      <div className="p-4 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+        <ZButton
+          className="w-full justify-start font-normal"
+          variant="outline"
+          onClick={onNewChat}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          新对话
+        </ZButton>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {histories.map((history) => (
+          <AiChatHistoryItem
+            key={history.id}
+            history={history}
+            isSelected={selectedId === history.id}
+            onSelect={onSelect}
+            onDelete={onDelete}
+          />
+        ))}
+        {histories.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            暂无历史记录
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export interface AiChatHistoryItemProps {
   history: ChatHistorySummary;

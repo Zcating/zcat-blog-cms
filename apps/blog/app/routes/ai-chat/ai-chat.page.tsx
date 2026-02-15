@@ -1,10 +1,9 @@
-import { ZButton, ZView } from '@zcat/ui';
-import { Plus } from 'lucide-react';
+import { ZView } from '@zcat/ui';
 import { useEffect, useRef, useState } from 'react';
 
 import {
   AiChat,
-  AiChatHistoryItem,
+  AiChatHistory,
   type AiChatRef,
   type ChatHistorySummary,
   useChatHistoryStore,
@@ -47,35 +46,13 @@ export default function AiChatPage() {
   return (
     <ZView className="flex h-full w-full overflow-hidden bg-background">
       {/* 历史对话侧边栏 */}
-      <div className="w-80 shrink-0 flex flex-col border-r bg-muted/10">
-        <div className="p-4 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-          <ZButton
-            className="w-full justify-start font-normal"
-            variant="outline"
-            onClick={handleNewChat}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            新对话
-          </ZButton>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {histories.map((history) => (
-            <AiChatHistoryItem
-              key={history.id}
-              history={history}
-              isSelected={selectedId === history.id}
-              onSelect={handleSelect}
-              onDelete={handleDelete}
-            />
-          ))}
-          {histories.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              暂无历史记录
-            </div>
-          )}
-        </div>
-      </div>
+      <AiChatHistory
+        histories={histories}
+        selectedId={selectedId}
+        onSelect={handleSelect}
+        onDelete={handleDelete}
+        onNewChat={handleNewChat}
+      />
 
       {/* 聊天主区域 */}
       <ZView className="flex flex-col flex-1 min-w-0">
