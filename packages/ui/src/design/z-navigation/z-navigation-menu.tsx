@@ -5,7 +5,7 @@ import {
   NavigationMenuList,
 } from '@zcat/ui/shadcn/ui/navigation-menu';
 
-interface LinkOption {
+export interface LinkOption {
   to: string;
   title: string;
 }

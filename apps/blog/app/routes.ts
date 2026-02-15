@@ -5,14 +5,14 @@ import {
   route,
 } from '@react-router/dev/routes';
 export default [
-  layout('features/layouts/blog-layout/blog.layout.tsx', [
+  layout('features/layouts/views/blog.layout.tsx', [
     index('routes/index/home.page.tsx'),
     route('post-board', 'routes/index/post-board.tsx'),
     route('post-board/:id', 'routes/index/post-board.id.tsx'),
     route('about', 'routes/index/about.tsx'),
     route('gallery', 'routes/index/gallery.tsx'),
   ]),
-  layout('features/layouts/toolbox-layout/toolbox.layout.tsx', [
+  layout('features/layouts/views/toolbox.layout.tsx', [
     route('toolbox', 'routes/toolbox/home.page.tsx'),
     route('toolbox/base64-to-image', 'routes/toolbox/base64-to-image.page.tsx'),
     route(

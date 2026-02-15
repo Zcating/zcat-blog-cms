@@ -15,8 +15,8 @@ import { useState } from 'react';
 import { createSearchParams, Link, useNavigate } from 'react-router';
 
 import { ArticleApi, UserApi } from '@blog/apis';
+import { safePositiveNumber } from '@blog/common';
 import { PostExcerptCard } from '@blog/features';
-import { safePositiveNumber } from '@blog/utils';
 
 import type { Route } from '../index/+types/home.page';
 

@@ -1,0 +1,91 @@
+import { Button, useSidebar, ZSidebar, type ZSidebarOption } from '@zcat/ui';
+import { SidebarIcon } from 'lucide-react';
+import { Link, Outlet } from 'react-router';
+
+import { LayoutFooter, LayoutHeader } from '../components';
+import { MENU_OPTIONS } from '../stores';
+
+const items: ZSidebarOption[] = [
+  {
+    label: '导航',
+    value: '/toolbox',
+  },
+  {
+    label: '常用',
+    children: [
+      {
+        label: 'IP 查询',
+        value: '/toolbox/ip-lookup',
+      },
+      {
+        label: 'Hash 计算',
+        value: '/toolbox/hash',
+      },
+      {
+        label: 'RSA 加解密',
+        value: '/toolbox/rsa-crypto',
+      },
+      {
+        label: 'AES 加解密',
+        value: '/toolbox/aes-crypto',
+      },
+      {
+        label: '图片和 Base64 互转',
+        value: '/toolbox/base64-to-image',
+      },
+      {
+        label: '二维码生成',
+        value: '/toolbox/qrcode-generator',
+      },
+      {
+        label: '身份证生成',
+        value: '/toolbox/id-card-generator',
+      },
+    ],
+  },
+];
+
+export default function ToolboxLayout() {
+  const renderItem = (item: ZSidebarOption) => {
+    if (item.value) {
+      return (
+        <Link to={item.value}>
+          <span>{item.label}</span>
+        </Link>
+      );
+    }
+    return <span>{item.label}</span>;
+  };
+
+  return (
+    <ZSidebar
+      className="h-full w-full overflow-hidden"
+      options={items}
+      renderItem={renderItem}
+      header={ToolboxHeader}
+      sidebarFooter={LayoutFooter}
+    >
+      <Outlet />
+    </ZSidebar>
+  );
+}
+
+function ToolboxHeader() {
+  const sidebar = useSidebar();
+
+  return (
+    <LayoutHeader
+      options={MENU_OPTIONS}
+      prefix={
+        <Button
+          className="h-8 w-8"
+          variant="ghost"
+          size="icon"
+          onClick={sidebar.toggleSidebar}
+        >
+          <SidebarIcon />
+        </Button>
+      }
+    />
+  );
+}

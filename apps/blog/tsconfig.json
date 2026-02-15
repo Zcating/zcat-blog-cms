@@ -16,16 +16,14 @@
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "@blog/components": ["./app/components"],
-      "@blog/components/*": ["./app/components/*"],
+      "@blog/common": ["./app/common"],
+      "@blog/common/*": ["./app/common/*"],
       "@blog/features": ["./app/features"],
       "@blog/features/*": ["./app/features/*"],
       "@blog/routes": ["./app/routes"],
       "@blog/routes/*": ["./app/routes/*"],
       "@blog/apis": ["./app/apis"],
       "@blog/apis/*": ["./app/apis/*"],
-      "@blog/utils": ["./app/utils"],
-      "@blog/utils/*": ["./app/utils/*"],
       "@root": ["./app/*"]
     },
     "esModuleInterop": true,

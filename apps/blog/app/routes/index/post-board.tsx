@@ -2,8 +2,8 @@ import { StaggerReveal, ZView, ZPagination } from '@zcat/ui';
 import { Link, useNavigate } from 'react-router';
 
 import { ArticleApi } from '@blog/apis';
-import { PostExcerptCard } from '@blog/features/components/post';
-import { safePositiveNumber } from '@blog/utils';
+import { safePositiveNumber } from '@blog/common';
+import { PostExcerptCard } from '@blog/features';
 
 import type { Route } from '../index/+types/post-board';
 
