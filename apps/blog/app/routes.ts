@@ -11,7 +11,6 @@ export default [
     route('post-board/:id', 'routes/index/post-board.id.tsx'),
     route('about', 'routes/index/about.tsx'),
     route('gallery', 'routes/index/gallery.tsx'),
-    route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
   ]),
   layout('features/layouts/toolbox-layout/toolbox.layout.tsx', [
     route('toolbox', 'routes/toolbox/home.page.tsx'),
@@ -34,5 +33,6 @@ export default [
       'routes/toolbox/markdown-to-html.page.tsx',
     ),
   ]),
+  route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
   route('gallery/:id', 'routes/index/gallery.id.tsx'),
 ] satisfies RouteConfig;
