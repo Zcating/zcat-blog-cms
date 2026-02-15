@@ -36,7 +36,15 @@ async function getDB(): Promise<IDBPDatabase<ChatHistoryDB>> {
   return db;
 }
 
+/**
+ * 聊天历史记录API
+ */
 export namespace AiChatHistoryApi {
+  /**
+   * 创建一个新的聊天历史记录
+   * @param params 创建聊天历史记录的参数
+   * @returns 创建的聊天历史记录
+   */
   export async function createChatHistory(
     params: CreateChatHistoryParams,
   ): Promise<ChatHistory> {
@@ -66,6 +74,11 @@ export namespace AiChatHistoryApi {
     return chatHistory;
   }
 
+  /**
+   * 获取指定ID的聊天历史记录
+   * @param id 聊天历史记录ID
+   * @returns 聊天历史记录或undefined
+   */
   export async function getChatHistory(
     id: string,
   ): Promise<ChatHistory | undefined> {
@@ -73,6 +86,12 @@ export namespace AiChatHistoryApi {
     return db.get(STORE_NAME, id);
   }
 
+  /**
+   * 获取聊天历史记录摘要列表
+   * @param limit 每页数量，默认50
+   * @param offset 偏移量，默认0
+   * @returns 聊天历史记录摘要列表
+   */
   export async function getChatHistorySummaries(
     limit: number = 50,
     offset: number = 0,
@@ -94,6 +113,12 @@ export namespace AiChatHistoryApi {
     }));
   }
 
+  /**
+   * 更新指定ID的聊天历史记录
+   * @param id 聊天历史记录ID
+   * @param updates 要更新的聊天历史记录字段
+   * @returns 更新后的聊天历史记录或undefined
+   */
   export async function updateChatHistory(
     id: string,
     updates: Partial<ChatHistory>,
@@ -112,22 +137,39 @@ export namespace AiChatHistoryApi {
     return updated;
   }
 
+  /**
+   * 删除指定ID的聊天历史记录
+   * @param id 聊天历史记录ID
+   * @returns 是否成功删除
+   */
   export async function deleteChatHistory(id: string): Promise<boolean> {
     const db = await getDB();
     const deleted = await db.delete(STORE_NAME, id);
     return deleted === undefined;
   }
 
+  /**
+   * 获取所有聊天历史记录ID
+   * @returns 所有聊天历史记录ID列表
+   */
   export async function getAllChatHistoryIds(): Promise<string[]> {
     const db = await getDB();
     return db.getAllKeys(STORE_NAME);
   }
 
+  /**
+   * 清空所有聊天历史记录
+   */
   export async function clearAllChatHistory(): Promise<void> {
     const db = await getDB();
     await db.clear(STORE_NAME);
   }
 
+  /**
+   * 生成聊天标题
+   * @param messages 聊天消息列表
+   * @returns 生成的聊天标题
+   */
   export async function generateChatTitle(
     messages: Message[],
   ): Promise<string> {

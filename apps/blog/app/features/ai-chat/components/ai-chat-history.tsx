@@ -10,7 +10,7 @@ export interface AiChatHistoryProps {
   histories: ChatHistorySummary[];
   selectedId: string;
   onSelect: (history: ChatHistorySummary) => void;
-  onDelete: (e: React.MouseEvent<HTMLButtonElement>, id: string) => void;
+  onDelete: (id: string) => void;
   onNewChat: () => void;
   className?: string;
 }
@@ -65,7 +65,7 @@ export interface AiChatHistoryItemProps {
   history: ChatHistorySummary;
   isSelected?: boolean;
   onSelect?: (history: ChatHistorySummary) => void;
-  onDelete?: (e: React.MouseEvent<HTMLButtonElement>, id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export function AiChatHistoryItem({
@@ -80,7 +80,9 @@ export function AiChatHistoryItem({
 
   const handleDelete = useMemoizedFn(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      onDelete?.(e, history.id);
+      e.stopPropagation();
+
+      onDelete?.(history.id);
     },
   );
 

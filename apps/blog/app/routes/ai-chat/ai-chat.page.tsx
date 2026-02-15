@@ -1,47 +1,18 @@
 import { ZView } from '@zcat/ui';
-import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 
-import {
-  AiChat,
-  AiChatHistory,
-  type AiChatRef,
-  type ChatHistorySummary,
-  useChatHistoryStore,
-} from '@blog/features';
+import { AiChat, AiChatHistory, type ChatHistorySummary } from '@blog/features';
 
 export default function AiChatPage() {
-  const aiChatRef = useRef<AiChatRef>(null);
-  const [selectedId, setSelectedId] = useState<string>('');
-  const { histories, loadChatHistories, deleteChatHistory } =
-    useChatHistoryStore();
+  const [selectedId, setSelectedId] = React.useState<string>('');
 
-  useEffect(() => {
-    loadChatHistories(true);
-  }, [loadChatHistories]);
+  const histories: ChatHistorySummary[] = [];
 
-  const handleSelect = (history: ChatHistorySummary) => {
-    if (selectedId === history.id) return;
-    setSelectedId(history.id);
-    aiChatRef.current?.loadConversation(history.id);
-  };
+  const handleSelect = (history: ChatHistorySummary) => {};
 
-  const handleNewChat = () => {
-    setSelectedId('');
-    aiChatRef.current?.startNewChat();
-  };
+  const handleNewChat = () => {};
 
-  const handleDelete = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    id: string,
-  ) => {
-    e.stopPropagation();
-    if (confirm('确认删除该对话吗？')) {
-      await deleteChatHistory(id);
-      if (selectedId === id) {
-        handleNewChat();
-      }
-    }
-  };
+  const handleDelete = async (id: string) => {};
 
   return (
     <ZView className="flex h-full w-full overflow-hidden bg-background">
@@ -57,7 +28,7 @@ export default function AiChatPage() {
       {/* 聊天主区域 */}
       <ZView className="flex flex-col flex-1 min-w-0">
         <ZView className="flex-1 overflow-hidden relative">
-          <AiChat ref={aiChatRef} className="h-full w-full" />
+          <AiChat className="h-full w-full" />
         </ZView>
       </ZView>
     </ZView>

@@ -15,12 +15,7 @@ interface AiChatForm {
   message: Message;
 }
 
-interface ConversationChangeParams {
-  conversationId: string;
-  messages: Message[];
-}
-
-export function useAiChatManager(id: string) {
+export function useAiChatManager() {
   const controller = useZChatController();
 
   const chatActionRef = React.useRef<ChatTaskSlice | null>(null);
@@ -81,52 +76,20 @@ export function useAiChatManager(id: string) {
 
   /**
    * 取消当前正在进行的聊天操作
-   * @param reason 取消操作的原因
    */
-  const abort = useMemoizedFn(async (reason: string) => {
+  const abort = useMemoizedFn(async () => {
     const chatAction = chatActionRef.current;
     if (!chatAction) {
       return;
     }
 
-    chatAction.abort(reason);
+    chatAction.abort('用户取消');
   });
-
-  /**
-   * 切换当前聊天会话
-   * @param params 包含新会话 ID 和消息数组的参数
-   * @returns 是否成功切换会话
-   */
-  function changeConversation(params: ConversationChangeParams) {
-    if (unsubscriptionRef.current) {
-      unsubscriptionRef.current();
-      unsubscriptionRef.current = null;
-    }
-
-    controller.set(params.messages);
-
-    const chatTask = useChatStore.getState().recover(id);
-    if (!chatTask) {
-      return;
-    }
-    chatActionRef.current = chatTask;
-
-    const last = controller.lastMessage;
-    if (!last || last.role !== 'assistant') {
-      return;
-    }
-
-    unsubscriptionRef.current = chatTask.subscribe((event) => {
-      last.setContent(event.content);
-      last.setFinish(event.isFinish);
-    });
-  }
 
   return {
     controller,
     send,
     abort,
     regenerate,
-    changeConversation,
   };
 }
