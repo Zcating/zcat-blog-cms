@@ -48,6 +48,7 @@ export const useChatHistoryStore = create<
     if (!resetData && !hasMore) {
       return;
     }
+
     set({ loading: true });
 
     try {
