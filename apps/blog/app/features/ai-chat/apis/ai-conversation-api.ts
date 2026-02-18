@@ -65,7 +65,7 @@ export namespace AiConversationApi {
     }
 
     const chatHistory: ChatHistory = {
-      id: crypto.randomUUID(),
+      id: `${Date.now()}-${crypto.randomUUID()}`,
       title,
       messages,
       model: params.model,

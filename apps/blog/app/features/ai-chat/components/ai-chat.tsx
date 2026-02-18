@@ -25,6 +25,7 @@ interface SendParams {
 interface AiChatProps {
   controller: ZChatController;
   className?: string;
+  loading?: boolean;
   emptyComponent?: React.ReactNode | React.ComponentType;
   onSend: (params: SendParams) => void;
   onRegenerate: () => void;
@@ -33,6 +34,7 @@ interface AiChatProps {
 
 export const AiChat = ({
   className,
+  loading,
   emptyComponent,
   controller,
   onSend,
@@ -65,6 +67,7 @@ export const AiChat = ({
     <ZChat
       className={cn('overflow-hidden', className)}
       controller={controller}
+      loading={loading}
       onSend={handleSend}
       onAbort={onAbort}
       onRegenerate={onRegenerate}

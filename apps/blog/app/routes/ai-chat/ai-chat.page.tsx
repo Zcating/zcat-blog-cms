@@ -1,5 +1,4 @@
 import { ZView } from '@zcat/ui';
-import React from 'react';
 
 import { AiChat, AiChatHistory, useAiChatManager } from '@blog/features';
 
@@ -26,6 +25,7 @@ export default function AiChatPage() {
             onSend={manager.send}
             onRegenerate={manager.regenerate}
             onAbort={manager.abort}
+            loading={manager.loading}
           />
         </ZView>
       </ZView>

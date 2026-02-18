@@ -6,67 +6,13 @@ import {
   AiConversationApi,
   type ChatHistorySummary,
 } from '../apis/ai-conversation-api';
+import { ChatTaskQuery, type ChatEvent } from '../utils';
 
 const SYSTEM_PROMPT = {
   role: 'system',
   content:
     '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。',
 } as const;
-
-interface ChatEvent {
-  content: string;
-  isFinish: boolean;
-}
-
-class ChatTask {
-  private listeners: ((event: ChatEvent) => void)[] = [];
-  private state: ChatEvent = {
-    content: '',
-    isFinish: false,
-  };
-
-  constructor() {
-    this.addListener = this.addListener.bind(this);
-    this.append = this.append.bind(this);
-    this.reset = this.reset.bind(this);
-    this.finish = this.finish.bind(this);
-    this.fail = this.fail.bind(this);
-  }
-
-  addListener(callback: (event: ChatEvent) => void): Teardown {
-    this.listeners.push(callback);
-    callback(this.state);
-
-    return () => {
-      const index = this.listeners.indexOf(callback);
-      if (index !== -1) {
-        this.listeners.splice(index, 1);
-      }
-    };
-  }
-
-  append(content: string) {
-    this.state.content += content;
-    this.listeners.forEach((listener) => listener(this.state));
-  }
-
-  reset(content: string) {
-    this.state.isFinish = false;
-    this.state.content = content;
-    this.listeners.forEach((listener) => listener(this.state));
-  }
-
-  finish() {
-    this.state.isFinish = true;
-    this.listeners.forEach((listener) => listener(this.state));
-  }
-
-  fail(content: string) {
-    this.state.isFinish = true;
-    this.state.content = content;
-    this.listeners.forEach((listener) => listener(this.state));
-  }
-}
 
 interface ChatParams {
   conversationId: string;
@@ -75,22 +21,9 @@ interface ChatParams {
   messages: AiApi.ChatMessage[];
 }
 
-const conversationTasks = new Map<string, ChatTask>();
-
-function getTask(conversationId: string) {
-  let task = conversationTasks.get(conversationId);
-  if (!task) {
-    task = new ChatTask();
-    conversationTasks.set(conversationId, task);
-  }
-  return task;
-}
-
 interface ChatHandler {
-  start: () => void;
-  restart: () => void;
+  start: (callback: (event: ChatEvent) => void) => Teardown;
   abort: (reason: string) => void;
-  subscribe: (callback: (event: ChatEvent) => void) => Teardown;
 }
 
 function createChatHandler(params: ChatParams) {
@@ -100,7 +33,7 @@ function createChatHandler(params: ChatParams) {
     deepThinking: params.deepThinking,
   });
 
-  const task = getTask(params.conversationId);
+  const task = ChatTaskQuery.getTask(params.conversationId);
 
   async function runAssistantStream() {
     try {
@@ -130,19 +63,13 @@ function createChatHandler(params: ChatParams) {
   }
 
   return {
-    start: () => {
+    start: (callback: (event: ChatEvent) => void) => {
       runAssistantStream();
-    },
-    restart: () => {
-      streamHandler.abort('用户重新发起了请求');
-      runAssistantStream();
+      return task.addListener(callback);
     },
     abort: (reason: string) => {
       streamHandler.abort(reason);
       task.fail(reason);
-    },
-    subscribe: (callback: (event: ChatEvent) => void) => {
-      return task.addListener(callback);
     },
   };
 }
@@ -156,9 +83,7 @@ interface SendParams {
 export function useAiChatManager() {
   const controller = useZChatController();
 
-  const [conversationId, setConversationId] = React.useState(() => {
-    return AiConversationApi.createConversationId();
-  });
+  const [conversationId, setConversationId] = React.useState('');
 
   const [histories, setHistories] = React.useState<ChatHistorySummary[]>([]);
   useMount(async () => {
@@ -172,6 +97,22 @@ export function useAiChatManager() {
 
   async function send(params: SendParams) {
     setLoading(true);
+
+    let currentId = conversationId;
+    if (!currentId) {
+      currentId = AiConversationApi.createConversationId();
+      const history = await AiConversationApi.createChatHistory({
+        title: params.message.content.slice(0, 100),
+        model: params.model,
+        deepThinking: params.deepThinking,
+        messages: [params.message],
+      });
+      setConversationId(history.id);
+      setHistories([
+        { ...history, preview: params.message.content.slice(0, 100) },
+        ...histories,
+      ]);
+    }
 
     controller.add(params.message);
 
@@ -187,21 +128,28 @@ export function useAiChatManager() {
       content: '',
     });
 
-    unsubscriberRef.current = chatHandler.current.subscribe((event) => {
+    unsubscriberRef.current = chatHandler.current.start((event) => {
       if (event.isFinish) {
         setLoading(false);
+        output.setFinish(event.isFinish);
       }
-      output.content = event.content;
+      output.setContent(event.content);
     });
-
-    chatHandler.current.start();
   }
 
   function regenerate() {
-    if (!chatHandler.current) {
+    setLoading(true);
+    controller.pop();
+    const userInput = controller.lastMessage;
+    if (!userInput || userInput.role !== 'user') {
       return;
     }
-    chatHandler.current.restart();
+
+    // send({
+    //   model: params.model,
+    //   deepThinking: params.deepThinking,
+    //   message: userInput,
+    // });
   }
 
   function abort() {
@@ -230,11 +178,28 @@ export function useAiChatManager() {
     setLoading(false);
     setConversationId(summary.id);
     const next = await AiConversationApi.getChatHistory(summary.id);
-    console.log(next);
     if (!next) {
       return;
     }
     controller.set(next.messages);
+
+    const output = controller.lastMessage;
+    if (!output) {
+      return;
+    }
+
+    const task = ChatTaskQuery.findTask(summary.id);
+    if (!task) {
+      return;
+    }
+
+    unsubscriberRef.current = task.addListener((event) => {
+      if (event.isFinish) {
+        setLoading(false);
+        output.setFinish(event.isFinish);
+      }
+      output.setContent(event.content);
+    });
   }
 
   function newConversation() {
@@ -244,8 +209,7 @@ export function useAiChatManager() {
     }
 
     setLoading(false);
-    const conversationId = AiConversationApi.createConversationId();
-    setConversationId(conversationId);
+    setConversationId('');
     controller.clear();
   }
 
