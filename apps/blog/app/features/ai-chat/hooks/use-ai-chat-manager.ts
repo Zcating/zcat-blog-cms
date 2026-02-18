@@ -1,95 +1,263 @@
-import { type Message, useMemoizedFn, useZChatController } from '@zcat/ui';
+import { useMount, useZChatController, type Message } from '@zcat/ui';
 import React from 'react';
 
 import { AiApi } from '../apis/ai-api';
-import { useChatStore, type ChatTaskSlice } from '../stores/use-chat-store';
+import {
+  AiConversationApi,
+  type ChatHistorySummary,
+} from '../apis/ai-conversation-api';
 
-function createMessageId() {
-  return `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+const SYSTEM_PROMPT = {
+  role: 'system',
+  content:
+    '你是一个专业的 Markdown 助手，能够根据用户的输入生成符合 Markdown 语法的内容。',
+} as const;
+
+interface ChatEvent {
+  content: string;
+  isFinish: boolean;
 }
 
-interface AiChatForm {
+class ChatTask {
+  private listeners: ((event: ChatEvent) => void)[] = [];
+  private state: ChatEvent = {
+    content: '',
+    isFinish: false,
+  };
+
+  constructor() {
+    this.addListener = this.addListener.bind(this);
+    this.append = this.append.bind(this);
+    this.reset = this.reset.bind(this);
+    this.finish = this.finish.bind(this);
+    this.fail = this.fail.bind(this);
+  }
+
+  addListener(callback: (event: ChatEvent) => void): Teardown {
+    this.listeners.push(callback);
+    callback(this.state);
+
+    return () => {
+      const index = this.listeners.indexOf(callback);
+      if (index !== -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+
+  append(content: string) {
+    this.state.content += content;
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  reset(content: string) {
+    this.state.isFinish = false;
+    this.state.content = content;
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  finish() {
+    this.state.isFinish = true;
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  fail(content: string) {
+    this.state.isFinish = true;
+    this.state.content = content;
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+}
+
+interface ChatParams {
   conversationId: string;
   model: AiApi.ChatModelName;
   deepThinking: boolean;
-  message: Message;
+  messages: AiApi.ChatMessage[];
+}
+
+const conversationTasks = new Map<string, ChatTask>();
+
+function getTask(conversationId: string) {
+  let task = conversationTasks.get(conversationId);
+  if (!task) {
+    task = new ChatTask();
+    conversationTasks.set(conversationId, task);
+  }
+  return task;
+}
+
+interface ChatHandler {
+  start: () => void;
+  restart: () => void;
+  abort: (reason: string) => void;
+  subscribe: (callback: (event: ChatEvent) => void) => Teardown;
+}
+
+function createChatHandler(params: ChatParams) {
+  const streamHandler = AiApi.chat({
+    modelName: params.model,
+    messages: [SYSTEM_PROMPT, ...params.messages],
+    deepThinking: params.deepThinking,
+  });
+
+  const task = getTask(params.conversationId);
+
+  async function runAssistantStream() {
+    try {
+      task.reset('');
+      let isThinking = false;
+      const stream = await streamHandler.create();
+      for await (const message of stream) {
+        if (message.thinking) {
+          if (!isThinking) {
+            isThinking = true;
+            task.append('```think\n');
+          }
+          task.append(message.thinking);
+          continue;
+        }
+        if (isThinking) {
+          task.append('\n```\n');
+          isThinking = false;
+        }
+        task.append(message.content);
+      }
+
+      task.finish();
+    } catch (error) {
+      task.fail('网络出错啦！！！');
+    }
+  }
+
+  return {
+    start: () => {
+      runAssistantStream();
+    },
+    restart: () => {
+      streamHandler.abort('用户重新发起了请求');
+      runAssistantStream();
+    },
+    abort: (reason: string) => {
+      streamHandler.abort(reason);
+      task.fail(reason);
+    },
+    subscribe: (callback: (event: ChatEvent) => void) => {
+      return task.addListener(callback);
+    },
+  };
+}
+
+interface SendParams {
+  model: AiApi.ChatModelName;
+  deepThinking: boolean;
+  message: AiApi.ChatMessage;
 }
 
 export function useAiChatManager() {
   const controller = useZChatController();
 
-  const chatActionRef = React.useRef<ChatTaskSlice | null>(null);
+  const [conversationId, setConversationId] = React.useState(() => {
+    return AiConversationApi.createConversationId();
+  });
 
-  const unsubscriptionRef = React.useRef<Teardown | null>(null);
+  const [histories, setHistories] = React.useState<ChatHistorySummary[]>([]);
+  useMount(async () => {
+    const data = await AiConversationApi.getChatHistorySummaries();
+    setHistories(data);
+  });
 
-  /**
-   * 发送用户消息并处理 AI 助手的响应
-   * @param message 用户发送的消息
-   * @returns 是否成功发送消息
-   */
-  const send = useMemoizedFn(async (form: AiChatForm) => {
-    if (unsubscriptionRef.current) {
-      unsubscriptionRef.current();
-      unsubscriptionRef.current = null;
-    }
+  const [loading, setLoading] = React.useState(false);
+  const chatHandler = React.useRef<ChatHandler>(null);
+  const unsubscriberRef = React.useRef<() => void>(null);
 
-    controller.add({
-      ...form.message,
-      id: createMessageId(),
+  async function send(params: SendParams) {
+    setLoading(true);
+
+    controller.add(params.message);
+
+    chatHandler.current = createChatHandler({
+      conversationId,
+      model: params.model,
+      deepThinking: params.deepThinking,
+      messages: controller.json(),
     });
 
-    try {
-      chatActionRef.current = await useChatStore.getState().chat({
-        conversationId: form.conversationId,
-        model: form.model,
-        deepThinking: form.deepThinking,
-        messages: controller.json(),
-      });
+    const output = controller.add({
+      role: 'assistant',
+      content: '',
+    });
 
-      const last = controller.add({
-        role: 'assistant',
-        content: '',
-        id: createMessageId(),
-      });
+    unsubscriberRef.current = chatHandler.current.subscribe((event) => {
+      if (event.isFinish) {
+        setLoading(false);
+      }
+      output.content = event.content;
+    });
 
-      unsubscriptionRef.current = chatActionRef.current.subscribe((event) => {
-        last.setContent(event.content);
-        last.setFinish(event.isFinish);
-      });
-    } catch (error) {
-      console.error('创建聊天处理程序失败:', error);
-      return false;
-    }
+    chatHandler.current.start();
+  }
 
-    return true;
-  });
-
-  /**
-   * 重新生成当前 AI 助手的响应
-   */
-  const regenerate = useMemoizedFn(async () => {
-    if (!chatActionRef.current) {
+  function regenerate() {
+    if (!chatHandler.current) {
       return;
     }
-    chatActionRef.current?.start();
-  });
+    chatHandler.current.restart();
+  }
 
-  /**
-   * 取消当前正在进行的聊天操作
-   */
-  const abort = useMemoizedFn(async () => {
-    const chatAction = chatActionRef.current;
-    if (!chatAction) {
+  function abort() {
+    if (!chatHandler.current) {
       return;
     }
+    chatHandler.current.abort('用户主动中断了请求');
+    setLoading(false);
+  }
 
-    chatAction.abort('用户取消');
-  });
+  /**
+   * 切换会话
+   * @param {ChatHistorySummary} summary 下一个会话摘要
+   * @returns
+   */
+  async function selectConversation(summary: ChatHistorySummary) {
+    if (unsubscriberRef.current) {
+      unsubscriberRef.current();
+      unsubscriberRef.current = null;
+    }
+
+    await AiConversationApi.updateChatHistory(conversationId, {
+      messages: controller.json(),
+    });
+
+    setLoading(false);
+    setConversationId(summary.id);
+    const next = await AiConversationApi.getChatHistory(summary.id);
+    console.log(next);
+    if (!next) {
+      return;
+    }
+    controller.set(next.messages);
+  }
+
+  function newConversation() {
+    if (unsubscriberRef.current) {
+      unsubscriberRef.current();
+      unsubscriberRef.current = null;
+    }
+
+    setLoading(false);
+    const conversationId = AiConversationApi.createConversationId();
+    setConversationId(conversationId);
+    controller.clear();
+  }
 
   return {
     controller,
+    histories,
+    conversationId,
+    loading,
     send,
-    abort,
     regenerate,
+    abort,
+    selectConversation,
+    newConversation,
   };
 }

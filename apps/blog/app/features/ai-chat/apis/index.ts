@@ -1,2 +1,2 @@
 export * from './ai-api';
-export * from './ai-chat-history-api';
+export * from './ai-conversation-api';

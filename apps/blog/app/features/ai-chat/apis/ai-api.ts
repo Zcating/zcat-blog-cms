@@ -1,7 +1,9 @@
 import { Stream } from '../utils/stream/stream';
 
+import { TestModelApi } from './test-model-api';
+
 export namespace AiApi {
-  interface ChatCompletion {
+  export interface ChatCompletion {
     choices: {
       delta: {
         content: string;
@@ -9,6 +11,7 @@ export namespace AiApi {
       };
     }[];
   }
+
   export interface ChatMessage {
     role: 'system' | 'user' | 'assistant' | 'function';
     content: string;
@@ -16,11 +19,11 @@ export namespace AiApi {
   }
 
   export interface ChatStreamHandler {
-    create(deepThinking?: boolean): Promise<Stream<ChatMessage>>;
+    create(): Promise<Stream<ChatMessage>>;
     abort(reason?: string): void;
   }
 
-  export type ChatModelName = 'deepseek';
+  export type ChatModelName = 'deepseek' | 'test';
   type ChatModels = {
     [x in ChatModelName]: {
       run(
@@ -90,28 +93,48 @@ export namespace AiApi {
         return !result.error;
       },
     },
+
+    test: {
+      run: async (
+        apiKey: string,
+        params: ChatMessage[],
+        deepThinking: boolean,
+        controller: AbortController,
+      ) => {
+        return TestModelApi.chat(apiKey, params, deepThinking, controller);
+      },
+      async test(token?: string) {
+        return true;
+      },
+    },
   };
 
   export const API_MODELS: CommonOption<ChatModelName>[] = [
     { value: 'deepseek', label: '深度求索' },
+    { value: 'test', label: '测试' },
   ];
 
-  export function registerModel() {}
+  export interface ChatParams {
+    modelName: ChatModelName;
+    messages: ChatMessage[];
+    deepThinking: boolean;
+  }
 
   /**
    * 与 AI 模型进行聊天
    */
-  export function chat(
-    modelName: ChatModelName,
-    messages: ChatMessage[],
-    deepThinking: boolean,
-  ): ChatStreamHandler {
+  export function chat(params: ChatParams): ChatStreamHandler {
     return createHandler((controller) => {
-      const apiKey = getApiKey(modelName);
+      const apiKey = getApiKey(params.modelName);
       if (!apiKey) {
-        throw new Error(`Model ${modelName} API key not found`);
+        throw new Error(`Model ${params.modelName} API key not found`);
       }
-      return models[modelName].run(apiKey, messages, deepThinking, controller);
+      return models[params.modelName].run(
+        apiKey,
+        params.messages,
+        params.deepThinking,
+        controller,
+      );
     });
   }
 

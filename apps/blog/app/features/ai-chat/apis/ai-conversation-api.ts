@@ -1,10 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
-import type {
-  ChatHistory,
-  ChatHistorySummary,
-  CreateChatHistoryParams,
-} from '../chat-history-types';
+import type { AiApi } from './ai-api';
 import type { Message } from '@zcat/ui';
 
 interface ChatHistoryDB extends DBSchema {
@@ -39,7 +35,15 @@ async function getDB(): Promise<IDBPDatabase<ChatHistoryDB>> {
 /**
  * 聊天历史记录API
  */
-export namespace AiChatHistoryApi {
+export namespace AiConversationApi {
+  /**
+   * 创建一个新的聊天历史记录ID
+   * @returns 新的聊天历史记录ID
+   */
+  export function createConversationId(): string {
+    return `${Date.now()}-${crypto.randomUUID()}`;
+  }
+
   /**
    * 创建一个新的聊天历史记录
    * @param params 创建聊天历史记录的参数
@@ -181,4 +185,31 @@ export namespace AiChatHistoryApi {
 
     return content.slice(0, 30) + '...';
   }
+}
+
+export interface ChatHistory {
+  id: string;
+  title: string;
+  messages: Message[];
+  model: AiApi.ChatModelName;
+  deepThinking: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ChatHistorySummary {
+  id: string;
+  title: string;
+  preview: string;
+  deepThinking: boolean;
+  model: AiApi.ChatModelName;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CreateChatHistoryParams {
+  title: string;
+  deepThinking: boolean;
+  model: AiApi.ChatModelName;
+  messages: Message[];
 }

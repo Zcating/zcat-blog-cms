@@ -19,9 +19,10 @@ import { ZChatBubble } from './z-chat-bubble';
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
   controller: ZChatController;
-  onSend: (message: Message) => boolean | Promise<boolean>;
-  onRegenerate?: () => void | Promise<void>;
-  onAbort?: () => void;
+  onSend: (message: Message) => void;
+  onRegenerate: () => void;
+  onAbort: () => void;
+  loading?: boolean;
   placeholder?: string;
   toolbar?: React.ReactNode;
   emptyComponent?: React.ReactNode | React.ComponentType;
@@ -32,6 +33,7 @@ export function ZChat({
   onSend,
   onAbort,
   onRegenerate,
+  loading,
   placeholder = 'Type a message...',
   className,
   toolbar,
@@ -45,15 +47,9 @@ export function ZChat({
 
   const renderEmptyState = () => safeReactNode(emptyState, DefaultEmptyState);
 
-  const { handleSend, handleAbort, handleRegenerate, loading } = useZChatSender(
-    onSend,
-    onAbort,
-    onRegenerate,
-  );
-
-  const send = useMemoizedFn(async (content: string) => {
+  const send = useMemoizedFn((content: string) => {
     lockToBottom();
-    return handleSend(content);
+    onSend({ role: 'user', content });
   });
 
   return (
@@ -76,7 +72,7 @@ export function ZChat({
                 key={index}
                 message={message}
                 regenerable={index === messages.length - 1}
-                onRegenerate={handleRegenerate}
+                onRegenerate={onRegenerate}
               />
             ))}
       </ZView>
@@ -95,10 +91,10 @@ export function ZChat({
         </ShrinkDownAnimation>
         <MessageInput
           onSend={send}
-          onAbort={handleAbort}
-          loading={loading}
+          onAbort={onAbort}
           placeholder={placeholder}
           toolbar={toolbar}
+          loading={loading}
         />
       </ZView>
     </ZView>

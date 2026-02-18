@@ -4,11 +4,11 @@ import { zhCN } from 'date-fns/locale';
 import { Plus, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import type { ChatHistorySummary } from '../chat-history-types';
+import type { ChatHistorySummary } from '../apis';
 
 export interface AiChatHistoryProps {
   histories: ChatHistorySummary[];
-  selectedId: string;
+  conversationId: string;
   onSelect: (history: ChatHistorySummary) => void;
   onDelete: (id: string) => void;
   onNewChat: () => void;
@@ -17,7 +17,7 @@ export interface AiChatHistoryProps {
 
 export function AiChatHistory({
   histories,
-  selectedId,
+  conversationId: selectedId,
   onSelect,
   onDelete,
   onNewChat,

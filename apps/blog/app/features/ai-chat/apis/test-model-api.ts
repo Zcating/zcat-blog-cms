@@ -1,56 +1,19 @@
 import { Stream } from '@blog/features/ai-chat/utils/stream/stream';
 
-export namespace AiApiMock {
-  export interface ChatMessage {
-    role: 'system' | 'user' | 'assistant' | 'function';
-    content: string;
-  }
+import type { AiApi } from './ai-api';
 
-  export interface ChatStreamHandler<P> {
-    create(params: P): Promise<Stream<ChatMessage>>;
-    abort(reason?: string): void;
-  }
+export namespace TestModelApi {
+  export function chat(
+    apiKey: string,
+    params: AiApi.ChatMessage[],
+    deepThinking: boolean,
+    controller: AbortController,
+  ): Stream<AiApi.ChatMessage | null> {
+    const stream = createTestStreamResponse(
+      `收到了${params[params.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？${markdownContent}\n${mermaidTestContent}`,
+    );
 
-  export type ChatMessagesHandler = ChatStreamHandler<ChatMessage[]>;
-
-  export function chat(): ChatStreamHandler<ChatMessage[]> {
-    return createHandler(async (params: ChatMessage[], controller) => {
-      const stream = createTestStreamResponse(
-        `收到了${params[params.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？\n${mermaidTestContent}`,
-      );
-
-      return Stream.from(stream, controller);
-    });
-  }
-
-  export function chatWithModel(): ChatStreamHandler<{
-    model: string;
-    messages: ChatMessage[];
-  }> {
-    return createHandler(async (params, controller) => {
-      const stream = createTestStreamResponse(
-        `模型：${params.model}\n收到了${params.messages[params.messages.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？\n${mermaidTestContent}`,
-      );
-      return Stream.from(stream, controller);
-    });
-  }
-
-  function createHandler<P>(
-    fn: (
-      params: P,
-      controller: AbortController,
-    ) => Promise<Stream<ChatMessage>>,
-  ): ChatStreamHandler<P> {
-    const controller = new AbortController();
-    const handler = {
-      create(params: P) {
-        return fn(params, controller);
-      },
-      abort(reason?: string) {
-        controller.abort(reason);
-      },
-    };
-    return handler;
+    return Stream.from(stream, controller);
   }
 
   /**

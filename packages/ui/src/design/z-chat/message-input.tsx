@@ -10,7 +10,7 @@ import { useSentHistory } from './use-sent-history';
 import { useShortcut } from './use-shortcut';
 
 interface MessageInputProps {
-  onSend: (content: string) => boolean | Promise<boolean>;
+  onSend: (content: string) => void;
   onAbort: () => void;
   loading?: boolean;
   placeholder?: string;
@@ -33,10 +33,7 @@ export function MessageInput({
     if (!inputValue || loading) {
       return;
     }
-    const result = await onSend(inputValue);
-    if (!result) {
-      return;
-    }
+    onSend(inputValue);
     addMessage(inputValue);
     setInputValue('');
   };

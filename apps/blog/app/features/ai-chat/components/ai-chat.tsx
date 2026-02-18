@@ -6,6 +6,8 @@ import {
   ZView,
   type Message,
   useMemoizedFn,
+  isFunction,
+  ZChatController,
 } from '@zcat/ui';
 import { AtomIcon } from 'lucide-react';
 import React, { useState } from 'react';
@@ -15,18 +17,30 @@ import { useAiChatManager } from '../hooks/use-ai-chat-manager';
 
 import { apiKeyPromption } from './api-key-promption';
 
+interface SendParams {
+  model: AiApi.ChatModelName;
+  deepThinking: boolean;
+  message: Message;
+}
 interface AiChatProps {
+  controller: ZChatController;
   className?: string;
   emptyComponent?: React.ReactNode | React.ComponentType;
+  onSend: (params: SendParams) => void;
+  onRegenerate: () => void;
+  onAbort: () => void;
 }
 
-export const AiChat = ({ className, emptyComponent }: AiChatProps) => {
-  const [conversationId, setConversationId] = useState('');
-
+export const AiChat = ({
+  className,
+  emptyComponent,
+  controller,
+  onSend,
+  onRegenerate,
+  onAbort,
+}: AiChatProps) => {
   const [deepThinking, setDeepThinking] = useState(false);
   const [model, setModel] = useState<AiApi.ChatModelName>();
-
-  const chat = useAiChatManager();
 
   /**
    * 发送消息
@@ -36,22 +50,24 @@ export const AiChat = ({ className, emptyComponent }: AiChatProps) => {
     if (!result) {
       return false;
     }
+    if (!isFunction(onSend)) {
+      return false;
+    }
 
-    return chat.send({
-      conversationId: conversationId,
+    return onSend({
       model: result.model,
       deepThinking,
-      message: message,
+      message,
     });
   });
 
   return (
     <ZChat
       className={cn('overflow-hidden', className)}
-      controller={chat.controller}
+      controller={controller}
       onSend={handleSend}
-      onAbort={() => chat.abort()}
-      onRegenerate={chat.regenerate}
+      onAbort={onAbort}
+      onRegenerate={onRegenerate}
       placeholder="问问AI..."
       emptyComponent={emptyComponent}
       toolbar={
