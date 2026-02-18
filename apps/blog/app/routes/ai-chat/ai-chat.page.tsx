@@ -12,7 +12,7 @@ export default function AiChatPage() {
         histories={manager.histories}
         conversationId={manager.conversationId}
         onSelect={manager.selectConversation}
-        onDelete={manager.abort}
+        onDelete={manager.deleteConversation}
         onNewChat={manager.newConversation}
       />
 

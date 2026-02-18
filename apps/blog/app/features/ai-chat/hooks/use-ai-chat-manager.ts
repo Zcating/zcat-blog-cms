@@ -96,28 +96,33 @@ export function useAiChatManager() {
   const unsubscriberRef = React.useRef<() => void>(null);
 
   async function send(params: SendParams) {
+    if (unsubscriberRef.current) {
+      unsubscriberRef.current();
+      unsubscriberRef.current = null;
+    }
+
     setLoading(true);
+
+    controller.add(params.message);
 
     let currentId = conversationId;
     if (!currentId) {
-      currentId = AiConversationApi.createConversationId();
       const history = await AiConversationApi.createChatHistory({
         title: params.message.content.slice(0, 100),
         model: params.model,
         deepThinking: params.deepThinking,
         messages: [params.message],
       });
-      setConversationId(history.id);
+      currentId = history.id;
+      setConversationId(currentId);
       setHistories([
         { ...history, preview: params.message.content.slice(0, 100) },
         ...histories,
       ]);
     }
 
-    controller.add(params.message);
-
     chatHandler.current = createChatHandler({
-      conversationId,
+      conversationId: currentId,
       model: params.model,
       deepThinking: params.deepThinking,
       messages: controller.json(),
@@ -213,6 +218,16 @@ export function useAiChatManager() {
     controller.clear();
   }
 
+  /**
+   * 删除会话
+   * @param {string} id 会话ID
+   * @returns
+   */
+  async function deleteConversation(id: string) {
+    await AiConversationApi.deleteChatHistory(id);
+    setHistories(histories.filter((item) => item.id !== id));
+  }
+
   return {
     controller,
     histories,
@@ -222,6 +237,7 @@ export function useAiChatManager() {
     regenerate,
     abort,
     selectConversation,
+    deleteConversation,
     newConversation,
   };
 }
