@@ -91,22 +91,20 @@ export function MessageInput({
           <ZView className="text-sm font-bold text-muted-foreground">
             {shortcut}
           </ZView>
-          <RainbowBorder className="rounded-md">
-            <ZButton
-              onClick={handleAction}
-              size="icon"
-              className="shrink-0"
-              aria-label={loading ? '停止' : '发送'}
-              tooltip={loading ? '停止' : '发送'}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2Icon className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </ZButton>
-          </RainbowBorder>
+          <ZButton
+            onClick={handleAction}
+            size="icon"
+            className="shrink-0"
+            aria-label={loading ? '停止' : '发送'}
+            tooltip={loading ? '停止' : '发送'}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2Icon className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </ZButton>
         </ZView>
       </ZView>
     </ZView>

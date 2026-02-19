@@ -14,7 +14,6 @@ import { useChatAutoScroll } from './use-chat-auto-scroll';
 import { ZChatController } from './use-chat-controller';
 import { Message } from './use-chat-message';
 import { useChatMessages } from './use-chat-messages';
-import { useZChatSender } from './use-chat-sender';
 import { ZChatBubble } from './z-chat-bubble';
 
 export interface ZChatProps extends React.HTMLAttributes<HTMLDivElement> {
