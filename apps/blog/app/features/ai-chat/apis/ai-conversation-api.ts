@@ -124,16 +124,15 @@ export namespace AiConversationApi {
    * @returns 更新后的聊天历史记录或undefined
    */
   export async function updateChatHistory(
-    id: string,
-    updates: Partial<ChatHistory>,
+    params: UpdateChatHistoryParams,
   ): Promise<ChatHistory | undefined> {
     const db = await getDB();
-    const existing = await db.get(STORE_NAME, id);
+    const existing = await db.get(STORE_NAME, params.id);
     if (!existing) return undefined;
 
     const updated: ChatHistory = {
       ...existing,
-      ...updates,
+      ...params,
       updatedAt: Date.now(),
     };
 
@@ -200,7 +199,6 @@ export interface ChatHistory {
 export interface ChatHistorySummary {
   id: string;
   title: string;
-  preview: string;
   deepThinking: boolean;
   model: AiApi.ChatModelName;
   createdAt: number;
@@ -212,4 +210,12 @@ export interface CreateChatHistoryParams {
   deepThinking: boolean;
   model: AiApi.ChatModelName;
   messages: Message[];
+}
+
+export interface UpdateChatHistoryParams {
+  id: string;
+  title?: string;
+  deepThinking?: boolean;
+  model?: AiApi.ChatModelName;
+  messages?: Message[];
 }

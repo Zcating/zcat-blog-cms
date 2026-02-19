@@ -52,6 +52,7 @@ export class ZChatController {
     if (msg) {
       this._notify();
     }
+    return msg;
   }
 
   clear() {

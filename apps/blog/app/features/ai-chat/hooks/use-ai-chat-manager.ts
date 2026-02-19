@@ -1,11 +1,9 @@
 import { useMount, useZChatController, type Message } from '@zcat/ui';
 import React from 'react';
 
+import { AiConversationApi, type ChatHistorySummary } from '../apis';
 import { AiApi } from '../apis/ai-api';
-import {
-  AiConversationApi,
-  type ChatHistorySummary,
-} from '../apis/ai-conversation-api';
+import { useChatHistoryStore } from '../stores';
 import { ChatTaskQuery, type ChatEvent } from '../utils';
 
 const SYSTEM_PROMPT = {
@@ -85,17 +83,20 @@ export function useAiChatManager() {
 
   const [conversationId, setConversationId] = React.useState('');
 
-  const [histories, setHistories] = React.useState<ChatHistorySummary[]>([]);
+  const histories = useChatHistoryStore((state) => state.histories);
+
   useMount(async () => {
-    const data = await AiConversationApi.getChatHistorySummaries();
-    setHistories(data);
+    await useChatHistoryStore.getState().fetchHistories();
   });
 
   const [loading, setLoading] = React.useState(false);
+  const [model, setModel] = React.useState<AiApi.ChatModelName>();
+  const [deepThinking, setDeepThinking] = React.useState(false);
+
   const chatHandler = React.useRef<ChatHandler>(null);
   const unsubscriberRef = React.useRef<() => void>(null);
 
-  async function send(params: SendParams) {
+  async function send(message: Message) {
     if (unsubscriberRef.current) {
       unsubscriberRef.current();
       unsubscriberRef.current = null;
@@ -103,28 +104,23 @@ export function useAiChatManager() {
 
     setLoading(true);
 
-    controller.add(params.message);
+    controller.add(message);
 
     let currentId = conversationId;
     if (!currentId) {
-      const history = await AiConversationApi.createChatHistory({
-        title: params.message.content.slice(0, 100),
-        model: params.model,
-        deepThinking: params.deepThinking,
-        messages: [params.message],
+      currentId = await useChatHistoryStore.getState().addHistory({
+        title: message.content.substring(0, 20),
+        model: model!,
+        deepThinking,
+        messages: [message],
       });
-      currentId = history.id;
       setConversationId(currentId);
-      setHistories([
-        { ...history, preview: params.message.content.slice(0, 100) },
-        ...histories,
-      ]);
     }
 
     chatHandler.current = createChatHandler({
       conversationId: currentId,
-      model: params.model,
-      deepThinking: params.deepThinking,
+      model: model!,
+      deepThinking,
       messages: controller.json(),
     });
 
@@ -144,19 +140,23 @@ export function useAiChatManager() {
 
   function regenerate() {
     setLoading(true);
-    controller.pop();
-    const userInput = controller.lastMessage;
+    const output = controller.pop();
+    if (!output || output.role !== 'assistant') {
+      return;
+    }
+
+    const userInput = controller.pop();
     if (!userInput || userInput.role !== 'user') {
       return;
     }
 
-    // send({
-    //   model: params.model,
-    //   deepThinking: params.deepThinking,
-    //   message: userInput,
-    // });
+    send(userInput);
   }
 
+  /**
+   * 中断当前会话
+   * @returns
+   */
   function abort() {
     if (!chatHandler.current) {
       return;
@@ -176,7 +176,8 @@ export function useAiChatManager() {
       unsubscriberRef.current = null;
     }
 
-    await AiConversationApi.updateChatHistory(conversationId, {
+    await useChatHistoryStore.getState().updateHistory({
+      id: conversationId,
       messages: controller.json(),
     });
 
@@ -195,6 +196,7 @@ export function useAiChatManager() {
 
     const task = ChatTaskQuery.findTask(summary.id);
     if (!task) {
+      output.setFinish(true);
       return;
     }
 
@@ -224,8 +226,7 @@ export function useAiChatManager() {
    * @returns
    */
   async function deleteConversation(id: string) {
-    await AiConversationApi.deleteChatHistory(id);
-    setHistories(histories.filter((item) => item.id !== id));
+    await useChatHistoryStore.getState().deleteHistory(id);
   }
 
   return {
@@ -233,6 +234,10 @@ export function useAiChatManager() {
     histories,
     conversationId,
     loading,
+    model,
+    setModel,
+    deepThinking,
+    setDeepThinking,
     send,
     regenerate,
     abort,

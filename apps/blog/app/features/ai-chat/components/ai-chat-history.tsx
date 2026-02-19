@@ -97,9 +97,6 @@ export function AiChatHistoryItem({
     >
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{history.title}</p>
-        <p className="text-xs text-muted-foreground truncate mt-1">
-          {history.preview || '暂无消息'}
-        </p>
         <p className="text-xs text-muted-foreground mt-1">
           {format(history.updatedAt, 'yyyy-MM-dd HH:mm', {
             locale: zhCN,
