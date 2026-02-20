@@ -20,8 +20,8 @@
  * pnpm docker:push --yes
  *
  * # 环境变量说明 (.env.deploy)
- * DOCKER_REGISTRY=103.84.110.53:5000   # Docker 镜像仓库地址
- * SSH_HOST=103.84.110.53               # SSH 服务器地址（必填）
+ * DOCKER_REGISTRY=localhost:5000   # Docker 镜像仓库地址
+ * SSH_HOST=localhost                # SSH 服务器地址（必填）
  * SSH_PORT=22                          # SSH 端口号（默认 22）
  * SSH_USER=root                        # SSH 用户名（必填）
  * SSH_PASSWORD=your_password           # SSH 密码（必填）
