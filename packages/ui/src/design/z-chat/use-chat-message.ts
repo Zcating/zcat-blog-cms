@@ -13,8 +13,8 @@ type MessageListener = (
 ) => void;
 
 export class MessageImpl implements Message {
-  id?: string;
-  role: 'user' | 'assistant' | 'system' | 'function';
+  readonly id: string;
+  readonly role: 'user' | 'assistant' | 'system' | 'function';
   content: string;
   isFinish?: boolean;
   private _listeners: Set<MessageListener> = new Set();
