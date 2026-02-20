@@ -121,7 +121,10 @@ export function useAiChatManager() {
       conversationId: currentId,
       model: model!,
       deepThinking,
-      messages: controller.json(),
+      messages: controller.json().map(({ role, content }) => ({
+        role,
+        content,
+      })),
     });
 
     const output = controller.add({
@@ -194,7 +197,12 @@ export function useAiChatManager() {
     if (!next) {
       return;
     }
-    controller.set(next.messages);
+    controller.set(
+      next.messages.map((m) => ({
+        ...m,
+        id: m.id || crypto.randomUUID(),
+      })),
+    );
 
     const output = controller.lastMessage;
     if (!output) {

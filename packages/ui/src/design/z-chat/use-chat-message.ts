@@ -24,7 +24,7 @@ export class MessageImpl implements Message {
   }
 
   constructor(message: Message) {
-    this.id = message.id;
+    this.id = message.id || Date.now().toString();
     this.role = message.role;
     this.content = message.content;
     this.isFinish = message.isFinish;
