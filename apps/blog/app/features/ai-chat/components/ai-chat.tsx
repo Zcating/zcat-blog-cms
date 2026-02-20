@@ -16,11 +16,6 @@ import { useAiChatManager } from '../hooks/use-ai-chat-manager';
 import { AiChatHistory } from './ai-chat-history';
 import { apiKeyPromption } from './api-key-promption';
 
-interface SendParams {
-  model: AiApi.ChatModelName;
-  deepThinking: boolean;
-  message: Message;
-}
 interface AiChatProps {
   className?: string;
   emptyComponent?: React.ReactNode;

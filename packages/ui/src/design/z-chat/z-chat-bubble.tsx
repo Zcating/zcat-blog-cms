@@ -55,6 +55,8 @@ const AssistantBubble = React.memo(
 
     const isFinish = useChatMessage(message, 'isFinish');
 
+    console.log(message, isFinish);
+
     return (
       <ZView className="flex flex-col w-full gap-2 justify-start items-center">
         <ZMarkdown className="w-full" content={content} />

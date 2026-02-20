@@ -129,6 +129,8 @@ export function useAiChatManager() {
       content: '',
     });
 
+    output.setFinish(false);
+
     unsubscriberRef.current = chatHandler.current.start((event) => {
       if (event.isFinish) {
         setLoading(false);
@@ -138,8 +140,11 @@ export function useAiChatManager() {
     });
   }
 
+  /**
+   * 重新生成上一条助手消息
+   * @returns
+   */
   function regenerate() {
-    setLoading(true);
     const output = controller.pop();
     if (!output || output.role !== 'assistant') {
       return;
@@ -183,6 +188,8 @@ export function useAiChatManager() {
 
     setLoading(false);
     setConversationId(summary.id);
+    setModel(summary.model);
+    setDeepThinking(summary.deepThinking);
     const next = await AiConversationApi.getChatHistory(summary.id);
     if (!next) {
       return;
