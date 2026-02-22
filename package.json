@@ -23,10 +23,10 @@
     "docker:dev:backend": "pnpm run docker:dev backend",
     "docker:dev:frontend": "pnpm run docker:dev frontend",
     "docker:dev:blog": "pnpm run docker:dev blog",
-    "docker:build": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y",
-    "docker:build:backend": "pnpm run docker:build -p backend",
-    "docker:build:frontend": "pnpm run docker:build -p frontend",
-    "docker:build:blog": "pnpm run docker:build -p blog"
+    "docker:build": "pnpm run docker:build:backend && pnpm run docker:build:frontend && pnpm run docker:build:blog",
+    "docker:build:backend": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y -p backend",
+    "docker:build:frontend": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y -p frontend",
+    "docker:build:blog": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y -p blog"
   },
   "keywords": [],
   "author": "",
@@ -50,6 +50,7 @@
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "node-ssh": "^13.2.1",
     "shelljs": "^0.10.0",
     "ts-node": "^10.9.2",
     "typescript-eslint": "^8.52.0"

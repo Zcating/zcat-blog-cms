@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 /**
- * @fileoverview Docker 部署脚本 - SSH 远程服务器部署工具
+ * @fileoverview Docker 部署脚本 - SSH 远程服务器部署工具 (Node-SSH 重写版)
  * @description 该脚本用于通过 SSH 连接到远程服务器并执行 Docker 容器部署
  *              支持文件传输、docker-compose 命令执行、dry-run 预览模式
  *              所有配置均从环境变量读取，不支持命令行参数传递敏感信息
@@ -34,9 +34,11 @@ import * as readline from 'readline';
 
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { NodeSSH } from 'node-ssh';
 import { z } from 'zod';
 
-import { normalizeError, normalizeShellCommand } from './normalize';
+import { executeLocalCommand, executeRemoteCommand } from './executer';
+import { normalizeError } from './normalize';
 import {
   colorSuccess,
   colorError,
@@ -114,6 +116,11 @@ function loadEnvConfig(envFile: string): Record<string, string> {
   return config;
 }
 
+/**
+ * 从命令行选项生成部署配置
+ * @param options - 命令行选项对象
+ * @returns 部署配置对象或错误信息
+ */
 function generateConfig(
   options: Record<string, any>,
 ): StepResult<DeployConfig> {
@@ -128,9 +135,10 @@ function generateConfig(
     },
     sshPassword: envConfig.SSH_PASSWORD || '',
     remoteDir: envConfig.REMOTE_DIR || '',
-    dryRun: envConfig.DRY_RUN || false,
+    dryRun: options.dryRun || envConfig.DRY_RUN === 'true',
     skipConfirm: options.yes || false,
-    skipBuild: envConfig.SKIP_BUILD || false,
+    skipBuild: options.skipBuild || envConfig.SKIP_BUILD === 'true',
+    envFile: options.envFile || '.env.deploy',
   });
   if (!result.success) {
     const errorMessages = result.error.issues
@@ -178,101 +186,36 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
 }
 
 /**
- * 执行命令并返回结果
- * @param description - 操作描述
- * @param command - 要执行的命令
- * @param dryRun - 是否为预览模式
- * @returns 执行结果对象
+ * 上传文件
  */
-async function executeCommand(
-  description: string,
-  command: string,
+async function uploadFile(
+  ssh: NodeSSH,
+  localPath: string,
+  remotePath: string,
   dryRun: boolean,
-): Promise<StepResult<string>> {
+): Promise<StepResult<void>> {
   if (dryRun) {
-    colorInfo(`[Dry Run] ${description}`);
-    colorCommand(command);
-    return createStepSuccess(command);
+    colorInfo(`[Dry Run] Upload ${localPath} -> ${remotePath}`);
+    return createStepSuccess(undefined);
   }
 
-  colorInfo(description);
-  colorCommand(command);
-
-  return new Promise((resolve) => {
-    const [cmd, ...args] = command.split(' ');
-    const child = spawn(cmd, args, { shell: true });
-
-    child.stdin.end();
-
-    let output = '';
-    child.stdout.on('data', (data: any) => {
-      if (!data) {
-        return;
-      }
-      const text = data.toString();
-      output += text;
-      process.stdout.write(text);
-    });
-
-    child.stdout.on('end', (data: any) => {
-      resolve(createStepSuccess(output));
-    });
-
-    child.stdout.on('error', (error: any) => {
-      colorError(`${description} 标准输出错误: ${error.message}`);
-      resolve(createStepError(error.message));
-    });
-
-    child.on('close', (code: number) => {
-      if (code !== 0) {
-        resolve(createStepError(`命令退出码: ${code}`));
-      }
-    });
-  });
-}
-
-/**
- * 执行 shell 脚本 - 通过 WSL 运行 bash 脚本并传递环境变量
- * @param description - 操作描述
- * @param scriptPath - 脚本路径
- * @param envVars - 要传递的环境变量对象
- * @param dryRun - 是否为预览模式
- * @returns 执行结果对象，包含 success、output 和 error 属性
- */
-async function runBashScript(
-  description: string,
-  scriptPath: string,
-  envVars: Record<string, string>,
-  dryRun: boolean,
-): Promise<StepResult<string>> {
-  const commandResult = normalizeShellCommand(scriptPath, envVars);
-
-  if (!commandResult.success) {
-    return createStepError(commandResult.error);
+  colorInfo(`Upload ${localPath} -> ${remotePath}`);
+  try {
+    await ssh.putFile(localPath, remotePath);
+    return createStepSuccess(undefined);
+  } catch (error: any) {
+    return createStepError(`文件上传失败: ${error.message}`);
   }
-
-  const execResult = await executeCommand(
-    description,
-    commandResult.data,
-    dryRun,
-  );
-  if (!execResult.success) {
-    return createStepError(execResult.error || '未知错误');
-  }
-
-  return createStepSuccess(execResult.data);
 }
 
 /**
  * 执行构建命令 - 调用 npm run build 进行项目构建
- * @param config - 部署配置对象
- * @returns 执行结果对象，包含 success、output 和 error 属性
  */
 async function runBuild(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
     return createStepSuccess('构建已跳过');
   }
-  return executeCommand(
+  return executeLocalCommand(
     '执行项目构建',
     `docker compose --env-file ${config.envFile} build ${config.projectName}`,
     config.dryRun,
@@ -281,14 +224,12 @@ async function runBuild(config: DeployConfig): Promise<StepResult<string>> {
 
 /**
  * 执行推送命令 - 对镜像进行 tag 并推送到镜像仓库
- * @param config - 部署配置对象
- * @returns 执行结果对象，包含 success、output 和 error 属性
  */
 async function runPush(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
     return createStepSuccess('推送已跳过');
   }
-  return executeCommand(
+  return executeLocalCommand(
     '推送镜像到仓库',
     `docker compose --env-file ${config.envFile} push ${config.projectName}`,
     config.dryRun,
@@ -296,36 +237,132 @@ async function runPush(config: DeployConfig): Promise<StepResult<string>> {
 }
 
 /**
- * 执行所有部署命令
- * 1. 检查必要的文件是否存在
- * 2. 准备环境变量
- * 3. 调用 shell 脚本执行实际部署
- * @param config - 部署配置对象
- * @returns 错误信息对象，如果有错误则包含 error 属性
+ * 执行远程部署逻辑
  */
-async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
-  colorInfo('开始 Docker 部署...');
+async function executeRemoteDeployment(
+  ssh: NodeSSH,
+  config: DeployConfig,
+  composeFilePath: string,
+  backendEnvFilePath: string,
+): Promise<StepResult<void>> {
+  // 3. 准备远程目录
+  const mkdirCmd = `mkdir -p ${config.remoteDir}/apps/backend && chmod -R 755 ${config.remoteDir}`;
+  const mkdirResult = await executeRemoteCommand(
+    ssh,
+    '创建远程目录结构',
+    mkdirCmd,
+    config.dryRun,
+  );
+  if (!mkdirResult.success) return mkdirResult;
 
-  const composeFilePath = 'docker-compose.yml';
-  const scriptPath = './scripts/docker-push.sh';
-  const backendEnvFilePath = './apps/backend/.env.production';
+  // 4. 上传文件
+  const remoteComposeFile = `${config.remoteDir}/docker-compose.yml`;
+  const uploadCompose = await uploadFile(
+    ssh,
+    composeFilePath,
+    remoteComposeFile,
+    config.dryRun,
+  );
+  if (!uploadCompose.success) return uploadCompose;
 
-  if (!fs.existsSync(scriptPath)) {
-    return createStepError(`脚本不存在: ${scriptPath}`);
+  const envFileName = path.basename(config.envFile);
+  const remoteEnvFile = `${config.remoteDir}/${envFileName}`;
+  const uploadEnv = await uploadFile(
+    ssh,
+    config.envFile,
+    remoteEnvFile,
+    config.dryRun,
+  );
+  if (!uploadEnv.success) return uploadEnv;
+
+  if (fs.existsSync(backendEnvFilePath)) {
+    const remoteBackendEnv = `${config.remoteDir}/apps/backend/.env.production`;
+    const uploadBackendEnv = await uploadFile(
+      ssh,
+      backendEnvFilePath,
+      remoteBackendEnv,
+      config.dryRun,
+    );
+    if (!uploadBackendEnv.success) return uploadBackendEnv;
+  } else {
+    colorWarning('跳过后端环境文件上传 (文件不存在)');
   }
 
-  const envVars = {
-    SSH_HOST: config.sshConfig.host,
-    SSH_USER: config.sshConfig.user,
-    SSH_PASSWORD: config.sshPassword,
-    SSH_PORT: String(config.sshConfig.port),
-    REMOTE_DIR: config.remoteDir,
-    PROJECT_NAME: config.projectName,
-    COMPOSE_FILE: composeFilePath,
-    ENV_FILE: config.envFile,
-    BACKEND_ENV_FILE: backendEnvFilePath,
-  };
+  // 5. 远程 Docker 操作
+  // 注意：如果远程只有 docker-compose (v1)，则需要改为 docker-compose
+  // 假设远程环境支持 docker compose (v2) 或者 docker-compose 是别名
+  // 原脚本使用的是 docker-compose，这里保持一致，但建议检查远程环境
+  const composeCmd = 'docker-compose'; // 保持原脚本兼容性
 
+  const baseCmd = `cd ${config.remoteDir} && ${composeCmd} --env-file ${envFileName}`;
+
+  if (!config.projectName || config.projectName === 'frontend') {
+    // 部署所有服务或特定逻辑 (原脚本逻辑：如果 projectName 为空或 frontend，则部署所有？)
+    // 原脚本逻辑：if [ -z "${PROJECT_NAME}" ] || [ "${PROJECT_NAME}" = "frontend" ]; then 部署所有...
+    // 这里保持一致
+
+    await executeRemoteCommand(
+      ssh,
+      '拉取最新镜像',
+      `${baseCmd} pull`,
+      config.dryRun,
+    );
+
+    await executeRemoteCommand(
+      ssh,
+      '停止现有服务',
+      `${baseCmd} down`,
+      config.dryRun,
+    );
+
+    await executeRemoteCommand(
+      ssh,
+      '启动服务',
+      `${baseCmd} up -d`,
+      config.dryRun,
+    );
+  } else {
+    // 部署单个服务
+    await executeRemoteCommand(
+      ssh,
+      `拉取服务镜像: ${config.projectName}`,
+      `${baseCmd} pull ${config.projectName}`,
+      config.dryRun,
+    );
+
+    await executeRemoteCommand(
+      ssh,
+      `停止服务: ${config.projectName}`,
+      `${baseCmd} down ${config.projectName}`,
+      config.dryRun,
+    );
+
+    await executeRemoteCommand(
+      ssh,
+      `启动服务: ${config.projectName}`,
+      `${baseCmd} up -d ${config.projectName}`,
+      config.dryRun,
+    );
+  }
+
+  // 6. 验证状态
+  await executeRemoteCommand(
+    ssh,
+    '验证服务状态',
+    `${baseCmd} ps`,
+    config.dryRun,
+  );
+
+  return createStepSuccess(undefined);
+}
+
+/**
+ * 执行本地任务：构建和推送镜像
+ */
+async function executeLocalTasks(
+  config: DeployConfig,
+): Promise<StepResult<void>> {
+  // 1. 本地构建和推送
   colorInfo('开始构建项目...');
   const buildResult = await runBuild(config);
   if (!buildResult.success) {
@@ -338,20 +375,78 @@ async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
     return createStepError(`推送失败: ${pushResult.error}`);
   }
 
-  colorInfo('执行部署脚本...');
-  const result = await runBashScript(
-    '部署脚本',
-    scriptPath,
-    envVars,
-    config.dryRun,
-  );
-  if (!result.success) {
-    return createStepError(`部署脚本执行失败: ${result.error}`);
+  return createStepSuccess(undefined);
+}
+
+/**
+ * 执行远程任务：SSH连接并执行部署
+ */
+async function executeRemoteTasks(
+  config: DeployConfig,
+  composeFilePath: string,
+  backendEnvFilePath: string,
+): Promise<StepResult<void>> {
+  // 2. SSH 连接
+  colorInfo(`正在连接到 ${config.sshConfig.host}...`);
+  const ssh = new NodeSSH();
+
+  if (!config.dryRun) {
+    try {
+      await ssh.connect({
+        host: config.sshConfig.host,
+        port: config.sshConfig.port,
+        username: config.sshConfig.user,
+        password: config.sshPassword,
+        // privateKeyPath: ... // 如果需要支持私钥
+      });
+      colorSuccess('SSH 连接成功');
+    } catch (error: any) {
+      return createStepError(`SSH 连接失败: ${error.message}`);
+    }
   }
 
-  colorSuccess('部署完成！', `应用已在 ${config.sshConfig.host} 上部署成功`);
+  try {
+    const deployResult = await executeRemoteDeployment(
+      ssh,
+      config,
+      composeFilePath,
+      backendEnvFilePath,
+    );
+    if (!deployResult.success) {
+      return deployResult;
+    }
 
-  return createStepSuccess(undefined);
+    colorSuccess('部署完成！', `应用已在 ${config.sshConfig.host} 上部署成功`);
+    return createStepSuccess(undefined);
+  } catch (error: any) {
+    return createStepError(`部署过程出错: ${error.message}`);
+  } finally {
+    if (!config.dryRun) {
+      ssh.dispose();
+    }
+  }
+}
+
+/**
+ * 执行所有部署命令
+ */
+async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
+  colorInfo('开始 Docker 部署...');
+
+  const composeFilePath = 'docker-compose.yml';
+  const backendEnvFilePath = './apps/backend/.env.production';
+
+  const localResult = await executeLocalTasks(config);
+  if (!localResult.success) {
+    return localResult;
+  }
+
+  const remoteResult = await executeRemoteTasks(
+    config,
+    composeFilePath,
+    backendEnvFilePath,
+  );
+  return remoteResult;
 }
 
 /**
@@ -363,7 +458,7 @@ async function main(): Promise<void> {
 
   program
     .name('docker-push')
-    .description('通过 SSH 远程部署 Docker 容器')
+    .description('通过 SSH 远程部署 Docker 容器 (Node-SSH)')
     .version(packageJson.version || '1.0.0', '-V, --version');
 
   program
@@ -396,7 +491,7 @@ async function main(): Promise<void> {
       const result = await runAllCommands(config);
       if (!result.success) {
         colorError(result.error);
-        return;
+        process.exit(1);
       }
     });
 
