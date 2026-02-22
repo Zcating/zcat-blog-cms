@@ -5,21 +5,21 @@ import { MdEditor } from 'md-editor-rt';
 import 'md-editor-rt/lib/style.css';
 
 interface MarkdownEditorProps {
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onValueChange?: (value: string) => void;
   className?: string;
 }
 
 export function MarkdownEditor({
   value,
-  onChange,
+  onValueChange,
   className,
 }: MarkdownEditorProps) {
   return (
     <MdEditor
       className={cn('h-full!', className)}
       value={value}
-      onChange={onChange}
+      onChange={onValueChange}
       onUploadImg={async (files, callBack) => {
         if (files.length === 0) {
           return;

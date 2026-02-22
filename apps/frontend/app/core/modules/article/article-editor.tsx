@@ -1,12 +1,26 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { ZButton, ZDatePicker, ZInput, ZTextarea } from '@zcat/ui';
+import { createZForm, ZButton, ZDatePicker, ZInput, ZTextarea } from '@zcat/ui';
 import dayjs from 'dayjs';
-import React from 'react';
+import { z } from 'zod';
 
 import { ArticlesApi } from '@cms/api';
 
-import { useLoadingFn } from '../../hooks';
 import { MarkdownEditor } from '../../ui';
+
+const ArticleSchema = z.object({
+  title: z
+    .string()
+    .min(1, '文章标题不能为空')
+    .max(50, '文章标题不能超过50个字符'),
+  excerpt: z.string().optional(),
+  content: z.string().optional(),
+  publishAt: z
+    .custom<dayjs.Dayjs>(dayjs.isDayjs, {
+      message: '发布时间格式不正确',
+    })
+    .optional(),
+});
+
+const ArticleForm = createZForm(ArticleSchema);
 
 interface ArticleEditorProps {
   article: ArticlesApi.Article;
@@ -19,50 +33,47 @@ export function ArticleEditor({
   onSave,
   onCancel,
 }: ArticleEditorProps) {
-  const [article, setArticle] = React.useState({
-    ...initialArticle,
-    publishAt: initialArticle.publishAt || dayjs().toISOString(),
-  });
-
-  // 处理编辑器内容变化
-  const handleEditorChange = (text: string) => {
-    setArticle((prev) => ({ ...prev, content: text }));
-  };
-
-  const handleSave = useLoadingFn(async () => {
-    await onSave(article);
+  const form = ArticleForm.useForm({
+    defaultValues: {
+      title: initialArticle.title,
+      excerpt: initialArticle.excerpt,
+      content: initialArticle.content,
+      publishAt: initialArticle.publishAt
+        ? dayjs(initialArticle.publishAt)
+        : dayjs(),
+    },
+    onSubmit: async (values) => {
+      await onSave({
+        ...initialArticle,
+        ...values,
+        publishAt: values.publishAt?.toISOString(),
+      });
+    },
   });
 
   return (
-    <div className="w-full h-screen flex flex-col">
+    <ArticleForm form={form} className="w-full h-screen">
       {/* 文章标题和操作按钮 */}
-      <div className="mx-3 mt-3">
-        <div className="flex justify-between items-center mb-4 gap-5">
-          <ZInput
-            className="flex-1 h-12 text-xl font-bold"
-            value={article.title}
-            onValueChange={(value) =>
-              setArticle((prev) => ({ ...prev, title: value }))
-            }
-            placeholder="请输入文章标题"
-            maxLength={50}
-          />
-          <div className="">
-            <div className="flex justify-end gap-3">
-              <ZDatePicker
-                value={article.publishAt ? dayjs(article.publishAt) : undefined}
-                onValueChange={(date) => {
-                  setArticle((prev) => ({
-                    ...prev,
-                    publishAt: date.toISOString(),
-                  }));
-                }}
-                placeholder="发布时间"
-              />
-              <ZButton onClick={handleSave} loading={handleSave.loading}>
+      <div className="p-3 h-full flex flex-col gap-2">
+        <div className="flex justify-between items-start gap-5">
+          <ArticleForm.Item name="title" className="flex-1">
+            <ZInput
+              className="h-12 text-xl font-bold"
+              placeholder="请输入文章标题"
+            />
+          </ArticleForm.Item>
+          <div>
+            <div className="flex justify-end gap-3 pt-1">
+              <ArticleForm.Item name="publishAt">
+                <ZDatePicker placeholder="发布时间" />
+              </ArticleForm.Item>
+              <ZButton
+                type="submit"
+                loading={form.instance.formState.isSubmitting}
+              >
                 保存
               </ZButton>
-              <ZButton onClick={onCancel} variant="outline">
+              <ZButton onClick={onCancel} variant="outline" type="button">
                 取消
               </ZButton>
             </div>
@@ -70,27 +81,15 @@ export function ArticleEditor({
         </div>
 
         {/* 文章摘要 */}
-        <ZTextarea
-          value={article.excerpt}
-          onValueChange={(value) =>
-            setArticle((prev) => ({ ...prev, excerpt: value }))
-          }
-          placeholder="请输入文章摘要"
-        />
-      </div>
+        <ArticleForm.Item name="excerpt">
+          <ZTextarea placeholder="请输入文章摘要" />
+        </ArticleForm.Item>
 
-      {/* Markdown 编辑器 */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden flex-1 mx-3">
-        <MarkdownEditor
-          value={article.content || ''}
-          onChange={handleEditorChange}
-        />
+        {/* Markdown 编辑器 */}
+        <ArticleForm.Item name="content" className="flex-1 h-full">
+          <MarkdownEditor />
+        </ArticleForm.Item>
       </div>
-      {handleSave.loading && (
-        <div className="fixed top-0 left-0 bottom-0 right-0 flex justify-center items-center">
-          <LoadingOutlined className="text-5xl" />
-        </div>
-      )}
-    </div>
+    </ArticleForm>
   );
 }
