@@ -7,6 +7,7 @@ export namespace ArticleApi {
     excerpt: string;
     createdAt: string;
     updatedAt: string;
+    publishAt: string;
   }
 
   export interface ArticleDetail {
@@ -16,6 +17,7 @@ export namespace ArticleApi {
     content: string;
     createdAt: string;
     updatedAt: string;
+    publishAt: string;
   }
 
   export type OrderEnum = 'latest' | 'oldest';

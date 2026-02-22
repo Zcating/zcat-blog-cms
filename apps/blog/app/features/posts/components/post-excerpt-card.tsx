@@ -15,7 +15,7 @@ export function PostExcerptCard(props: PostExcerptCardProps) {
         <h2 className="text-xl font-semibold">{props.value.title}</h2>
         <p className="text-muted-foreground mt-2">{props.value.excerpt}</p>
         <p className="text-sm text-muted-foreground mt-4">
-          {stringDateFormat(props.value.createdAt)}
+          {stringDateFormat(props.value.publishAt)}
         </p>
       </ZView>
     </Card>
