@@ -27,7 +27,6 @@
  * SSH_PASSWORD=your_password           # SSH 密码（必填）
  */
 
-import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
@@ -37,20 +36,25 @@ import { Command } from 'commander';
 import { NodeSSH } from 'node-ssh';
 import { z } from 'zod';
 
-import { executeLocalCommand, executeRemoteCommand } from './executer';
+import {
+  executeLocalCommand,
+  executeRemoteCommand,
+  executeUploadFile,
+} from './executer';
 import { normalizeError } from './normalize';
 import {
   colorSuccess,
   colorError,
   colorWarning,
   colorInfo,
-  colorCommand,
 } from './script-logger';
 import { StepResult, createStepError, createStepSuccess } from './step-result';
 
 const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
 ) as Record<string, any>;
+
+const BACKEND_ENV_FILE = './apps/backend/.env.production';
 
 /**
  * SSH 配置 schema - 使用 zod 进行类型验证
@@ -62,11 +66,6 @@ const SSHConfigSchema = z.object({
 });
 
 /**
- * SSH 配置类型定义
- */
-type SSHConfig = z.infer<typeof SSHConfigSchema>;
-
-/**
  * 部署配置 schema - 定义所有可配置项及其验证规则
  */
 const DeployConfigSchema = z.object({
@@ -75,7 +74,7 @@ const DeployConfigSchema = z.object({
     .regex(/^[a-zA-Z0-9][a-zA-Z0-9.:-]*$/, 'Docker 镜像仓库地址格式无效')
     .optional()
     .default(''),
-  projectName: z.string().optional().default(''),
+  projectName: z.string(),
   sshConfig: SSHConfigSchema,
   sshPassword: z.string().optional().default(''),
   remoteDir: z
@@ -186,29 +185,6 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
 }
 
 /**
- * 上传文件
- */
-async function uploadFile(
-  ssh: NodeSSH,
-  localPath: string,
-  remotePath: string,
-  dryRun: boolean,
-): Promise<StepResult<void>> {
-  if (dryRun) {
-    colorInfo(`[Dry Run] Upload ${localPath} -> ${remotePath}`);
-    return createStepSuccess(undefined);
-  }
-
-  colorInfo(`Upload ${localPath} -> ${remotePath}`);
-  try {
-    await ssh.putFile(localPath, remotePath);
-    return createStepSuccess(undefined);
-  } catch (error: any) {
-    return createStepError(`文件上传失败: ${error.message}`);
-  }
-}
-
-/**
  * 执行构建命令 - 调用 npm run build 进行项目构建
  */
 async function runBuild(config: DeployConfig): Promise<StepResult<string>> {
@@ -234,126 +210,6 @@ async function runPush(config: DeployConfig): Promise<StepResult<string>> {
     `docker compose --env-file ${config.envFile} push ${config.projectName}`,
     config.dryRun,
   );
-}
-
-/**
- * 执行远程部署逻辑
- */
-async function executeRemoteDeployment(
-  ssh: NodeSSH,
-  config: DeployConfig,
-  composeFilePath: string,
-  backendEnvFilePath: string,
-): Promise<StepResult<void>> {
-  // 3. 准备远程目录
-  const mkdirCmd = `mkdir -p ${config.remoteDir}/apps/backend && chmod -R 755 ${config.remoteDir}`;
-  const mkdirResult = await executeRemoteCommand(
-    ssh,
-    '创建远程目录结构',
-    mkdirCmd,
-    config.dryRun,
-  );
-  if (!mkdirResult.success) return mkdirResult;
-
-  // 4. 上传文件
-  const remoteComposeFile = `${config.remoteDir}/docker-compose.yml`;
-  const uploadCompose = await uploadFile(
-    ssh,
-    composeFilePath,
-    remoteComposeFile,
-    config.dryRun,
-  );
-  if (!uploadCompose.success) return uploadCompose;
-
-  const envFileName = path.basename(config.envFile);
-  const remoteEnvFile = `${config.remoteDir}/${envFileName}`;
-  const uploadEnv = await uploadFile(
-    ssh,
-    config.envFile,
-    remoteEnvFile,
-    config.dryRun,
-  );
-  if (!uploadEnv.success) return uploadEnv;
-
-  if (fs.existsSync(backendEnvFilePath)) {
-    const remoteBackendEnv = `${config.remoteDir}/apps/backend/.env.production`;
-    const uploadBackendEnv = await uploadFile(
-      ssh,
-      backendEnvFilePath,
-      remoteBackendEnv,
-      config.dryRun,
-    );
-    if (!uploadBackendEnv.success) return uploadBackendEnv;
-  } else {
-    colorWarning('跳过后端环境文件上传 (文件不存在)');
-  }
-
-  // 5. 远程 Docker 操作
-  // 注意：如果远程只有 docker-compose (v1)，则需要改为 docker-compose
-  // 假设远程环境支持 docker compose (v2) 或者 docker-compose 是别名
-  // 原脚本使用的是 docker-compose，这里保持一致，但建议检查远程环境
-  const composeCmd = 'docker-compose'; // 保持原脚本兼容性
-
-  const baseCmd = `cd ${config.remoteDir} && ${composeCmd} --env-file ${envFileName}`;
-
-  if (!config.projectName || config.projectName === 'frontend') {
-    // 部署所有服务或特定逻辑 (原脚本逻辑：如果 projectName 为空或 frontend，则部署所有？)
-    // 原脚本逻辑：if [ -z "${PROJECT_NAME}" ] || [ "${PROJECT_NAME}" = "frontend" ]; then 部署所有...
-    // 这里保持一致
-
-    await executeRemoteCommand(
-      ssh,
-      '拉取最新镜像',
-      `${baseCmd} pull`,
-      config.dryRun,
-    );
-
-    await executeRemoteCommand(
-      ssh,
-      '停止现有服务',
-      `${baseCmd} down`,
-      config.dryRun,
-    );
-
-    await executeRemoteCommand(
-      ssh,
-      '启动服务',
-      `${baseCmd} up -d`,
-      config.dryRun,
-    );
-  } else {
-    // 部署单个服务
-    await executeRemoteCommand(
-      ssh,
-      `拉取服务镜像: ${config.projectName}`,
-      `${baseCmd} pull ${config.projectName}`,
-      config.dryRun,
-    );
-
-    await executeRemoteCommand(
-      ssh,
-      `停止服务: ${config.projectName}`,
-      `${baseCmd} down ${config.projectName}`,
-      config.dryRun,
-    );
-
-    await executeRemoteCommand(
-      ssh,
-      `启动服务: ${config.projectName}`,
-      `${baseCmd} up -d ${config.projectName}`,
-      config.dryRun,
-    );
-  }
-
-  // 6. 验证状态
-  await executeRemoteCommand(
-    ssh,
-    '验证服务状态',
-    `${baseCmd} ps`,
-    config.dryRun,
-  );
-
-  return createStepSuccess(undefined);
 }
 
 /**
@@ -383,15 +239,15 @@ async function executeLocalTasks(
  */
 async function executeRemoteTasks(
   config: DeployConfig,
-  composeFilePath: string,
-  backendEnvFilePath: string,
 ): Promise<StepResult<void>> {
+  const composeFilePath = 'docker-compose.yml';
+
   // 2. SSH 连接
   colorInfo(`正在连接到 ${config.sshConfig.host}...`);
   const ssh = new NodeSSH();
 
-  if (!config.dryRun) {
-    try {
+  try {
+    if (!config.dryRun) {
       await ssh.connect({
         host: config.sshConfig.host,
         port: config.sshConfig.port,
@@ -400,53 +256,109 @@ async function executeRemoteTasks(
         // privateKeyPath: ... // 如果需要支持私钥
       });
       colorSuccess('SSH 连接成功');
-    } catch (error: any) {
-      return createStepError(`SSH 连接失败: ${error.message}`);
     }
-  }
 
-  try {
-    const deployResult = await executeRemoteDeployment(
+    // 3. 准备远程目录
+    const mkdirCmd = `mkdir -p ${config.remoteDir}/apps/backend && chmod -R 755 ${config.remoteDir}`;
+    const mkdirResult = await executeRemoteCommand(
       ssh,
-      config,
-      composeFilePath,
-      backendEnvFilePath,
+      '创建远程目录结构',
+      mkdirCmd,
+      config.dryRun,
     );
-    if (!deployResult.success) {
-      return deployResult;
+
+    if (!mkdirResult.success) {
+      return mkdirResult;
     }
+
+    // 4. 上传文件
+    const remoteComposeFile = `${config.remoteDir}/docker-compose.yml`;
+    const uploadCompose = await executeUploadFile(
+      ssh,
+      composeFilePath,
+      remoteComposeFile,
+      config.dryRun,
+    );
+    if (!uploadCompose.success) {
+      return uploadCompose;
+    }
+
+    // 4.1 上传环境文件
+    const envFileName = path.basename(config.envFile);
+    const remoteEnvFile = `${config.remoteDir}/${envFileName}`;
+    const uploadEnv = await executeUploadFile(
+      ssh,
+      config.envFile,
+      remoteEnvFile,
+      config.dryRun,
+    );
+    if (!uploadEnv.success) {
+      return uploadEnv;
+    }
+
+    // 4.2 上传后端环境文件
+    const remoteBackendEnv = `${config.remoteDir}/apps/backend/.env.production`;
+    const uploadBackendEnv = await executeUploadFile(
+      ssh,
+      BACKEND_ENV_FILE,
+      remoteBackendEnv,
+      config.dryRun,
+    );
+    if (!uploadBackendEnv.success) {
+      return uploadBackendEnv;
+    }
+
+    // 5. 远程 Docker 操作
+    // 注意：如果远程只有 docker-compose (v1)，则需要改为 docker-compose
+    // 假设远程环境支持 docker compose (v2) 或者 docker-compose 是别名
+    // 原脚本使用的是 docker-compose，这里保持一致，但建议检查远程环境
+    const baseCmd = `cd ${config.remoteDir} && docker-compose --env-file ${envFileName}`;
+
+    // 部署单个服务
+    const pullResult = await executeRemoteCommand(
+      ssh,
+      `拉取服务镜像: ${config.projectName}`,
+      `${baseCmd} pull ${config.projectName}`,
+      config.dryRun,
+    );
+    if (!pullResult.success) return pullResult;
+
+    // 部署单个服务
+    const downResult = await executeRemoteCommand(
+      ssh,
+      `停止服务: ${config.projectName}`,
+      `${baseCmd} down ${config.projectName}`,
+      config.dryRun,
+    );
+    if (!downResult.success) return downResult;
+
+    // 部署单个服务
+    const upResult = await executeRemoteCommand(
+      ssh,
+      `启动服务: ${config.projectName}`,
+      `${baseCmd} up -d ${config.projectName}`,
+      config.dryRun,
+    );
+    if (!upResult.success) return upResult;
+
+    // 6. 验证状态
+    const psResult = await executeRemoteCommand(
+      ssh,
+      '验证服务状态',
+      `${baseCmd} ps`,
+      config.dryRun,
+    );
+    if (!psResult.success) return psResult;
 
     colorSuccess('部署完成！', `应用已在 ${config.sshConfig.host} 上部署成功`);
     return createStepSuccess(undefined);
   } catch (error: any) {
-    return createStepError(`部署过程出错: ${error.message}`);
+    return createStepError(`SSH 连接或部署失败: ${error.message}`);
   } finally {
     if (!config.dryRun) {
       ssh.dispose();
     }
   }
-}
-
-/**
- * 执行所有部署命令
- */
-async function runAllCommands(config: DeployConfig): Promise<StepResult<void>> {
-  colorInfo('开始 Docker 部署...');
-
-  const composeFilePath = 'docker-compose.yml';
-  const backendEnvFilePath = './apps/backend/.env.production';
-
-  const localResult = await executeLocalTasks(config);
-  if (!localResult.success) {
-    return localResult;
-  }
-
-  const remoteResult = await executeRemoteTasks(
-    config,
-    composeFilePath,
-    backendEnvFilePath,
-  );
-  return remoteResult;
 }
 
 /**
@@ -468,6 +380,11 @@ async function main(): Promise<void> {
     .option('--dry-run', '预览模式 - 仅打印命令，不实际执行')
     .option('-y, --yes', '跳过确认直接执行')
     .action(async (options: Record<string, any>) => {
+      if (!fs.existsSync(BACKEND_ENV_FILE)) {
+        colorError(`后端环境文件 ${BACKEND_ENV_FILE} 不存在`);
+        return;
+      }
+
       const validationResult = generateConfig(options);
       if (!validationResult.success) {
         colorError(validationResult.error);
@@ -488,10 +405,16 @@ async function main(): Promise<void> {
         return;
       }
 
-      const result = await runAllCommands(config);
-      if (!result.success) {
-        colorError(result.error);
-        process.exit(1);
+      const localResult = await executeLocalTasks(config);
+      if (!localResult.success) {
+        colorError(localResult.error);
+        return;
+      }
+
+      const remoteResult = await executeRemoteTasks(config);
+      if (!remoteResult.success) {
+        colorError(remoteResult.error);
+        return;
       }
     });
 

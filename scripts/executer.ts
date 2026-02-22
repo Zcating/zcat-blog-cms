@@ -106,3 +106,26 @@ export async function executeRemoteCommand(
     return createStepError(`SSH 执行错误: ${error.message}`);
   }
 }
+
+/**
+ * 上传文件
+ */
+export async function executeUploadFile(
+  ssh: NodeSSH,
+  localPath: string,
+  remotePath: string,
+  dryRun: boolean,
+): Promise<StepResult<void>> {
+  if (dryRun) {
+    colorInfo(`[Dry Run] Upload ${localPath} -> ${remotePath}`);
+    return createStepSuccess(undefined);
+  }
+
+  colorInfo(`Upload ${localPath} -> ${remotePath}`);
+  try {
+    await ssh.putFile(localPath, remotePath);
+    return createStepSuccess(undefined);
+  } catch (error: any) {
+    return createStepError(`文件上传失败: ${error.message}`);
+  }
+}
