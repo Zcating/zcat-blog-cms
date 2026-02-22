@@ -17,7 +17,7 @@ export class BlogService {
     const articles = await this.prisma.article.findMany({
       ...createPaginate(query.page, query.pageSize),
       orderBy: {
-        createdAt: this.ORDER_MAP[query.order],
+        publishAt: this.ORDER_MAP[query.order],
       },
       select: {
         id: true,
@@ -25,6 +25,7 @@ export class BlogService {
         excerpt: true,
         createdAt: true,
         updatedAt: true,
+        publishAt: true,
         articleAndArticleTags: true,
       },
     });
@@ -54,6 +55,7 @@ export class BlogService {
         content: true,
         createdAt: true,
         updatedAt: true,
+        publishAt: true,
         articleAndArticleTags: true,
       },
     });

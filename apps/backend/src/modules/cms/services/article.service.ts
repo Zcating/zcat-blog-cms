@@ -33,6 +33,7 @@ export class ArticleService {
         createdAt: true,
         updatedAt: true,
         createByUserId: true,
+        publishAt: true,
       },
     });
     const total = await this.prismaService.article.count();
@@ -43,6 +44,7 @@ export class ArticleService {
         excerpt: article.excerpt,
         createdAt: article.createdAt,
         updatedAt: article.updatedAt,
+        publishAt: article.publishAt,
         // tags: article.articleAndArticleTags.map((item) => item.articleTag),
       })),
       totalPages: Math.ceil(total / dto.pageSize),

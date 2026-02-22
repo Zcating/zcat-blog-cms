@@ -16,9 +16,11 @@ model Article {
   updatedAt             DateTime                @default(now()) @db.Timestamp(6)
   content               String                  @db.Text
   createByUserId        Int?
+  publishAt             DateTime                @default(now())
   articleAndArticleTags ArticleAndArticleTags[]
 
   @@map("article")
+  @@index([publishAt])
 }
 
 model ArticleAndArticleTags {

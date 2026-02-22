@@ -12,6 +12,7 @@ interface ArticleViewerProps {
 export function ArticleViewer({ article, onEdit }: ArticleViewerProps) {
   const createTime = safeDateString(article.createdAt, '未知');
   const updateTime = safeDateString(article.updatedAt, '未知');
+  const publishTime = safeDateString(article.publishAt, '未知');
   return (
     <div className="w-full flex flex-col justify-center gap-10">
       {/* 文章标题和操作按钮 */}
@@ -33,6 +34,7 @@ export function ArticleViewer({ article, onEdit }: ArticleViewerProps) {
         <div className="mt-6 text-sm space-y-2">
           <p>创建时间: {createTime}</p>
           <p>更新时间: {updateTime}</p>
+          <p>发布时间: {publishTime}</p>
         </div>
       </div>
 

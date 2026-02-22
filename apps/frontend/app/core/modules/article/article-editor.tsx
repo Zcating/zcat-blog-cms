@@ -1,5 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { ZButton, ZInput, ZTextarea } from '@zcat/ui';
+import { ZButton, ZDatePicker, ZInput, ZTextarea } from '@zcat/ui';
+import dayjs from 'dayjs';
 import React from 'react';
 
 import { ArticlesApi } from '@cms/api';
@@ -18,7 +19,10 @@ export function ArticleEditor({
   onSave,
   onCancel,
 }: ArticleEditorProps) {
-  const [article, setArticle] = React.useState(initialArticle);
+  const [article, setArticle] = React.useState({
+    ...initialArticle,
+    publishAt: initialArticle.publishAt || dayjs().toISOString(),
+  });
 
   // 处理编辑器内容变化
   const handleEditorChange = (text: string) => {
@@ -45,6 +49,16 @@ export function ArticleEditor({
           />
           <div className="">
             <div className="flex justify-end gap-3">
+              <ZDatePicker
+                value={article.publishAt ? dayjs(article.publishAt) : undefined}
+                onValueChange={(date) => {
+                  setArticle((prev) => ({
+                    ...prev,
+                    publishAt: date.toISOString(),
+                  }));
+                }}
+                placeholder="发布时间"
+              />
               <ZButton onClick={handleSave} loading={handleSave.loading}>
                 保存
               </ZButton>

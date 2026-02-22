@@ -5,6 +5,7 @@ export const CreateArticleDtoSchema = z.object({
   title: z.string().min(1, '标题不能为空'),
   excerpt: z.string().min(1, '摘要不能为空'),
   content: z.string().min(1, '内容不能为空'),
+  publishAt: z.coerce.date().optional(),
   tagIds: z.array(z.coerce.number().int()).optional(),
 });
 
@@ -13,6 +14,7 @@ export const UpdateArticleDtoSchema = z.object({
   title: z.string().optional(),
   excerpt: z.string().optional(),
   content: z.string().optional(),
+  publishAt: z.coerce.date().optional(),
   tagIds: z.array(z.coerce.number().int()).optional(),
 });
 
@@ -25,4 +27,5 @@ export interface ReturnArticleDto {
   excerpt: string;
   createdAt: Date;
   updatedAt: Date;
+  publishAt: Date;
 }

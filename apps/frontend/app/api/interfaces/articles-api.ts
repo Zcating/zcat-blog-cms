@@ -17,12 +17,14 @@ export namespace ArticlesApi {
     content: string;
     createdAt?: string;
     updatedAt?: string;
+    publishAt?: string;
     tags?: ArticleTag[];
   }
 
   export interface CreateArticleWithFileParams {
     title: string;
     excerpt: string;
+    publishAt?: string;
     file?: File;
   }
 
@@ -31,6 +33,7 @@ export namespace ArticlesApi {
     title?: string;
     excerpt?: string;
     content?: string;
+    publishAt?: string;
   }
 
   export interface GetArticlesParams {
