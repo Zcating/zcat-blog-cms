@@ -6,6 +6,7 @@ import {
   ZButton,
   ZDialog,
   safeNumber,
+  useWatch,
 } from '@zcat/ui';
 import React from 'react';
 import { useNavigate } from 'react-router';
@@ -38,6 +39,10 @@ export default function Articles(props: Route.ComponentProps) {
   const [articles, setArticles] = React.useState(pagination.data);
 
   const navigate = useNavigate();
+
+  // 监听 pagination.data 变化，同步更新 articles 状态
+  // 解决分页切换时列表不更新的问题
+  useWatch([pagination.data], setArticles);
 
   const handleClick = () => {
     navigate('/articles/edit');
