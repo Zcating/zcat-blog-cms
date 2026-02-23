@@ -88,26 +88,16 @@ export class OssService {
       return '';
     }
     // 同一进程内优先复用已生成的私有下载链接，避免每次调用都产生不同签名 URL。
-    const now = Math.floor(Date.now() / 1000);
     const cached = this.privateUrlCache.get(filename);
+
     if (cached) {
       return cached;
     }
 
     // 生成私有下载链接：deadline 是 Unix 秒级时间戳，超过后链接失效。
-    switch (type) {
-      case 'public':
-        return this.bucketManager.publicDownloadUrl(domain, filename);
-      case 'private':
-      default: {
-        const deadline = now + TTL;
-        return this.bucketManager.privateDownloadUrl(
-          domain,
-          filename,
-          deadline,
-        );
-      }
-    }
+    const url = this.getUrlFromBucket(domain, filename, type);
+    this.privateUrlCache.set(filename, url);
+    return url;
   }
 
   private async deleteOssFile(bucketName: string, filename: string) {
@@ -116,6 +106,27 @@ export class OssService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  private getUrlFromBucket(
+    domain: string,
+    filename: string,
+    type: 'private' | 'public' = 'private',
+  ) {
+    switch (type) {
+      case 'public':
+        return this.bucketManager.publicDownloadUrl(domain, filename);
+      case 'private':
+      default: {
+        const now = Math.floor(Date.now() / 1000);
+        const deadline = now + TTL;
+        return this.bucketManager.privateDownloadUrl(
+          domain,
+          filename,
+          deadline,
+        );
+      }
     }
   }
 }
