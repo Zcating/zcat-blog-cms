@@ -8,7 +8,7 @@ export function safeArray<T>(value: unknown, defaultValue: T[] = []): T[] {
   return Array.isArray(value) ? value : defaultValue;
 }
 
-const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 export function safeDateString(date: unknown, defaultValue: string = '') {
   const parsed = dayjs.isDayjs(date) ? date : dayjs(date as any);

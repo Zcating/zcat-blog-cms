@@ -27,16 +27,20 @@ export function safeArray<T>(array: unknown, defaultValue: T[] = []): T[] {
   return defaultValue;
 }
 
-const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
+const DATE_FORMAT = 'YYYY-MM-DD';
 
-export function safeDateString(date: unknown, defaultValue?: string) {
+export function safeDateString(
+  date: unknown,
+  defaultValue?: string,
+  format: string = DATE_FORMAT,
+) {
   if (dayjs.isDayjs(date) && date.isValid()) {
-    return date.format(DATE_FORMAT);
+    return date.format(format);
   }
 
   const dayjsDate = dayjs(date as any);
   if (dayjsDate.isValid()) {
-    return dayjsDate.format(DATE_FORMAT);
+    return dayjsDate.format(format);
   }
 
   return defaultValue;

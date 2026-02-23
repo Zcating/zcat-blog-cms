@@ -1,6 +1,4 @@
-import { ZButton, ZMarkdown } from '@zcat/ui';
-
-import { safeDateString } from '../../utils';
+import { safeDateString, ZButton, ZMarkdown } from '@zcat/ui';
 
 import type { ArticlesApi } from '@cms/api';
 

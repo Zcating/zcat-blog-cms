@@ -17,7 +17,7 @@ const ArticleSchema = z.object({
     .custom<dayjs.Dayjs>(dayjs.isDayjs, {
       message: '发布时间格式不正确',
     })
-    .optional(),
+    .default(dayjs()),
 });
 
 const ArticleForm = createZForm(ArticleSchema);

@@ -1,10 +1,12 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
   ZButton,
   ZDialog,
+  safeDateString,
   safeNumber,
   useWatch,
 } from '@zcat/ui';
@@ -76,6 +78,10 @@ export default function Articles(props: Route.ComponentProps) {
           <Card key={article.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">{article.title}</CardTitle>
+              <CardDescription className="text-xs">
+                发布时间：
+                {safeDateString(article.publishAt, '未发布')}
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
