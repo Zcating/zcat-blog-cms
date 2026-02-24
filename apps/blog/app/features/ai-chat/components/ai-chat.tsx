@@ -42,6 +42,7 @@ export const AiChat = ({ className, emptyComponent }: AiChatProps) => {
       <AiChatHistory
         histories={manager.histories}
         conversationId={manager.conversationId}
+        loading={manager.loading}
         onSelect={manager.selectConversation}
         onDelete={manager.deleteConversation}
         onNewChat={manager.newConversation}

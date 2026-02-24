@@ -1,14 +1,17 @@
 import { ZButton, cn, useMemoizedFn } from '@zcat/ui';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { Plus, Trash2 } from 'lucide-react';
-import React from 'react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import { ChatTaskQuery } from '../utils';
 
 import type { ChatHistorySummary } from '../apis';
 
 export interface AiChatHistoryProps {
   histories: ChatHistorySummary[];
   conversationId: string;
+  loading?: boolean;
   onSelect: (history: ChatHistorySummary) => void;
   onDelete: (id: string) => void;
   onNewChat: () => void;
@@ -17,7 +20,8 @@ export interface AiChatHistoryProps {
 
 export function AiChatHistory({
   histories,
-  conversationId: selectedId,
+  conversationId,
+  loading,
   onSelect,
   onDelete,
   onNewChat,
@@ -46,7 +50,9 @@ export function AiChatHistory({
           <AiChatHistoryItem
             key={history.id}
             history={history}
-            isSelected={selectedId === history.id}
+            isSelected={conversationId === history.id}
+            // 传入 loading 作为触发检查的信号，但不直接决定状态
+            checkTrigger={loading}
             onSelect={onSelect}
             onDelete={onDelete}
           />
@@ -64,6 +70,7 @@ export function AiChatHistory({
 export interface AiChatHistoryItemProps {
   history: ChatHistorySummary;
   isSelected?: boolean;
+  checkTrigger?: boolean;
   onSelect?: (history: ChatHistorySummary) => void;
   onDelete?: (id: string) => void;
 }
@@ -71,9 +78,29 @@ export interface AiChatHistoryItemProps {
 export function AiChatHistoryItem({
   history,
   isSelected,
+  checkTrigger,
   onSelect,
   onDelete,
 }: AiChatHistoryItemProps) {
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    const task = ChatTaskQuery.findTask(history.id);
+    if (!task) {
+      // 使用微任务避免同步 setState，防止级联渲染
+      queueMicrotask(() => setIsRunning(false));
+      return;
+    }
+
+    const unsubscribe = task.addListener((event) => {
+      setIsRunning(!event.isFinish);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [history.id, checkTrigger]);
+
   const handleSelect = useMemoizedFn(() => {
     onSelect?.(history);
   });
@@ -96,7 +123,12 @@ export function AiChatHistoryItem({
       )}
     >
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">{history.title}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm truncate">{history.title}</p>
+          {isRunning && (
+            <Loader2 className="size-3.5 text-primary animate-spin shrink-0" />
+          )}
+        </div>
         <p className="text-xs text-muted-foreground mt-1">
           {format(history.updatedAt, 'yyyy-MM-dd HH:mm', {
             locale: zhCN,
