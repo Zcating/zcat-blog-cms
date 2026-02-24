@@ -109,10 +109,12 @@ export namespace AiApi {
     },
   };
 
-  export const API_MODELS: CommonOption<ChatModelName>[] = [
-    { value: 'deepseek', label: '深度求索' },
-    { value: 'test', label: '测试' },
-  ];
+  export const API_MODELS: CommonOption<ChatModelName>[] = import.meta.env.DEV
+    ? [
+        { value: 'deepseek', label: '深度求索' },
+        { value: 'test', label: '测试' },
+      ]
+    : [{ value: 'deepseek', label: '深度求索' }];
 
   export interface ChatParams {
     modelName: ChatModelName;

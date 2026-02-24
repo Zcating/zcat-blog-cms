@@ -8,7 +8,7 @@ export namespace TestModelApi {
     params: AiApi.ChatMessage[],
     deepThinking: boolean,
     controller: AbortController,
-  ): Stream<AiApi.ChatMessage | null> {
+  ): Stream<AiApi.ChatMessage> {
     const stream = createTestStreamResponse(
       `收到了${params[params.length - 1].content}，你好！我是 AI 助手，有什么可以帮你的吗？${markdownContent}\n${mermaidTestContent}`,
     );
