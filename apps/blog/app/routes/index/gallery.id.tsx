@@ -1,18 +1,10 @@
-import {
-  Button,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  // CarouselPointer,
-  IconClose,
-  ZView,
-  type CarouselApi,
-} from '@zcat/ui';
-import React from 'react';
+import { Button, IconClose, ZDialog, ZImage, ZView } from '@zcat/ui';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { PhotoPoster } from '@blog/features';
+import { ImageZoomViewer, PhotoPoster } from '@blog/features';
 
 import type { Route } from '../index/+types/gallery.id';
 
@@ -28,73 +20,226 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export default function GalleryDetailPage(props: Route.ComponentProps) {
-  const gallery = props.loaderData.gallery;
-  const [api, setApi] = React.useState<CarouselApi>();
-  const [current, setCurrent] = React.useState(0);
-  const [count, setCount] = React.useState(0);
+  const { gallery } = props.loaderData;
+  const navigate = useNavigate();
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  React.useEffect(() => {
-    if (!api) {
-      return;
+  // 构造统一的展示列表
+  const items = useMemo(() => {
+    const list: Array<{
+      id: string;
+      url: string;
+      name?: string;
+      description?: string;
+      isCover?: boolean;
+      original?: any;
+    }> = [];
+
+    if (gallery.cover) {
+      list.push({
+        id: 'cover',
+        url: gallery.cover.url,
+        name: gallery.name,
+        description: gallery.description,
+        isCover: true,
+        original: gallery.cover,
+      });
     }
 
-    setCount(api.scrollSnapList().length - 1);
-    setCurrent(api.selectedScrollSnap());
-    api.on('select', () => {
-      setCurrent(api.selectedScrollSnap());
+    gallery.photos.forEach((photo) => {
+      if (gallery.cover && photo.id === gallery.cover.id) {
+        return;
+      }
+      list.push({
+        id: photo.id,
+        url: photo.url,
+        name: photo.name,
+        description: '', // 照片描述暂时为空，如果有字段可以加上
+        isCover: false,
+        original: photo,
+      });
     });
-  }, [api]);
 
-  const navigate = useNavigate();
+    return list;
+  }, [gallery]);
+
+  const currentItem = items[selectedIndex];
+
+  // 键盘导航
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setSelectedIndex((prev) => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedIndex((prev) => Math.min(items.length - 1, prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [items.length]);
+
   const back = () => {
     navigate(`/gallery`);
   };
 
-  return (
-    <ZView
-      className="h-screen overflow-hidden flex flex-row items-center justify-center"
-      backgroundColor="oklch(0.3898 0.0523 28.3)"
-    >
-      <Carousel scrollbarable opts={{ duration: 20 }} setApi={setApi}>
-        <CarouselContent>
-          {gallery.cover && (
-            <CarouselItem>
-              <PhotoPoster.Cover
-                name={gallery.name}
-                description={gallery.description}
-                photo={gallery.cover}
-              />
-            </CarouselItem>
-          )}
-          {gallery.photos.map((item) => (
-            <CarouselItem key={item.id}>
-              <PhotoPoster photo={item} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        {/* <CarouselPointer /> */}
-      </Carousel>
-      {current > 0 && (
-        <ZView className="absolute bottom-0 left-0 right-0 flex items-center h-20">
-          <ZView className="flex-1 text-center text-white">
-            {gallery.photos[current - 1].name}
-          </ZView>
-          <ZView
-            className="flex-1 text-white text-center text-3xl font-bold"
-            style={{ fontFamily: "'Times New Roman'" }}
+  const handleMainImageClick = () => {
+    ZDialog.show({
+      contentContainerClassName:
+        'max-w-none w-screen h-screen bg-black/95 border-none p-0 flex items-center justify-center',
+      content: ({ onClose }) => (
+        <ZView className="w-full h-full flex items-center justify-center relative p-10">
+          <ImageZoomViewer src={currentItem.url} alt={currentItem.name} />
+          <Button
+            className="absolute top-4 right-4 z-50 hover:bg-white/20"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
           >
-            {current} / {count}
+            <IconClose className="text-white" />
+          </Button>
+        </ZView>
+      ),
+    });
+  };
+
+  if (!currentItem) {
+    return null; // 或者显示 Loading
+  }
+
+  return (
+    <ZView className="flex h-screen w-screen overflow-hidden bg-background">
+      {/* 左侧区域：主图 + 缩略图 */}
+      <ZView className="flex-1 flex flex-col h-full relative bg-black/95">
+        {/* 顶部工具栏 (返回按钮) */}
+        <ZView className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={back}
+            className="text-white hover:bg-white/20"
+          >
+            <IconClose />
+          </Button>
+        </ZView>
+
+        {/* 主图区域 */}
+        <ZView className="flex-1 flex items-center justify-center p-12 overflow-hidden">
+          <div
+            onClick={handleMainImageClick}
+            className="cursor-pointer w-full h-full flex items-center justify-center"
+          >
+            <ZImage
+              src={currentItem.url}
+              alt={currentItem.name || 'Photo'}
+              className="max-w-full max-h-full object-contain shadow-lg"
+              contentMode="contain"
+            />
+          </div>
+        </ZView>
+
+        {/* 缩略图区域 */}
+        <ZView className="h-24 w-full bg-black/80 flex items-center px-4 gap-2 overflow-x-auto border-t border-white/10 shrink-0">
+          {items.map((item, index) => (
+            <button
+              key={item.id}
+              onClick={() => setSelectedIndex(index)}
+              className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-md transition-all ${
+                selectedIndex === index
+                  ? 'ring-2 ring-primary opacity-100'
+                  : 'opacity-50 hover:opacity-80'
+              }`}
+            >
+              <ZImage
+                src={item.url}
+                alt={item.name}
+                className="h-full w-full object-cover"
+                contentMode="cover"
+              />
+            </button>
+          ))}
+        </ZView>
+      </ZView>
+
+      {/* 右侧侧边栏 */}
+      <ZView className="w-[400px] h-full border-l bg-background flex flex-col shadow-xl z-20">
+        <ZView className="p-6 flex-1 overflow-y-auto">
+          <ZView className="space-y-6">
+            <ZView>
+              <h1 className="text-2xl font-bold wrap-break-word">
+                {currentItem.name || '未命名照片'}
+              </h1>
+              {currentItem.isCover && (
+                <span className="inline-block px-2 py-0.5 text-xs bg-primary/10 text-primary rounded mt-2">
+                  封面
+                </span>
+              )}
+            </ZView>
+
+            {currentItem.description && (
+              <ZView>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  描述
+                </h3>
+                <p className="text-base leading-relaxed">
+                  {currentItem.description}
+                </p>
+              </ZView>
+            )}
+
+            <ZView>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                信息
+              </h3>
+              <ZView className="grid grid-cols-2 gap-4 text-sm">
+                <ZView>
+                  <span className="text-muted-foreground block text-xs">
+                    索引
+                  </span>
+                  <span>
+                    {selectedIndex + 1} / {items.length}
+                  </span>
+                </ZView>
+                <ZView>
+                  <span className="text-muted-foreground block text-xs">
+                    ID
+                  </span>
+                  <span
+                    className="font-mono text-xs truncate block"
+                    title={currentItem.id}
+                  >
+                    {currentItem.id}
+                  </span>
+                </ZView>
+                {/* 这里可以添加更多元数据，比如拍摄时间、相机参数等，如果后端有返回 */}
+              </ZView>
+            </ZView>
           </ZView>
-          <ZView className="flex-1 flex justify-end items-center">
-            <Button className="mr-12" onClick={back}>
-              返回相册
+        </ZView>
+
+        {/* 侧边栏底部操作区 (可选) */}
+        <ZView className="p-4 border-t bg-muted/20">
+          <ZView className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={selectedIndex === 0}
+              onClick={() => setSelectedIndex((prev) => prev - 1)}
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground">导航</span>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={selectedIndex === items.length - 1}
+              onClick={() => setSelectedIndex((prev) => prev + 1)}
+            >
+              <ArrowRight className="size-4" />
             </Button>
           </ZView>
         </ZView>
-      )}
-      <Button className="absolute top-4 right-4" variant="link" onClick={back}>
-        <IconClose color="white" />
-      </Button>
+      </ZView>
     </ZView>
   );
 }
