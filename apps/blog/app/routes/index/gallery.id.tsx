@@ -85,11 +85,16 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
 
   const handleMainImageClick = () => {
     ZDialog.show({
+      showCloseButton: false,
       contentContainerClassName:
-        'max-w-none w-screen h-screen bg-black/95 border-none p-0 flex items-center justify-center',
+        '!max-w-screen h-screen w-screen p-0 bg-black/95 border-none flex items-center justify-center',
       content: ({ onClose }) => (
-        <ZView className="w-full h-full flex items-center justify-center relative p-10">
-          <ImageZoomViewer src={currentItem.url} alt={currentItem.name} />
+        <ZView>
+          <ImageZoomViewer
+            className="py-40 px-20"
+            src={currentItem.url}
+            alt={currentItem.name}
+          />
           <Button
             className="absolute top-4 right-4 z-50 hover:bg-white/20"
             variant="ghost"
@@ -132,7 +137,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
             <ZImage
               src={currentItem.url}
               alt={currentItem.name || 'Photo'}
-              className="max-w-full max-h-full object-contain shadow-lg"
+              className="shadow-lg"
               contentMode="contain"
             />
           </div>

@@ -1,4 +1,4 @@
-import { ZImage } from '@zcat/ui';
+import { cn, ZImage } from '@zcat/ui';
 import React, { useRef, useState } from 'react';
 
 interface ImageZoomViewerProps {
@@ -67,9 +67,11 @@ export function ImageZoomViewer({ src, alt, className }: ImageZoomViewerProps) {
   return (
     <div
       ref={containerRef}
-      className={`w-full h-full overflow-hidden flex items-center justify-center ${
-        scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
-      } ${className}`}
+      className={cn(
+        'overflow-hidden flex items-center justify-center',
+        scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in',
+        className,
+      )}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -80,7 +82,7 @@ export function ImageZoomViewer({ src, alt, className }: ImageZoomViewerProps) {
       <ZImage
         src={src}
         alt={alt}
-        className="max-w-full max-h-full transition-transform duration-100 ease-out select-none pointer-events-none"
+        className="transition-transform duration-100 ease-out select-none pointer-events-none"
         style={{
           transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
         }}
