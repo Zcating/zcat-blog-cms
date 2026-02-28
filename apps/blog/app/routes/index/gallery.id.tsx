@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { ImageZoomViewer, PhotoPoster } from '@blog/features';
+import { PhotoPoster } from '@blog/features';
 
 import type { Route } from '../index/+types/gallery.id';
 
@@ -83,31 +83,6 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
     navigate(`/gallery`);
   };
 
-  const handleMainImageClick = () => {
-    ZDialog.show({
-      showCloseButton: false,
-      contentContainerClassName:
-        '!max-w-screen h-screen w-screen p-0 bg-black/95 border-none flex items-center justify-center',
-      content: ({ onClose }) => (
-        <ZView>
-          <ImageZoomViewer
-            className="py-40 px-20"
-            src={currentItem.url}
-            alt={currentItem.name}
-          />
-          <Button
-            className="absolute top-4 right-4 z-50 hover:bg-white/20"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-          >
-            <IconClose className="text-white" />
-          </Button>
-        </ZView>
-      ),
-    });
-  };
-
   if (!currentItem) {
     return null; // 或者显示 Loading
   }
@@ -130,14 +105,11 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
 
         {/* 主图区域 */}
         <ZView className="flex-1 flex items-center justify-center p-12 overflow-hidden">
-          <div
-            onClick={handleMainImageClick}
-            className="cursor-pointer w-full h-full flex items-center justify-center"
-          >
+          <div className="w-full h-full flex items-center justify-center">
             <ZImage
               src={currentItem.url}
               alt={currentItem.name || 'Photo'}
-              className="shadow-lg"
+              className="max-w-full max-h-full object-contain shadow-lg"
               contentMode="contain"
             />
           </div>

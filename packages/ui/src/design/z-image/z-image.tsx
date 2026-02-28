@@ -27,14 +27,19 @@ const imageTv = cva('max-h-full max-w-full', {
   },
 });
 
-export function ZImage(props: ZImageProps) {
-  const { src, alt, className, contentMode, ...rest } = props;
-  return (
-    <img
-      className={cn(imageTv({ contentMode }), className)}
-      src={src}
-      alt={alt}
-      {...rest}
-    />
-  );
-}
+export const ZImage = React.forwardRef<HTMLImageElement, ZImageProps>(
+  (props, ref) => {
+    const { src, alt, className, contentMode, ...rest } = props;
+    return (
+      <img
+        ref={ref}
+        className={cn(imageTv({ contentMode }), className)}
+        src={src}
+        alt={alt}
+        {...rest}
+      />
+    );
+  },
+);
+
+ZImage.displayName = 'ZImage';
