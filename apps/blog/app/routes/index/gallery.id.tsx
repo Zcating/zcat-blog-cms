@@ -1,10 +1,9 @@
 import { Button, IconClose, ZDialog, ZImage, ZView } from '@zcat/ui';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { PhotoPoster } from '@blog/features';
+import { GallerySidebarNav, PhotoPoster } from '@blog/features';
 
 import type { Route } from '../index/+types/gallery.id';
 
@@ -195,27 +194,11 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
         </ZView>
 
         {/* 侧边栏底部操作区 (可选) */}
-        <ZView className="p-4 border-t bg-muted/20">
-          <ZView className="flex justify-between items-center">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={selectedIndex === 0}
-              onClick={() => setSelectedIndex((prev) => prev - 1)}
-            >
-              <ArrowLeft className="size-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground">导航</span>
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={selectedIndex === items.length - 1}
-              onClick={() => setSelectedIndex((prev) => prev + 1)}
-            >
-              <ArrowRight className="size-4" />
-            </Button>
-          </ZView>
-        </ZView>
+        <GallerySidebarNav
+          value={selectedIndex}
+          count={items.length}
+          onValueChange={setSelectedIndex}
+        />
       </ZView>
     </ZView>
   );
