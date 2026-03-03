@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { cn } from '@zcat/ui/shadcn';
 import {
   Dialog,
   DialogContent,
@@ -77,7 +78,7 @@ export const DialogContainer = React.forwardRef<
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className={props.contentContainerClassName}
+        className={cn(props.contentContainerClassName, 'space-y-2')}
         backdropClose={props.backdropClose}
         onAnimationEnd={handleAnimationEnd}
         showCloseButton={props.showCloseButton}
@@ -87,9 +88,7 @@ export const DialogContainer = React.forwardRef<
             <DialogTitle>{props.title}</DialogTitle>
           </DialogHeader>
         )}
-
-        <ZView className="py-2">{content}</ZView>
-
+        {content}
         {props.footer && (
           <DialogFooter>{<props.footer onClose={handleClose} />}</DialogFooter>
         )}

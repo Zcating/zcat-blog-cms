@@ -1,9 +1,9 @@
 import { Button, IconClose, ZDialog, ZImage, ZView } from '@zcat/ui';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { GallerySidebarNav, PhotoPoster } from '@blog/features';
+import { GallerySidebarNav, ImageZoomViewer } from '@blog/features';
 
 import type { Route } from '../index/+types/gallery.id';
 
@@ -86,6 +86,27 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
     return null; // 或者显示 Loading
   }
 
+  const handleZoom = () => {
+    ZDialog.show({
+      contentContainerClassName:
+        'flex items-center justify-center p-0 border-0 w-[90vw] h-[90vh] bg-transparent',
+      showCloseButton: false,
+      content: ({ onClose }) => (
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-white hover:bg-white/20 z-50"
+            onClick={onClose}
+          >
+            <IconClose />
+          </Button>
+          <ImageZoomViewer src={currentItem.url} alt={currentItem.name} />
+        </div>
+      ),
+    });
+  };
+
   return (
     <ZView className="flex h-screen w-screen overflow-hidden bg-background">
       {/* 左侧区域：主图 + 缩略图 */}
@@ -104,11 +125,14 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
 
         {/* 主图区域 */}
         <ZView className="flex-1 flex items-center justify-center p-12 overflow-hidden">
-          <div className="w-full h-full flex items-center justify-center">
+          <div
+            className="w-full h-full flex items-center justify-center cursor-zoom-in"
+            onClick={handleZoom}
+          >
             <ZImage
               src={currentItem.url}
               alt={currentItem.name || 'Photo'}
-              className="max-w-full max-h-full object-contain shadow-lg"
+              className="max-w-full max-h-full object-contain shadow-lg pointer-events-none"
               contentMode="contain"
             />
           </div>
