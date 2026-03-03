@@ -3,7 +3,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { GalleryApi } from '@blog/apis';
-import { GallerySidebarNav, ImageZoomViewer } from '@blog/features';
+import {
+  GallerySidebarNav,
+  GalleryThumbnailList,
+  ImageZoomViewer,
+} from '@blog/features';
 
 import type { Route } from '../index/+types/gallery.id';
 
@@ -143,26 +147,11 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
         </ZView>
 
         {/* 缩略图区域 */}
-        <ZView className="h-24 w-full bg-black/80 flex items-center px-4 gap-2 overflow-x-auto border-t border-white/10 shrink-0">
-          {items.map((item, index) => (
-            <button
-              key={item.id}
-              onClick={() => setSelectedIndex(index)}
-              className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-md transition-all ${
-                selectedIndex === index
-                  ? 'ring-2 ring-primary opacity-100'
-                  : 'opacity-50 hover:opacity-80'
-              }`}
-            >
-              <ZImage
-                src={item.url}
-                alt={item.name}
-                className="h-full w-full object-cover"
-                contentMode="cover"
-              />
-            </button>
-          ))}
-        </ZView>
+        <GalleryThumbnailList
+          items={items}
+          value={selectedIndex}
+          onValueChange={setSelectedIndex}
+        />
       </ZView>
 
       {/* 右侧侧边栏 */}
