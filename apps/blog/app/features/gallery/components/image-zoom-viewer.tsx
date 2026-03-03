@@ -1,43 +1,80 @@
 import { cn, ZImage } from '@zcat/ui';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 interface ImageZoomViewerProps {
   src: string;
   alt?: string;
   className?: string;
+  onClickBackdrop?: () => void;
 }
 
-export function ImageZoomViewer({ src, alt, className }: ImageZoomViewerProps) {
+export function ImageZoomViewer({
+  src,
+  alt,
+  className,
+  onClickBackdrop,
+}: ImageZoomViewerProps) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [imageAR, setImageAR] = useState(1);
-  const [containerAR, setContainerAR] = useState(1);
+  const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!document.body) {
+      return;
+    }
 
     const observer = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
-      if (width && height) {
-        setContainerAR(width / height);
-      }
+      setScreenSize({ width, height });
     });
 
-    observer.observe(containerRef.current);
+    observer.observe(document.body);
     return () => observer.disconnect();
   }, []);
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { naturalWidth, naturalHeight } = e.currentTarget;
-    if (naturalWidth && naturalHeight) {
-      setImageAR(naturalWidth / naturalHeight);
-    }
+    setImageSize({ width: naturalWidth, height: naturalHeight });
   };
+
+  const displaySize = useMemo(() => {
+    if (
+      !screenSize.width ||
+      !screenSize.height ||
+      !imageSize.width ||
+      !imageSize.height
+    ) {
+      return {
+        width: 0,
+        height: 0,
+      };
+    }
+    const sw = screenSize.width;
+    const sh = screenSize.height;
+    const nw = imageSize.width;
+    const nh = imageSize.height;
+
+    const imageRate = nw / nh;
+    const padding = 50;
+
+    if (imageRate > 1) {
+      return {
+        width: (sh - padding) * imageRate,
+        height: sh - padding,
+      };
+    } else {
+      return {
+        width: (sh - padding) * imageRate,
+        height: sh - padding,
+      };
+    }
+  }, [screenSize, imageSize]);
 
   const getBounds = (currentScale: number) => {
     if (!containerRef.current || !imageRef.current) return { maxX: 0, maxY: 0 };
@@ -105,16 +142,16 @@ export function ImageZoomViewer({ src, alt, className }: ImageZoomViewerProps) {
     }
   };
 
-  // Determine fitting style based on aspect ratio
-  // If image is wider relative to container than its AR, fit by width
-  const isWider = imageAR > containerAR;
+  const handleClickImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('click');
+  };
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        'w-full h-full flex items-center justify-center overflow-hidden select-none',
-        scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in',
+        'relative w-screen h-screen flex items-center justify-center overflow-hidden select-none bg-black/95',
         className,
       )}
       onWheel={handleWheel}
@@ -124,16 +161,27 @@ export function ImageZoomViewer({ src, alt, className }: ImageZoomViewerProps) {
       onMouseLeave={handleMouseUp}
       onDoubleClick={handleDoubleClick}
     >
+      <div
+        className="absolute top-0 left-0 w-full h-full"
+        onClick={onClickBackdrop}
+      />
       <ZImage
         ref={imageRef}
         src={src}
         alt={alt}
         onLoad={handleImageLoad}
-        className="transition-transform duration-100 ease-out pointer-events-none block max-w-full max-h-full w-auto h-auto object-contain"
+        contentMode="contain"
+        className={cn(
+          'rounded-md transition-transform duration-100 ease-out block',
+          scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in',
+        )}
         style={{
+          width: displaySize?.width,
+          height: displaySize?.height,
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
         }}
         draggable={false}
+        onClick={handleClickImage}
       />
     </div>
   );

@@ -89,7 +89,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
   const handleZoom = () => {
     ZDialog.show({
       contentContainerClassName:
-        'flex items-center justify-center p-0 border-0 w-[90vw] h-[90vh] bg-transparent',
+        '!max-w-none shadow-none flex items-center justify-center p-0 border-0 bg-transparent',
       showCloseButton: false,
       content: ({ onClose }) => (
         <div className="relative">
@@ -101,7 +101,11 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
           >
             <IconClose />
           </Button>
-          <ImageZoomViewer src={currentItem.url} alt={currentItem.name} />
+          <ImageZoomViewer
+            src={currentItem.url}
+            alt={currentItem.name}
+            onClickBackdrop={onClose}
+          />
         </div>
       ),
     });
