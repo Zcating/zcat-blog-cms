@@ -63,7 +63,7 @@ export namespace ArticlesApi {
   }
 
   export async function deleteArticle(id: number): Promise<void> {
-    return await HttpClient.post(`cms/articles/delete`, { id });
+    return await HttpClient.del(`cms/articles/${id}`);
   }
 
   export async function uploadArticleImages(

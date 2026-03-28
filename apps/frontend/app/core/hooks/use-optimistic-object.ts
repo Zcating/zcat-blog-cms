@@ -9,7 +9,7 @@ type ObjectStateDispatch<T> = <K extends keyof StateActionTypes<T>>(
   ...args: StateActionTypes<T>[K]
 ) => void;
 
-export function UseOptimisticObject<T, U = unknown>(
+export function useOptimisticObject<T, U = unknown>(
   initialValue: T,
   reduce: (prev: T, data: U) => T,
 ) {

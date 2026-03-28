@@ -93,7 +93,7 @@ export default function Albums(props: Route.ComponentProps) {
             return;
           }
           commitAlbums('update', result);
-        } catch (error) {
+        } catch {
           commitAlbums('rollback');
         }
       });
@@ -113,16 +113,19 @@ export default function Albums(props: Route.ComponentProps) {
             return;
           }
           commitAlbums('update', result);
-        } catch (error) {
+        } catch {
           commitAlbums('rollback');
         }
       });
     },
   });
 
-  const handleClickAlbum = (item: AlbumsApi.PhotoAlbum) => {
-    navigate(`/albums/${item.id}`);
-  };
+  const handleClickAlbum = React.useCallback(
+    (item: AlbumsApi.PhotoAlbum) => {
+      navigate(`/albums/${item.id}`);
+    },
+    [navigate],
+  );
 
   return (
     <PaginationWorkspace

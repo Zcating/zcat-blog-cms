@@ -42,28 +42,38 @@ export default function Articles(props: Route.ComponentProps) {
 
   const navigate = useNavigate();
 
-  // 监听 pagination.data 变化，同步更新 articles 状态
-  // 解决分页切换时列表不更新的问题
   useWatch([pagination.data], setArticles);
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     navigate('/articles/edit');
-  };
+  }, [navigate]);
 
-  const deleteArticles = useLoadingFn(async (article: ArticlesApi.Article) => {
-    if (!article.id) {
-      return;
-    }
-    const isConfirmed = await ZDialog.confirm({
-      title: '温馨提示',
-      content: `确定删除文章"${article.title}"吗？`,
-    });
-    if (!isConfirmed) {
-      return;
-    }
-    await ArticlesApi.deleteArticle(article.id);
-    setArticles((prev) => prev.filter((item) => item.id !== article.id));
-  });
+  const deleteArticles = useLoadingFn(
+    React.useCallback(async (article: ArticlesApi.Article) => {
+      if (!article.id) {
+        return;
+      }
+      const isConfirmed = await ZDialog.confirm({
+        title: '温馨提示',
+        content: `确定删除文章"${article.title}"吗？`,
+      });
+      if (!isConfirmed) {
+        return;
+      }
+      await ArticlesApi.deleteArticle(article.id);
+      setArticles((prev) => prev.filter((item) => item.id !== article.id));
+    }, []),
+  );
+
+  const handleViewArticle = React.useCallback(
+    (id: number) => navigate(`/articles/${id}`),
+    [navigate],
+  );
+
+  const handleDeleteArticle = React.useCallback(
+    (article: ArticlesApi.Article) => deleteArticles(article),
+    [deleteArticles],
+  );
 
   return (
     <PaginationWorkspace
@@ -90,12 +100,12 @@ export default function Articles(props: Route.ComponentProps) {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <ZButton onClick={() => navigate(`/articles/${article.id}`)}>
+                <ZButton onClick={() => handleViewArticle(article.id)}>
                   详情
                 </ZButton>
                 <ZButton
                   variant="destructive"
-                  onClick={() => deleteArticles(article)}
+                  onClick={() => handleDeleteArticle(article)}
                   loading={deleteArticles.loading}
                 >
                   删除

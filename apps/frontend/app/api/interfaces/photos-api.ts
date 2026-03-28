@@ -70,7 +70,7 @@ export namespace PhotosApi {
   }
 
   export async function deletePhoto(id: number): Promise<void> {
-    return await HttpClient.post(`cms/photos/delete`, { id });
+    return await HttpClient.del(`cms/photos/${id}`);
   }
 
   export async function createAlbumPhoto(
