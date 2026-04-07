@@ -8,6 +8,7 @@ import {
 export default [
   index('routes/home.tsx'),
   route('login', 'routes/login.tsx'),
+  route('api/bff/*', 'routes/api-bff.$.ts'),
   layout('layouts/cms-layout.tsx', [
     route('dashboard', 'routes/dashboard.tsx'),
     route('articles', 'routes/articles.tsx'),

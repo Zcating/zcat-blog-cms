@@ -26,7 +26,7 @@ export const csrf = {
 };
 
 export namespace HttpClient {
-  const API_URL: string = import.meta.env.VITE_API_URL;
+  const API_URL: string = '/api/bff';
   const SERVER_URL: string = import.meta.env.VITE_SERVER_URL;
 
   interface ResponseResult<T = unknown> {
@@ -85,16 +85,16 @@ export namespace HttpClient {
     options: { signal?: AbortSignal } = {},
   ): Promise<T> {
     log('POST request', path, body);
-    const headers = new Headers({
+    const headers: Record<string, string> = {
       Authorization: Cookies.get('token') || '',
       ...getCsrfHeader(),
-    });
+    };
     let bodyData: string | FormData;
     if (body instanceof FormData) {
       bodyData = body;
     } else {
       bodyData = JSON.stringify(body);
-      headers.set('Content-Type', 'application/json');
+      headers['Content-Type'] = 'application/json';
     }
 
     const response = await fetchWithRetry(`${API_URL}/${path}`, {
