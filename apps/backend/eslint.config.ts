@@ -13,6 +13,7 @@ export default defineConfig([
       globals: {
         ...globals.node,
         ...globals.jest,
+        ...globals.vitest,
       },
       ecmaVersion: "latest",
       sourceType: "module",

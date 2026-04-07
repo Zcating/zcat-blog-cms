@@ -1,3 +1,3 @@
-export * from './auth/auth.module';
-export * from './cms/cms.module';
-export * from './blog/blog.module';
+export * from './auth.module';
+export * from './cms.module';
+export * from './blog.module';

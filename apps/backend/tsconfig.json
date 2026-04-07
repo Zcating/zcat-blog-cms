@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*", "test/**/*", "generated/**/*", "__test__/**/*", "scripts/**/*", "prisma.config.ts"],
+  "include": ["src/**/*", "test/**/*", "generated/**/*", "__test__/**/*", "scripts/**/*", "prisma.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "module": "commonjs",
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "vitest/globals"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -14,6 +14,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@backend/*": ["./src/*"],
       "@backend/prisma": ["./generated/prisma/client"]

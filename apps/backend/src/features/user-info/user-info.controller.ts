@@ -1,0 +1,74 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Request } from 'express';
+
+import { createResult, ResultCode } from '@backend/model';
+
+import { CmsJwtAuthGuard } from '../cms/cms-jwt-auth.guard';
+
+import { UserInfoDto } from './user-info.schema';
+import { UserInfoService } from './user-info.service';
+
+@Controller('api/cms/user-info')
+@UseGuards(CmsJwtAuthGuard)
+export class UserInfoController {
+  private readonly logger = new Logger(UserInfoController.name);
+
+  constructor(private userInfoService: UserInfoService) {}
+
+  @Get()
+  @ApiOperation({ summary: '获取用户信息' })
+  @ApiResponse({ status: 200, description: '用户信息获取成功' })
+  async userInfo(@Req() req: Request) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return createResult({
+        code: ResultCode.Success,
+        message: 'success',
+        data: null,
+      });
+    }
+
+    this.logger.log(`获取用户信息，用户ID: ${userId}`);
+    const result = await this.userInfoService.getUserInfo(userId);
+
+    this.logger.log(`用户信息获取成功，用户ID: ${userId}`);
+
+    return createResult({
+      code: ResultCode.Success,
+      message: 'success',
+      data: result,
+    });
+  }
+
+  @Post('update')
+  @ApiOperation({ summary: '更新用户信息' })
+  @ApiResponse({ status: 200, description: '用户信息更新成功' })
+  async updateUserInfo(@Req() req: Request, @Body() body: UserInfoDto) {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return createResult({
+        code: ResultCode.ValidationError,
+        message: 'failed',
+      });
+    }
+
+    const result = await this.userInfoService.updateUserInfo(userId, body);
+
+    this.logger.log(`用户信息更新成功，用户ID: ${userId}`);
+
+    return createResult({
+      code: ResultCode.Success,
+      message: 'success',
+      data: result,
+    });
+  }
+}
