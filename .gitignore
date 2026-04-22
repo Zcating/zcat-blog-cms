@@ -53,11 +53,11 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-.opencode
-.cladecode
-.cursor
-.trae
-.qwen
-.codebuddy
-.agents
-.github
+.opencode/
+.clade/
+.cursor/
+.trae/
+.qwen/
+.codebuddy/
+.agents/
+.github/
