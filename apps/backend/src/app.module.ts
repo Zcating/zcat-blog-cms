@@ -4,7 +4,7 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { CommonModule, HttpExceptionFilter } from '@backend/common';
-import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
+import { CmsModule, PublicModule } from '@backend/modules';
 
 // import * as path from 'path';
 
@@ -23,9 +23,8 @@ import { AuthModule, BlogModule, CmsModule } from '@backend/modules';
     // ServeStaticModule.forRoot({
     //   rootPath: path.join(__dirname, '..', 'uploads/'),
     // }),
-    AuthModule,
     CmsModule,
-    BlogModule,
+    PublicModule,
   ],
   providers: [
     {

@@ -1,3 +1,2 @@
-export * from './auth.module';
-export * from './cms.module';
-export * from './blog.module';
+export * from '../features/cms/cms/cms.module';
+export * from '../features/public/public.module';
