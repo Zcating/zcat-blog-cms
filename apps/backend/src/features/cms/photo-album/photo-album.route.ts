@@ -3,9 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
-import { createPaginate } from '@backend/utils';
 
-import { prismaService, ossService } from '../../../services';
 import { AddPhotosDtoSchema } from '../photo/photo.schema';
 
 import {
@@ -13,23 +11,9 @@ import {
   SetCoverDtoSchema,
   UpdateAlbumDtoSchema,
 } from './photo-album.schema';
+import { photoAlbumService } from './photo-album.service';
 
 const photoAlbumRoutes = new Hono().basePath('/api/cms/photo-albums');
-
-type PhotoWithUrls = {
-  url: string;
-  thumbnailUrl: string;
-};
-
-function transformPhoto<T extends PhotoWithUrls>(
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
-  return {
-    ...photo,
-    url: ossService.getPrivateUrl(photo.url),
-    thumbnailUrl: ossService.getPrivateUrl(photo.thumbnailUrl),
-  };
-}
 
 // GET / - 获取所有相册
 photoAlbumRoutes.get(
@@ -38,58 +22,16 @@ photoAlbumRoutes.get(
   async (c) => {
     try {
       const query = c.req.valid('query');
-
-      console.log('开始获取所有相册');
-
-      const [albums, total] = await Promise.all([
-        prismaService.photoAlbum.findMany({
-          orderBy: { createdAt: 'desc' },
-          ...createPaginate(query.page, query.pageSize),
-        }),
-        prismaService.photoAlbum.count(),
-      ]);
-
-      const coverIds = albums
-        .map((album) => album.coverId)
-        .filter((id): id is number => id !== null);
-
-      const covers =
-        coverIds.length > 0
-          ? await prismaService.photo.findMany({
-              where: { id: { in: coverIds } },
-            })
-          : [];
-
-      const data = albums.map((album) => {
-        const foundedCover = covers.find((cover) => cover.id === album.coverId);
-        const cover = foundedCover ? transformPhoto(foundedCover) : null;
-        return {
-          id: album.id,
-          name: album.name,
-          description: album.description,
-          coverId: album.coverId,
-          createdAt: album.createdAt,
-          updatedAt: album.updatedAt,
-          available: album.available,
-          cover,
-        };
-      });
-
-      const pagination = {
-        data,
-        totalPages: Math.ceil(total / query.pageSize),
-        page: query.page,
-        pageSize: query.pageSize,
-        total,
-      };
-
-      console.log(`成功获取 ${pagination.data.length} 个相册`);
+      const result = await photoAlbumService.findAll(
+        query.page,
+        query.pageSize,
+      );
 
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '成功',
-          data: pagination,
+          data: result,
         }),
       );
     } catch (error) {
@@ -103,14 +45,7 @@ photoAlbumRoutes.get(
 photoAlbumRoutes.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-
-    console.log(`开始获取ID为 ${id} 的相册`);
-
-    const album = await prismaService.photoAlbum.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
-
-    console.log(`成功获取ID为 ${id} 的相册`);
+    const album = await photoAlbumService.findById(id);
 
     return c.json(
       createResult({
@@ -120,7 +55,7 @@ photoAlbumRoutes.get('/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error(`获取ID为 ${c.req.param('id')} 的相册失败`, error);
+    console.error(`获取相册失败`, error);
     throw error;
   }
 });
@@ -132,14 +67,7 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(`开始创建相册: ${body.name}`);
-
-      const album = await prismaService.photoAlbum.create({
-        data: body,
-      });
-
-      console.log(`成功创建相册，ID: ${album.id}, 名称: ${album.name}`);
+      const album = await photoAlbumService.create(body);
 
       return c.json(
         createResult({
@@ -162,15 +90,15 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(`开始更新相册ID: ${body.id}`);
-
-      const result = await prismaService.photoAlbum.update({
-        where: { id: body.id },
-        data: body,
-      });
-
-      console.log(`成功更新相册，ID: ${result.id}`);
+      if (!body.id) {
+        return c.json(
+          createResult({
+            code: ResultCode.ValidationError,
+            message: '更新失败：缺少ID',
+          }),
+        );
+      }
+      const result = await photoAlbumService.update(body.id, body);
 
       return c.json(
         createResult({
@@ -180,7 +108,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error(`更新相册失败`, error);
+      console.error('更新相册失败', error);
       throw error;
     }
   },
@@ -193,14 +121,7 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const { id } = c.req.valid('json');
-
-      console.log(`开始删除ID为 ${id} 的相册`);
-
-      await prismaService.photoAlbum.delete({
-        where: { id: parseInt(id, 10) },
-      });
-
-      console.log(`成功删除ID为 ${id} 的相册`);
+      await photoAlbumService.delete(id);
 
       return c.json(
         createResult({
@@ -209,7 +130,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error(`删除相册失败`, error);
+      console.error('删除相册失败', error);
       throw error;
     }
   },
@@ -222,19 +143,7 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(
-        `开始设置相册封面: 相册ID ${body.albumId}, 照片ID ${body.photoId}`,
-      );
-
-      await prismaService.photoAlbum.update({
-        where: { id: body.albumId },
-        data: {
-          coverId: body.photoId,
-        },
-      });
-
-      console.log(`成功设置相册封面`);
+      await photoAlbumService.setCover(body.albumId, body.photoId);
 
       return c.json(
         createResult({
@@ -256,16 +165,12 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(
-        `开始批量添加照片到相册: 相册ID ${body.albumId}, 照片IDs: ${body.photoIds.join(', ')}`,
+      const success = await photoAlbumService.addPhotos(
+        body.albumId,
+        body.photoIds,
       );
 
-      const album = await prismaService.photoAlbum.findUnique({
-        where: { id: body.albumId },
-      });
-
-      if (!album) {
+      if (!success) {
         return c.json(
           createResult({
             code: ResultCode.ValidationError,
@@ -273,19 +178,6 @@ photoAlbumRoutes.post(
           }),
         );
       }
-
-      await prismaService.photo.updateMany({
-        where: {
-          id: {
-            in: body.photoIds,
-          },
-        },
-        data: {
-          albumId: body.albumId,
-        },
-      });
-
-      console.log(`成功批量添加照片到相册`);
 
       return c.json(
         createResult({

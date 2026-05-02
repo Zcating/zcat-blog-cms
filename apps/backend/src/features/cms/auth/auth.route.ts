@@ -1,13 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
-import * as bcrypt from 'bcrypt';
 import { Hono } from 'hono';
-import jwt from 'jsonwebtoken';
 
 import { createResult, ResultCode } from '@backend/model';
 
-import { prismaService } from '../../../services';
-
 import { loginSchema, registerDtoSchema } from './auth.schema';
+import { authService } from './auth.service';
 
 const authRoutes = new Hono().basePath('/api/auth');
 
@@ -15,11 +12,9 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { username, password } = c.req.valid('json');
 
   try {
-    const user = await prismaService.user.findUnique({
-      where: { username },
-    });
+    const result = await authService.login(username, password);
 
-    if (!user) {
+    if (!result) {
       return c.json(
         createResult({
           code: ResultCode.LoginError,
@@ -27,28 +22,12 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
         }),
       );
     }
-
-    const hashPassword = await bcrypt.hash(password, user.salt);
-    if (user.password !== hashPassword) {
-      return c.json(
-        createResult({
-          code: ResultCode.LoginError,
-          message: '用户名或密码错误',
-        }),
-      );
-    }
-
-    const token = jwt.sign(
-      { username: user.username, sub: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1d' },
-    );
 
     return c.json(
       createResult({
         code: ResultCode.Success,
         message: '登录成功',
-        data: { accessToken: token },
+        data: result,
       }),
     );
   } catch (error) {
@@ -69,8 +48,9 @@ authRoutes.post(
     const { username, password, email } = c.req.valid('json');
 
     try {
-      const users = await prismaService.user.findMany();
-      if (users.length >= 1) {
+      const result = await authService.register(username, password, email);
+
+      if (result.code === 'REGISTER_LIMIT') {
         return c.json(
           createResult({
             code: ResultCode.RegisterError,
@@ -79,10 +59,7 @@ authRoutes.post(
         );
       }
 
-      const existingUser = await prismaService.user.findUnique({
-        where: { username },
-      });
-      if (existingUser) {
+      if (result.code === 'USER_EXISTS') {
         return c.json(
           createResult({
             code: ResultCode.RegisterError,
@@ -91,29 +68,11 @@ authRoutes.post(
         );
       }
 
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const createdUser = await prismaService.user.create({
-        data: {
-          username,
-          password: hashedPassword,
-          email,
-          salt,
-        },
-      });
-
-      const token = jwt.sign(
-        { username: createdUser.username, sub: createdUser.id },
-        process.env.JWT_SECRET!,
-        { expiresIn: '1d' },
-      );
-
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '注册成功',
-          data: { accessToken: token },
+          data: { accessToken: result.accessToken },
         }),
       );
     } catch (error) {

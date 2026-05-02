@@ -3,9 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { createResult, ResultCode } from '@backend/model';
-import { isNumber } from '@backend/utils';
 
-import { prismaService, ossService } from '../../../services';
 import {
   CreateAlbumPhotoDtoSchema,
   UpdateAlbumPhotoDtoSchema,
@@ -16,73 +14,19 @@ import {
   GetPhotosDtoSchema,
   UpdatePhotoDtoSchema,
 } from './photo.schema';
+import { photoService } from './photo.service';
 
 const photoRoutes = new Hono().basePath('/api/cms/photos');
-
-type PhotoWithUrls = {
-  url: string;
-  thumbnailUrl: string;
-};
-
-function transformPhoto<T extends PhotoWithUrls>(
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
-  return {
-    ...photo,
-    url: ossService.getPrivateUrl(photo.url),
-    thumbnailUrl: ossService.getPrivateUrl(photo.thumbnailUrl),
-  };
-}
 
 // GET / - 获取所有照片（分页）
 photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {
   try {
     const query = c.req.valid('query');
-    const { albumId, page, pageSize } = query;
-
-    console.log('开始获取所有照片');
-
-    if (isNumber(albumId) && albumId <= 0) {
-      return c.json(
-        createResult({
-          code: ResultCode.Success,
-          message: '成功',
-          data: {
-            data: [],
-            page,
-            pageSize,
-            totalPages: 0,
-            total: 0,
-          },
-        }),
-      );
-    }
-
-    const where = {
-      albumId: albumId,
-    };
-
-    const [photos, total] = await Promise.all([
-      prismaService.photo.findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prismaService.photo.count({ where }),
-    ]);
-
-    const totalPages = Math.ceil(total / pageSize);
-
-    const result = {
-      data: photos.map((photo) => transformPhoto(photo)),
-      page,
-      pageSize,
-      totalPages,
-      total,
-    };
-
-    console.log(`成功获取 ${result.total} 张照片`);
+    const result = await photoService.findAll(
+      query.albumId,
+      query.page,
+      query.pageSize,
+    );
 
     return c.json(
       createResult({
@@ -100,17 +44,7 @@ photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {
 // GET /empty-album - 获取所有未所属相册的照片
 photoRoutes.get('/empty-album', async (c) => {
   try {
-    console.log('开始获取所有照片');
-
-    const photos = await prismaService.photo.findMany({
-      where: {
-        albumId: null,
-      },
-    });
-
-    const result = photos.map((photo) => transformPhoto(photo));
-
-    console.log(`成功获取 ${result.length} 张照片`);
+    const result = await photoService.findEmptyAlbum();
 
     return c.json(
       createResult({
@@ -130,16 +64,11 @@ photoRoutes.get(
   '/detail',
   zValidator('query', z.object({ id: z.coerce.number().int().positive() })),
   async (c) => {
-    const { id } = c.req.valid('query');
     try {
-      console.log(`开始获取ID为 ${id} 的照片`);
-
-      const photo = await prismaService.photo.findUnique({
-        where: { id },
-      });
+      const { id } = c.req.valid('query');
+      const photo = await photoService.findById(id);
 
       if (!photo) {
-        console.warn(`未找到ID为 ${id} 的照片`);
         return c.json(
           createResult({
             code: ResultCode.Success,
@@ -149,16 +78,15 @@ photoRoutes.get(
         );
       }
 
-      console.log(`成功获取ID为 ${id} 的照片`);
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '成功',
-          data: transformPhoto(photo),
+          data: photo,
         }),
       );
     } catch (error) {
-      console.error(`获取ID为 ${id} 的照片失败`, error);
+      console.error('获取照片详情失败', error);
       throw error;
     }
   },
@@ -171,25 +99,13 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(`开始创建照片: ${body.name || '未提供名称'}`);
-
-      const photo = await prismaService.photo.create({
-        data: {
-          name: body.name,
-          url: body.url || '',
-          thumbnailUrl: body.thumbnailUrl || '',
-          albumId: body.albumId,
-        },
-      });
-
-      console.log(`成功创建照片，ID: ${photo.id}, 名称: ${photo.name}`);
+      const photo = await photoService.create(body);
 
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '照片创建成功',
-          data: transformPhoto(photo),
+          data: photo,
         }),
       );
     } catch (error) {
@@ -206,24 +122,13 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
+      const photo = await photoService.create(body);
 
-      console.log(`开始创建相册照片: ${body.name || '未提供名称'}`);
-
-      const photo = await prismaService.photo.create({
-        data: {
-          name: body.name,
-          url: body.url || '',
-          thumbnailUrl: body.thumbnailUrl || '',
-          albumId: body.albumId,
-        },
-      });
-
-      console.log(`成功创建相册照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '照片创建成功',
-          data: transformPhoto(photo),
+          data: photo,
         }),
       );
     } catch (error) {
@@ -240,27 +145,13 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
+      const photo = await photoService.update(body.id, body);
 
-      console.log(
-        `开始更新照片ID: ${body.id}, 名称: ${body.name || '未提供名称'}`,
-      );
-
-      const photo = await prismaService.photo.update({
-        where: { id: body.id },
-        data: {
-          name: body.name,
-          url: body.url,
-          thumbnailUrl: body.thumbnailUrl,
-          albumId: body.albumId,
-        },
-      });
-
-      console.log(`成功更新照片，ID: ${photo.id}, 名称: ${photo.name}`);
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: '成功',
-          data: transformPhoto(photo),
+          data: photo,
         }),
       );
     } catch (error) {
@@ -277,49 +168,12 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-
-      console.log(`开始更新相册照片ID: ${body.id}, 相册ID: ${body.albumId}`);
-
-      // 先更新相册封面
-      if (body.isCover) {
-        await prismaService.photoAlbum.update({
-          where: { id: body.albumId },
-          data: {
-            coverId: body.id,
-          },
-        });
-      }
-
-      // 再更新照片
-      const updatedPhoto = await prismaService.photo.update({
-        where: { id: body.id },
-        data: {
-          name: body.name,
-          url: body.url,
-          thumbnailUrl: body.thumbnailUrl,
-          albumId: body.albumId,
-        },
-      });
-
-      const result = {
-        ...transformPhoto(updatedPhoto),
-        albumId: body.albumId,
-        isCover: body.isCover,
-      };
-
-      if (!result) {
-        console.warn(`更新相册照片失败：未找到ID为 ${body.id} 的照片`);
-        return c.json(
-          createResult({
-            code: ResultCode.DatabaseError,
-            message: '更新失败',
-          }),
-        );
-      }
-
-      console.log(
-        `成功更新相册照片，照片ID: ${result.id}, 相册ID: ${result.albumId}`,
+      const result = await photoService.updateWithAlbum(
+        body.id,
+        body.albumId,
+        body,
       );
+
       return c.json(
         createResult({
           code: ResultCode.Success,
@@ -339,16 +193,11 @@ photoRoutes.post(
   '/delete',
   zValidator('json', z.object({ id: z.coerce.number().int().positive() })),
   async (c) => {
-    const { id } = c.req.valid('json');
     try {
-      console.log(`开始删除ID为 ${id} 的照片`);
+      const { id } = c.req.valid('json');
+      const deleted = await photoService.delete(id);
 
-      const photo = await prismaService.photo.findUnique({
-        where: { id },
-      });
-
-      if (!photo) {
-        console.warn(`未找到ID为 ${id} 的照片`);
+      if (!deleted) {
         return c.json(
           createResult({
             code: ResultCode.Success,
@@ -357,18 +206,6 @@ photoRoutes.post(
         );
       }
 
-      // 删除 oss 的数据
-      await Promise.allSettled([
-        ossService.deleteFile(photo.url),
-        ossService.deleteFile(photo.thumbnailUrl),
-      ]);
-
-      // 删除数据库记录
-      await prismaService.photo.delete({
-        where: { id },
-      });
-
-      console.log(`成功删除ID为 ${id} 的照片`);
       return c.json(
         createResult({
           code: ResultCode.Success,
@@ -376,7 +213,7 @@ photoRoutes.post(
         }),
       );
     } catch (error) {
-      console.error(`删除ID为 ${id} 的照片失败`, error);
+      console.error('删除照片失败', error);
       throw error;
     }
   },

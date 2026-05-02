@@ -3,72 +3,22 @@ import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
 
-import { prismaService, ossService } from '../../../services';
-
 import { UserInfoSchema } from './user-info.schema';
+import { userInfoService } from './user-info.service';
 
 const userInfoRoutes = new Hono().basePath('/api/cms/user-info');
-
-/**
- * 转换用户信息（私有URL处理）
- */
-function transformUserInfo<T extends { avatar?: string | null }>(
-  userInfo: T,
-): T {
-  if (userInfo.avatar) {
-    return {
-      ...userInfo,
-      avatar: ossService.getPrivateUrl(userInfo.avatar || ''),
-    } as T;
-  }
-  return userInfo;
-}
 
 // GET / - 获取用户信息
 userInfoRoutes.get('/', async (c) => {
   try {
     const user = c.get('user');
-    const userId = user?.userId;
-
-    if (!userId) {
-      return c.json(
-        createResult({
-          code: ResultCode.Success,
-          message: 'success',
-          data: null,
-        }),
-      );
-    }
-
-    console.log(`获取用户信息，用户ID: ${userId}`);
-
-    let result = await prismaService.userInfo.findUnique({
-      where: { id: userId },
-    });
-
-    if (!result) {
-      result = await prismaService.userInfo.create({
-        data: {
-          name: '',
-          contact: '{}',
-          occupation: '',
-          avatar: '',
-          aboutMe: '',
-          abstract: '',
-          userId: userId,
-        },
-      });
-    }
-
-    const transformed = transformUserInfo(result);
-
-    console.log(`用户信息获取成功，用户ID: ${userId}`);
+    const result = await userInfoService.get(user?.userId);
 
     return c.json(
       createResult({
         code: ResultCode.Success,
         message: 'success',
-        data: transformed,
+        data: result,
       }),
     );
   } catch (error) {
@@ -84,10 +34,10 @@ userInfoRoutes.post(
   async (c) => {
     try {
       const user = c.get('user');
-      const userId = user?.userId;
       const body = c.req.valid('json');
+      const result = await userInfoService.update(user?.userId, body);
 
-      if (!userId) {
+      if (!result) {
         return c.json(
           createResult({
             code: ResultCode.ValidationError,
@@ -96,29 +46,11 @@ userInfoRoutes.post(
         );
       }
 
-      console.log(`更新用户信息，用户ID: ${userId}`);
-
-      const updated = await prismaService.userInfo.update({
-        where: { id: userId },
-        data: {
-          name: body.name,
-          contact: JSON.stringify(body.contact),
-          occupation: body.occupation,
-          avatar: body.avatar,
-          aboutMe: body.aboutMe,
-          abstract: body.abstract,
-        },
-      });
-
-      const transformed = transformUserInfo(updated);
-
-      console.log(`用户信息更新成功，用户ID: ${userId}`);
-
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: 'success',
-          data: transformed,
+          data: result,
         }),
       );
     } catch (error) {

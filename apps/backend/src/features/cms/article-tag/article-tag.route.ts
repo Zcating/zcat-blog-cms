@@ -3,22 +3,19 @@ import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
 
-import { prismaService } from '../../../services';
-
 import {
   CreateArticleTagDtoSchema,
   UpdateArticleTagDtoSchema,
 } from './article-tag.schema';
+import { articleTagService } from './article-tag.service';
 
 const articleTagRoutes = new Hono().basePath('/api/cms/article-tags');
 
 // GET / - 获取所有文章标签
 articleTagRoutes.get('/', async (c) => {
   try {
-    console.log('开始获取所有文章标签');
-    const tags = await prismaService.articleTag.findMany();
+    const tags = await articleTagService.findAll();
 
-    console.log(`成功获取 ${tags.length} 个文章标签`);
     return c.json(
       createResult({
         code: ResultCode.Success,
@@ -36,13 +33,8 @@ articleTagRoutes.get('/', async (c) => {
 articleTagRoutes.get('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    console.log(`开始获取ID为 ${id} 的文章标签`);
+    const tag = await articleTagService.findById(id);
 
-    const tag = await prismaService.articleTag.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
-
-    console.log(`${tag ? '成功' : '未找到'}获取ID为 ${id} 的文章标签`);
     return c.json(
       createResult({
         code: ResultCode.Success,
@@ -63,14 +55,8 @@ articleTagRoutes.post(
   async (c) => {
     try {
       const dto = c.req.valid('json');
+      const tag = await articleTagService.create(dto);
 
-      console.log(`开始创建文章标签: ${JSON.stringify(dto)}`);
-
-      const tag = await prismaService.articleTag.create({
-        data: dto,
-      });
-
-      console.log(`成功创建文章标签，ID: ${tag.id}`);
       return c.json(
         createResult({
           code: ResultCode.Success,
@@ -98,15 +84,8 @@ articleTagRoutes.put(
     const id = c.req.param('id');
     try {
       const dto = c.req.valid('json');
+      const result = await articleTagService.update(id, dto);
 
-      console.log(`开始更新ID为 ${id} 的文章标签: ${JSON.stringify(dto)}`);
-
-      const result = await prismaService.articleTag.update({
-        where: { id: parseInt(id, 10) },
-        data: dto,
-      });
-
-      console.log(`成功更新ID为 ${id} 的文章标签`);
       return c.json(
         createResult({
           code: ResultCode.Success,
@@ -130,13 +109,8 @@ articleTagRoutes.put(
 articleTagRoutes.delete('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    console.log(`开始删除ID为 ${id} 的文章标签`);
+    await articleTagService.delete(id);
 
-    await prismaService.articleTag.delete({
-      where: { id: parseInt(id, 10) },
-    });
-
-    console.log(`成功删除ID为 ${id} 的文章标签`);
     return c.json(
       createResult({
         code: ResultCode.Success,
