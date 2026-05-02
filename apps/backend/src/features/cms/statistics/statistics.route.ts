@@ -2,17 +2,13 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { StatisticService } from '@backend/common';
+import { getStatistics, getSummary, getChartData } from '@backend/common';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
-
-import { prismaService } from '../../../services';
 
 import { StatisticQueryDtoSchema } from './statistics.schema';
 
 const statisticsRoutes = new Hono().basePath('/api/cms/statistics');
-
-const statisticService = new StatisticService(prismaService);
 
 // GET /detail - 获取统计数据
 statisticsRoutes.get(
@@ -25,7 +21,7 @@ statisticsRoutes.get(
 
       logger.info('开始获取统计数据');
 
-      const result = await statisticService.getStatistics(
+      const result = await getStatistics(
         { pagePath, ip, browser, os, device },
         page,
         limit,
@@ -52,7 +48,7 @@ statisticsRoutes.get('/summary', async (c) => {
   try {
     logger.info('开始获取统计摘要');
 
-    const summary = await statisticService.getSummary();
+    const summary = await getSummary();
 
     logger.info('成功获取统计摘要');
 
@@ -80,7 +76,7 @@ statisticsRoutes.get(
       logger.info(`开始获取图表数据，天数: ${days}`);
 
       const daysCount = parseInt(days, 10) || 7;
-      const chartData = await statisticService.getChartData(daysCount);
+      const chartData = await getChartData(daysCount);
 
       logger.info('成功获取图表数据');
 

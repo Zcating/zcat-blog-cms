@@ -1,3 +1,8 @@
-export { PrismaService } from '@backend/common';
-export { OssService } from '@backend/common';
-export { StatisticService } from '@backend/common';
+export {
+  prismaService,
+  ossService,
+  getStatistics,
+  getSummary,
+  getChartData,
+  recordVisitor,
+} from '@backend/common';

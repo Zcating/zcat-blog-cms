@@ -4,74 +4,79 @@ import { createPaginate, safeNumber } from '@backend/utils';
 
 import { ossService, prismaService } from '../../../services';
 
-export class ArticleService {
-  async findAll(page: number, pageSize: number) {
-    const result = await prismaService.article.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      ...createPaginate(page, pageSize),
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        createdAt: true,
-        updatedAt: true,
-        createByUserId: true,
-        publishAt: true,
-      },
-    });
-    const total = await prismaService.article.count();
+export async function findAll(page: number, pageSize: number) {
+  const result = await prismaService.article.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+    ...createPaginate(page, pageSize),
+    select: {
+      id: true,
+      title: true,
+      excerpt: true,
+      createdAt: true,
+      updatedAt: true,
+      createByUserId: true,
+      publishAt: true,
+    },
+  });
+  const total = await prismaService.article.count();
 
-    return {
-      data: result,
-      totalPages: Math.ceil(total / pageSize),
-      page,
-      pageSize,
-      total,
-    };
-  }
-
-  async findById(id: string) {
-    const safeId = safeNumber(id, 0);
-    if (!safeId) {
-      return null;
-    }
-
-    return prismaService.article.findUnique({
-      where: { id: safeId },
-    });
-  }
-
-  async create(dto: Prisma.ArticleCreateInput) {
-    return prismaService.article.create({
-      data: dto,
-    });
-  }
-
-  async update(dto: Prisma.ArticleUpdateInput & { id: number }) {
-    return prismaService.article.update({
-      where: { id: dto.id },
-      data: dto,
-    });
-  }
-
-  async delete(id: string) {
-    const safeId = safeNumber(id, 0);
-    if (!safeId) {
-      return false;
-    }
-
-    await prismaService.article.delete({
-      where: { id: safeId },
-    });
-
-    return true;
-  }
-
-  getUploadUrls(images: string[]) {
-    return images.map((image) => ossService.getArticleUrl(image));
-  }
+  return {
+    data: result,
+    totalPages: Math.ceil(total / pageSize),
+    page,
+    pageSize,
+    total,
+  };
 }
 
-export const articleService = new ArticleService();
+export async function findById(id: string) {
+  const safeId = safeNumber(id, 0);
+  if (!safeId) {
+    return null;
+  }
+
+  return prismaService.article.findUnique({
+    where: { id: safeId },
+  });
+}
+
+export async function create(dto: Prisma.ArticleCreateInput) {
+  return prismaService.article.create({
+    data: dto,
+  });
+}
+
+export async function update(dto: Prisma.ArticleUpdateInput & { id: number }) {
+  return prismaService.article.update({
+    where: { id: dto.id },
+    data: dto,
+  });
+}
+
+export async function deleteById(id: string) {
+  const safeId = safeNumber(id, 0);
+  if (!safeId) {
+    return false;
+  }
+
+  await prismaService.article.delete({
+    where: { id: safeId },
+  });
+
+  return true;
+}
+
+export function getUploadUrls(images: string[]) {
+  return images.map((image) => ossService.getArticleUrl(image));
+}
+
+export const articleService = {
+  findAll,
+  findById,
+  create,
+  update,
+  delete: deleteById,
+  getUploadUrls,
+};

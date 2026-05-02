@@ -1,6 +1,3 @@
-import { PrismaService, OssService } from '@backend/common';
+import { prismaService, ossService } from '@backend/common';
 
-export const prismaService = new PrismaService();
-prismaService.onModuleInit();
-
-export const ossService = new OssService();
+export { prismaService, ossService };

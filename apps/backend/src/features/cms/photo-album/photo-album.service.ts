@@ -17,105 +17,111 @@ function transformPhoto<T extends PhotoWithUrls>(
   };
 }
 
-export class PhotoAlbumService {
-  async findAll(page: number, pageSize: number) {
-    const [albums, total] = await Promise.all([
-      prismaService.photoAlbum.findMany({
-        orderBy: { createdAt: 'desc' },
-        ...createPaginate(page, pageSize),
-      }),
-      prismaService.photoAlbum.count(),
-    ]);
+export async function findAll(page: number, pageSize: number) {
+  const [albums, total] = await Promise.all([
+    prismaService.photoAlbum.findMany({
+      orderBy: { createdAt: 'desc' },
+      ...createPaginate(page, pageSize),
+    }),
+    prismaService.photoAlbum.count(),
+  ]);
 
-    const coverIds = albums
-      .map((album) => album.coverId)
-      .filter((id): id is number => id !== null);
+  const coverIds = albums
+    .map((album) => album.coverId)
+    .filter((id): id is number => id !== null);
 
-    const covers =
-      coverIds.length > 0
-        ? await prismaService.photo.findMany({
-            where: { id: { in: coverIds } },
-          })
-        : [];
+  const covers =
+    coverIds.length > 0
+      ? await prismaService.photo.findMany({
+          where: { id: { in: coverIds } },
+        })
+      : [];
 
-    const data = albums.map((album) => {
-      const foundedCover = covers.find((cover) => cover.id === album.coverId);
-      const cover = foundedCover ? transformPhoto(foundedCover) : null;
-      return {
-        id: album.id,
-        name: album.name,
-        description: album.description,
-        coverId: album.coverId,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-        available: album.available,
-        cover,
-      };
-    });
-
+  const data = albums.map((album) => {
+    const foundedCover = covers.find((cover) => cover.id === album.coverId);
+    const cover = foundedCover ? transformPhoto(foundedCover) : null;
     return {
-      data,
-      totalPages: Math.ceil(total / pageSize),
-      page,
-      pageSize,
-      total,
+      id: album.id,
+      name: album.name,
+      description: album.description,
+      coverId: album.coverId,
+      createdAt: album.createdAt,
+      updatedAt: album.updatedAt,
+      available: album.available,
+      cover,
     };
-  }
+  });
 
-  findById(id: string) {
-    return prismaService.photoAlbum.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
-  }
-
-  create(data: { name: string; description?: string }) {
-    return prismaService.photoAlbum.create({
-      data: {
-        name: data.name,
-        description: data.description ?? '',
-      },
-    });
-  }
-
-  update(
-    id: number,
-    data: { name?: string; description?: string; available?: boolean },
-  ) {
-    return prismaService.photoAlbum.update({
-      where: { id },
-      data,
-    });
-  }
-
-  delete(id: string) {
-    return prismaService.photoAlbum.delete({
-      where: { id: parseInt(id, 10) },
-    });
-  }
-
-  async setCover(albumId: number, photoId: number) {
-    await prismaService.photoAlbum.update({
-      where: { id: albumId },
-      data: { coverId: photoId },
-    });
-  }
-
-  async addPhotos(albumId: number, photoIds: number[]) {
-    const album = await prismaService.photoAlbum.findUnique({
-      where: { id: albumId },
-    });
-
-    if (!album) {
-      return false;
-    }
-
-    await prismaService.photo.updateMany({
-      where: { id: { in: photoIds } },
-      data: { albumId },
-    });
-
-    return true;
-  }
+  return {
+    data,
+    totalPages: Math.ceil(total / pageSize),
+    page,
+    pageSize,
+    total,
+  };
 }
 
-export const photoAlbumService = new PhotoAlbumService();
+export function findById(id: string) {
+  return prismaService.photoAlbum.findUnique({
+    where: { id: parseInt(id, 10) },
+  });
+}
+
+export function create(data: { name: string; description?: string }) {
+  return prismaService.photoAlbum.create({
+    data: {
+      name: data.name,
+      description: data.description ?? '',
+    },
+  });
+}
+
+export function update(
+  id: number,
+  data: { name?: string; description?: string; available?: boolean },
+) {
+  return prismaService.photoAlbum.update({
+    where: { id },
+    data,
+  });
+}
+
+export function deleteById(id: string) {
+  return prismaService.photoAlbum.delete({
+    where: { id: parseInt(id, 10) },
+  });
+}
+
+export async function setCover(albumId: number, photoId: number) {
+  await prismaService.photoAlbum.update({
+    where: { id: albumId },
+    data: { coverId: photoId },
+  });
+}
+
+export async function addPhotos(albumId: number, photoIds: number[]) {
+  const album = await prismaService.photoAlbum.findUnique({
+    where: { id: albumId },
+  });
+
+  if (!album) {
+    return false;
+  }
+
+  await prismaService.photo.updateMany({
+    where: { id: { in: photoIds } },
+    data: { albumId },
+  });
+
+  return true;
+}
+
+export const photoAlbumService = {
+  findAll,
+  findById,
+  create,
+  update,
+  delete: deleteById,
+  setCover,
+  addPhotos,
+};

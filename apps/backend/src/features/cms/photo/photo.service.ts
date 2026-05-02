@@ -15,153 +15,163 @@ function transformPhoto<T extends PhotoWithUrls>(
   };
 }
 
-export class PhotoService {
-  async findAll(albumId: number | undefined, page: number, pageSize: number) {
-    if (albumId !== undefined && albumId <= 0) {
-      return {
-        data: [],
-        page,
-        pageSize,
-        totalPages: 0,
-        total: 0,
-      };
-    }
-
-    const where = albumId !== undefined ? { albumId } : {};
-
-    const [photos, total] = await Promise.all([
-      prismaService.photo.findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prismaService.photo.count({ where }),
-    ]);
-
+export async function findAll(
+  albumId: number | undefined,
+  page: number,
+  pageSize: number,
+) {
+  if (albumId !== undefined && albumId <= 0) {
     return {
-      data: photos.map((photo) => transformPhoto(photo)),
+      data: [],
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize),
-      total,
+      totalPages: 0,
+      total: 0,
     };
   }
 
-  async findEmptyAlbum() {
-    const photos = await prismaService.photo.findMany({
-      where: { albumId: null },
-    });
+  const where = albumId !== undefined ? { albumId } : {};
 
-    return photos.map((photo) => transformPhoto(photo));
+  const [photos, total] = await Promise.all([
+    prismaService.photo.findMany({
+      where,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prismaService.photo.count({ where }),
+  ]);
+
+  return {
+    data: photos.map((photo) => transformPhoto(photo)),
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+    total,
+  };
+}
+
+export async function findEmptyAlbum() {
+  const photos = await prismaService.photo.findMany({
+    where: { albumId: null },
+  });
+
+  return photos.map((photo) => transformPhoto(photo));
+}
+
+export async function findById(id: number) {
+  const photo = await prismaService.photo.findUnique({
+    where: { id },
+  });
+
+  if (!photo) {
+    return null;
   }
 
-  async findById(id: number) {
-    const photo = await prismaService.photo.findUnique({
-      where: { id },
-    });
+  return transformPhoto(photo);
+}
 
-    if (!photo) {
-      return null;
-    }
+export async function create(data: {
+  name?: string;
+  url?: string;
+  thumbnailUrl?: string;
+  albumId?: number | null;
+}) {
+  const photo = await prismaService.photo.create({
+    data: {
+      name: data.name ?? '',
+      url: data.url || '',
+      thumbnailUrl: data.thumbnailUrl || '',
+      albumId: data.albumId,
+    },
+  });
 
-    return transformPhoto(photo);
-  }
+  return transformPhoto(photo);
+}
 
-  async create(data: {
+export async function update(
+  id: number,
+  data: {
     name?: string;
     url?: string;
     thumbnailUrl?: string;
     albumId?: number | null;
-  }) {
-    const photo = await prismaService.photo.create({
-      data: {
-        name: data.name ?? '',
-        url: data.url || '',
-        thumbnailUrl: data.thumbnailUrl || '',
-        albumId: data.albumId,
-      },
-    });
-
-    return transformPhoto(photo);
-  }
-
-  async update(
-    id: number,
+  },
+) {
+  const photo = await prismaService.photo.update({
+    where: { id },
     data: {
-      name?: string;
-      url?: string;
-      thumbnailUrl?: string;
-      albumId?: number | null;
+      name: data.name,
+      url: data.url,
+      thumbnailUrl: data.thumbnailUrl,
+      albumId: data.albumId,
     },
-  ) {
-    const photo = await prismaService.photo.update({
-      where: { id },
-      data: {
-        name: data.name,
-        url: data.url,
-        thumbnailUrl: data.thumbnailUrl,
-        albumId: data.albumId,
-      },
-    });
+  });
 
-    return transformPhoto(photo);
-  }
-
-  async updateWithAlbum(
-    id: number,
-    albumId: number,
-    data: {
-      name?: string;
-      url?: string;
-      thumbnailUrl?: string;
-      isCover?: boolean;
-    },
-  ) {
-    if (data.isCover) {
-      await prismaService.photoAlbum.update({
-        where: { id: albumId },
-        data: { coverId: id },
-      });
-    }
-
-    const updatedPhoto = await prismaService.photo.update({
-      where: { id },
-      data: {
-        name: data.name,
-        url: data.url,
-        thumbnailUrl: data.thumbnailUrl,
-        albumId,
-      },
-    });
-
-    return {
-      ...transformPhoto(updatedPhoto),
-      albumId,
-      isCover: data.isCover,
-    };
-  }
-
-  async delete(id: number) {
-    const photo = await prismaService.photo.findUnique({
-      where: { id },
-    });
-
-    if (!photo) {
-      return false;
-    }
-
-    await Promise.allSettled([
-      ossService.deleteFile(photo.url),
-      ossService.deleteFile(photo.thumbnailUrl),
-    ]);
-
-    await prismaService.photo.delete({
-      where: { id },
-    });
-
-    return true;
-  }
+  return transformPhoto(photo);
 }
 
-export const photoService = new PhotoService();
+export async function updateWithAlbum(
+  id: number,
+  albumId: number,
+  data: {
+    name?: string;
+    url?: string;
+    thumbnailUrl?: string;
+    isCover?: boolean;
+  },
+) {
+  if (data.isCover) {
+    await prismaService.photoAlbum.update({
+      where: { id: albumId },
+      data: { coverId: id },
+    });
+  }
+
+  const updatedPhoto = await prismaService.photo.update({
+    where: { id },
+    data: {
+      name: data.name,
+      url: data.url,
+      thumbnailUrl: data.thumbnailUrl,
+      albumId,
+    },
+  });
+
+  return {
+    ...transformPhoto(updatedPhoto),
+    albumId,
+    isCover: data.isCover,
+  };
+}
+
+export async function deleteById(id: number) {
+  const photo = await prismaService.photo.findUnique({
+    where: { id },
+  });
+
+  if (!photo) {
+    return false;
+  }
+
+  await Promise.allSettled([
+    ossService.deleteFile(photo.url),
+    ossService.deleteFile(photo.thumbnailUrl),
+  ]);
+
+  await prismaService.photo.delete({
+    where: { id },
+  });
+
+  return true;
+}
+
+export const photoService = {
+  findAll,
+  findEmptyAlbum,
+  findById,
+  create,
+  update,
+  updateWithAlbum,
+  delete: deleteById,
+};

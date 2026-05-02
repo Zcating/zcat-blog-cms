@@ -2,15 +2,13 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { StatisticService } from '@backend/common';
+import { recordVisitor } from '@backend/common';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
 import { logger, safeNumber, safeParse, createPaginate } from '@backend/utils';
 
 import { prismaService, ossService } from '../../../services';
 
 const blogRoutes = new Hono().basePath('/api/blog');
-
-const statisticService = new StatisticService(prismaService);
 
 const ORDER_MAP = {
   latest: 'desc',
@@ -288,7 +286,7 @@ blogRoutes.post(
 
       logger.info('记录博客访客:', visitorDto.pagePath);
 
-      // Create a minimal request-like object compatible with StatisticService.recordVisitor
+      // Create a minimal request-like object compatible with recordVisitor
       const request = {
         headers: {
           'data-hash': c.req.header('data-hash') || '',
@@ -301,7 +299,7 @@ blogRoutes.post(
         get: (name: string) => c.req.header(name) || '',
       } as any;
 
-      await statisticService.recordVisitor(request, visitorDto);
+      await recordVisitor(request, visitorDto);
 
       return c.json(
         createResult({
