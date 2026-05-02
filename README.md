@@ -14,7 +14,7 @@
 
 - Blog 前端：React + React Router
 - CMS 前端：React + React Router
-- 后端：Nest.js + Prisma
+- 后端：Hono + Prisma
 - 数据库：PostgreSQL
 
 ## 安装与运行

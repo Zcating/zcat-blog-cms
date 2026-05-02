@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as qiniu from 'qiniu';
 
 // 私有下载链接签名有效期（单位：秒）。
@@ -13,28 +11,27 @@ interface OssInfo {
   domain: string;
 }
 
-@Injectable()
 export class OssService {
   private readonly bucketManager: qiniu.rs.BucketManager;
   private readonly ossInfoMap = new Map<OssType, OssInfo>();
   // 缓存 filename -> 私有下载链接，保证同一资源在 TTL 内返回稳定 URL，减少前端重复请求。
   private readonly privateUrlCache = new Cache<string>(MAX_CACHE_SIZE, TTL);
 
-  constructor(private configService: ConfigService) {
-    const accessKey = this.configService.get<string>('OSS_ACCESS_KEY') ?? '';
-    const secretKey = this.configService.get<string>('OSS_SECRET_KEY') ?? '';
+  constructor() {
+    const accessKey = process.env.OSS_ACCESS_KEY ?? '';
+    const secretKey = process.env.OSS_SECRET_KEY ?? '';
     const mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
     const config = new qiniu.conf.Config();
     this.bucketManager = new qiniu.rs.BucketManager(mac, config);
 
     this.ossInfoMap.set('photo', {
-      bucket: this.configService.get<string>('OSS_PHOTO_BUCKET') ?? '',
-      domain: this.configService.get<string>('OSS_PHOTO_DOMAIN') ?? '',
+      bucket: process.env.OSS_PHOTO_BUCKET ?? '',
+      domain: process.env.OSS_PHOTO_DOMAIN ?? '',
     });
 
     this.ossInfoMap.set('article', {
-      bucket: this.configService.get<string>('OSS_ARTICLE_BUCKET') ?? '',
-      domain: this.configService.get<string>('OSS_ARTICLE_DOMAIN') ?? '',
+      bucket: process.env.OSS_ARTICLE_BUCKET ?? '',
+      domain: process.env.OSS_ARTICLE_DOMAIN ?? '',
     });
   }
 

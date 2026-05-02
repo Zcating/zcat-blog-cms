@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
 import { Statistic } from '@backend/prisma';
@@ -47,7 +46,6 @@ export interface StatisticsChartData {
   uniqueVisitors: number;
 }
 
-@Injectable()
 export class StatisticService {
   private readonly osList = [
     'macOS',

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 import { PaginateQuerySchema } from '@backend/model';
@@ -35,10 +34,10 @@ export const GetPhotosDtoSchema = z.object({
   ...PaginateQuerySchema.shape,
 });
 
-export class CreatePhotoDto extends createZodDto(CreatePhotoDtoSchema) {}
-export class AddPhotosDto extends createZodDto(AddPhotosDtoSchema) {}
-export class UpdatePhotoDto extends createZodDto(UpdatePhotoDtoSchema) {}
-export class GetPhotosDto extends createZodDto(GetPhotosDtoSchema) {}
+export type CreatePhotoDto = z.infer<typeof CreatePhotoDtoSchema>;
+export type AddPhotosDto = z.infer<typeof AddPhotosDtoSchema>;
+export type UpdatePhotoDto = z.infer<typeof UpdatePhotoDtoSchema>;
+export type GetPhotosDto = z.infer<typeof GetPhotosDtoSchema>;
 
 export interface UpdateAlbumPhotoResultDto {
   id: number;

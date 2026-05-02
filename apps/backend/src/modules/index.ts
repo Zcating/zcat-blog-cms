@@ -1,2 +1,3 @@
-export * from '../features/cms/cms/cms.module';
-export * from '../features/public/public.module';
+export { PrismaService } from '@backend/common';
+export { OssService } from '@backend/common';
+export { StatisticService } from '@backend/common';

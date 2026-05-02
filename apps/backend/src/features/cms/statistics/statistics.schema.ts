@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const StatisticQueryDtoSchema = z.object({
@@ -47,7 +46,7 @@ export const CreatePageStatisticsDtoSchema = z.object({
   referrer: z.string().optional(),
 });
 
-export class StatisticQueryDto extends createZodDto(StatisticQueryDtoSchema) {}
-export class CreatePageStatisticsDto extends createZodDto(
-  CreatePageStatisticsDtoSchema,
-) {}
+export type StatisticQueryDto = z.infer<typeof StatisticQueryDtoSchema>;
+export type CreatePageStatisticsDto = z.infer<
+  typeof CreatePageStatisticsDtoSchema
+>;

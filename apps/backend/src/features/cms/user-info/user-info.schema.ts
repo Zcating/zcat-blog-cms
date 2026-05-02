@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 interface OssConfig {
@@ -22,4 +21,4 @@ export interface SystemSetting {
   ossConfig: OssConfig;
 }
 
-export class UserInfoDto extends createZodDto(UserInfoSchema) {}
+export type UserInfoDto = z.infer<typeof UserInfoSchema>;

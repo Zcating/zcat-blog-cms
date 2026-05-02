@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const CreateArticleDtoSchema = z.object({
@@ -18,8 +17,8 @@ export const UpdateArticleDtoSchema = z.object({
   tagIds: z.array(z.coerce.number().int()).optional(),
 });
 
-export class CreateArticleDto extends createZodDto(CreateArticleDtoSchema) {}
-export class UpdateArticleDto extends createZodDto(UpdateArticleDtoSchema) {}
+export type CreateArticleDto = z.infer<typeof CreateArticleDtoSchema>;
+export type UpdateArticleDto = z.infer<typeof UpdateArticleDtoSchema>;
 
 export interface ReturnArticleDto {
   id: number;
