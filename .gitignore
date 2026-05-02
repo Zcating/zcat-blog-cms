@@ -54,7 +54,7 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .opencode/
-.clade/
+.claude/
 .cursor/
 .trae/
 .qwen/
