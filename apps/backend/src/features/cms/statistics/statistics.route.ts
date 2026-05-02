@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { StatisticService } from '@backend/common';
 import { createResult, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import { prismaService } from '../../../services';
 
@@ -22,7 +23,7 @@ statisticsRoutes.get(
       const query = c.req.valid('query');
       const { pagePath, page = 1, limit = 10, ip, browser, os, device } = query;
 
-      console.log('开始获取统计数据');
+      logger.info('开始获取统计数据');
 
       const result = await statisticService.getStatistics(
         { pagePath, ip, browser, os, device },
@@ -30,7 +31,7 @@ statisticsRoutes.get(
         limit,
       );
 
-      console.log('成功获取统计数据');
+      logger.info('成功获取统计数据');
 
       return c.json(
         createResult({
@@ -40,7 +41,7 @@ statisticsRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取统计数据失败', error);
+      logger.error('获取统计数据失败', error);
       throw error;
     }
   },
@@ -49,11 +50,11 @@ statisticsRoutes.get(
 // GET /summary - 获取统计摘要
 statisticsRoutes.get('/summary', async (c) => {
   try {
-    console.log('开始获取统计摘要');
+    logger.info('开始获取统计摘要');
 
     const summary = await statisticService.getSummary();
 
-    console.log('成功获取统计摘要');
+    logger.info('成功获取统计摘要');
 
     return c.json(
       createResult({
@@ -63,7 +64,7 @@ statisticsRoutes.get('/summary', async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取统计摘要失败', error);
+    logger.error('获取统计摘要失败', error);
     throw error;
   }
 });
@@ -76,12 +77,12 @@ statisticsRoutes.get(
     try {
       const { days } = c.req.valid('query');
 
-      console.log(`开始获取图表数据，天数: ${days}`);
+      logger.info(`开始获取图表数据，天数: ${days}`);
 
       const daysCount = parseInt(days, 10) || 7;
       const chartData = await statisticService.getChartData(daysCount);
 
-      console.log('成功获取图表数据');
+      logger.info('成功获取图表数据');
 
       return c.json(
         createResult({
@@ -91,7 +92,7 @@ statisticsRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取图表数据失败', error);
+      logger.error('获取图表数据失败', error);
       throw error;
     }
   },

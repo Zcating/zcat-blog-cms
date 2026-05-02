@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import { UserInfoSchema } from './user-info.schema';
 import { userInfoService } from './user-info.service';
@@ -22,7 +23,7 @@ userInfoRoutes.get('/', async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取用户信息失败', error);
+    logger.error('获取用户信息失败', error);
     throw error;
   }
 });
@@ -54,7 +55,7 @@ userInfoRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('更新用户信息失败', error);
+      logger.error('更新用户信息失败', error);
       throw error;
     }
   },

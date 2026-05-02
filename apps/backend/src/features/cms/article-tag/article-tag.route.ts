@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import {
   CreateArticleTagDtoSchema,
@@ -24,7 +25,7 @@ articleTagRoutes.get('/', async (c) => {
       }),
     );
   } catch (error: any) {
-    console.error('获取文章标签失败', error);
+    logger.error('获取文章标签失败', error);
     throw error;
   }
 });
@@ -43,7 +44,7 @@ articleTagRoutes.get('/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error(`获取ID为 ${id} 的文章标签失败`);
+    logger.error(`获取ID为 ${id} 的文章标签失败`);
     throw error;
   }
 });
@@ -65,7 +66,7 @@ articleTagRoutes.post(
         }),
       );
     } catch (error: any) {
-      console.error('创建文章标签失败', error);
+      logger.error('创建文章标签失败', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,
@@ -94,7 +95,7 @@ articleTagRoutes.put(
         }),
       );
     } catch (error) {
-      console.error(`更新ID为 ${id} 的文章标签失败：未找到记录`, error);
+      logger.error(`更新ID为 ${id} 的文章标签失败：未找到记录`, error);
       return c.json(
         createResult({
           code: ResultCode.DatabaseError,
@@ -118,7 +119,7 @@ articleTagRoutes.delete('/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error(`删除ID为 ${id} 的文章标签失败`, error);
+    logger.error(`删除ID为 ${id} 的文章标签失败`, error);
     return c.json(
       createResult({
         code: ResultCode.UnknownError,

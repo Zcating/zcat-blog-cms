@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { StatisticService } from '@backend/common';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
-import { safeNumber, safeParse, createPaginate } from '@backend/utils';
+import { logger, safeNumber, safeParse, createPaginate } from '@backend/utils';
 
 import { prismaService, ossService } from '../../../services';
 
@@ -49,7 +49,7 @@ blogRoutes.get(
     try {
       const query = c.req.valid('query');
 
-      console.log('获取文章列表, query:', query);
+      logger.info('获取文章列表, query:', query);
 
       const articles = await prismaService.article.findMany({
         ...createPaginate(query.page, query.pageSize),
@@ -76,7 +76,7 @@ blogRoutes.get(
         pageSize: query.pageSize,
       };
 
-      console.log('获取文章列表成功, data:', data);
+      logger.info('获取文章列表成功, data:', data);
 
       return c.json(
         createResult({
@@ -86,7 +86,7 @@ blogRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取文章列表失败', error);
+      logger.error('获取文章列表失败', error);
       throw error;
     }
   },
@@ -138,7 +138,7 @@ blogRoutes.get('/article/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取文章详情失败', error);
+    logger.error('获取文章详情失败', error);
     throw error;
   }
 });
@@ -151,7 +151,7 @@ blogRoutes.get(
     try {
       const query = c.req.valid('query');
 
-      console.log('获取相册列表, query:', query);
+      logger.info('获取相册列表, query:', query);
 
       const albumModels = await prismaService.photoAlbum.findMany({
         ...createPaginate(query.page, query.pageSize),
@@ -201,7 +201,7 @@ blogRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取相册列表失败', error);
+      logger.error('获取相册列表失败', error);
       throw error;
     }
   },
@@ -213,7 +213,7 @@ blogRoutes.get('/gallery/:id', async (c) => {
     const id = c.req.param('id');
     const albumId = safeNumber(id);
 
-    console.log('获取相册详情, id:', id);
+    logger.info('获取相册详情, id:', id);
 
     const album = await prismaService.photoAlbum.findUnique({
       where: { id: albumId },
@@ -261,7 +261,7 @@ blogRoutes.get('/gallery/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取相册详情失败', error);
+    logger.error('获取相册详情失败', error);
     throw error;
   }
 });
@@ -286,7 +286,7 @@ blogRoutes.post(
     try {
       const visitorDto = c.req.valid('json');
 
-      console.log('记录博客访客:', visitorDto.pagePath);
+      logger.info('记录博客访客:', visitorDto.pagePath);
 
       // Create a minimal request-like object compatible with StatisticService.recordVisitor
       const request = {
@@ -310,7 +310,7 @@ blogRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('记录博客访客失败:', error);
+      logger.error('记录博客访客失败:', error);
       // 访客记录失败不应该影响用户体验，返回成功
       return c.json(
         createResult({
@@ -325,7 +325,7 @@ blogRoutes.post(
 // GET /user-info - 获取用户信息
 blogRoutes.get('/user-info', async (c) => {
   try {
-    console.log('获取用户信息');
+    logger.info('获取用户信息');
 
     const userInfo = await prismaService.userInfo.findUnique({
       where: {
@@ -358,7 +358,7 @@ blogRoutes.get('/user-info', async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取用户信息失败', error);
+    logger.error('获取用户信息失败', error);
     throw error;
   }
 });

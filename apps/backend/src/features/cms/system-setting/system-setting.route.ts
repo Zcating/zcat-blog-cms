@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import { UploadTokenDtoSchema } from './system-setting.schema';
 import { systemSettingService } from './system-setting.service';
@@ -25,7 +26,7 @@ systemSettingRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取上传凭证失败', error);
+      logger.error('获取上传凭证失败', error);
       throw error;
     }
   },

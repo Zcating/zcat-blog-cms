@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import {
   CreateArticleDtoSchema,
@@ -26,7 +27,7 @@ articleRoutes.get('/', zValidator('query', PaginateQuerySchema), async (c) => {
       }),
     );
   } catch (error) {
-    console.error('获取文章列表失败', error);
+    logger.error('获取文章列表失败', error);
     throw error;
   }
 });
@@ -57,7 +58,7 @@ articleRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取文章详情失败', error);
+      logger.error('获取文章详情失败', error);
       throw error;
     }
   },
@@ -80,7 +81,7 @@ articleRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('创建文章失败', error);
+      logger.error('创建文章失败', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,
@@ -108,7 +109,7 @@ articleRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('更新文章失败', error);
+      logger.error('更新文章失败', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,
@@ -144,7 +145,7 @@ articleRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('删除文章失败', error);
+      logger.error('删除文章失败', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,
@@ -172,7 +173,7 @@ articleRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('上传文章图片失败', error);
+      logger.error('上传文章图片失败', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,

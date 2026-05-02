@@ -1,5 +1,7 @@
 import { ZodError } from 'zod';
 
+import { logger } from '@backend/utils';
+
 import type { ErrorHandler } from 'hono';
 
 export const errorHandler: ErrorHandler = (err, c) => {
@@ -13,7 +15,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
     );
   }
 
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error:', err);
   return c.json(
     {
       code: 'ERR0006',

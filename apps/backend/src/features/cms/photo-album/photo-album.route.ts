@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import { AddPhotosDtoSchema } from '../photo/photo.schema';
 
@@ -35,7 +36,7 @@ photoAlbumRoutes.get(
         }),
       );
     } catch (error) {
-      console.error('获取相册列表失败', error);
+      logger.error('获取相册列表失败', error);
       throw error;
     }
   },
@@ -55,7 +56,7 @@ photoAlbumRoutes.get('/:id', async (c) => {
       }),
     );
   } catch (error) {
-    console.error(`获取相册失败`, error);
+    logger.error(`获取相册失败`, error);
     throw error;
   }
 });
@@ -77,7 +78,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('创建相册失败', error);
+      logger.error('创建相册失败', error);
       throw error;
     }
   },
@@ -108,7 +109,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('更新相册失败', error);
+      logger.error('更新相册失败', error);
       throw error;
     }
   },
@@ -130,7 +131,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('删除相册失败', error);
+      logger.error('删除相册失败', error);
       throw error;
     }
   },
@@ -152,7 +153,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('设置相册封面失败', error);
+      logger.error('设置相册封面失败', error);
       throw error;
     }
   },
@@ -186,7 +187,7 @@ photoAlbumRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('批量添加照片到相册失败', error);
+      logger.error('批量添加照片到相册失败', error);
       throw error;
     }
   },

@@ -2,6 +2,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { createResult, ResultCode } from '@backend/model';
+import { logger } from '@backend/utils';
 
 import { loginSchema, registerDtoSchema } from './auth.schema';
 import { authService } from './auth.service';
@@ -31,7 +32,7 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       }),
     );
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     return c.json(
       createResult({
         code: ResultCode.UnknownError,
@@ -76,7 +77,7 @@ authRoutes.post(
         }),
       );
     } catch (error) {
-      console.error('Register error:', error);
+      logger.error('Register error:', error);
       return c.json(
         createResult({
           code: ResultCode.UnknownError,
