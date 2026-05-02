@@ -6,8 +6,9 @@
 ## 强制规则【必须遵循】
 
 1. 文件命名规则：烤肉串命名法（kebab-case）
-2. 先规划，再行动，使用 planning-with-files 时，把plan 放入 `docs/planning/{plan-title}` 中。
-3. 不确定的内容，请使用具体的 web-search 工具。
+2. 先规划，确认后再行动，使用 planning-with-files 时，把plan 放入 `docs/planning/{plan-title}` 中。
+3. 测试文件应与被测文件同级存放
+4. 不确定的内容，请使用具体的 web-search 工具。
 
 
 ## 项目指南
