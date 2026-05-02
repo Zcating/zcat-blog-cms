@@ -10,6 +10,8 @@
     "start": "react-router-serve ./build/server/index.js",
     "pretypecheck": "pnpm --filter=@zcat/ui run build",
     "typecheck": "react-router typegen && tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0 --fix"
   },
   "files": [

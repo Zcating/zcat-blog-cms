@@ -6,8 +6,8 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 describe('HttpClient', () => {
-  let HttpClient: typeof import('../http-client').HttpClient;
-  let csrf: typeof import('../http-client').csrf;
+  let HttpClient: typeof import('./http-client').HttpClient;
+  let csrf: typeof import('./http-client').csrf;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -15,7 +15,7 @@ describe('HttpClient', () => {
 
     Cookies.set('token', 'Bearer test-token');
 
-    const module = await import('../http-client');
+    const module = await import('./http-client');
     HttpClient = module.HttpClient;
     csrf = module.csrf;
   });
@@ -96,7 +96,7 @@ describe('HttpClient', () => {
     });
 
     it('应该在 401 时触发 UNAUTH 事件', async () => {
-      const { EventCenter } = await import('../event-center');
+      const { EventCenter } = await import('./event-center');
       const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
       mockFetch.mockResolvedValueOnce({
         status: 401,
