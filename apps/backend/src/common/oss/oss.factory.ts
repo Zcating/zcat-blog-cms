@@ -3,7 +3,7 @@ import { createQiniuStrategy } from './qiniu.strategy';
 
 import type { OssStrategy } from './oss.strategy';
 
-export type OssProvider = 'qiniu' | 'minio';
+export type OssProvider = 'minio' | 'qiniu';
 
 let cachedStrategy: OssStrategy | null = null;
 
@@ -12,15 +12,15 @@ export function createOssStrategy(): OssStrategy {
     return cachedStrategy;
   }
 
-  const provider = (process.env.OSS_PROVIDER ?? 'qiniu') as OssProvider;
+  const provider = (process.env.OSS_PROVIDER ?? 'minio') as OssProvider;
 
   switch (provider) {
-    case 'minio':
-      cachedStrategy = createMinioStrategy();
-      break;
     case 'qiniu':
-    default:
       cachedStrategy = createQiniuStrategy();
+      break;
+    case 'minio':
+    default:
+      cachedStrategy = createMinioStrategy();
       break;
   }
 

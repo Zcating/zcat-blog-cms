@@ -18,6 +18,27 @@ services:
       timeout: 2s
       retries: 20
 
+  minio:
+    image: minio/minio:latest
+    hostname: minio
+    container_name: cms_minio
+    restart: unless-stopped
+    command: server /data --console-address ':9001'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    env_file:
+      - .env.deploy.dev
+    volumes:
+      - minio_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -35,6 +56,8 @@ services:
       - apps/backend/.env.development
     depends_on:
       cms_pg:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - app-network
@@ -80,3 +103,4 @@ networks:
 
 volumes:
   cms_pg:
+  minio_data:
