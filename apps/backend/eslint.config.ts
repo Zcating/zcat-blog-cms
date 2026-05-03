@@ -9,6 +9,13 @@ export default defineConfig([
     ignores: ["eslint.config.ts"],
   },
   {
+    files: ["**/*.spec.ts", "**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+    },
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.node,
