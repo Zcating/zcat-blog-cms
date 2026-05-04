@@ -1,6 +1,6 @@
 import { createPaginate } from '@backend/utils';
 
-import { ossService, prismaService } from '../../../services';
+import { ossService, prismaService } from '../../../common';
 
 type PhotoWithUrls = {
   url: string;

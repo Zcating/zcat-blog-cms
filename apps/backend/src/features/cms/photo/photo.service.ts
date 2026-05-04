@@ -1,4 +1,4 @@
-import { prismaService, ossService } from '../../../services';
+import { prismaService, ossService } from '../../../common';
 
 type PhotoWithUrls = {
   url: string;

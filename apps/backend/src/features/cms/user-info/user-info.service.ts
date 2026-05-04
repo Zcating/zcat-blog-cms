@@ -1,4 +1,4 @@
-import { ossService, prismaService } from '../../../services';
+import { ossService, prismaService } from '../../../common';
 
 function transformUserInfo<T extends { avatar?: string | null }>(
   userInfo: T,

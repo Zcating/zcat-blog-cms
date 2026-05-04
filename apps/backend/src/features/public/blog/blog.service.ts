@@ -1,7 +1,9 @@
-import { recordVisitor as recordStatisticVisitor } from '@backend/common';
+import {
+  recordVisitor as recordStatisticVisitor,
+  ossService,
+  prismaService,
+} from '@backend/common';
 import { createPaginate, safeNumber, safeParse } from '@backend/utils';
-
-import { ossService, prismaService } from '../../../services';
 
 const ORDER_MAP = {
   latest: 'desc',

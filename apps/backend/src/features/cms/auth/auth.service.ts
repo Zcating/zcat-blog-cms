@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-import { prismaService } from '../../../services';
+import { prismaService } from '../../../common';
 
 export async function login(username: string, password: string) {
   const user = await prismaService.user.findUnique({

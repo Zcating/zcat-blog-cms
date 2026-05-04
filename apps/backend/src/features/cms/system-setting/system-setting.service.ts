@@ -1,6 +1,6 @@
 import * as qiniu from 'qiniu';
 
-import { ossService } from '../../../services';
+import { ossService } from '../../../common';
 
 export function getUploadToken(type: 'article' | 'photo') {
   const accessKey = process.env.OSS_ACCESS_KEY ?? '';

@@ -1,4 +1,4 @@
-import { prismaService } from '../../../services';
+import { prismaService } from '../../../common';
 
 export function findAll() {
   return prismaService.articleTag.findMany();

@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { createPaginate, safeNumber } from '@backend/utils';
 
-import { ossService, prismaService } from '../../../services';
+import { ossService, prismaService } from '../../../common';
 
 export async function findAll(page: number, pageSize: number) {
   const result = await prismaService.article.findMany({
