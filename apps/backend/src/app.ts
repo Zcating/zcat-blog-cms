@@ -4,6 +4,7 @@ import { cors } from 'hono/cors';
 import { cmsRoutes } from './features/cms';
 import { publicRoutes } from './features/public';
 import { errorHandler } from './middleware/error-handler';
+import { requestLogger } from './middleware/request-logger';
 
 // CORS
 const app = new Hono();
@@ -18,6 +19,9 @@ app.use(
     credentials: true,
   }),
 );
+
+// Request logging
+app.use('*', requestLogger);
 
 // Global error handler
 app.onError(errorHandler);
