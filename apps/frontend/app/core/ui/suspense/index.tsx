@@ -1,4 +1,4 @@
-import { ZSpin } from '@zcat/ui';
+import { Spinner } from '@zcat/ui';
 import React from 'react';
 
 interface SuspenseBoundaryProps {
@@ -15,7 +15,7 @@ export function SuspenseBoundary({
       fallback={
         fallback || (
           <div className="flex items-center justify-center min-h-[200px]">
-            <ZSpin size="lg" />
+            <Spinner />
           </div>
         )
       }
