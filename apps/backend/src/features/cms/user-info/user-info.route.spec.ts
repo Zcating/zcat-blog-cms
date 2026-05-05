@@ -23,12 +23,12 @@ describe('userInfoRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/user-info', () => {
+  describe('GET /user-info', () => {
     it('returns user info', async () => {
       mockUserInfoService.get.mockResolvedValue({ name: 'Admin' });
       const app = createApp();
 
-      const res = await app.request('/api/cms/user-info');
+      const res = await app.request('/user-info');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -39,17 +39,17 @@ describe('userInfoRoutes', () => {
       mockUserInfoService.get.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/user-info');
+      const res = await app.request('/user-info');
       expect(res.status).toBe(500);
     });
   });
 
-  describe('POST /api/cms/user-info/update', () => {
+  describe('POST /user-info/update', () => {
     it('updates user info', async () => {
       mockUserInfoService.update.mockResolvedValue({ name: 'Updated' });
       const app = createApp();
 
-      const res = await app.request('/api/cms/user-info/update', {
+      const res = await app.request('/user-info/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -70,7 +70,7 @@ describe('userInfoRoutes', () => {
       mockUserInfoService.update.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/api/cms/user-info/update', {
+      const res = await app.request('/user-info/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,7 +91,7 @@ describe('userInfoRoutes', () => {
       mockUserInfoService.update.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/user-info/update', {
+      const res = await app.request('/user-info/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

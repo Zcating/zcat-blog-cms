@@ -31,24 +31,24 @@ describe('photoAlbumRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/photo-albums', () => {
+  describe('GET /photo-albums', () => {
     it('returns paginated albums', async () => {
       mockAlbumService.findAll.mockResolvedValue({ data: [] });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums');
+      const res = await app.request('/photo-albums');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
     });
   });
 
-  describe('GET /api/cms/photo-albums/:id', () => {
+  describe('GET /photo-albums/:id', () => {
     it('returns album by id', async () => {
       mockAlbumService.findById.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/1');
+      const res = await app.request('/photo-albums/1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -58,19 +58,19 @@ describe('photoAlbumRoutes', () => {
       mockAlbumService.findById.mockRejectedValue(new Error('not found'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/1');
+      const res = await app.request('/photo-albums/1');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('POST /api/cms/photo-albums', () => {
+  describe('POST /photo-albums', () => {
     it('creates album', async () => {
       mockAlbumService.create.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums', {
+      const res = await app.request('/photo-albums', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'New Album' }),
@@ -84,7 +84,7 @@ describe('photoAlbumRoutes', () => {
       mockAlbumService.create.mockRejectedValue(new Error('create failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums', {
+      const res = await app.request('/photo-albums', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'New Album' }),
@@ -95,12 +95,12 @@ describe('photoAlbumRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photo-albums/update', () => {
+  describe('POST /photo-albums/update', () => {
     it('updates album', async () => {
       mockAlbumService.update.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/update', {
+      const res = await app.request('/photo-albums/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1, name: 'Updated' }),
@@ -113,7 +113,7 @@ describe('photoAlbumRoutes', () => {
     it('returns validation error when id missing', async () => {
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/update', {
+      const res = await app.request('/photo-albums/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Updated' }),
@@ -127,7 +127,7 @@ describe('photoAlbumRoutes', () => {
       mockAlbumService.update.mockRejectedValue(new Error('update failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/update', {
+      const res = await app.request('/photo-albums/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1, name: 'Updated' }),
@@ -138,12 +138,12 @@ describe('photoAlbumRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photo-albums/delete', () => {
+  describe('POST /photo-albums/delete', () => {
     it('deletes album', async () => {
       mockAlbumService.delete.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/delete', {
+      const res = await app.request('/photo-albums/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: '1' }),
@@ -157,7 +157,7 @@ describe('photoAlbumRoutes', () => {
       mockAlbumService.delete.mockRejectedValue(new Error('delete failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/delete', {
+      const res = await app.request('/photo-albums/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: '1' }),
@@ -168,12 +168,12 @@ describe('photoAlbumRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photo-albums/cover', () => {
+  describe('POST /photo-albums/cover', () => {
     it('sets cover', async () => {
       mockAlbumService.setCover.mockResolvedValue(undefined);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/cover', {
+      const res = await app.request('/photo-albums/cover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId: 1, photoId: 1 }),
@@ -189,7 +189,7 @@ describe('photoAlbumRoutes', () => {
       );
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/cover', {
+      const res = await app.request('/photo-albums/cover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId: 1, photoId: 1 }),
@@ -200,12 +200,12 @@ describe('photoAlbumRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photo-albums/add-photos', () => {
+  describe('POST /photo-albums/add-photos', () => {
     it('adds photos to album', async () => {
       mockAlbumService.addPhotos.mockResolvedValue(true);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/add-photos', {
+      const res = await app.request('/photo-albums/add-photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId: 1, photoIds: [1, 2] }),
@@ -220,7 +220,7 @@ describe('photoAlbumRoutes', () => {
       mockAlbumService.addPhotos.mockResolvedValue(false);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/add-photos', {
+      const res = await app.request('/photo-albums/add-photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId: 999, photoIds: [1] }),
@@ -236,7 +236,7 @@ describe('photoAlbumRoutes', () => {
       );
       const app = createApp();
 
-      const res = await app.request('/api/cms/photo-albums/add-photos', {
+      const res = await app.request('/photo-albums/add-photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId: 1, photoIds: [1] }),

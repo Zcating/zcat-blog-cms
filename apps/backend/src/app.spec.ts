@@ -18,14 +18,14 @@ import { app } from './app';
 
 describe('app', () => {
   it('has health check endpoint', async () => {
-    const res = await app.request('/api/health');
+    const res = await app.request('/health');
     const body = await res.json();
 
     expect(body).toEqual({ status: 'ok' });
   });
 
   it('has CORS headers on requests with Origin', async () => {
-    const res = await app.request('/api/health', {
+    const res = await app.request('/health', {
       headers: { Origin: 'http://localhost:3000' },
     });
 
@@ -35,7 +35,7 @@ describe('app', () => {
   });
 
   it('has CORS allow-methods on OPTIONS preflight', async () => {
-    const res = await app.request('/api/health', {
+    const res = await app.request('/health', {
       method: 'OPTIONS',
       headers: {
         Origin: 'http://localhost:3000',
@@ -47,7 +47,7 @@ describe('app', () => {
   });
 
   it('returns 404 for unknown routes', async () => {
-    const res = await app.request('/api/nonexistent');
+    const res = await app.request('/nonexistent');
 
     expect(res.status).toBe(404);
   });

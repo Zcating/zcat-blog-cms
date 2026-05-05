@@ -26,12 +26,12 @@ describe('articleTagRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/article-tags', () => {
+  describe('GET /article-tags', () => {
     it('returns all tags', async () => {
       mockTagService.findAll.mockResolvedValue([{ id: 1, name: 'tag1' }]);
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags');
+      const res = await app.request('/article-tags');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -42,17 +42,17 @@ describe('articleTagRoutes', () => {
       mockTagService.findAll.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags');
+      const res = await app.request('/article-tags');
       expect(res.status).toBe(500);
     });
   });
 
-  describe('GET /api/cms/article-tags/:id', () => {
+  describe('GET /article-tags/:id', () => {
     it('returns tag by id', async () => {
       mockTagService.findById.mockResolvedValue({ id: 1, name: 'tag' });
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1');
+      const res = await app.request('/article-tags/1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -62,17 +62,17 @@ describe('articleTagRoutes', () => {
       mockTagService.findById.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1');
+      const res = await app.request('/article-tags/1');
       expect(res.status).toBe(500);
     });
   });
 
-  describe('POST /api/cms/article-tags', () => {
+  describe('POST /article-tags', () => {
     it('creates a tag', async () => {
       mockTagService.create.mockResolvedValue({ id: 1, name: 'new' });
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags', {
+      const res = await app.request('/article-tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'new' }),
@@ -86,7 +86,7 @@ describe('articleTagRoutes', () => {
       mockTagService.create.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags', {
+      const res = await app.request('/article-tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'new' }),
@@ -97,12 +97,12 @@ describe('articleTagRoutes', () => {
     });
   });
 
-  describe('PUT /api/cms/article-tags/:id', () => {
+  describe('PUT /article-tags/:id', () => {
     it('updates a tag', async () => {
       mockTagService.update.mockResolvedValue({ id: 1, name: 'updated' });
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1', {
+      const res = await app.request('/article-tags/1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'updated' }),
@@ -116,7 +116,7 @@ describe('articleTagRoutes', () => {
       mockTagService.update.mockRejectedValue(new Error('not found'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1', {
+      const res = await app.request('/article-tags/1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'updated' }),
@@ -127,12 +127,12 @@ describe('articleTagRoutes', () => {
     });
   });
 
-  describe('DELETE /api/cms/article-tags/:id', () => {
+  describe('DELETE /article-tags/:id', () => {
     it('deletes a tag', async () => {
       mockTagService.delete.mockResolvedValue(undefined);
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1', {
+      const res = await app.request('/article-tags/1', {
         method: 'DELETE',
       });
       const body = await res.json();
@@ -144,7 +144,7 @@ describe('articleTagRoutes', () => {
       mockTagService.delete.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/article-tags/1', {
+      const res = await app.request('/article-tags/1', {
         method: 'DELETE',
       });
       const body = await res.json();

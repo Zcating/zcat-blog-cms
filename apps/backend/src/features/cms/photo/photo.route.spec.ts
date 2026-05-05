@@ -31,36 +31,36 @@ describe('photoRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/photos', () => {
+  describe('GET /photos', () => {
     it('returns paginated photos', async () => {
       mockPhotoService.findAll.mockResolvedValue({ data: [], total: 0 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos');
+      const res = await app.request('/photos');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
     });
   });
 
-  describe('GET /api/cms/photos/empty-album', () => {
+  describe('GET /photos/empty-album', () => {
     it('returns empty album photos', async () => {
       mockPhotoService.findEmptyAlbum.mockResolvedValue([]);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/empty-album');
+      const res = await app.request('/photos/empty-album');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
     });
   });
 
-  describe('GET /api/cms/photos/detail', () => {
+  describe('GET /photos/detail', () => {
     it('returns photo detail', async () => {
       mockPhotoService.findById.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/detail?id=1');
+      const res = await app.request('/photos/detail?id=1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -70,7 +70,7 @@ describe('photoRoutes', () => {
       mockPhotoService.findById.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/detail?id=999');
+      const res = await app.request('/photos/detail?id=999');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -78,12 +78,12 @@ describe('photoRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photos/create', () => {
+  describe('POST /photos/create', () => {
     it('creates photo', async () => {
       mockPhotoService.create.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/create', {
+      const res = await app.request('/photos/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -98,12 +98,12 @@ describe('photoRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photos/create/with-album', () => {
+  describe('POST /photos/create/with-album', () => {
     it('creates photo with album', async () => {
       mockPhotoService.create.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/create/with-album', {
+      const res = await app.request('/photos/create/with-album', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,7 +122,7 @@ describe('photoRoutes', () => {
       mockPhotoService.create.mockRejectedValue(new Error('create failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/create/with-album', {
+      const res = await app.request('/photos/create/with-album', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,12 +138,12 @@ describe('photoRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photos/update', () => {
+  describe('POST /photos/update', () => {
     it('updates photo', async () => {
       mockPhotoService.update.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/update', {
+      const res = await app.request('/photos/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1, name: 'Updated' }),
@@ -157,7 +157,7 @@ describe('photoRoutes', () => {
       mockPhotoService.update.mockRejectedValue(new Error('update failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/update', {
+      const res = await app.request('/photos/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1, name: 'Updated' }),
@@ -168,12 +168,12 @@ describe('photoRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photos/update/with-album', () => {
+  describe('POST /photos/update/with-album', () => {
     it('updates photo with album', async () => {
       mockPhotoService.updateWithAlbum.mockResolvedValue({ id: 1 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/update/with-album', {
+      const res = await app.request('/photos/update/with-album', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -194,7 +194,7 @@ describe('photoRoutes', () => {
       );
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/update/with-album', {
+      const res = await app.request('/photos/update/with-album', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,12 +210,12 @@ describe('photoRoutes', () => {
     });
   });
 
-  describe('POST /api/cms/photos/delete', () => {
+  describe('POST /photos/delete', () => {
     it('deletes photo', async () => {
       mockPhotoService.delete.mockResolvedValue(true);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/delete', {
+      const res = await app.request('/photos/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1 }),
@@ -229,7 +229,7 @@ describe('photoRoutes', () => {
       mockPhotoService.delete.mockResolvedValue(false);
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/delete', {
+      const res = await app.request('/photos/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1 }),
@@ -243,7 +243,7 @@ describe('photoRoutes', () => {
       mockPhotoService.delete.mockRejectedValue(new Error('delete failed'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/photos/delete', {
+      const res = await app.request('/photos/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 1 }),

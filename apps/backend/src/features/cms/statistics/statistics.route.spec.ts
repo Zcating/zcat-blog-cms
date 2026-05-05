@@ -23,13 +23,13 @@ describe('statisticsRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/statistics/detail', () => {
+  describe('GET /statistics/detail', () => {
     it('returns statistics', async () => {
       const { getStatistics } = await import('@backend/common');
       (getStatistics as any).mockResolvedValue({ data: [], total: 0 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/detail');
+      const res = await app.request('/statistics/detail');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -40,20 +40,20 @@ describe('statisticsRoutes', () => {
       (getStatistics as any).mockRejectedValue(new Error('stats error'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/detail');
+      const res = await app.request('/statistics/detail');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('GET /api/cms/statistics/summary', () => {
+  describe('GET /statistics/summary', () => {
     it('returns summary', async () => {
       const { getSummary } = await import('@backend/common');
       (getSummary as any).mockResolvedValue({ totalVisits: 100 });
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/summary');
+      const res = await app.request('/statistics/summary');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -65,20 +65,20 @@ describe('statisticsRoutes', () => {
       (getSummary as any).mockRejectedValue(new Error('summary error'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/summary');
+      const res = await app.request('/statistics/summary');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('GET /api/cms/statistics/chart-data', () => {
+  describe('GET /statistics/chart-data', () => {
     it('returns chart data', async () => {
       const { getChartData } = await import('@backend/common');
       (getChartData as any).mockResolvedValue([]);
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/chart-data');
+      const res = await app.request('/statistics/chart-data');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -89,7 +89,7 @@ describe('statisticsRoutes', () => {
       (getChartData as any).mockRejectedValue(new Error('chart error'));
       const app = createApp();
 
-      const res = await app.request('/api/cms/statistics/chart-data');
+      const res = await app.request('/statistics/chart-data');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');

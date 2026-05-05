@@ -25,7 +25,7 @@ describe('systemSettingRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /api/cms/system-setting/upload-token', () => {
+  describe('GET /system-setting/upload-token', () => {
     it('returns upload token', async () => {
       mockSettingService.getUploadToken.mockReturnValue({
         uploadToken: 'token',
@@ -33,7 +33,7 @@ describe('systemSettingRoutes', () => {
       const app = createApp();
 
       const res = await app.request(
-        '/api/cms/system-setting/upload-token?type=article',
+        '/system-setting/upload-token?type=article',
       );
       const body = await res.json();
 
@@ -48,7 +48,7 @@ describe('systemSettingRoutes', () => {
       const app = createApp();
 
       const res = await app.request(
-        '/api/cms/system-setting/upload-token?type=article',
+        '/system-setting/upload-token?type=article',
       );
       const body = await res.json();
 
