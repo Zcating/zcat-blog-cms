@@ -14,7 +14,7 @@ import React from 'react';
 import { z } from 'zod';
 
 import { UserApi } from '@cms/api';
-import { OssAction, UseOptimisticObject, Workspace } from '@cms/core';
+import { OssAction, useOptimisticObject, Workspace } from '@cms/core';
 
 import type { Route } from './+types/user-info';
 
@@ -43,7 +43,7 @@ const UserInfoSchema = z.object({
 const UserInfoForm = createZForm(UserInfoSchema);
 
 export default function UserInfo(props: Route.ComponentProps) {
-  const [userInfo, setOptimisticUserInfo, commitUserInfo] = UseOptimisticObject(
+  const [userInfo, setOptimisticUserInfo, commitUserInfo] = useOptimisticObject(
     props.loaderData.userInfo,
     (prev, data: UserInfoValues) => {
       return {

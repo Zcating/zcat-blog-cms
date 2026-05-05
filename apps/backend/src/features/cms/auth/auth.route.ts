@@ -11,9 +11,16 @@ const authRoutes = new Hono().basePath('/api/auth');
 
 authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { username, password } = c.req.valid('json');
+  const device = c.req.header('User-Agent');
+  const ip = c.req.header('X-Forwarded-For') ?? c.req.header('X-Real-IP');
+  const userAgent = c.req.header('User-Agent');
 
   try {
-    const result = await authService.login(username, password);
+    const result = await authService.login(username, password, {
+      device,
+      ip,
+      userAgent,
+    });
 
     if (!result) {
       return c.json(
@@ -37,6 +44,37 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       createResult({
         code: ResultCode.UnknownError,
         message: '登录失败',
+      }),
+    );
+  }
+});
+
+authRoutes.post('/logout', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json(
+      createResult({
+        code: ResultCode.Success,
+        message: '已登出',
+      }),
+    );
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    await authService.logout(token);
+    return c.json(
+      createResult({
+        code: ResultCode.Success,
+        message: '登出成功',
+      }),
+    );
+  } catch (error) {
+    logger.error('Logout error:', error);
+    return c.json(
+      createResult({
+        code: ResultCode.UnknownError,
+        message: '登出失败',
       }),
     );
   }

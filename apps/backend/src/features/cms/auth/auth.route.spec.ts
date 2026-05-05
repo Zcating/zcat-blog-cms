@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mockAuthService = vi.hoisted(() => ({
   login: vi.fn(),
   register: vi.fn(),
+  logout: vi.fn(),
 }));
 
 vi.mock('./auth.service', () => ({
@@ -146,6 +147,34 @@ describe('authRoutes', () => {
 
       const body = await res.json();
       expect(body.code).toBe('ERR0006');
+    });
+  });
+
+  describe('POST /api/auth/logout', () => {
+    it('returns success when valid Authorization header', async () => {
+      mockAuthService.logout.mockResolvedValue(undefined);
+      const app = createApp();
+
+      const res = await app.request('/api/auth/logout', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer some-token' },
+      });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.code).toBe('0000');
+      expect(mockAuthService.logout).toHaveBeenCalledWith('some-token');
+    });
+
+    it('returns success even without Authorization header', async () => {
+      const app = createApp();
+
+      const res = await app.request('/api/auth/logout', { method: 'POST' });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.code).toBe('0000');
+      expect(mockAuthService.logout).not.toHaveBeenCalled();
     });
   });
 });

@@ -3,7 +3,19 @@ import jwt from 'jsonwebtoken';
 
 import { prismaService } from '../../../common';
 
-export async function login(username: string, password: string) {
+import { tokenWhitelistService } from './whitelist.service';
+
+interface LoginOptions {
+  device?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
+export async function login(
+  username: string,
+  password: string,
+  options?: LoginOptions,
+) {
   const user = await prismaService.user.findUnique({
     where: { username },
   });
@@ -22,6 +34,17 @@ export async function login(username: string, password: string) {
     process.env.JWT_SECRET!,
     { expiresIn: '1d' },
   );
+
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await tokenWhitelistService.create({
+    token,
+    userId: user.id,
+    device: options?.device,
+    ip: options?.ip,
+    userAgent: options?.userAgent,
+    expiresAt,
+  });
 
   return { accessToken: token };
 }
@@ -64,4 +87,8 @@ export async function register(
   return { code: 'SUCCESS' as const, accessToken: token };
 }
 
-export const authService = { login, register };
+export async function logout(token: string) {
+  await tokenWhitelistService.remove(token);
+}
+
+export const authService = { login, register, logout };

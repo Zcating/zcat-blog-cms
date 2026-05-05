@@ -1,6 +1,8 @@
 import { createMiddleware } from 'hono/factory';
 import jwt from 'jsonwebtoken';
 
+import { tokenWhitelistService } from '../features/cms/auth/whitelist.service';
+
 // Extend Hono context variables type
 declare module 'hono' {
   interface ContextVariableMap {
@@ -24,6 +26,12 @@ export const authMiddleware = createMiddleware(async (c, next) => {
       sub: string;
       username: string;
     };
+
+    const isValid = await tokenWhitelistService.validate(token);
+    if (!isValid) {
+      return c.json({ code: 'ERR0002', message: 'Unauthorized' }, 401);
+    }
+
     c.set('user', {
       userId: Number(payload.sub),
       username: payload.username,

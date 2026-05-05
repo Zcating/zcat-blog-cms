@@ -6,13 +6,17 @@ const mockPrisma = vi.hoisted(() => ({
     findMany: vi.fn(),
     create: vi.fn(),
   },
+  tokenWhitelist: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    deleteMany: vi.fn(),
+  },
 }));
 
-vi.mock('../../../services', () => ({
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
 }));
 
-// Must be hoisted before bcrypt/jwt mocks
 const mockBcrypt = vi.hoisted(() => ({
   hash: vi.fn(),
   genSalt: vi.fn(),
@@ -24,6 +28,18 @@ const mockJwt = vi.hoisted(() => ({
 
 vi.mock('bcrypt', () => ({ default: mockBcrypt, ...mockBcrypt }));
 vi.mock('jsonwebtoken', () => ({ default: mockJwt, ...mockJwt }));
+
+const whitelistMocks = vi.hoisted(() => ({
+  create: vi.fn(),
+  remove: vi.fn(),
+}));
+
+vi.mock('./whitelist.service', () => ({
+  tokenWhitelistService: {
+    create: whitelistMocks.create,
+    remove: whitelistMocks.remove,
+  },
+}));
 
 import { authService } from './auth.service';
 
@@ -37,7 +53,7 @@ describe('authService', () => {
   });
 
   describe('login', () => {
-    it('returns accessToken on valid credentials', async () => {
+    it('returns accessToken and creates whitelist entry on valid credentials', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         username: 'admin',
@@ -46,11 +62,24 @@ describe('authService', () => {
       });
       mockBcrypt.hash.mockResolvedValue('hashed-password');
       mockJwt.sign.mockReturnValue('token123');
+      whitelistMocks.create.mockResolvedValue({ id: 1 });
 
-      const result = await authService.login('admin', 'password');
+      const result = await authService.login('admin', 'password', {
+        device: 'Chrome',
+        ip: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      });
 
       expect(result).toEqual({ accessToken: 'token123' });
       expect(mockBcrypt.hash).toHaveBeenCalledWith('password', 'somesalt');
+      expect(whitelistMocks.create).toHaveBeenCalledWith({
+        token: 'token123',
+        userId: 1,
+        device: 'Chrome',
+        ip: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+        expiresAt: expect.any(Date),
+      });
     });
 
     it('returns null when user not found', async () => {
@@ -59,6 +88,7 @@ describe('authService', () => {
       const result = await authService.login('nonexistent', 'password');
 
       expect(result).toBeNull();
+      expect(whitelistMocks.create).not.toHaveBeenCalled();
     });
 
     it('returns null when password does not match', async () => {
@@ -73,6 +103,7 @@ describe('authService', () => {
       const result = await authService.login('admin', 'wrong');
 
       expect(result).toBeNull();
+      expect(whitelistMocks.create).not.toHaveBeenCalled();
     });
   });
 
@@ -115,6 +146,16 @@ describe('authService', () => {
           salt: 'newsalt',
         },
       });
+    });
+  });
+
+  describe('logout', () => {
+    it('removes token from whitelist', async () => {
+      whitelistMocks.remove.mockResolvedValue(undefined);
+
+      await authService.logout('test-token');
+
+      expect(whitelistMocks.remove).toHaveBeenCalledWith('test-token');
     });
   });
 });

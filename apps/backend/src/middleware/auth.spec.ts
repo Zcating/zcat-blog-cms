@@ -7,6 +7,13 @@ const mockJwt = vi.hoisted(() => ({
 
 vi.mock('jsonwebtoken', () => ({ default: mockJwt, ...mockJwt }));
 
+const mockWhitelistValidate = vi.hoisted(() => vi.fn());
+vi.mock('../features/cms/auth/whitelist.service', () => ({
+  tokenWhitelistService: {
+    validate: mockWhitelistValidate,
+  },
+}));
+
 import { authMiddleware } from './auth';
 
 describe('authMiddleware', () => {
@@ -28,8 +35,9 @@ describe('authMiddleware', () => {
     return app;
   };
 
-  it('allows request with valid Bearer token', async () => {
+  it('allows request with valid Bearer token in whitelist', async () => {
     mockJwt.verify.mockReturnValue({ sub: '1', username: 'admin' });
+    mockWhitelistValidate.mockResolvedValue(true);
     const app = createApp();
 
     const res = await app.request('/protected/data', {
@@ -40,6 +48,20 @@ describe('authMiddleware', () => {
     const body = await res.json();
     expect(body.userId).toBe(1);
     expect(body.username).toBe('admin');
+  });
+
+  it('returns 401 when token not in whitelist', async () => {
+    mockJwt.verify.mockReturnValue({ sub: '1', username: 'admin' });
+    mockWhitelistValidate.mockResolvedValue(false);
+    const app = createApp();
+
+    const res = await app.request('/protected/data', {
+      headers: { Authorization: 'Bearer revoked-token' },
+    });
+
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.code).toBe('ERR0002');
   });
 
   it('returns 401 when no Authorization header', async () => {
