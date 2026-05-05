@@ -11,7 +11,7 @@ import {
 } from './article.schema';
 import { articleService } from './article.service';
 
-const articleRoutes = new Hono().basePath('/api/cms/articles');
+const articleRoutes = new Hono().basePath('/articles');
 
 // GET / - 获取所有文章（分页）
 articleRoutes.get('/', zValidator('query', PaginateQuerySchema), async (c) => {

@@ -17,7 +17,7 @@ import {
 } from './photo.schema';
 import { photoService } from './photo.service';
 
-const photoRoutes = new Hono().basePath('/api/cms/photos');
+const photoRoutes = new Hono().basePath('/photos');
 
 // GET / - 获取所有照片（分页）
 photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {

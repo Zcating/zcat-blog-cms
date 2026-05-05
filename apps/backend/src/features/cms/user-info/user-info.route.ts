@@ -7,7 +7,7 @@ import { logger } from '@backend/utils';
 import { UserInfoSchema } from './user-info.schema';
 import { userInfoService } from './user-info.service';
 
-const userInfoRoutes = new Hono().basePath('/api/cms/user-info');
+const userInfoRoutes = new Hono().basePath('/user-info');
 
 // GET / - 获取用户信息
 userInfoRoutes.get('/', async (c) => {

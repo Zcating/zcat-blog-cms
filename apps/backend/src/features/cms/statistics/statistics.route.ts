@@ -8,7 +8,7 @@ import { logger } from '@backend/utils';
 
 import { StatisticQueryDtoSchema } from './statistics.schema';
 
-const statisticsRoutes = new Hono().basePath('/api/cms/statistics');
+const statisticsRoutes = new Hono().basePath('/statistics');
 
 // GET /detail - 获取统计数据
 statisticsRoutes.get(

@@ -10,7 +10,7 @@ import {
 } from './article-tag.schema';
 import { articleTagService } from './article-tag.service';
 
-const articleTagRoutes = new Hono().basePath('/api/cms/article-tags');
+const articleTagRoutes = new Hono().basePath('/article-tags');
 
 // GET / - 获取所有文章标签
 articleTagRoutes.get('/', async (c) => {

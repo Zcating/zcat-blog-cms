@@ -6,7 +6,7 @@ import { recordVisitor, prismaService, ossService } from '@backend/common';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
 import { logger, safeNumber, safeParse, createPaginate } from '@backend/utils';
 
-const blogRoutes = new Hono().basePath('/api/blog');
+const blogRoutes = new Hono();
 
 const ORDER_MAP = {
   latest: 'desc',

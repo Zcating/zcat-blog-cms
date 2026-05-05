@@ -14,7 +14,7 @@ import {
 } from './photo-album.schema';
 import { photoAlbumService } from './photo-album.service';
 
-const photoAlbumRoutes = new Hono().basePath('/api/cms/photo-albums');
+const photoAlbumRoutes = new Hono().basePath('/photo-albums');
 
 // GET / - 获取所有相册
 photoAlbumRoutes.get(

@@ -7,7 +7,7 @@ import { logger } from '@backend/utils';
 import { UploadTokenDtoSchema } from './system-setting.schema';
 import { systemSettingService } from './system-setting.service';
 
-const systemSettingRoutes = new Hono().basePath('/api/cms/system-setting');
+const systemSettingRoutes = new Hono().basePath('/system-setting');
 
 // GET /upload-token - 获取上传凭证
 systemSettingRoutes.get(
