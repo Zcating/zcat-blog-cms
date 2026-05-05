@@ -9,7 +9,8 @@
 2. 先规划，确认后再行动，使用 planning-with-files 时，把plan 放入 `docs/planning/{plan-title}` 中。
 3. 测试文件应与被测文件同级存放
 4. 所有代码修改必须遵循 TDD（Test-Driven Development）：先编写测试，再实现功能
-5. 不确定的内容，请使用具体的 web-search 工具。
+5. 不确定的内容，请使用具体的 web-search 工具
+
 
 
 ## 项目指南
