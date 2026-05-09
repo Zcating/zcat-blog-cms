@@ -8,7 +8,7 @@ import { ArticleEditor } from '../components/article';
 
 import type { Route } from './+types/articles.edit';
 
-export async function clientLoader(props: Route.ClientLoaderArgs) {
+export async function loader(props: Route.LoaderArgs) {
   const url = new URL(props.request.url);
   const id = safeNumber(url.searchParams.get('id'));
   if (!id) {
