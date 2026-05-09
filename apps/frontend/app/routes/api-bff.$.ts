@@ -48,7 +48,7 @@ function sanitizeResponseHeaders(response: Response): Headers {
   return headers;
 }
 
-async function proxyToBackend(
+export async function proxyToBackend(
   request: Request,
   params: Route.LoaderArgs['params'],
 ) {
