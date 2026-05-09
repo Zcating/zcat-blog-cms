@@ -7,7 +7,7 @@ import { ArticleViewer } from '../components/article';
 
 import type { Route } from './+types/articles.id';
 
-export async function clientLoader(props: Route.ClientLoaderArgs) {
+export async function loader(props: Route.LoaderArgs) {
   const id = Number(props.params.id);
   if (isNaN(id)) {
     throw new Error('文章ID无效');
