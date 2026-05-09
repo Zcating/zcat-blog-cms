@@ -31,10 +31,7 @@ interface AlbumPhotoFormData {
   albumId: number;
 }
 
-export async function clientLoader({
-  params,
-  request,
-}: Route.ClientLoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const page = safeNumber(url.searchParams.get('page'), 1);
   const pageSize = safeNumber(url.searchParams.get('pageSize'), 20);
