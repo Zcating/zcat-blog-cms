@@ -48,6 +48,34 @@ function sanitizeResponseHeaders(response: Response): Headers {
   return headers;
 }
 
+function extractAuthToken(request: Request): string | null {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) return authHeader;
+
+  const cookieHeader = request.headers.get('Cookie');
+  if (cookieHeader) {
+    const cookies = Object.fromEntries(
+      cookieHeader.split(';').map((c) => {
+        const [key, ...value] = c.trim().split('=');
+        return [key, value.join('=')];
+      }),
+    );
+    return cookies['token'] || null;
+  }
+  return null;
+}
+
+function logBffRequest(
+  method: string,
+  targetUrl: string,
+  status: number,
+  duration: number,
+): void {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[BFF] ${method} ${targetUrl} → ${status} (${duration}ms)`);
+  }
+}
+
 export async function proxyToBackend(
   request: Request,
   params: Route.LoaderArgs['params'],
@@ -64,13 +92,24 @@ export async function proxyToBackend(
   const method = request.method.toUpperCase();
   const hasRequestBody = method !== 'GET' && method !== 'HEAD';
 
+  const token = extractAuthToken(request);
+  const headers = sanitizeRequestHeaders(request);
+  if (token) {
+    headers.set('Authorization', token);
+  }
+
+  const startTime = Date.now();
+
   const response = await fetch(targetUrl, {
     method,
-    headers: sanitizeRequestHeaders(request),
+    headers,
     body: hasRequestBody ? await request.arrayBuffer() : undefined,
     redirect: 'manual',
     signal: request.signal,
   });
+
+  const duration = Date.now() - startTime;
+  logBffRequest(method, targetUrl, response.status, duration);
 
   return new Response(response.body, {
     status: response.status,
