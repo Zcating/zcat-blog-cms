@@ -22,7 +22,7 @@ interface UserInfoValues extends UserApi.UserInfo {
   loading?: boolean;
 }
 
-export async function clientLoader() {
+export async function loader() {
   return {
     userInfo: (await UserApi.userInfo()) as UserInfoValues,
   };
