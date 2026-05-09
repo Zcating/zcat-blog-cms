@@ -5,20 +5,26 @@ import {
   route,
 } from '@react-router/dev/routes';
 
+import { albumRoutes } from './features/album';
+import { articleRoutes } from './features/article';
+import { authRoutes } from './features/auth';
+import { dashboardRoutes } from './features/dashboard';
+import { photoRoutes } from './features/photo';
+import { settingsRoutes } from './features/settings';
+import { userInfoRoutes } from './features/user-info';
+
 export default [
   index('routes/home.tsx'),
-  route('login', 'routes/login.tsx'),
+  ...Object.values(authRoutes).map((r) => route(r.path, r.module)),
   route('api/bff/*', 'routes/api-bff.$.ts'),
   layout('layouts/cms-layout.tsx', [
-    route('dashboard', 'routes/dashboard.tsx'),
-    route('articles', 'routes/articles.tsx'),
-    route('articles/:id', 'routes/articles.id.tsx'),
+    ...Object.values(dashboardRoutes).map((r) => route(r.path, r.module)),
+    ...Object.values(articleRoutes).map((r) => route(r.path, r.module)),
     route('article-categories', 'routes/article-categories.tsx'),
-    route('albums', 'routes/albums.tsx'),
-    route('albums/:id', 'routes/albums.id.tsx'),
-    route('photos', 'routes/photos.tsx'),
-    route('user-info', 'routes/user-info.tsx'),
-    route('settings', 'routes/settings.tsx'),
+    ...Object.values(albumRoutes).map((r) => route(r.path, r.module)),
+    ...Object.values(photoRoutes).map((r) => route(r.path, r.module)),
+    ...Object.values(userInfoRoutes).map((r) => route(r.path, r.module)),
+    ...Object.values(settingsRoutes).map((r) => route(r.path, r.module)),
   ]),
-  route('articles/edit', 'routes/articles.edit.tsx'),
+  route('articles/edit', 'features/article/routes/articles.edit.tsx'),
 ] satisfies RouteConfig;

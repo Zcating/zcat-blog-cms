@@ -2,7 +2,9 @@ import { safeNumber } from '@zcat/ui';
 import { useNavigate } from 'react-router';
 
 import { ArticlesApi } from '@cms/api';
-import { ArticleEditor, OssAction } from '@cms/core';
+import { OssAction } from '@cms/core';
+
+import { ArticleEditor } from '../components/article';
 
 import type { Route } from './+types/articles.edit';
 

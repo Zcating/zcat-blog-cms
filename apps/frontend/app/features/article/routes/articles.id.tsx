@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router';
 
 import { ArticlesApi } from '@cms/api';
-import { ArticleViewer, Workspace } from '@cms/core';
+import { Workspace } from '@cms/core';
+
+import { ArticleViewer } from '../components/article';
 
 import type { Route } from './+types/articles.id';
 

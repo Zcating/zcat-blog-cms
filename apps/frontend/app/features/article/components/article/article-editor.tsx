@@ -3,8 +3,7 @@ import dayjs from 'dayjs';
 import { z } from 'zod';
 
 import { ArticlesApi } from '@cms/api';
-
-import { MarkdownEditor } from '../../ui';
+import { MarkdownEditor } from '@cms/core/ui/markdown-editor';
 
 const ArticleSchema = z.object({
   title: z

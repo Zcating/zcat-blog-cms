@@ -12,12 +12,15 @@ import {
   createTextArea,
   OssAction,
   PaginationWorkspace,
-  PhotoCard,
-  showPhotoSelector,
   useLoadingFn,
   useOptimisticArray,
-  type PhotoCardData,
 } from '@cms/core';
+
+import {
+  PhotoCard,
+  showPhotoSelector,
+  type PhotoCardData,
+} from '../components/album';
 
 import type { Route } from './+types/albums.id';
 

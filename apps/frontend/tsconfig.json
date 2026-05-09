@@ -36,10 +36,10 @@
         "./app/api/*"
       ],
       "@cms/core": [
-        "app/core"
+        "app/shared"
       ],
       "@cms/core/*": [
-        "app/core/*"
+        "app/shared/*"
       ],
     },
     "esModuleInterop": true,

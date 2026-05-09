@@ -5,7 +5,6 @@ import zod from 'zod';
 
 import { AlbumsApi } from '@cms/api';
 import {
-  AlbumImageCard,
   createCheckbox,
   createConstNumber,
   createInput,
@@ -14,6 +13,8 @@ import {
   useOptimisticArray,
   PaginationWorkspace,
 } from '@cms/core';
+
+import { AlbumImageCard } from '../components/album';
 
 import type { Route } from './+types/albums';
 

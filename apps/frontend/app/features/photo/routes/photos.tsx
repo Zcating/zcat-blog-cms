@@ -10,10 +10,10 @@ import {
   createSchemaForm,
   OssAction,
   PaginationWorkspace,
-  PhotoCard,
   useOptimisticArray,
-  type PhotoCardData,
 } from '@cms/core';
+
+import { PhotoCard, type PhotoCardData } from '../../album/components/album';
 
 import type { Route } from './+types/photos';
 
