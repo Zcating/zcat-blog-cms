@@ -3,7 +3,7 @@ import React from 'react';
 
 import type { Route } from './+types/settings';
 
-export function clientLoader() {
+export function loader() {
   // return SystemSettingApi.getSystemSetting();
 }
 
