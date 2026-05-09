@@ -18,7 +18,7 @@ import { PaginationWorkspace, useLoadingFn } from '@cms/core';
 
 import type { Route } from './+types/articles';
 
-export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const page = safeNumber(url.searchParams.get('page'), 1);
   const pageSize = safeNumber(url.searchParams.get('pageSize'), 10);
