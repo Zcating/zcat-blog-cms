@@ -9,17 +9,6 @@ import { requestLogger } from './middleware/request-logger';
 
 // CORS
 const app = new Hono();
-app.use(
-  '*',
-  cors({
-    origin: [process.env.FRONTEND_URL ?? '', process.env.BLOG_URL ?? ''].filter(
-      Boolean,
-    ),
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Data-Hash'],
-    credentials: true,
-  }),
-);
 
 // Request logging
 app.use('*', requestLogger);

@@ -1,11 +1,6 @@
 import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.hoisted(() => {
-  process.env.FRONTEND_URL = 'http://localhost:3000';
-  process.env.BLOG_URL = 'http://localhost:1024';
-});
-
 vi.mock('./features/cms', () => ({
   cmsRoutes: new Hono(),
 }));
