@@ -38,7 +38,6 @@ export default function Settings(props: Route.ComponentProps) {
   const [imageUrl, setImageUrl] = React.useState<string>('');
 
   React.useEffect(() => {
-    console.log(imageUrl);
     if (!imageUrl) {
       return;
     }
