@@ -12,6 +12,13 @@ import { dashboardRoutes } from './features/dashboard';
 import { photoRoutes } from './features/photo';
 import { settingsRoutes } from './features/settings';
 import { userInfoRoutes } from './features/user-info';
+import { runWithRequest } from '@cms/api/context/request-context';
+
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request }, next) => {
+    return runWithRequest(request, next);
+  },
+];
 
 export default [
   index('routes/home.tsx'),
