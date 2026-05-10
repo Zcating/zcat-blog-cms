@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie';
 
 import { getCurrentRequest } from '../context/request-context';
+
 import { EventCenter } from './event-center';
 import { createQueryPath } from './http-utils';
 
@@ -80,6 +81,15 @@ export namespace HttpClient {
     return headers;
   }
 
+  function resolveApiUrl(path: string): string {
+    const currentRequest = getCurrentRequest();
+    if (currentRequest) {
+      const origin = new URL(currentRequest.url).origin;
+      return `${origin}${API_URL}/${path}`;
+    }
+    return `${API_URL}/${path}`;
+  }
+
   async function fetchWithRetry(
     input: string | URL | Request,
     init?: RequestInit & { retryOptions?: RetryOptions },
@@ -127,7 +137,7 @@ export namespace HttpClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetchWithRetry(`${API_URL}/${path}`, {
+    const response = await fetchWithRetry(resolveApiUrl(path), {
       method: 'POST',
       body: bodyData,
       headers: headers,
@@ -144,7 +154,7 @@ export namespace HttpClient {
     options: { signal?: AbortSignal } = {},
   ): Promise<T> {
     const queryPath = createQueryPath(path, body);
-    const response = await fetchWithRetry(`${API_URL}/${queryPath}`, {
+    const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'GET',
       headers: getAuthHeaders(),
       signal: options.signal,
@@ -157,7 +167,7 @@ export namespace HttpClient {
     body: Record<string, any>,
     options: { signal?: AbortSignal } = {},
   ): Promise<T> {
-    const response = await fetchWithRetry(`${API_URL}/${path}`, {
+    const response = await fetchWithRetry(resolveApiUrl(path), {
       method: 'PUT',
       body: JSON.stringify(body),
       headers: {
@@ -178,7 +188,7 @@ export namespace HttpClient {
     const queryPath = body
       ? `${path}?${new URLSearchParams(body as Record<string, string>).toString()}`
       : path;
-    const response = await fetchWithRetry(`${API_URL}/${queryPath}`, {
+    const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
