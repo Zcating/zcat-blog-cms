@@ -7,7 +7,7 @@ import { logger } from '@backend/utils';
 import { loginSchema, registerDtoSchema } from './auth.schema';
 import { authService } from './auth.service';
 
-const authRoutes = new Hono().basePath('/auth');
+const authRoutes = new Hono();
 
 authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { username, password } = c.req.valid('json');
