@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { getCurrentRequest } from '@cms/api/context/request-context';
+import { getCurrentRequest } from '../context/request-context';
 import { EventCenter } from './event-center';
 import { createQueryPath } from './http-utils';
 

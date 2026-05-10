@@ -12,10 +12,10 @@ import { dashboardRoutes } from './features/dashboard';
 import { photoRoutes } from './features/photo';
 import { settingsRoutes } from './features/settings';
 import { userInfoRoutes } from './features/user-info';
-import { runWithRequest } from '@cms/api/context/request-context';
+import { runWithRequest } from './api/context/request-context';
 
-export const middleware: Route.MiddlewareFunction[] = [
-  async ({ request }, next) => {
+export const middleware = [
+  async ({ request }: { request: Request }, next: () => Promise<unknown>) => {
     return runWithRequest(request, next);
   },
 ];
