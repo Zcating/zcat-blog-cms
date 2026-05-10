@@ -24,7 +24,9 @@ describe('request-context', () => {
 
       expect(captured).toHaveLength(1);
       expect(captured[0].url).toBe('http://localhost:3000/dashboard');
-      expect(captured[0].headers.get('Cookie')).toBe('token=Bearer%20test-token');
+      expect(captured[0].headers.get('Cookie')).toBe(
+        'token=Bearer%20test-token',
+      );
     });
   });
 

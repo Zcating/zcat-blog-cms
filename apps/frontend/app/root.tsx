@@ -11,16 +11,24 @@ import {
 } from 'react-router';
 
 import { HttpClient } from './api';
-import { initServerStorage, runWithRequest } from './api/context/request-context';
+import {
+  initServerStorage,
+  runWithRequest,
+} from './api/context/request-context';
 
 import type { Route } from './+types/root';
 
 import './app.css';
 
-export async function middleware({ request }: Route.MiddlewareFunctionArgs, next: Function) {
-  await initServerStorage();
-  return runWithRequest(request, next);
-}
+export const middleware = [
+  async (
+    { request }: Parameters<Route.MiddlewareFunction>[0],
+    next: () => Promise<unknown>,
+  ) => {
+    await initServerStorage();
+    return runWithRequest(request, next);
+  },
+];
 
 export function meta() {
   return [

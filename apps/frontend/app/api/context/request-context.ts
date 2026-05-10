@@ -8,7 +8,7 @@ let _store: ContextStore | null = null;
 function ensureStore(): ContextStore {
   if (!_store) {
     _store = {
-      run(_request: Request, callback: () => unknown) {
+      run<T>(_request: Request, callback: () => T): T {
         return callback();
       },
       getStore() {
@@ -22,11 +22,15 @@ function ensureStore(): ContextStore {
 let _initPromise: Promise<void> | null = null;
 
 export async function initServerStorage() {
-  if (_initPromise) return _initPromise;
+  if (_initPromise) {
+    return _initPromise;
+  }
+
   _initPromise = (async () => {
     const { AsyncLocalStorage } = await import('node:async_hooks');
     _store = new AsyncLocalStorage<Request>();
   })();
+
   return _initPromise;
 }
 
