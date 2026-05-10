@@ -11,7 +11,7 @@ import { StatisticsApi } from '@cms/api';
 
 import type { Route } from './+types/dashboard';
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader() {
   const [summary, chartData, detailData] = await Promise.all([
     StatisticsApi.getSummary(),
     StatisticsApi.getChartData(),
