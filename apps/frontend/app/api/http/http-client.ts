@@ -69,7 +69,10 @@ export namespace HttpClient {
         const cookies = Object.fromEntries(
           cookieHeader.split(';').map((c) => {
             const [key, ...value] = c.trim().split('=');
-            return [key, value.join('=')];
+            return [
+              decodeURIComponent(key),
+              decodeURIComponent(value.join('=')),
+            ];
           }),
         );
         if (cookies['token']) {
