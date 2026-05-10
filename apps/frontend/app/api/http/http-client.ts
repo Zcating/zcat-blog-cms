@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 
+import { getCurrentRequest } from '@cms/api/context/request-context';
 import { EventCenter } from './event-center';
 import { createQueryPath } from './http-utils';
 
@@ -27,7 +28,6 @@ export const csrf = {
 
 export namespace HttpClient {
   const API_URL: string = '/api/bff';
-  const SERVER_URL: string = import.meta.env.VITE_SERVER_URL;
 
   interface ResponseResult<T = unknown> {
     code: string;
@@ -48,6 +48,36 @@ export namespace HttpClient {
       return { 'X-CSRF-Token': csrfToken };
     }
     return {};
+  }
+
+  function getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+
+    const cookieToken = Cookies.get('token');
+    if (cookieToken) {
+      headers['Authorization'] = cookieToken;
+    }
+
+    const currentRequest = getCurrentRequest();
+    if (currentRequest) {
+      const cookieHeader = currentRequest.headers.get('Cookie') || '';
+      if (cookieHeader) {
+        headers['Cookie'] = cookieHeader;
+      }
+      if (!headers['Authorization']) {
+        const cookies = Object.fromEntries(
+          cookieHeader.split(';').map((c) => {
+            const [key, ...value] = c.trim().split('=');
+            return [key, value.join('=')];
+          }),
+        );
+        if (cookies['token']) {
+          headers['Authorization'] = cookies['token'];
+        }
+      }
+    }
+
+    return headers;
   }
 
   async function fetchWithRetry(
@@ -86,7 +116,7 @@ export namespace HttpClient {
   ): Promise<T> {
     log('POST request', path, body);
     const headers: Record<string, string> = {
-      Authorization: Cookies.get('token') || '',
+      ...getAuthHeaders(),
       ...getCsrfHeader(),
     };
     let bodyData: string | FormData;
@@ -116,9 +146,7 @@ export namespace HttpClient {
     const queryPath = createQueryPath(path, body);
     const response = await fetchWithRetry(`${API_URL}/${queryPath}`, {
       method: 'GET',
-      headers: {
-        Authorization: Cookies.get('token') || '',
-      },
+      headers: getAuthHeaders(),
       signal: options.signal,
     });
     return handleResponse<T>(response);
@@ -134,7 +162,7 @@ export namespace HttpClient {
       body: JSON.stringify(body),
       headers: {
         'Content-Type': 'application/json',
-        Authorization: Cookies.get('token') || '',
+        ...getAuthHeaders(),
         ...getCsrfHeader(),
       },
       signal: options.signal,
@@ -153,24 +181,8 @@ export namespace HttpClient {
     const response = await fetchWithRetry(`${API_URL}/${queryPath}`, {
       method: 'DELETE',
       headers: {
-        Authorization: Cookies.get('token') || '',
+        ...getAuthHeaders(),
         ...getCsrfHeader(),
-      },
-      signal: options.signal,
-    });
-    return handleResponse<T>(response);
-  }
-
-  export async function serverSideGet<T>(
-    path: string,
-    body?: Record<string, any>,
-    options: { signal?: AbortSignal } = {},
-  ): Promise<T> {
-    const queryPath = createQueryPath(path, body);
-    const response = await fetchWithRetry(`${SERVER_URL}/${queryPath}`, {
-      method: 'GET',
-      headers: {
-        Authorization: Cookies.get('token') || '',
       },
       signal: options.signal,
     });
