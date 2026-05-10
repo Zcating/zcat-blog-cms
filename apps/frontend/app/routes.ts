@@ -12,10 +12,11 @@ import { dashboardRoutes } from './features/dashboard';
 import { photoRoutes } from './features/photo';
 import { settingsRoutes } from './features/settings';
 import { userInfoRoutes } from './features/user-info';
-import { runWithRequest } from './api/context/request-context';
+import { runWithRequest, initServerStorage } from './api/context/request-context';
 
 export const middleware = [
   async ({ request }: { request: Request }, next: () => Promise<unknown>) => {
+    await initServerStorage();
     return runWithRequest(request, next);
   },
 ];
