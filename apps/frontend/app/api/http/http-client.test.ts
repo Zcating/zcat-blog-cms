@@ -1,6 +1,20 @@
 import Cookies from 'js-cookie';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+const cookieStore = vi.hoisted(() => new Map<string, string>());
+
+vi.mock('js-cookie', () => ({
+  default: {
+    get: vi.fn((key: string) => cookieStore.get(key)),
+    set: vi.fn((key: string, value: string) => {
+      cookieStore.set(key, value);
+    }),
+    remove: vi.fn((key: string) => {
+      cookieStore.delete(key);
+    }),
+  },
+}));
+
 const mockFetch = vi.fn();
 
 vi.stubGlobal('fetch', mockFetch);
@@ -10,6 +24,7 @@ describe('HttpClient', () => {
   let csrf: typeof import('./http-client').csrf;
 
   beforeEach(async () => {
+    cookieStore.clear();
     vi.clearAllMocks();
     vi.resetModules();
 
@@ -95,6 +110,31 @@ describe('HttpClient', () => {
       );
     });
 
+    it('应该支持对象参数并将 params 构建为查询参数', async () => {
+      const abortController = HttpClient.createAbortController();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: null }),
+      });
+
+      await HttpClient.get({
+        path: 'test/path',
+        params: { page: 1, name: 'test' },
+        signal: abortController.signal,
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('test/path?'),
+        expect.objectContaining({
+          method: 'GET',
+          signal: abortController.signal,
+        }),
+      );
+      expect(mockFetch.mock.calls[0][0]).toContain('page=1');
+      expect(mockFetch.mock.calls[0][0]).toContain('name=test');
+    });
+
     it('应该在 401 时触发 UNAUTH 事件', async () => {
       const { EventCenter } = await import('./event-center');
       const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
@@ -169,6 +209,74 @@ describe('HttpClient', () => {
       );
     });
 
+    it('应该支持对象参数并将 params 作为 JSON 请求体', async () => {
+      const mockData = { id: 1, name: 'Created' };
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: mockData }),
+      });
+
+      const result = await HttpClient.post<typeof mockData>({
+        path: 'test/path',
+        params: { name: 'test' },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('test/path'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ name: 'test' }),
+        }),
+      );
+      expect(result).toEqual(mockData);
+    });
+
+    it('应该支持对象参数并透传 FormData params', async () => {
+      const formData = new FormData();
+      formData.append('file', 'content');
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: null }),
+      });
+
+      await HttpClient.post({
+        path: 'test/path',
+        params: formData,
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('test/path'),
+        expect.objectContaining({
+          method: 'POST',
+          body: formData,
+        }),
+      );
+    });
+
+    it('应该支持对象参数并透传 signal', async () => {
+      const abortController = HttpClient.createAbortController();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: null }),
+      });
+
+      await HttpClient.post({
+        path: 'test/path',
+        params: { name: 'test' },
+        signal: abortController.signal,
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          signal: abortController.signal,
+        }),
+      );
+    });
+
     it('应该包含 CSRF token 如果已设置', async () => {
       csrf.set('csrf-token-123');
       mockFetch.mockResolvedValueOnce({
@@ -203,6 +311,47 @@ describe('HttpClient', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('test/path/123'),
         expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+
+    it('应该支持对象参数并将 params 构建为查询参数', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: null }),
+      });
+
+      await HttpClient.del({
+        path: 'test/path',
+        params: { id: 123 },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('test/path?id=123'),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+  });
+
+  describe('put', () => {
+    it('应该支持对象参数并将 params 作为 JSON 请求体', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ code: '0000', message: 'success', data: null }),
+      });
+
+      await HttpClient.put({
+        path: 'test/path',
+        params: { name: 'updated' },
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('test/path'),
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ name: 'updated' }),
+        }),
       );
     });
   });

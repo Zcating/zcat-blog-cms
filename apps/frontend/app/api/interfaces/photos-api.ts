@@ -46,42 +46,48 @@ export namespace PhotosApi {
   export async function getPhotos(
     params?: GetPhotosParams,
   ): Promise<PaginateResult<Photo>> {
-    return HttpClient.get<PaginateResult<Photo>>('cms/photos', {
-      albumId: params?.albumId,
-      page: params?.page ?? 1,
-      pageSize: params?.pageSize ?? 20,
+    return HttpClient.get<PaginateResult<Photo>>({
+      path: 'cms/photos',
+      params: {
+        albumId: params?.albumId,
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? 20,
+      },
     });
   }
 
   export async function getEmptyAlbumPhotos(): Promise<Photo[]> {
-    return HttpClient.get<Photo[]>('cms/photos/empty-album');
+    return HttpClient.get<Photo[]>({ path: 'cms/photos/empty-album' });
   }
 
   export async function getPhoto(id: number): Promise<Photo> {
-    return HttpClient.get<Photo>(`cms/photos/detail?id=${id}`);
+    return HttpClient.get<Photo>({
+      path: 'cms/photos/detail',
+      params: { id },
+    });
   }
 
   export async function createPhoto(params: CreatePhotoParams): Promise<Photo> {
-    return HttpClient.post('cms/photos/create', params);
+    return HttpClient.post({ path: 'cms/photos/create', params });
   }
 
   export async function updatePhoto(params: UpdatePhotoParams): Promise<Photo> {
-    return HttpClient.post(`cms/photos/update`, params);
+    return HttpClient.post({ path: 'cms/photos/update', params });
   }
 
   export async function deletePhoto(id: number): Promise<void> {
-    return await HttpClient.del(`cms/photos/${id}`);
+    return await HttpClient.del({ path: `cms/photos/${id}` });
   }
 
   export async function createAlbumPhoto(
     params: PhotosApi.CreateAlbumPhotoParams,
   ): Promise<PhotosApi.Photo> {
-    return HttpClient.post('cms/photos/create/with-album', params);
+    return HttpClient.post({ path: 'cms/photos/create/with-album', params });
   }
 
   export async function updateAlbumPhoto(
     params: PhotosApi.UpdatePhotoParams,
   ): Promise<PhotosApi.Photo> {
-    return HttpClient.post(`cms/photos/update/with-album`, params);
+    return HttpClient.post({ path: 'cms/photos/update/with-album', params });
   }
 }

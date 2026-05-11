@@ -108,26 +108,23 @@ export namespace StatisticsApi {
   export type DetailData = StatisticsDetailData;
 
   export function getSummary(options?: { signal?: AbortSignal }) {
-    return HttpClient.get<StatisticsSummary>(
-      'cms/statistics/summary',
-      undefined,
-      options,
-    );
+    return HttpClient.get<StatisticsSummary>({
+      path: 'cms/statistics/summary',
+      signal: options?.signal,
+    });
   }
 
   export function getChartData(options?: { signal?: AbortSignal }) {
-    return HttpClient.get<StatisticsChartData[]>(
-      'cms/statistics/chart-data',
-      undefined,
-      options,
-    );
+    return HttpClient.get<StatisticsChartData[]>({
+      path: 'cms/statistics/chart-data',
+      signal: options?.signal,
+    });
   }
 
   export function getStatistics(options?: { signal?: AbortSignal }) {
-    return HttpClient.get<StatisticsDetailData[]>(
-      'cms/statistics/detail',
-      undefined,
-      options,
-    );
+    return HttpClient.get<StatisticsDetailData[]>({
+      path: 'cms/statistics/detail',
+      signal: options?.signal,
+    });
   }
 }

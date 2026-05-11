@@ -45,35 +45,38 @@ export namespace AlbumsApi {
   export async function getPhotoAlbums(
     params?: GetPhotoAlbumsParams,
   ): Promise<PaginateResult<PhotoAlbum>> {
-    return HttpClient.get('cms/photo-albums', params);
+    return HttpClient.get({ path: 'cms/photo-albums', params });
   }
 
   export async function getPhotoAlbum(id: number): Promise<PhotoAlbumDetail> {
-    const detail = await HttpClient.get<PhotoAlbumDetail>(
-      `cms/photo-albums/${id}`,
-    );
+    const detail = await HttpClient.get<PhotoAlbumDetail>({
+      path: `cms/photo-albums/${id}`,
+    });
     return detail;
   }
 
   export function createPhotoAlbum(
     params: CreatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return HttpClient.post('cms/photo-albums', params);
+    return HttpClient.post({ path: 'cms/photo-albums', params });
   }
 
   export function updatePhotoAlbum(
     params: UpdatePhotoAlbumParams,
   ): Promise<PhotoAlbum> {
-    return HttpClient.post('cms/photo-albums/update', {
-      id: params.id,
-      name: params.name,
-      description: params.description,
-      available: params.available,
+    return HttpClient.post({
+      path: 'cms/photo-albums/update',
+      params: {
+        id: params.id,
+        name: params.name,
+        description: params.description,
+        available: params.available,
+      },
     });
   }
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
-    return await HttpClient.del(`cms/photo-albums/${id}`);
+    return await HttpClient.del({ path: `cms/photo-albums/${id}` });
   }
 
   export interface SetPhotoAlbumCoverParams {
@@ -91,7 +94,7 @@ export namespace AlbumsApi {
   export async function setPhotoAlbumCover(
     params: SetPhotoAlbumCoverParams,
   ): Promise<void> {
-    return await HttpClient.post('cms/photo-albums/cover', params);
+    return await HttpClient.post({ path: 'cms/photo-albums/cover', params });
   }
 
   interface AddPhotosParams {
@@ -100,6 +103,9 @@ export namespace AlbumsApi {
   }
 
   export async function addPhotos(params: AddPhotosParams): Promise<void> {
-    return await HttpClient.post('cms/photo-albums/add-photos', params);
+    return await HttpClient.post({
+      path: 'cms/photo-albums/add-photos',
+      params,
+    });
   }
 }

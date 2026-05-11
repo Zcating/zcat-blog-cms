@@ -45,30 +45,36 @@ export namespace ArticlesApi {
   export async function getArticles(
     params: GetArticlesParams,
   ): Promise<PaginateResult<Article>> {
-    return await HttpClient.get('cms/articles', params);
+    return await HttpClient.get({ path: 'cms/articles', params });
   }
 
   export async function getArticle(id: number): Promise<Article> {
-    return await HttpClient.get(`cms/articles/detail`, { id });
+    return await HttpClient.get({
+      path: 'cms/articles/detail',
+      params: { id },
+    });
   }
 
   export async function createArticle(params: Article): Promise<Article> {
-    return await HttpClient.post('cms/articles/create', params);
+    return await HttpClient.post({ path: 'cms/articles/create', params });
   }
 
   export async function updateArticle(
     params: UpdateArticleParams,
   ): Promise<Article> {
-    return await HttpClient.post(`cms/articles/update`, params);
+    return await HttpClient.post({ path: 'cms/articles/update', params });
   }
 
   export async function deleteArticle(id: number): Promise<void> {
-    return await HttpClient.del(`cms/articles/${id}`);
+    return await HttpClient.del({ path: `cms/articles/${id}` });
   }
 
   export async function uploadArticleImages(
     images: string[],
   ): Promise<string[]> {
-    return await HttpClient.post('cms/articles/upload-images', { images });
+    return await HttpClient.post({
+      path: 'cms/articles/upload-images',
+      params: { images },
+    });
   }
 }

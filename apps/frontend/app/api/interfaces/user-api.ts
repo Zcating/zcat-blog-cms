@@ -18,7 +18,7 @@ export namespace UserApi {
   }
 
   export async function userInfo(): Promise<UserInfo> {
-    const result = await HttpClient.get('cms/user-info');
+    const result = await HttpClient.get({ path: 'cms/user-info' });
     return {
       name: result.name,
       contact: safeParseJson<Contact>(result.contact, {
@@ -35,13 +35,13 @@ export namespace UserApi {
   export type UpdateUserInfoParams = Partial<UserInfo>;
 
   export async function updateUserInfo(data: UpdateUserInfoParams) {
-    const result = await HttpClient.post<Record<string, string>>(
-      'cms/user-info/update',
-      {
+    const result = await HttpClient.post<Record<string, string>>({
+      path: 'cms/user-info/update',
+      params: {
         ...data,
         contact: JSON.stringify(data.contact),
       },
-    );
+    });
 
     return {
       name: result.name,

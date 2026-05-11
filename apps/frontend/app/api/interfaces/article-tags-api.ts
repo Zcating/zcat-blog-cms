@@ -20,27 +20,27 @@ export namespace ArticleTagsApi {
 
   // ArticleTag API functions
   export async function getArticleTags(): Promise<ArticleTag[]> {
-    return await HttpClient.get('cms/article-tags');
+    return await HttpClient.get({ path: 'cms/article-tags' });
   }
 
   export async function getArticleTag(id: number): Promise<ArticleTag> {
-    return await HttpClient.get(`cms/article-tags/${id}`);
+    return await HttpClient.get({ path: `cms/article-tags/${id}` });
   }
 
   export async function createArticleTag(
     params: CreateArticleTagParams,
   ): Promise<ArticleTag> {
-    return await HttpClient.post('cms/article-tags', params);
+    return await HttpClient.post({ path: 'cms/article-tags', params });
   }
 
   export async function updateArticleTag(
     id: number,
     params: UpdateArticleTagParams,
   ): Promise<ArticleTag> {
-    return await HttpClient.put(`cms/article-tags/${id}`, params);
+    return await HttpClient.put({ path: `cms/article-tags/${id}`, params });
   }
 
   export async function deleteArticleTag(id: number): Promise<void> {
-    return await HttpClient.del(`cms/article-tags/${id}`);
+    return await HttpClient.del({ path: `cms/article-tags/${id}` });
   }
 }

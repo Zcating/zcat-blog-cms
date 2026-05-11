@@ -36,6 +36,17 @@ export namespace HttpClient {
     data: T;
   }
 
+  type Params = Record<string, any>;
+  type BodyParams = Params | FormData;
+
+  interface RequestOptions<TParams = Params> {
+    path: string;
+    params?: TParams;
+    signal?: AbortSignal;
+  }
+
+  type RequestSignalOptions = Pick<RequestOptions, 'signal'>;
+
   export function saveToken(token: string) {
     Cookies.set('token', `Bearer ${token}`);
   }
@@ -93,6 +104,28 @@ export namespace HttpClient {
     return `${API_URL}/${path}`;
   }
 
+  function isRequestOptions<TParams>(
+    value: string | RequestOptions<TParams>,
+  ): value is RequestOptions<TParams> {
+    return typeof value !== 'string';
+  }
+
+  function normalizeRequestOptions<TParams>(
+    pathOrOptions: string | RequestOptions<TParams>,
+    params?: TParams,
+    options: RequestSignalOptions = {},
+  ): RequestOptions<TParams> {
+    if (isRequestOptions(pathOrOptions)) {
+      return pathOrOptions;
+    }
+
+    return {
+      path: pathOrOptions,
+      params,
+      signal: options.signal,
+    };
+  }
+
   async function fetchWithRetry(
     input: string | URL | Request,
     init?: RequestInit & { retryOptions?: RetryOptions },
@@ -122,82 +155,116 @@ export namespace HttpClient {
     throw lastError || new Error('Request failed');
   }
 
-  export async function post<T = Record<string, any>>(
+  export function post<T = Record<string, any>>(
+    options: RequestOptions<BodyParams>,
+  ): Promise<T>;
+  export function post<T = Record<string, any>>(
     path: string,
-    body: Record<string, any> | FormData,
-    options: { signal?: AbortSignal } = {},
+    params: BodyParams,
+    options?: RequestSignalOptions,
+  ): Promise<T>;
+  export async function post<T = Record<string, any>>(
+    pathOrOptions: string | RequestOptions<BodyParams>,
+    params?: BodyParams,
+    options: RequestSignalOptions = {},
   ): Promise<T> {
-    log('POST request', path, body);
+    const request = normalizeRequestOptions(pathOrOptions, params, options);
+    log('POST request', request.path, request.params);
     const headers: Record<string, string> = {
       ...getAuthHeaders(),
       ...getCsrfHeader(),
     };
     let bodyData: string | FormData;
-    if (body instanceof FormData) {
-      bodyData = body;
+    if (request.params instanceof FormData) {
+      bodyData = request.params;
     } else {
-      bodyData = JSON.stringify(body);
+      bodyData = JSON.stringify(request.params);
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetchWithRetry(resolveApiUrl(path), {
+    const response = await fetchWithRetry(resolveApiUrl(request.path), {
       method: 'POST',
       body: bodyData,
       headers: headers,
-      signal: options.signal,
+      signal: request.signal,
     });
     const result = await handleResponse<T>(response);
-    log('POST response', path, result);
+    log('POST response', request.path, result);
     return result;
   }
 
-  export async function get<T = Record<string, string>>(
+  export function get<T = Record<string, string>>(
+    options: RequestOptions<Params>,
+  ): Promise<T>;
+  export function get<T = Record<string, string>>(
     path: string,
-    body?: Record<string, any>,
-    options: { signal?: AbortSignal } = {},
+    params?: Params,
+    options?: RequestSignalOptions,
+  ): Promise<T>;
+  export async function get<T = Record<string, string>>(
+    pathOrOptions: string | RequestOptions<Params>,
+    params?: Params,
+    options: RequestSignalOptions = {},
   ): Promise<T> {
-    const queryPath = createQueryPath(path, body);
+    const request = normalizeRequestOptions(pathOrOptions, params, options);
+    const queryPath = createQueryPath(request.path, request.params);
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'GET',
       headers: getAuthHeaders(),
-      signal: options.signal,
+      signal: request.signal,
     });
     return handleResponse<T>(response);
   }
 
-  export async function put<T = Record<string, any>>(
+  export function put<T = Record<string, any>>(
+    options: RequestOptions<Params>,
+  ): Promise<T>;
+  export function put<T = Record<string, any>>(
     path: string,
-    body: Record<string, any>,
-    options: { signal?: AbortSignal } = {},
+    params: Params,
+    options?: RequestSignalOptions,
+  ): Promise<T>;
+  export async function put<T = Record<string, any>>(
+    pathOrOptions: string | RequestOptions<Params>,
+    params?: Params,
+    options: RequestSignalOptions = {},
   ): Promise<T> {
-    const response = await fetchWithRetry(resolveApiUrl(path), {
+    const request = normalizeRequestOptions(pathOrOptions, params, options);
+    const response = await fetchWithRetry(resolveApiUrl(request.path), {
       method: 'PUT',
-      body: JSON.stringify(body),
+      body: JSON.stringify(request.params),
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
         ...getCsrfHeader(),
       },
-      signal: options.signal,
+      signal: request.signal,
     });
     return handleResponse<T>(response);
   }
 
-  export async function del<T = Record<string, any>>(
+  export function del<T = Record<string, any>>(
+    options: RequestOptions<Params>,
+  ): Promise<T>;
+  export function del<T = Record<string, any>>(
     path: string,
-    body?: Record<string, any>,
-    options: { signal?: AbortSignal } = {},
+    params?: Params,
+    options?: RequestSignalOptions,
+  ): Promise<T>;
+  export async function del<T = Record<string, any>>(
+    pathOrOptions: string | RequestOptions<Params>,
+    params?: Params,
+    options: RequestSignalOptions = {},
   ): Promise<T> {
-    const queryPath = body
-      ? `${path}?${new URLSearchParams(body as Record<string, string>).toString()}`
-      : path;
+    const request = normalizeRequestOptions(pathOrOptions, params, options);
+    const queryPath = createQueryPath(request.path, request.params);
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
         ...getCsrfHeader(),
       },
-      signal: options.signal,
+      signal: request.signal,
     });
     return handleResponse<T>(response);
   }

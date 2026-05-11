@@ -1,8 +1,8 @@
-export function createQueryPath(path: string, body?: Record<string, string>) {
-  if (!body) {
+export function createQueryPath(path: string, params?: Record<string, any>) {
+  if (!params) {
     return path;
   }
-  const query = Object.entries(body).reduce<Record<string, any>>(
+  const query = Object.entries(params).reduce<Record<string, any>>(
     (acc, [key, value]) => {
       if (value !== undefined && value !== null) {
         acc[key] = value;
