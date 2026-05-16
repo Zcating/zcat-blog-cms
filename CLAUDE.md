@@ -1,105 +1,65 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+行为指南，用于减少常见的 LLM 编码错误。根据需要与项目特定说明合并使用。
 
-## Project Overview
+**权衡取舍：** 这些指南倾向于谨慎而非速度。对于简单任务，请自行判断。
 
-ZCAT BLOG CMS — a full-stack blog content management system. pnpm monorepo with three apps and two packages.
+## 1. 编码前先思考
 
-## Commands
+**不要假设。不要隐藏困惑。要呈现权衡利弊。**
 
-```bash
-# Root-level (run on all workspace packages)
-pnpm run dev              # Start all dev servers
-pnpm run build            # Build all packages
-pnpm run typecheck        # Type-check all packages
-pnpm run lint             # Lint all packages
+在实现之前：
+- 明确陈述你的假设。如果不确定，就提问。
+- 如果存在多种理解方式，要呈现出来——不要默默选择。
+- 如果存在更简单的方案，请指出。在有充分理由时，敢于反驳。
+- 如果有不清楚的地方，停下来。说出哪里让你困惑，然后提问。
 
-# Per-package (replace <name> with: backend, frontend, blog, ui, doc)
-pnpm --filter=<name> run dev
-pnpm --filter=<name> run build
-pnpm --filter=<name> run typecheck
-pnpm --filter=<name> run lint
+## 2. 简洁至上
 
-# Backend-specific
-pnpm --filter=backend run test         # Unit tests (vitest)
-pnpm --filter=backend run test:e2e     # E2E tests (jest)
-pnpm --filter=backend run db:generate  # Regenerate Prisma client
+**用最少的代码解决问题。不写投机性的代码。**
 
-# Docker (local dev)
-pnpm run docker:dev:db       # Start PostgreSQL only
-pnpm run docker:dev          # Start all services (db + backend + frontend + blog)
+- 不添加需求之外的功能。
+- 不为一次性使用的代码创建抽象。
+- 不添加未请求的"灵活性"或"可配置性"。
+- 不处理不可能发生的场景的错误。
+- 如果你写了 200 行代码但本可以 50 行完成，那就重写。
+
+问问自己："资深工程师会说这过于复杂吗？"如果是，请简化。
+
+## 3. 精准修改
+
+**只触碰必须改动的部分。只清理自己造成的混乱。**
+
+编辑现有代码时：
+- 不要"改进"相邻的代码、注释或格式。
+- 不要重构没有问题的部分。
+- 匹配现有风格，即使你可能会用不同的方式实现。
+- 如果注意到无关的死代码，提出来——但不要删除它。
+
+当你的改动产生孤立代码时：
+- 删除因你的改动而不再使用的 import/变量/函数。
+- 不要删除已有的死代码，除非被要求。
+
+检验标准：每一行改动的代码都应该能直接追溯到用户的请求。
+
+## 4. 目标驱动执行
+
+**定义成功标准。循环验证直到完成。**
+
+将任务转化为可验证的目标：
+- "添加验证" → "为无效输入编写测试，然后让它们通过"
+- "修复 bug" → "编写能复现它的测试，然后让测试通过"
+- "重构 X" → "确保重构前后的测试都能通过"
+
+对于多步骤任务，简要说明计划：
+```
+1. [步骤] → 验证: [检查项]
+2. [步骤] → 验证: [检查项]
+3. [步骤] → 验证: [检查项]
 ```
 
-## Architecture
+明确的成功标准让你能够独立循环验证。模糊的标准（"让它能工作"）则需要不断确认。
 
-```
-zcat-blog-cms/
-├── apps/
-│   ├── backend/          # NestJS REST API (port 9090)
-│   ├── frontend/         # CMS admin panel — React Router 7 framework (port 3000)
-│   └── blog/             # Public blog site — React Router 7 framework (port 1024)
-├── packages/
-│   ├── ui/               # @zcat/ui — shared React component library (Tailwind CSS)
-│   └── doc/              # Component library documentation site
-```
+---
 
-### Backend (`apps/backend`)
-
-- **Framework**: NestJS with Zod validation (nestjs-zod), NOT class-validator
-- **ORM**: Prisma 7 with PostgreSQL (`prisma/schema.prisma`), output to `generated/prisma/`
-- **Path aliases** (defined in `tsconfig.json`):
-  - `@backend/*` → `src/*`
-  - `@backend/prisma` → `generated/prisma/client`
-- **Source structure**: `src/features/{cms,public}/` — feature-based with controller + service + schema per domain
-  - `src/features/cms/` — authenticated CMS APIs: article, article-tag, auth, photo, photo-album, statistics, system-setting, user-info
-  - `src/features/public/` — public APIs: blog (visitor stats)
-  - `src/common/` — shared services: PrismaService, OSS, exception filter
-  - `src/model/` — ResultData wrapper, pagination schemas
-  - `src/utils/` — hash, paginate, type helpers
-- **Pattern**: Controller → Service → PrismaService. Controllers use Zod DTOs (via `createZodDto()`), wrap responses in `createResult()`, and log key operations. Swagger decorators on all endpoints.
-- **Auth**: Passport JWT strategy, `CmsJwtAuthGuard` protects CMS routes
-- **Tests**: Vitest for unit tests (`*.spec.ts` alongside source), Jest for e2e
-
-### Frontend (`apps/frontend`) — CMS Admin
-
-- React Router 7 framework mode (SSR-capable)
-- Ant Design + Tailwind CSS v4 + `@zcat/ui`
-- **BFF proxy**: `routes/api-bff.$.ts` proxies all `/api/bff/*` requests to the NestJS backend, stripping hop-by-hop headers
-- Global error/unauth handling via `HttpClient` subscriptions in `root.tsx`
-- State management: Jotai
-
-### Blog (`apps/blog`) — Public Site
-
-- React Router 7 framework mode (SSR-capable)
-- Tailwind CSS v4 + `@zcat/ui`
-- Routes: home, post-board with detail pages, about, gallery, ai-chat, toolbox (10+ utilities)
-- State management: Zustand
-
-### Shared UI (`packages/ui`)
-
-- Built with tsup, consumed as `@zcat/ui` workspace dependency
-- Tailwind CSS v4, exports components from `src/index.ts`
-
-## Conventions
-
-- **File naming**: kebab-case enforced by `eslint-plugin-check-file` (both folder and file names)
-- **Import order**: enforced by `eslint-plugin-import` — builtin → external → internal → parent → sibling → index, alphabetical
-- **Pre-commit**: lint-staged runs ESLint --fix on staged files per package
-- **Node**: >=22.4.0, **pnpm**: >=10.5.1
-
-## Environment & Database
-
-- Local PostgreSQL via Docker: `docker compose -f docker-compose.dev.yaml up -d cms_pg`
-- Backend env files (in priority order): `.env` → `.env.local` → `.env.{NODE_ENV}`
-- Root `.env.deploy` / `.env.deploy.dev` for Docker deployments
-- Prisma config in `prisma.config.ts` reads `DATABASE_URL` from environment
-
-## Per-Project Agent Docs
-
-Each sub-project has its own `AGENTS.md` with detailed conventions:
-- `apps/backend/AGENTS.md` — NestJS/Prisma constraints, testing requirements
-- `apps/frontend/AGENTS.md` — Admin UI patterns, form validation, Playwright E2E
-- `apps/blog/AGENTS.md` — Blog SSR/UX requirements, Playwright E2E
-- `packages/ui/AGENTS.md` — Component API design, accessibility
-- `packages/doc/AGENTS.md` — Documentation quality standards
+**这些指南是否有效，可以通过以下标准判断：** diff 中不必要的改动减少了，因过度复杂而返工的情况减少了，澄清性问题出现在实现之前而不是出错之后。

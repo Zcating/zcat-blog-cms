@@ -1,32 +1,51 @@
 # AGENTS.md
 
-本文档定义了 AI AGENT 在本项目中必须遵循的工作规范。
+本文档定义 AI AGENT 在本仓库中的仓库级协作规范。
 所有任务请求都会隐式应用这些规则。
 
-## 强制规则【必须遵循】
+## 作用范围
+
+- 适用于整个仓库
+- 本文件是仓库级总入口规范
+- 进入具体子项目前，先读取本文件
+- 涉及具体业务目录时，必须继续加载对应子项目的 `AGENTS.md`
+- 涉及跨项目改动时，必须同时检查所有相关子项目规范
+
+## 仓库说明
+
+本项目使用 monorepo 架构，每个子项目都是一个独立的 npm 包，并维护各自的 `package.json`。
+
+## 强制规则
 
 1. 文件命名规则：烤肉串命名法（kebab-case）
-2. 先规划，确认后再行动，使用 planning-with-files 时，把plan 放入 `docs/planning/{plan-title}` 中。
-3. 测试文件应与被测文件同级存放
-4. 所有代码修改必须遵循 TDD（Test-Driven Development）：先编写测试，再实现功能
-5. 不确定的内容，请使用具体的 web-search 工具
+2. 先规划，确认后再行动。
+3. 测试文件应与被测文件同级存放。
+4. 不确定的内容，请使用具体的 web-search 工具。
 
+## 执行原则
 
+- 开始任务时，先判断改动发生在哪个子项目，再加载对应的 `AGENTS.md`
+- 如果需求涉及组件相关内容，优先查阅 `packages/ui/src`，确认组件是否已经实现
+- 非必要不要扩大修改范围，优先在目标子项目内完成闭环
+- 完成修改后，需要检查相关功能是否正常工作，包括样式、交互等方面
+- 如果组件存在问题，需要及时反馈并修复
 
 ## 项目指南
 
-以下是项目简称对应的目录
+以下是项目简称对应的目录：
 
-- 博客: apps/blog
-- 服务端: apps/backend
-- 管理后台: apps/frontend
-- 组件库: packages/ui
-- 组件库文档: packages/doc
+- 博客：`apps/blog`
+- 服务端：`apps/backend`
+- 管理后台：`apps/frontend`
+- 组件库：`packages/ui`
+- 组件库文档：`packages/doc`
 
-执行对应项目的需求，请加载具体项目的 AGENTS.md
+## 子项目规范入口
 
-- 博客: apps/blog/AGENTS.md
-- 服务端: apps/backend/AGENTS.md
-- 管理后台: apps/frontend/AGENTS.md
-- 组件库: packages/ui/AGENTS.md
-- 组件库文档: packages/doc/AGENTS.md
+执行对应项目的需求时，请继续加载以下文件：
+
+- 博客：`apps/blog/AGENTS.md`
+- 服务端：`apps/backend/AGENTS.md`
+- 管理后台：`apps/frontend/AGENTS.md`
+- 组件库：`packages/ui/AGENTS.md`
+- 组件库文档：`packages/doc/AGENTS.md`
