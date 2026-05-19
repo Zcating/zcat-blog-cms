@@ -93,9 +93,20 @@ export function deleteById(id: string) {
 }
 
 export async function setCover(albumId: number, photoId: number) {
-  await prismaService.photoAlbum.update({
-    where: { id: albumId },
-    data: { coverId: photoId },
+  await prismaService.$transaction(async (tx) => {
+    const photo = await tx.photo.findUnique({
+      where: { id: photoId },
+      select: { albumId: true },
+    });
+
+    if (!photo || photo.albumId !== albumId) {
+      throw new Error('封面照片必须属于当前相册');
+    }
+
+    await tx.photoAlbum.update({
+      where: { id: albumId },
+      data: { coverId: photoId },
+    });
   });
 }
 

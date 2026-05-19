@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const mockPrisma = vi.hoisted(() => ({
+  $transaction: vi.fn(),
   photo: {
     findMany: vi.fn(),
     count: vi.fn(),
@@ -11,6 +12,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
   photoAlbum: {
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
 }));
 
@@ -19,7 +21,11 @@ const mockOssService = vi.hoisted(() => ({
   deleteFile: vi.fn(),
 }));
 
-vi.mock('../../../services', () => ({
+mockPrisma.$transaction.mockImplementation(async (callback) =>
+  callback(mockPrisma),
+);
+
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
   ossService: mockOssService,
 }));
@@ -185,6 +191,10 @@ describe('photoService', () => {
 
   describe('updateWithAlbum', () => {
     it('updates album cover when isCover is true', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 1,
+        albumId: 1,
+      });
       mockPrisma.photoAlbum.update.mockResolvedValue({ id: 1 });
       mockPrisma.photo.update.mockResolvedValue({
         id: 1,
@@ -206,6 +216,10 @@ describe('photoService', () => {
     });
 
     it('skips cover update when isCover is not set', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 1,
+        albumId: 1,
+      });
       mockPrisma.photo.update.mockResolvedValue({
         id: 1,
         name: 'P',
@@ -216,6 +230,28 @@ describe('photoService', () => {
       await photoService.updateWithAlbum(1, 1, { name: 'P' });
 
       expect(mockPrisma.photoAlbum.update).not.toHaveBeenCalled();
+    });
+
+    it('clears old album cover when moving a cover photo to another album', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 1,
+        albumId: 1,
+        url: 'u',
+        thumbnailUrl: 't',
+      });
+      mockPrisma.photo.update.mockResolvedValue({
+        id: 1,
+        name: 'Moved',
+        url: 'u',
+        thumbnailUrl: 't',
+      });
+
+      await photoService.updateWithAlbum(1, 2, { name: 'Moved' });
+
+      expect(mockPrisma.photoAlbum.updateMany).toHaveBeenCalledWith({
+        where: { coverId: 1, id: { not: 2 } },
+        data: { coverId: null },
+      });
     });
   });
 
@@ -232,6 +268,22 @@ describe('photoService', () => {
 
       expect(result).toBe(true);
       expect(mockOssService.deleteFile).toHaveBeenCalledTimes(2);
+    });
+
+    it('clears cover references before deleting a photo', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 1,
+        url: 'u',
+        thumbnailUrl: 't',
+      });
+      mockPrisma.photo.delete.mockResolvedValue({ id: 1 });
+
+      await photoService.delete(1);
+
+      expect(mockPrisma.photoAlbum.updateMany).toHaveBeenCalledWith({
+        where: { coverId: 1 },
+        data: { coverId: null },
+      });
     });
 
     it('returns false when photo not found', async () => {

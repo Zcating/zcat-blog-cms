@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const mockPrisma = vi.hoisted(() => ({
+  $transaction: vi.fn(),
   photoAlbum: {
     findMany: vi.fn(),
     count: vi.fn(),
@@ -11,6 +12,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
   photo: {
     findMany: vi.fn(),
+    findUnique: vi.fn(),
     updateMany: vi.fn(),
   },
 }));
@@ -19,7 +21,11 @@ const mockOssService = vi.hoisted(() => ({
   getPrivateUrl: vi.fn((url: string) => `private-${url}`),
 }));
 
-vi.mock('../../../services', () => ({
+mockPrisma.$transaction.mockImplementation(async (callback) =>
+  callback(mockPrisma),
+);
+
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
   ossService: mockOssService,
 }));
@@ -148,12 +154,29 @@ describe('photoAlbumService', () => {
 
   describe('setCover', () => {
     it('sets album cover photo', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 5,
+        albumId: 1,
+      });
+
       await photoAlbumService.setCover(1, 5);
 
       expect(mockPrisma.photoAlbum.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { coverId: 5 },
       });
+    });
+
+    it('rejects cover photo that does not belong to the album', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue({
+        id: 5,
+        albumId: 2,
+      });
+
+      await expect(photoAlbumService.setCover(1, 5)).rejects.toThrow(
+        '封面照片必须属于当前相册',
+      );
+      expect(mockPrisma.photoAlbum.update).not.toHaveBeenCalled();
     });
   });
 

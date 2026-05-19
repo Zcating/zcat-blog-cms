@@ -121,21 +121,40 @@ export async function updateWithAlbum(
     isCover?: boolean;
   },
 ) {
-  if (data.isCover) {
-    await prismaService.photoAlbum.update({
-      where: { id: albumId },
-      data: { coverId: id },
+  const updatedPhoto = await prismaService.$transaction(async (tx) => {
+    const existingPhoto = await tx.photo.findUnique({
+      where: { id },
+      select: { albumId: true },
     });
-  }
 
-  const updatedPhoto = await prismaService.photo.update({
-    where: { id },
-    data: {
-      name: data.name,
-      url: data.url,
-      thumbnailUrl: data.thumbnailUrl,
-      albumId,
-    },
+    if (existingPhoto && existingPhoto.albumId !== albumId) {
+      await tx.photoAlbum.updateMany({
+        where: {
+          coverId: id,
+          id: { not: albumId },
+        },
+        data: { coverId: null },
+      });
+    }
+
+    const photo = await tx.photo.update({
+      where: { id },
+      data: {
+        name: data.name,
+        url: data.url,
+        thumbnailUrl: data.thumbnailUrl,
+        albumId,
+      },
+    });
+
+    if (data.isCover) {
+      await tx.photoAlbum.update({
+        where: { id: albumId },
+        data: { coverId: id },
+      });
+    }
+
+    return photo;
   });
 
   return {
@@ -146,8 +165,25 @@ export async function updateWithAlbum(
 }
 
 export async function deleteById(id: number) {
-  const photo = await prismaService.photo.findUnique({
-    where: { id },
+  const photo = await prismaService.$transaction(async (tx) => {
+    const existingPhoto = await tx.photo.findUnique({
+      where: { id },
+    });
+
+    if (!existingPhoto) {
+      return null;
+    }
+
+    await tx.photoAlbum.updateMany({
+      where: { coverId: id },
+      data: { coverId: null },
+    });
+
+    await tx.photo.delete({
+      where: { id },
+    });
+
+    return existingPhoto;
   });
 
   if (!photo) {
@@ -158,10 +194,6 @@ export async function deleteById(id: number) {
     ossService.deleteFile(photo.url),
     ossService.deleteFile(photo.thumbnailUrl),
   ]);
-
-  await prismaService.photo.delete({
-    where: { id },
-  });
 
   return true;
 }
