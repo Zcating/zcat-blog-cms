@@ -20,6 +20,13 @@ interface ZViewProps {
   className?: string;
 }
 
+interface CardProps {
+  children?: React.ReactNode;
+  className?: string;
+  onMouseOver?: () => void;
+  onMouseLeave?: () => void;
+}
+
 interface PaginationWorkspaceProps {
   title: string;
   children?: React.ReactNode;
@@ -37,6 +44,21 @@ vi.mock('@zcat/ui', () => ({
   ZButton: ({ children, onClick }: ButtonProps) => (
     <button onClick={onClick}>{children}</button>
   ),
+  Card: ({ children, className, onMouseOver, onMouseLeave }: CardProps) => (
+    <div
+      className={className}
+      onMouseOver={onMouseOver}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, className }: ZViewProps) => (
+    <div className={className}>{children}</div>
+  ),
+  CardTitle: ({ children, className }: ZViewProps) => (
+    <div className={className}>{children}</div>
+  ),
   ZDialog: { confirm: vi.fn() },
   ZGrid: <T,>({ items, renderItem, columnClassName }: ZGridProps<T>) => (
     <div data-testid="ZGrid" data-column-class={columnClassName}>
@@ -50,6 +72,7 @@ vi.mock('@zcat/ui', () => ({
   ZView: ({ children, className }: ZViewProps) => (
     <div className={className}>{children}</div>
   ),
+  ZImagePreload: ({ alt }: { alt: string }) => <img alt={alt} />,
   safeNumber: (v: unknown, d: number) => {
     const n = Number(v);
     return Number.isNaN(n) ? d : n;
