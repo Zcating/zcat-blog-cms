@@ -12,6 +12,8 @@
     "typecheck": "react-router typegen && tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0 --fix"
   },
   "files": [
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@react-router/dev": "^7.9.1",
     "@tailwindcss/vite": "^4.1.4",
+    "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
