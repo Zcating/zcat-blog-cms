@@ -6,8 +6,13 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd()) as ImportMetaEnv;
   return {
-    plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+    plugins: [
+      tailwindcss(),
+      ...(mode === 'test' ? [] : [reactRouter()]),
+      tsconfigPaths(),
+    ],
     server: {
+      host: '127.0.0.1',
       port: Number(env.VITE_PORT),
       proxy: {
         '/api': {
@@ -23,6 +28,12 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: ['@originjs/crypto-js-wasm'],
+    },
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./vitest.setup.ts'],
+      include: ['app/**/*.{test,spec}.{ts,tsx}'],
+      globals: true,
     },
     ssr: {
       external: [

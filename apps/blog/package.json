@@ -11,6 +11,10 @@
     "start": "PORT=1024 react-router-serve ./build/server/index.js",
     "pretypecheck": "pnpm --filter=@zcat/ui run build",
     "typecheck": "react-router typegen && tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "eslint --ext .ts,.tsx ./app --max-warnings 0 --fix"
   },
   "files": [
@@ -58,15 +62,22 @@
     "@react-router/dev": "^7.9.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^25.0.5",
+    "@playwright/test": "^1.52.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitest/ui": "4.1.3",
+    "jsdom": "^27.4.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4.1.4",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.18"
   }
 }
