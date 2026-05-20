@@ -12,13 +12,10 @@ const mockOss = vi.hoisted(() => ({
   getPrivateUrl: vi.fn((url: string) => url || ''),
 }));
 
-vi.mock('../../../services', () => ({
-  prismaService: mockPrisma,
-  ossService: mockOss,
-}));
-
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
 vi.mock('@backend/common', () => ({
+  prismaService: mockPrisma,
+  ossService: mockOss,
   recordVisitor: mockRecordVisitor,
 }));
 
@@ -38,13 +35,13 @@ describe('blogRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /blog/article/list', () => {
+  describe('GET /article/list', () => {
     it('returns article list', async () => {
       mockPrisma.article.findMany.mockResolvedValue([]);
       mockPrisma.article.count.mockResolvedValue(0);
       const app = createApp();
 
-      const res = await app.request('/blog/article/list');
+      const res = await app.request('/article/list');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -54,14 +51,14 @@ describe('blogRoutes', () => {
       mockPrisma.article.findMany.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/blog/article/list');
+      const res = await app.request('/article/list');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('GET /blog/article/:id', () => {
+  describe('GET /article/:id', () => {
     it('returns article detail', async () => {
       mockPrisma.article.findUnique.mockResolvedValue({
         id: 1,
@@ -69,7 +66,7 @@ describe('blogRoutes', () => {
       });
       const app = createApp();
 
-      const res = await app.request('/blog/article/1');
+      const res = await app.request('/article/1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -78,7 +75,7 @@ describe('blogRoutes', () => {
     it('returns error when id is invalid', async () => {
       const app = createApp();
 
-      const res = await app.request('/blog/article/0');
+      const res = await app.request('/article/0');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0003');
@@ -88,7 +85,7 @@ describe('blogRoutes', () => {
       mockPrisma.article.findUnique.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/blog/article/1');
+      const res = await app.request('/article/1');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0003');
@@ -98,19 +95,19 @@ describe('blogRoutes', () => {
       mockPrisma.article.findUnique.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/blog/article/1');
+      const res = await app.request('/article/1');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('GET /blog/gallery', () => {
+  describe('GET /gallery', () => {
     it('returns gallery list', async () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue([]);
       const app = createApp();
 
-      const res = await app.request('/blog/gallery');
+      const res = await app.request('/gallery');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -135,7 +132,7 @@ describe('blogRoutes', () => {
       );
       const app = createApp();
 
-      const res = await app.request('/blog/gallery');
+      const res = await app.request('/gallery');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -146,14 +143,14 @@ describe('blogRoutes', () => {
       mockPrisma.photoAlbum.findMany.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/blog/gallery');
+      const res = await app.request('/gallery');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('GET /blog/gallery/:id', () => {
+  describe('GET /gallery/:id', () => {
     it('returns gallery detail', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue({
         id: 1,
@@ -166,7 +163,7 @@ describe('blogRoutes', () => {
       mockPrisma.photo.findMany.mockResolvedValue([]);
       const app = createApp();
 
-      const res = await app.request('/blog/gallery/1');
+      const res = await app.request('/gallery/1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -187,7 +184,7 @@ describe('blogRoutes', () => {
       ]);
       const app = createApp();
 
-      const res = await app.request('/blog/gallery/1');
+      const res = await app.request('/gallery/1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -199,7 +196,7 @@ describe('blogRoutes', () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/blog/gallery/999');
+      const res = await app.request('/gallery/999');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -210,19 +207,19 @@ describe('blogRoutes', () => {
       mockPrisma.photoAlbum.findUnique.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/blog/gallery/999');
+      const res = await app.request('/gallery/999');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
     });
   });
 
-  describe('POST /blog/visitor', () => {
+  describe('POST /visitor', () => {
     it('records visitor', async () => {
       mockRecordVisitor.mockResolvedValue(undefined);
       const app = createApp();
 
-      const res = await app.request('/blog/visitor', {
+      const res = await app.request('/visitor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pagePath: '/test' }),
@@ -236,7 +233,7 @@ describe('blogRoutes', () => {
       mockRecordVisitor.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/blog/visitor', {
+      const res = await app.request('/visitor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pagePath: '/test' }),
@@ -247,7 +244,7 @@ describe('blogRoutes', () => {
     });
   });
 
-  describe('GET /blog/user-info', () => {
+  describe('GET /user-info', () => {
     it('returns user info', async () => {
       const userInfo = {
         name: 'Admin',
@@ -262,7 +259,7 @@ describe('blogRoutes', () => {
       mockPrisma.userInfo.findUnique.mockResolvedValue(userInfo);
       const app = createApp();
 
-      const res = await app.request('/blog/user-info');
+      const res = await app.request('/user-info');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -273,7 +270,7 @@ describe('blogRoutes', () => {
       mockPrisma.userInfo.findUnique.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/blog/user-info');
+      const res = await app.request('/user-info');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
@@ -284,7 +281,7 @@ describe('blogRoutes', () => {
       mockPrisma.userInfo.findUnique.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/blog/user-info');
+      const res = await app.request('/user-info');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');

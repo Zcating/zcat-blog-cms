@@ -24,12 +24,12 @@ describe('authRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('POST /auth/login', () => {
+  describe('POST /login', () => {
     it('returns 200 with accessToken on successful login', async () => {
       mockAuthService.login.mockResolvedValue({ accessToken: 'token123' });
       const app = createApp();
 
-      const res = await app.request('/auth/login', {
+      const res = await app.request('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: 'admin', password: 'pass' }),
@@ -45,7 +45,7 @@ describe('authRoutes', () => {
       mockAuthService.login.mockResolvedValue(null);
       const app = createApp();
 
-      const res = await app.request('/auth/login', {
+      const res = await app.request('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: 'bad', password: 'wrong' }),
@@ -60,7 +60,7 @@ describe('authRoutes', () => {
       mockAuthService.login.mockRejectedValue(new Error('db error'));
       const app = createApp();
 
-      const res = await app.request('/auth/login', {
+      const res = await app.request('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: 'admin', password: 'pass' }),
@@ -71,7 +71,7 @@ describe('authRoutes', () => {
     });
   });
 
-  describe('POST /auth/register', () => {
+  describe('POST /register', () => {
     it('registers successfully', async () => {
       mockAuthService.register.mockResolvedValue({
         code: 'SUCCESS',
@@ -79,7 +79,7 @@ describe('authRoutes', () => {
       });
       const app = createApp();
 
-      const res = await app.request('/auth/register', {
+      const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -98,7 +98,7 @@ describe('authRoutes', () => {
       mockAuthService.register.mockResolvedValue({ code: 'REGISTER_LIMIT' });
       const app = createApp();
 
-      const res = await app.request('/auth/register', {
+      const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,7 +116,7 @@ describe('authRoutes', () => {
       mockAuthService.register.mockResolvedValue({ code: 'USER_EXISTS' });
       const app = createApp();
 
-      const res = await app.request('/auth/register', {
+      const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,7 +135,7 @@ describe('authRoutes', () => {
       mockAuthService.register.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
-      const res = await app.request('/auth/register', {
+      const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,12 +150,12 @@ describe('authRoutes', () => {
     });
   });
 
-  describe('POST /auth/logout', () => {
+  describe('POST /logout', () => {
     it('returns success when valid Authorization header', async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
       const app = createApp();
 
-      const res = await app.request('/auth/logout', {
+      const res = await app.request('/logout', {
         method: 'POST',
         headers: { Authorization: 'Bearer some-token' },
       });
@@ -169,7 +169,7 @@ describe('authRoutes', () => {
     it('returns success even without Authorization header', async () => {
       const app = createApp();
 
-      const res = await app.request('/auth/logout', { method: 'POST' });
+      const res = await app.request('/logout', { method: 'POST' });
 
       expect(res.status).toBe(200);
       const body = await res.json();

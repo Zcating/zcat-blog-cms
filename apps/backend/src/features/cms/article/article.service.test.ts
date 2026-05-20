@@ -15,7 +15,7 @@ const mockOssService = vi.hoisted(() => ({
   getArticleUrl: vi.fn(),
 }));
 
-vi.mock('../../../services', () => ({
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
   ossService: mockOssService,
 }));

@@ -22,14 +22,11 @@ const mockOssService = vi.hoisted(() => ({
   getPrivateUrl: vi.fn((url: string) => `private-${url}`),
 }));
 
-vi.mock('../../../services', () => ({
-  prismaService: mockPrisma,
-  ossService: mockOssService,
-}));
-
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
 
 vi.mock('@backend/common', () => ({
+  prismaService: mockPrisma,
+  ossService: mockOssService,
   recordVisitor: mockRecordVisitor,
 }));
 

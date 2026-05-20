@@ -4,7 +4,7 @@ const mockOssService = vi.hoisted(() => ({
   getBucket: vi.fn((type: string) => `${type}-bucket`),
 }));
 
-vi.mock('../../../services', () => ({
+vi.mock('../../../common', () => ({
   ossService: mockOssService,
 }));
 

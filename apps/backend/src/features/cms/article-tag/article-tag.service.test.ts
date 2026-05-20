@@ -10,7 +10,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../services', () => ({
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
 }));
 

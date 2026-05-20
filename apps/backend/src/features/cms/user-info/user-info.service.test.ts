@@ -12,7 +12,7 @@ const mockOssService = vi.hoisted(() => ({
   getPrivateUrl: vi.fn((url: string) => `private-${url}`),
 }));
 
-vi.mock('../../../services', () => ({
+vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
   ossService: mockOssService,
 }));
