@@ -1,6 +1,15 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*", "test/**/*", "generated/**/*", "__test__/**/*", "scripts/**/*", "prisma.config.ts", "vitest.config.ts"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "generated/**/*",
+    "__test__/**/*",
+    "scripts/**/*",
+    "prisma.config.ts",
+    "vitest.config.ts",
+    "vitest.e2e.config.ts"
+  ],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "module": "ESNext",

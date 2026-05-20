@@ -6,12 +6,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@backend': fileURLToPath(new URL('./src', import.meta.url)),
+      '@backend/prisma': fileURLToPath(
+        new URL('./generated/prisma/client', import.meta.url),
+      ),
     },
   },
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.spec.ts'],
+    include: ['src/**/*.test.ts'],
     exclude: ['dist/**', 'node_modules/**', 'test/**'],
     coverage: {
       provider: 'v8',
@@ -23,6 +26,7 @@ export default defineConfig({
         'src/**/index.ts',
         'src/common/prisma.service.ts',
         'src/features/public/blog/blog.schema.ts',
+        'src/**/*.e2e.test.ts',
         'node_modules/**',
         'dist/**',
         'test/**',

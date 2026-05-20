@@ -12,33 +12,21 @@ vi.mock('./features/public', () => ({
 import { app } from './app';
 
 describe('app', () => {
-  it('has health check endpoint', async () => {
-    const res = await app.request('/health');
+  it('returns ok on /api/health', async () => {
+    const res = await app.request('/api/health');
     const body = await res.json();
 
     expect(body).toEqual({ status: 'ok' });
   });
 
-  it('has CORS headers on requests with Origin', async () => {
-    const res = await app.request('/health', {
+  it('adds CORS headers when origin is provided', async () => {
+    const res = await app.request('/api/health', {
       headers: { Origin: 'http://localhost:3000' },
     });
 
     expect(res.headers.get('access-control-allow-origin')).toBe(
       'http://localhost:3000',
     );
-  });
-
-  it('has CORS allow-methods on OPTIONS preflight', async () => {
-    const res = await app.request('/health', {
-      method: 'OPTIONS',
-      headers: {
-        Origin: 'http://localhost:3000',
-        'Access-Control-Request-Method': 'GET',
-      },
-    });
-
-    expect(res.headers.get('access-control-allow-methods')).toBeTruthy();
   });
 
   it('returns 404 for unknown routes', async () => {

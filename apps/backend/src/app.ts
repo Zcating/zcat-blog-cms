@@ -10,6 +10,13 @@ import { requestLogger } from './middleware/request-logger';
 // CORS
 const app = new Hono();
 
+app.use(
+  '*',
+  cors({
+    origin: (origin) => origin,
+  }),
+);
+
 // Request logging
 app.use('*', requestLogger);
 
