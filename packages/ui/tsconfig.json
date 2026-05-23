@@ -7,7 +7,9 @@
       "ES2022"
     ],
     "types": [
-      "node"
+      "node",
+      "vitest/globals",
+      "@testing-library/jest-dom"
     ],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "bundler",
@@ -34,7 +36,8 @@
   },
   "include": [
     "src/**/*",
-    "scripts/**/*"
+    "scripts/**/*",
+    "vitest.config.ts"
   ],
   "exclude": [
     "tsup.config.ts",
