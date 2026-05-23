@@ -4,7 +4,7 @@ import {
   ZAvatar,
   ZImageUpload as ImageUpload,
   ZInput,
-  Textarea,
+  ZTextarea as Textarea,
   Label,
   useWatch,
   safeObjectURL,

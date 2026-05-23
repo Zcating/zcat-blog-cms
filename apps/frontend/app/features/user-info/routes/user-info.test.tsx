@@ -36,7 +36,7 @@ vi.mock('@zcat/ui', () => ({
   ZInput: (props: Record<string, unknown>) => (
     <input data-testid="z-input" {...props} />
   ),
-  Textarea: (props: Record<string, unknown>) => (
+  ZTextarea: (props: Record<string, unknown>) => (
     <textarea data-testid="textarea" {...props} />
   ),
   ZImageUpload: (props: Record<string, unknown>) => (

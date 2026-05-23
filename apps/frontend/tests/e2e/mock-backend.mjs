@@ -49,6 +49,14 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (url.pathname === '/api/cms/system-setting/upload-config') {
+    const key = url.searchParams.get('key') || 'default-key';
+    sendJson(response, {
+      presignedUrl: `http://localhost:9000/mock-bucket/${key}?presigned=mock`,
+    });
+    return;
+  }
+
   if (url.pathname === '/api/cms/user-info' && request.method === 'GET') {
     sendJson(response, {
       name: 'Admin',
