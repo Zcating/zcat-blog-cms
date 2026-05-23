@@ -131,6 +131,7 @@ describe('authService', () => {
       mockBcrypt.genSalt.mockResolvedValue('newsalt');
       mockBcrypt.hash.mockResolvedValue('hashed');
       mockJwt.sign.mockReturnValue('reg-token');
+      mockPrisma.user.create.mockResolvedValue({ id: 99, username: 'newuser' });
 
       const result = await authService.register('newuser', 'pass', 'e@m.com');
 
@@ -146,6 +147,11 @@ describe('authService', () => {
           salt: 'newsalt',
         },
       });
+      expect(mockJwt.sign).toHaveBeenCalledWith(
+        { username: 'newuser', sub: 99 },
+        'test-secret',
+        { expiresIn: '1d' },
+      );
     });
   });
 

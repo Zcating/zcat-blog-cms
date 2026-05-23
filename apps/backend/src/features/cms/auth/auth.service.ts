@@ -69,7 +69,7 @@ export async function register(
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  await prismaService.user.create({
+  const user = await prismaService.user.create({
     data: {
       username,
       password: hashedPassword,
@@ -79,7 +79,7 @@ export async function register(
   });
 
   const token = jwt.sign(
-    { username, sub: undefined },
+    { username, sub: user.id },
     process.env.JWT_SECRET!,
     { expiresIn: '1d' },
   );
