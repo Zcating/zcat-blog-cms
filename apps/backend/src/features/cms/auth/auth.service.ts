@@ -31,7 +31,7 @@ export async function login(
 
   const token = jwt.sign(
     { username: user.username, sub: user.id },
-    process.env.JWT_SECRET!,
+    process.env.JWT_SECRET as string,
     { expiresIn: '1d' },
   );
 
@@ -80,7 +80,7 @@ export async function register(
 
   const token = jwt.sign(
     { username, sub: user.id },
-    process.env.JWT_SECRET!,
+    process.env.JWT_SECRET as string,
     { expiresIn: '1d' },
   );
 
