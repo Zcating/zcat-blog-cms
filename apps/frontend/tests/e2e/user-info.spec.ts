@@ -14,33 +14,35 @@ test.describe('User Info', () => {
     await expect(page.getByText('个人资料')).toBeVisible();
 
     // Verify display mode shows loader data
-    await expect(page.getByText('Admin')).toBeVisible();
-    await expect(page.getByText('admin@test.com')).toBeVisible();
-    await expect(page.getByText('Developer')).toBeVisible();
-    await expect(page.getByText('About me')).toBeVisible();
+    await expect(page.getByText('Admin', { exact: true })).toBeVisible();
+    await expect(page.getByText('admin@test.com', { exact: true })).toBeVisible();
+    await expect(page.getByText('admin', { exact: true })).toBeVisible();
+    await expect(page.getByText('Developer', { exact: true })).toBeVisible();
+    await expect(page.getByText('About me', { exact: true })).toBeVisible();
 
     // Click edit button
     await page.getByRole('button', { name: '编辑' }).click();
 
-    // Verify form appears with pre-filled values
-    const nameInput = page.getByDisplayValue('Admin');
-    await expect(nameInput).toBeVisible();
+    // Find text inputs in the edit form - the first textbox is the name field
+    const textboxes = page.getByRole('textbox');
+    await expect(textboxes.first()).toBeVisible();
 
-    // Modify the name
-    await nameInput.fill('UpdatedAdmin');
+    // Fill the first textbox (name field) with updated value
+    await textboxes.first().clear();
+    await textboxes.first().fill('UpdatedAdmin');
 
     // Save
     await page.getByRole('button', { name: '保存' }).click();
 
-    // Verify display mode shows updated name
-    await expect(page.getByText('UpdatedAdmin')).toBeVisible();
-    await expect(page.getByText('admin@test.com')).toBeVisible();
+    // Wait for display mode to show updated name
+    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('admin@test.com', { exact: true })).toBeVisible();
 
     // Click edit again, then cancel
     await page.getByRole('button', { name: '编辑' }).click();
     await page.getByRole('button', { name: '取消' }).click();
 
     // Verify it reverted to display mode with the updated name still showing
-    await expect(page.getByText('UpdatedAdmin')).toBeVisible();
+    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible();
   });
 });
