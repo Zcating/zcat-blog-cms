@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'node ./tests/e2e/mock-backend.mjs',
+      command: 'npx tsx ./tests/e2e/mock-backend.ts',
       url: 'http://127.0.0.1:9090/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 120000,

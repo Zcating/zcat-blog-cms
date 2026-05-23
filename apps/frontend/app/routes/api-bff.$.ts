@@ -50,9 +50,15 @@ function sanitizeResponseHeaders(response: Response): Headers {
 
 function extractAuthToken(request: Request): string | null {
   const authHeader = request.headers.get('Authorization');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[BFF-DEBUG] extractAuthToken authHeader:', authHeader);
+  }
   if (authHeader) return authHeader;
 
   const cookieHeader = request.headers.get('Cookie');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[BFF-DEBUG] extractAuthToken cookieHeader:', cookieHeader);
+  }
   if (cookieHeader) {
     const cookies = Object.fromEntries(
       cookieHeader.split(';').map((c) => {
@@ -60,7 +66,11 @@ function extractAuthToken(request: Request): string | null {
         return [key, value.join('=')];
       }),
     );
-    return cookies['token'] || null;
+    const token = cookies['token'] || null;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[BFF-DEBUG] extractAuthToken cookie token:', token);
+    }
+    return token;
   }
   return null;
 }

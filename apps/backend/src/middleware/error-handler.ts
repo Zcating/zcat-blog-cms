@@ -1,3 +1,4 @@
+import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
 
 import { logger } from '@backend/utils';
@@ -10,6 +11,16 @@ export const errorHandler: ErrorHandler = (err, c) => {
       {
         code: 'ERR0005',
         message: err.issues.map((issue) => issue.message).join(', '),
+      },
+      200,
+    );
+  }
+
+  if (err instanceof HTTPException) {
+    return c.json(
+      {
+        code: err.status === 400 ? 'ERR0005' : 'ERR0006',
+        message: err.message,
       },
       200,
     );

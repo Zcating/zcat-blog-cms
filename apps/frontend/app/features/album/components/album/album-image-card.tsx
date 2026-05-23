@@ -1,5 +1,12 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { Card, CardContent, CardTitle, ZButton, ZImagePreload } from '@zcat/ui';
+import {
+  Card,
+  CardContent,
+  CardTitle,
+  ZButton,
+  ZDialog,
+  ZImagePreload,
+} from '@zcat/ui';
 
 import type { AlbumsApi } from '@cms/api';
 
@@ -10,6 +17,7 @@ export interface PhotoAlbumData extends AlbumsApi.PhotoAlbum {
 interface AlbumImageCardProps {
   data: PhotoAlbumData;
   onEdit: (item: PhotoAlbumData) => void;
+  onDelete: (item: PhotoAlbumData) => void;
   onClickItem: (item: PhotoAlbumData) => void;
 }
 
@@ -18,6 +26,19 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
 
   const handleEdit = () => {
     props.onEdit(data);
+  };
+
+  const handleDelete = async () => {
+    const confirm = await ZDialog.confirm({
+      title: '删除相册',
+      content: (
+        <div>
+          确定删除相册 <strong>{data.name}</strong> 吗？
+        </div>
+      ),
+    });
+    if (!confirm) return;
+    props.onDelete(data);
   };
 
   const handleDetail = () => {
@@ -38,6 +59,9 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
         <p className="h-10 text-sm text-muted-foreground">{data.description}</p>
         <div className="flex justify-end gap-2 pt-2">
           <ZButton onClick={handleEdit}>编辑</ZButton>
+          <ZButton variant="destructive" onClick={handleDelete}>
+            删除
+          </ZButton>
           <ZButton variant="outline" onClick={handleDetail}>
             查看详情
           </ZButton>

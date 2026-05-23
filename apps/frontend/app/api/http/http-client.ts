@@ -1,4 +1,4 @@
-import Cookies from 'js-cookie';
+﻿import Cookies from 'js-cookie';
 
 import { csrfContext } from '../context/csrf-context';
 import { getCurrentRequest } from '../context/request-context';
@@ -43,7 +43,7 @@ export namespace HttpClient {
   type RequestSignalOptions = Pick<RequestOptions, 'signal'>;
 
   export function saveToken(token: string) {
-    Cookies.set('token', `Bearer ${token}`);
+    Cookies.set('token', `Bearer ${token}`, { path: '/' });
   }
 
   export function createAbortController(): AbortController {
@@ -59,6 +59,7 @@ export namespace HttpClient {
   }
 
   function getAuthHeaders(): Record<string, string> {
+    log('getAuthHeaders called');
     const headers: Record<string, string> = {};
 
     const cookieToken = Cookies.get('token');

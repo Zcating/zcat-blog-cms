@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -15,6 +16,14 @@ describe('errorHandler', () => {
     });
     app.get('/generic-error', () => {
       throw new Error('something broke');
+    });
+    app.get('/http-exception-400', () => {
+      throw new HTTPException(400, {
+        message: 'Malformed JSON in request body',
+      });
+    });
+    app.get('/http-exception-500', () => {
+      throw new HTTPException(500, { message: 'Something went wrong' });
     });
     return app;
   };
@@ -37,5 +46,25 @@ describe('errorHandler', () => {
 
     expect(body.code).toBe('ERR0006');
     expect(body.message).toBe('Internal server error');
+  });
+
+  it('handles HTTPException 400 with ERR0005', async () => {
+    const app = createApp();
+
+    const res = await app.request('/http-exception-400');
+    const body = await res.json();
+
+    expect(body.code).toBe('ERR0005');
+    expect(body.message).toBe('Malformed JSON in request body');
+  });
+
+  it('handles HTTPException 500 with ERR0006', async () => {
+    const app = createApp();
+
+    const res = await app.request('/http-exception-500');
+    const body = await res.json();
+
+    expect(body.code).toBe('ERR0006');
+    expect(body.message).toBe('Something went wrong');
   });
 });

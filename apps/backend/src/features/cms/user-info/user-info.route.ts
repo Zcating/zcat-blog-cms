@@ -28,7 +28,7 @@ userInfoRoutes.get('/', async (c) => {
   }
 });
 
-// POST /update - 更新用户信息
+// POST /update - 更新用户信息 (RPC style)
 userInfoRoutes.post(
   '/update',
   zValidator('json', UserInfoSchema),
@@ -60,5 +60,34 @@ userInfoRoutes.post(
     }
   },
 );
+
+// PUT / - RESTful 更新用户信息
+userInfoRoutes.put('/', zValidator('json', UserInfoSchema), async (c) => {
+  try {
+    const user = c.get('user');
+    const body = c.req.valid('json');
+    const result = await userInfoService.update(user?.userId, body);
+
+    if (!result) {
+      return c.json(
+        createResult({
+          code: ResultCode.ValidationError,
+          message: 'failed',
+        }),
+      );
+    }
+
+    return c.json(
+      createResult({
+        code: ResultCode.Success,
+        message: 'success',
+        data: result,
+      }),
+    );
+  } catch (error) {
+    logger.error('更新用户信息失败', error);
+    throw error;
+  }
+});
 
 export default userInfoRoutes;

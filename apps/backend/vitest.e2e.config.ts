@@ -14,6 +14,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    env: {
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      JWT_SECRET: 'test-secret',
+    },
     include: ['src/**/*.e2e.test.ts'],
     exclude: ['dist/**', 'node_modules/**'],
   },

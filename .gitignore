@@ -55,6 +55,7 @@ coverage/
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+.codex/
 .opencode/
 .claude/
 .cursor/
@@ -63,6 +64,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .codebuddy/
 .agents/
 .github/
+.playwright-cli/
 
 docs/planning/
 docs/superpowers/

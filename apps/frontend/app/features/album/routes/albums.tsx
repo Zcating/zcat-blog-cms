@@ -82,6 +82,13 @@ export default function Albums(props: Route.ComponentProps) {
 
   const navigate = useNavigate();
 
+  const deleteAlbum = async (item: AlbumFormValues) => {
+    React.startTransition(async () => {
+      commitAlbums('remove', item);
+      await AlbumsApi.deletePhotoAlbum(item.id);
+    });
+  };
+
   const create = useAlbumForm({
     title: '新增相册',
     onSubmit: async (data) => {
@@ -158,6 +165,7 @@ export default function Albums(props: Route.ComponentProps) {
             data={item}
             onClickItem={handleClickAlbum}
             onEdit={edit}
+            onDelete={deleteAlbum}
           />
         )}
       />

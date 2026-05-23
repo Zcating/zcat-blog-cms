@@ -76,7 +76,10 @@ export namespace AlbumsApi {
   }
 
   export async function deletePhotoAlbum(id: number): Promise<void> {
-    return await HttpClient.del({ path: `cms/photo-albums/${id}` });
+    return await HttpClient.post({
+      path: 'cms/photo-albums/delete',
+      params: { id: String(id) },
+    });
   }
 
   export interface SetPhotoAlbumCoverParams {

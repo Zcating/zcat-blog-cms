@@ -7,7 +7,6 @@ export namespace SystemSettingApi {
   export function getUploadUrl(key: string) {
     return HttpClient.get<UploadConfigResult>(
       'cms/system-setting/upload-config',
-      { type, key },
       { key },
     );
   }
