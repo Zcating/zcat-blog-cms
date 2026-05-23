@@ -26,7 +26,8 @@ function getUrl(type: OssType, key: string): string {
   if (!config.minioPublicUrl) {
     return '';
   }
-  return `${config.minioPublicUrl}/pictures/${key}`;
+  const { bucket } = getBucketConfig(type);
+  return `${config.minioPublicUrl}/${bucket}/${key}`;
 }
 
 async function deleteObject(type: OssType, key: string): Promise<void> {
