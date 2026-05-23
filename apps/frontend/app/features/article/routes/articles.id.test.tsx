@@ -5,14 +5,17 @@ vi.mock("@zcat/ui", () => ({
   ZSelect: () => <div />,
   ZCheckbox: () => <div />,
   createZForm: () => ({ useForm: () => ({ register: vi.fn(), handleSubmit: vi.fn(), formState: {}, watch: vi.fn() }), Item: ({ children }: any) => <div>{children}</div> }),
-  ZInput: () => <input />,
-  ZButton: ({ children }: any) => <button>{children}</button>,
 }));
 
-import Layout from "./photos";
+vi.mock("react-router", () => ({
+  useParams: () => ({ id: "1" }),
+  useLoaderData: () => ({}),
+}));
 
-describe("Photos page", () => {
+import ArticleDetail from "../routes/articles.id";
+
+describe("Articles detail page", () => {
   it("renders without crashing", () => {
-    expect(typeof Layout).toBe("function");
+    expect(typeof ArticleDetail).toBe("function");
   });
 });

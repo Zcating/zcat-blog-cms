@@ -23,7 +23,7 @@ vi.mock('@zcat/ui/shadcn', () => ({
 }));
 
 vi.mock('@zcat/ui/shadcn/ui/button', () => ({
-  Button: React.forwardRef<HTMLButtonElement, React.ComponentProps<'button'>>(
+  Button: React.forwardRef<HTMLButtonElement, any>(
     ({ children, asChild: _asChild, ...props }, ref) =>
       React.createElement(
         'button',
@@ -44,10 +44,7 @@ vi.mock('@zcat/ui/shadcn/ui/tooltip', () => ({
   }) => children,
   TooltipContent: ({
     children,
-    align: _align,
-    side: _side,
-    sideOffset: _sideOffset,
     ...props
-  }: React.HTMLAttributes<HTMLDivElement>) =>
+  }: any) =>
     React.createElement('div', props, children),
 }));
