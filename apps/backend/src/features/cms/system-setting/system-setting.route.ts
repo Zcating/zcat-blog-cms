@@ -15,8 +15,8 @@ systemSettingRoutes.get(
   zValidator('query', UploadTokenDtoSchema),
   async (c) => {
     try {
-      const { type, key } = c.req.valid('query');
-      const result = await systemSettingService.getUploadConfig(type, key);
+      const { key } = c.req.valid('query');
+      const result = await systemSettingService.getUploadConfig(key);
 
       return c.json(
         createResult({

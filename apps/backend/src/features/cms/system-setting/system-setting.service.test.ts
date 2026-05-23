@@ -16,42 +16,18 @@ describe('systemSettingService', () => {
   });
 
   describe('getUploadConfig', () => {
-    it('returns presignedUrl for photo type with given key', async () => {
+    it('returns presignedUrl for given key', async () => {
       mockPresignUploadUrl.mockResolvedValueOnce(
-        'http://localhost:9000/photos-bucket/photos/test.jpg?presigned=abc',
+        'http://localhost:9000/pictures-bucket/photos/test.jpg?presigned=abc',
       );
-      const result = await systemSettingService.getUploadConfig(
-        'photo',
-        'photos/test.jpg',
-      );
+      const result =
+        await systemSettingService.getUploadConfig('photos/test.jpg');
 
       expect(result).toEqual({
         presignedUrl:
-          'http://localhost:9000/photos-bucket/photos/test.jpg?presigned=abc',
+          'http://localhost:9000/pictures-bucket/photos/test.jpg?presigned=abc',
       });
-      expect(mockPresignUploadUrl).toHaveBeenCalledWith(
-        'photo',
-        'photos/test.jpg',
-      );
-    });
-
-    it('returns presignedUrl for article type with given key', async () => {
-      mockPresignUploadUrl.mockResolvedValueOnce(
-        'http://localhost:9000/articles-bucket/articles/test.jpg?presigned=def',
-      );
-      const result = await systemSettingService.getUploadConfig(
-        'article',
-        'articles/test.jpg',
-      );
-
-      expect(result).toEqual({
-        presignedUrl:
-          'http://localhost:9000/articles-bucket/articles/test.jpg?presigned=def',
-      });
-      expect(mockPresignUploadUrl).toHaveBeenCalledWith(
-        'article',
-        'articles/test.jpg',
-      );
+      expect(mockPresignUploadUrl).toHaveBeenCalledWith('photos/test.jpg');
     });
   });
 });

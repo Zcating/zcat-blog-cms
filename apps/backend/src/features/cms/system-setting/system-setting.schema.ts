@@ -19,7 +19,6 @@ export const SystemSettingUpdateDtoSchema = z.object({
 });
 
 export const UploadTokenDtoSchema = z.object({
-  type: z.enum(['article', 'photo']),
   key: z.string(),
 });
 

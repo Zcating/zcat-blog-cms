@@ -1,7 +1,7 @@
 import { ossService } from '../../../common';
 
-export async function getUploadConfig(type: 'article' | 'photo', key: string) {
-  const presignedUrl = await ossService.presignUploadUrl(type, key);
+export async function getUploadConfig(key: string) {
+  const presignedUrl = await ossService.presignUploadUrl(key);
   return { presignedUrl };
 }
 

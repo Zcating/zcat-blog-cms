@@ -90,8 +90,8 @@ async function uploadPhotoFile(
 
   const [{ presignedUrl }, { presignedUrl: thumbnailPresignedUrl }] =
     await Promise.all([
-      SystemSettingApi.getUploadUrl('photo', key),
-      SystemSettingApi.getUploadUrl('photo', thumbnailKey),
+      SystemSettingApi.getUploadUrl(key),
+      SystemSettingApi.getUploadUrl(thumbnailKey),
     ]);
 
   await Promise.all([
@@ -117,7 +117,7 @@ async function uploadAvatar(image?: string): Promise<string | undefined> {
 
   const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
 
-  const { presignedUrl } = await SystemSettingApi.getUploadUrl('photo', key);
+  const { presignedUrl } = await SystemSettingApi.getUploadUrl(key);
   await uploadToOss(presignedUrl, compressedBlob);
 
   return key;
@@ -144,10 +144,7 @@ async function uploadArticleImagesContent(content: string): Promise<string> {
 
     const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
 
-    const { presignedUrl } = await SystemSettingApi.getUploadUrl(
-      'article',
-      key,
-    );
+    const { presignedUrl } = await SystemSettingApi.getUploadUrl(key);
     await uploadToOss(presignedUrl, compressedBlob);
     return key;
   });
