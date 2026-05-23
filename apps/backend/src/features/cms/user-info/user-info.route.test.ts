@@ -42,6 +42,22 @@ describe('userInfoRoutes', () => {
       const res = await app.request('/user-info');
       expect(res.status).toBe(500);
     });
+
+    it('passes userId from auth context to service', async () => {
+      mockUserInfoService.get.mockResolvedValue({ name: 'Admin' });
+      const app = new Hono();
+      app.use('*', (c, next) => {
+        c.set('user', { userId: 5 });
+        return next();
+      });
+      app.route('/', userInfoRoutes);
+
+      const res = await app.request('/user-info');
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(mockUserInfoService.get).toHaveBeenCalledWith(5);
+    });
   });
 
   describe('POST /user-info/update', () => {
@@ -104,6 +120,44 @@ describe('userInfoRoutes', () => {
         }),
       });
       expect(res.status).toBe(500);
+    });
+
+    it('returns validation error on empty name', async () => {
+      const app = createApp();
+
+      const res = await app.request('/user-info/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: '',
+          contact: { email: 'a@b.com', github: 'u' },
+          occupation: '',
+          avatar: '',
+          aboutMe: '',
+          abstract: '',
+        }),
+      });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns validation error on invalid email', async () => {
+      const app = createApp();
+
+      const res = await app.request('/user-info/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Test',
+          contact: { email: 'not-an-email', github: 'u' },
+          occupation: '',
+          avatar: '',
+          aboutMe: '',
+          abstract: '',
+        }),
+      });
+
+      expect(res.status).toBe(400);
     });
   });
 });
