@@ -78,6 +78,25 @@ describe('userInfoService', () => {
         },
       });
     });
+
+    it('returns existing user info without avatar unchanged', async () => {
+      const userInfo = {
+        id: 1,
+        name: 'User',
+        contact: '{}',
+        occupation: 'Dev',
+        avatar: null,
+        aboutMe: 'About',
+        abstract: 'Abstract',
+        userId: 1,
+      };
+      mockPrisma.userInfo.findUnique.mockResolvedValue(userInfo);
+
+      const result = await userInfoService.get(1);
+
+      expect(result).toBeDefined();
+      expect(result!.avatar).toBeNull();
+    });
   });
 
   describe('update', () => {
@@ -117,6 +136,75 @@ describe('userInfoService', () => {
           avatar: undefined,
           aboutMe: undefined,
           abstract: undefined,
+        },
+      });
+    });
+
+    it('update partial fields skips undefined contact', async () => {
+      const updated = {
+        id: 1,
+        name: 'Updated',
+        contact: '{}',
+        occupation: '',
+        avatar: '',
+        aboutMe: '',
+        abstract: '',
+        userId: 1,
+      };
+      mockPrisma.userInfo.update.mockResolvedValue(updated);
+
+      const result = await userInfoService.update(1, {
+        name: 'Updated',
+      });
+
+      expect(result).toBeDefined();
+      expect(mockPrisma.userInfo.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: {
+          name: 'Updated',
+          contact: undefined,
+          occupation: undefined,
+          avatar: undefined,
+          aboutMe: undefined,
+          abstract: undefined,
+        },
+      });
+    });
+
+    it('update all fields serializes correctly', async () => {
+      const updated = {
+        id: 1,
+        name: 'Full',
+        contact: JSON.stringify({ email: 'a@b.com', github: 'u' }),
+        occupation: 'Dev',
+        avatar: 'avatar.jpg',
+        aboutMe: 'About me',
+        abstract: 'Abs',
+        userId: 1,
+      };
+      mockPrisma.userInfo.update.mockResolvedValue(updated);
+
+      const result = await userInfoService.update(1, {
+        name: 'Full',
+        contact: { email: 'a@b.com', github: 'u' },
+        occupation: 'Dev',
+        avatar: 'avatar.jpg',
+        aboutMe: 'About me',
+        abstract: 'Abs',
+      });
+
+      expect(result).toBeDefined();
+      expect(result!.name).toBe('Full');
+      expect(result!.occupation).toBe('Dev');
+      expect(mockPrisma.userInfo.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: {
+          name: 'Full',
+          contact: JSON.stringify({ email: 'a@b.com', github: 'u' }),
+          occupation: 'Dev',
+          avatar: 'avatar.jpg',
+          aboutMe: 'About me',
+          abstract: 'Abs',
         },
       });
     });
