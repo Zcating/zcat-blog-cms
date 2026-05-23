@@ -112,7 +112,7 @@ describe('articleService', () => {
       expect(result).toEqual(updated);
       expect(mockPrisma.article.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: dto,
+        data: { title: 'Updated' },
       });
     });
   });

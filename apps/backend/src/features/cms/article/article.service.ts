@@ -49,9 +49,10 @@ export async function create(dto: Prisma.ArticleCreateInput) {
 }
 
 export async function update(dto: Prisma.ArticleUpdateInput & { id: number }) {
+  const { id, ...data } = dto;
   return prismaService.article.update({
-    where: { id: dto.id },
-    data: dto,
+    where: { id },
+    data,
   });
 }
 
