@@ -42,14 +42,13 @@ describe('Cache', () => {
     expect(cache.get('key1')).toBeUndefined();
   });
 
-  it('returns undefined during refresh-ahead window', () => {
+  it('returns value when within TTL (including near-expiry)', () => {
     const cache = new Cache<string>(10, 100);
 
     cache.set('key1', 'value1');
-    // TTL=100, refreshAhead=60 → entry becomes stale at deadline - 60 = now+40
-    advanceSeconds(41); // Past refresh-ahead threshold
+    advanceSeconds(99); // Just before TTL
 
-    expect(cache.get('key1')).toBeUndefined();
+    expect(cache.get('key1')).toBe('value1');
   });
 
   it('replaces existing value for same key on set', () => {
@@ -72,18 +71,20 @@ describe('Cache', () => {
     expect(cache.get('key3')).toBe('value3');
   });
 
-  it('cleans up expired entries before evicting oldest', () => {
+  it('evicts expired entries before evicting oldest', () => {
     const cache = new Cache<string>(2, 100);
 
     cache.set('key1', 'value1');
-    advanceSeconds(90); // key1 enters refresh-ahead window
+    advanceSeconds(101); // key1 is now expired
 
     cache.set('key2', 'value2');
-    // key1 is now expired (refresh-ahead), key2 is valid
+    // key1 is expired, key2 is valid
     // Adding key3 should evict expired key1 first
     cache.set('key3', 'value3');
 
     expect(cache.get('key1')).toBeUndefined();
+    expect(cache.get('key2')).toBe('value2');
+    expect(cache.get('key3')).toBe('value3');
   });
 
   it('handles cache with 0 max size', () => {
