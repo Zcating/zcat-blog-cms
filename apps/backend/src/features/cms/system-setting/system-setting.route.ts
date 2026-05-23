@@ -9,14 +9,14 @@ import { systemSettingService } from './system-setting.service';
 
 const systemSettingRoutes = new Hono().basePath('/system-setting');
 
-// GET /upload-token - 获取上传凭证
+// GET /upload-config - 获取上传配置（预签名URL）
 systemSettingRoutes.get(
-  '/upload-token',
+  '/upload-config',
   zValidator('query', UploadTokenDtoSchema),
   async (c) => {
     try {
-      const { type } = c.req.valid('query');
-      const result = systemSettingService.getUploadToken(type);
+      const { type, key } = c.req.valid('query');
+      const result = await systemSettingService.getUploadConfig(type, key);
 
       return c.json(
         createResult({
@@ -26,7 +26,7 @@ systemSettingRoutes.get(
         }),
       );
     } catch (error) {
-      logger.error('获取上传凭证失败', error);
+      logger.error('获取上传配置失败', error);
       throw error;
     }
   },

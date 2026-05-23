@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
 
 const mockSettingService = vi.hoisted(() => ({
-  getUploadToken: vi.fn(),
+  getUploadConfig: vi.fn(),
 }));
 
 vi.mock('./system-setting.service', () => ({
@@ -25,30 +25,31 @@ describe('systemSettingRoutes', () => {
     vi.clearAllMocks();
   });
 
-  describe('GET /system-setting/upload-token', () => {
-    it('returns upload token', async () => {
-      mockSettingService.getUploadToken.mockReturnValue({
-        uploadToken: 'token',
+  describe('GET /system-setting/upload-config', () => {
+    it('returns presignedUrl', async () => {
+      mockSettingService.getUploadConfig.mockResolvedValue({
+        presignedUrl:
+          'http://localhost:9000/photos-bucket/test.jpg?presigned=abc',
       });
       const app = createApp();
 
       const res = await app.request(
-        '/system-setting/upload-token?type=article',
+        '/system-setting/upload-config?type=photo&key=test.jpg',
       );
       const body = await res.json();
 
       expect(body.code).toBe('0000');
-      expect(body.data.uploadToken).toBe('token');
+      expect(body.data.presignedUrl).toBe(
+        'http://localhost:9000/photos-bucket/test.jpg?presigned=abc',
+      );
     });
 
     it('returns error on exception', async () => {
-      mockSettingService.getUploadToken.mockImplementation(() => {
-        throw new Error('fail');
-      });
+      mockSettingService.getUploadConfig.mockRejectedValue(new Error('fail'));
       const app = createApp();
 
       const res = await app.request(
-        '/system-setting/upload-token?type=article',
+        '/system-setting/upload-config?type=photo&key=test.jpg',
       );
       const body = await res.json();
 

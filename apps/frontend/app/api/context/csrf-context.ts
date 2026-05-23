@@ -1,15 +1,67 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+let _csrfStorage: {
+  getStore(): string | null;
+  run<T>(token: string | null, fn: () => T): T;
+  enterWith(token: string | null): void;
+} | null = null;
 
-const csrfStorage = new AsyncLocalStorage<string | null>();
+function ensureStorage() {
+  if (!_csrfStorage) {
+    const store: { value: string | null } = { value: null };
+    _csrfStorage = {
+      run<T>(token: string | null, fn: () => T): T {
+        const prev = store.value;
+        store.value = token;
+        try {
+          return fn();
+        } finally {
+          store.value = prev;
+        }
+      },
+      getStore() {
+        return store.value;
+      },
+      enterWith(token: string | null) {
+        store.value = token;
+      },
+    };
+  }
+  return _csrfStorage;
+}
+
+let _initPromise: Promise<void> | null = null;
+
+export async function initCsrfStorage() {
+  if (_initPromise) {
+    return _initPromise;
+  }
+
+  _initPromise = (async () => {
+    try {
+      const { AsyncLocalStorage } = await import('node:async_hooks');
+      _csrfStorage = new AsyncLocalStorage<string | null>();
+    } catch {
+      // browser fallback: sync fallback already set by ensureStorage()
+    }
+  })();
+
+  return _initPromise;
+}
+
+function getStorage() {
+  if (_csrfStorage) {
+    return _csrfStorage;
+  }
+  return ensureStorage();
+}
 
 export const csrfContext = {
   run: <T>(token: string | null, fn: () => T): T => {
-    return csrfStorage.run(token, fn);
+    return getStorage().run(token, fn);
   },
   get: (): string | null => {
-    return csrfStorage.getStore() ?? null;
+    return getStorage().getStore() ?? null;
   },
   set: (token: string | null) => {
-    csrfStorage.enterWith(token);
+    getStorage().enterWith(token);
   },
 };

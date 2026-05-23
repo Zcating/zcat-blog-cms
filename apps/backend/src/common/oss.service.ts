@@ -1,41 +1,86 @@
-import { createOssStrategy } from './oss/oss.factory';
+import { Client } from 'minio';
 
-const strategy = createOssStrategy();
+type OssType = 'article' | 'photo';
 
-export async function getPrivateUrl(filename: string) {
-  return strategy.getPrivateUrl(filename, 'photo');
+function getBucketConfig(type: OssType): { bucket: string; domain: string } {
+  const publicUrl = process.env.MINIO_PUBLIC_URL ?? '';
+  const bucket =
+    type === 'photo'
+      ? (process.env.MINIO_PHOTO_BUCKET ?? '')
+      : (process.env.MINIO_ARTICLE_BUCKET ?? '');
+  return { bucket, domain: publicUrl };
 }
 
-export async function deleteFile(filename: string) {
+function createMinioClient(): Client {
+  const endpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
+  const port = parseInt(process.env.MINIO_PORT ?? '9000', 10);
+  const useSSL = process.env.MINIO_USE_SSL === 'true';
+  const accessKey = process.env.MINIO_ACCESS_KEY ?? '';
+  const secretKey = process.env.MINIO_SECRET_KEY ?? '';
+
+  return new Client({
+    endPoint: endpoint,
+    port,
+    useSSL,
+    accessKey,
+    secretKey,
+  });
+}
+
+const minioClient = createMinioClient();
+
+function getUrl(type: OssType, key: string): string {
+  const domain = process.env.MINIO_PUBLIC_URL ?? '';
+  if (!domain) {
+    return '';
+  }
+  return `${domain}/pictures/${key}`;
+}
+
+async function deleteObject(type: OssType, key: string): Promise<void> {
+  const { bucket } = getBucketConfig(type);
+  if (!bucket) {
+    return;
+  }
+  await minioClient.removeObject(bucket, key);
+}
+
+async function presignUploadUrl(type: OssType, key: string): Promise<string> {
+  const { bucket } = getBucketConfig(type);
+  if (!bucket) {
+    return '';
+  }
   try {
-    await strategy.deleteFile(filename, 'photo');
+    const url = await minioClient.presignedPutObject(bucket, key, 60);
+    return url;
+  } catch {
+    return '';
+  }
+}
+
+// Facade methods (backward-compatible signatures)
+function getPrivateUrl(key: string): string {
+  return getUrl('photo', key);
+}
+
+function getArticleUrl(key: string): string {
+  return getUrl('article', key);
+}
+
+async function deleteFile(key: string): Promise<boolean> {
+  try {
+    await deleteObject('photo', key);
     return true;
   } catch {
     return false;
   }
-}
-
-export async function getArticleUrl(filename: string) {
-  return strategy.getArticleUrl(filename);
-}
-
-export async function deleteArticleFile(filename: string) {
-  try {
-    await strategy.deleteArticleFile(filename);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function getBucket(type: 'article' | 'photo') {
-  return strategy.getBucket(type);
 }
 
 export const ossService = {
+  getUrl,
+  deleteObject,
+  presignUploadUrl,
   getPrivateUrl,
-  deleteFile,
   getArticleUrl,
-  deleteArticleFile,
-  getBucket,
+  deleteFile,
 };
