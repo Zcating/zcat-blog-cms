@@ -1,9 +1,8 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 
 const mockConfig = vi.hoisted(() => ({
   minioPublicUrl: 'http://localhost:9000',
-  minioPhotoBucket: 'photos-bucket',
-  minioArticleBucket: 'articles-bucket',
+  minioBucket: 'pictures-bucket',
   minioEndpoint: 'localhost',
   minioPort: 9000,
   minioUseSsl: false,
@@ -32,20 +31,19 @@ describe('ossService', () => {
   afterEach(() => {
     vi.clearAllMocks();
     mockConfig.minioPublicUrl = 'http://localhost:9000';
-    mockConfig.minioPhotoBucket = 'photos-bucket';
-    mockConfig.minioArticleBucket = 'articles-bucket';
+    mockConfig.minioBucket = 'pictures-bucket';
   });
 
   describe('getUrl', () => {
     it('returns url for photo type', () => {
       const url = ossService.getUrl('photo', 'photos/test.jpg');
-      expect(url).toBe('http://localhost:9000/photos-bucket/photos/test.jpg');
+      expect(url).toBe('http://localhost:9000/pictures-bucket/photos/test.jpg');
     });
 
     it('returns url for article type', () => {
       const url = ossService.getUrl('article', 'articles/test.jpg');
       expect(url).toBe(
-        'http://localhost:9000/articles-bucket/articles/test.jpg',
+        'http://localhost:9000/pictures-bucket/articles/test.jpg',
       );
     });
 
@@ -55,29 +53,20 @@ describe('ossService', () => {
       expect(url).toBe('');
     });
 
-    it('returns url when only public url is configured (bucket not needed)', () => {
-      mockConfig.minioPhotoBucket = '';
+    it('returns url when bucket is not configured', () => {
+      mockConfig.minioBucket = '';
       const url = ossService.getUrl('photo', 'test.jpg');
       expect(url).toBe('http://localhost:9000//test.jpg');
     });
   });
 
   describe('deleteObject', () => {
-    it('calls removeObject with correct bucket and key for photo type', async () => {
+    it('calls removeObject with correct bucket and key', async () => {
       mockRemoveObject.mockResolvedValueOnce(undefined);
       await ossService.deleteObject('photo', 'photos/test.jpg');
       expect(mockRemoveObject).toHaveBeenCalledWith(
-        'photos-bucket',
+        'pictures-bucket',
         'photos/test.jpg',
-      );
-    });
-
-    it('calls removeObject with correct bucket and key for article type', async () => {
-      mockRemoveObject.mockResolvedValueOnce(undefined);
-      await ossService.deleteObject('article', 'articles/test.jpg');
-      expect(mockRemoveObject).toHaveBeenCalledWith(
-        'articles-bucket',
-        'articles/test.jpg',
       );
     });
 
@@ -89,7 +78,7 @@ describe('ossService', () => {
     });
 
     it('does nothing when bucket is not configured', async () => {
-      mockConfig.minioPhotoBucket = '';
+      mockConfig.minioBucket = '';
       await ossService.deleteObject('photo', 'test.jpg');
       expect(mockRemoveObject).not.toHaveBeenCalled();
     });
@@ -98,16 +87,16 @@ describe('ossService', () => {
   describe('presignUploadUrl', () => {
     it('calls presignedPutObject with correct params and expiry', async () => {
       mockPresignedPutObject.mockResolvedValueOnce(
-        'http://localhost:9000/photos-bucket/photos/test.jpg?presigned=abc',
+        'http://localhost:9000/pictures-bucket/photos/test.jpg?presigned=abc',
       );
       const url = await ossService.presignUploadUrl('photo', 'photos/test.jpg');
       expect(mockPresignedPutObject).toHaveBeenCalledWith(
-        'photos-bucket',
+        'pictures-bucket',
         'photos/test.jpg',
         60,
       );
       expect(url).toBe(
-        'http://localhost:9000/photos-bucket/photos/test.jpg?presigned=abc',
+        'http://localhost:9000/pictures-bucket/photos/test.jpg?presigned=abc',
       );
     });
 
@@ -118,7 +107,7 @@ describe('ossService', () => {
     });
 
     it('returns empty string when bucket is not configured', async () => {
-      mockConfig.minioPhotoBucket = '';
+      mockConfig.minioBucket = '';
       const url = await ossService.presignUploadUrl('photo', 'test.jpg');
       expect(url).toBe('');
     });
@@ -128,7 +117,9 @@ describe('ossService', () => {
     describe('getPrivateUrl', () => {
       it('delegates to getUrl with photo type', () => {
         const url = ossService.getPrivateUrl('photos/test.jpg');
-        expect(url).toBe('http://localhost:9000/photos-bucket/photos/test.jpg');
+        expect(url).toBe(
+          'http://localhost:9000/pictures-bucket/photos/test.jpg',
+        );
       });
     });
 
@@ -136,7 +127,7 @@ describe('ossService', () => {
       it('delegates to getUrl with article type', () => {
         const url = ossService.getArticleUrl('articles/test.jpg');
         expect(url).toBe(
-          'http://localhost:9000/articles-bucket/articles/test.jpg',
+          'http://localhost:9000/pictures-bucket/articles/test.jpg',
         );
       });
     });
@@ -147,7 +138,7 @@ describe('ossService', () => {
         const result = await ossService.deleteFile('photos/test.jpg');
         expect(result).toBe(true);
         expect(mockRemoveObject).toHaveBeenCalledWith(
-          'photos-bucket',
+          'pictures-bucket',
           'photos/test.jpg',
         );
       });

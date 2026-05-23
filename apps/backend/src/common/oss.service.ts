@@ -5,8 +5,7 @@ import { config } from './config.service';
 type OssType = 'article' | 'photo';
 
 function getBucketConfig(type: OssType): { bucket: string; domain: string } {
-  const bucket =
-    type === 'photo' ? config.minioPhotoBucket : config.minioArticleBucket;
+  const bucket = config.minioBucket;
   return { bucket, domain: config.minioPublicUrl };
 }
 

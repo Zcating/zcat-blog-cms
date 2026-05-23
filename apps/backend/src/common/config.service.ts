@@ -31,6 +31,5 @@ export const config = Object.freeze({
   minioAccessKey: optional('MINIO_ACCESS_KEY', ''),
   minioSecretKey: optional('MINIO_SECRET_KEY', ''),
   minioPublicUrl: optional('MINIO_PUBLIC_URL', ''),
-  minioPhotoBucket: optional('MINIO_PHOTO_BUCKET', ''),
-  minioArticleBucket: optional('MINIO_ARTICLE_BUCKET', ''),
+  minioBucket: optional('MINIO_BUCKET', ''),
 });
