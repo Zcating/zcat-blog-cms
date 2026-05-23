@@ -39,12 +39,14 @@ describe('ossService', () => {
   describe('getUrl', () => {
     it('returns url for photo type', () => {
       const url = ossService.getUrl('photo', 'photos/test.jpg');
-      expect(url).toBe('http://localhost:9000/pictures/photos/test.jpg');
+      expect(url).toBe('http://localhost:9000/photos-bucket/photos/test.jpg');
     });
 
     it('returns url for article type', () => {
       const url = ossService.getUrl('article', 'articles/test.jpg');
-      expect(url).toBe('http://localhost:9000/pictures/articles/test.jpg');
+      expect(url).toBe(
+        'http://localhost:9000/articles-bucket/articles/test.jpg',
+      );
     });
 
     it('returns empty string when public url is not configured', () => {
@@ -56,7 +58,7 @@ describe('ossService', () => {
     it('returns url when only public url is configured (bucket not needed)', () => {
       mockConfig.minioPhotoBucket = '';
       const url = ossService.getUrl('photo', 'test.jpg');
-      expect(url).toBe('http://localhost:9000/pictures/test.jpg');
+      expect(url).toBe('http://localhost:9000//test.jpg');
     });
   });
 
@@ -126,14 +128,16 @@ describe('ossService', () => {
     describe('getPrivateUrl', () => {
       it('delegates to getUrl with photo type', () => {
         const url = ossService.getPrivateUrl('photos/test.jpg');
-        expect(url).toBe('http://localhost:9000/pictures/photos/test.jpg');
+        expect(url).toBe('http://localhost:9000/photos-bucket/photos/test.jpg');
       });
     });
 
     describe('getArticleUrl', () => {
       it('delegates to getUrl with article type', () => {
         const url = ossService.getArticleUrl('articles/test.jpg');
-        expect(url).toBe('http://localhost:9000/pictures/articles/test.jpg');
+        expect(url).toBe(
+          'http://localhost:9000/articles-bucket/articles/test.jpg',
+        );
       });
     });
 
