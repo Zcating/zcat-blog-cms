@@ -38,9 +38,7 @@
       "@cms/core": [
         "app/shared"
       ],
-      "@cms/core/*": [
-        "app/shared/*"
-      ],
+      "@cms/core/*": ["app/shared/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
