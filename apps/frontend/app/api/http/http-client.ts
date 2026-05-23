@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 
+import { csrfContext } from '../context/csrf-context';
 import { getCurrentRequest } from '../context/request-context';
 
 import { EventCenter } from './event-center';
@@ -15,16 +16,10 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   retryDelay: 1000,
 };
 
-let csrfToken: string | null = null;
-
 export const csrf = {
-  get: () => csrfToken,
-  set: (token: string) => {
-    csrfToken = token;
-  },
-  clear: () => {
-    csrfToken = null;
-  },
+  get: () => csrfContext.get(),
+  set: (token: string | null) => csrfContext.set(token),
+  clear: () => csrfContext.set(null),
 };
 
 export namespace HttpClient {
@@ -56,8 +51,9 @@ export namespace HttpClient {
   }
 
   function getCsrfHeader(): Record<string, string> {
-    if (csrfToken) {
-      return { 'X-CSRF-Token': csrfToken };
+    const token = csrfContext.get();
+    if (token) {
+      return { 'X-CSRF-Token': token };
     }
     return {};
   }
