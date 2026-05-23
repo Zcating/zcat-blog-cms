@@ -49,6 +49,35 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (url.pathname === '/api/cms/user-info' && request.method === 'GET') {
+    sendJson(response, {
+      name: 'Admin',
+      contact: '{"email":"admin@test.com","github":"admin"}',
+      occupation: 'Developer',
+      avatar: '',
+      aboutMe: 'About me',
+      abstract: 'Abstract',
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/cms/user-info/update' && request.method === 'POST') {
+    let body = '';
+    request.on('data', (chunk) => { body += chunk; });
+    request.on('end', () => {
+      const parsed = JSON.parse(body);
+      sendJson(response, {
+        name: parsed.name || 'Admin',
+        contact: parsed.contact || '{"email":"admin@test.com","github":"admin"}',
+        occupation: parsed.occupation || 'Developer',
+        avatar: parsed.avatar || '',
+        aboutMe: parsed.aboutMe || 'About me',
+        abstract: parsed.abstract || 'Abstract',
+      });
+    });
+    return;
+  }
+
   response.writeHead(404, { 'Content-Type': 'application/json' });
   response.end(
     JSON.stringify({
