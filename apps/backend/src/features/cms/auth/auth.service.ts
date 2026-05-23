@@ -24,8 +24,8 @@ export async function login(
     return null;
   }
 
-  const hashPassword = await bcrypt.hash(password, user.salt);
-  if (user.password !== hashPassword) {
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
     return null;
   }
 

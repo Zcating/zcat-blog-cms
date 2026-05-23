@@ -18,6 +18,7 @@ vi.mock('../../../common', () => ({
 }));
 
 const mockBcrypt = vi.hoisted(() => ({
+  compare: vi.fn(),
   hash: vi.fn(),
   genSalt: vi.fn(),
 }));
@@ -60,7 +61,7 @@ describe('authService', () => {
         password: 'hashed-password',
         salt: 'somesalt',
       });
-      mockBcrypt.hash.mockResolvedValue('hashed-password');
+      mockBcrypt.compare.mockResolvedValue(true);
       mockJwt.sign.mockReturnValue('token123');
       whitelistMocks.create.mockResolvedValue({ id: 1 });
 
@@ -71,7 +72,10 @@ describe('authService', () => {
       });
 
       expect(result).toEqual({ accessToken: 'token123' });
-      expect(mockBcrypt.hash).toHaveBeenCalledWith('password', 'somesalt');
+      expect(mockBcrypt.compare).toHaveBeenCalledWith(
+        'password',
+        'hashed-password',
+      );
       expect(whitelistMocks.create).toHaveBeenCalledWith({
         token: 'token123',
         userId: 1,
@@ -98,7 +102,7 @@ describe('authService', () => {
         password: 'real-hash',
         salt: 'salt',
       });
-      mockBcrypt.hash.mockResolvedValue('wrong-hash');
+      mockBcrypt.compare.mockResolvedValue(false);
 
       const result = await authService.login('admin', 'wrong');
 
