@@ -1,5 +1,20 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
+const mockConfig = vi.hoisted(() => ({
+  minioPublicUrl: 'http://localhost:9000',
+  minioPhotoBucket: 'photos-bucket',
+  minioArticleBucket: 'articles-bucket',
+  minioEndpoint: 'localhost',
+  minioPort: 9000,
+  minioUseSsl: false,
+  minioAccessKey: '',
+  minioSecretKey: '',
+}));
+
+vi.mock('./config.service', () => ({
+  config: mockConfig,
+}));
+
 const mockRemoveObject = vi.hoisted(() => vi.fn());
 const mockPresignedPutObject = vi.hoisted(() => vi.fn());
 
@@ -14,17 +29,11 @@ vi.mock('minio', () => {
 import { ossService } from './oss.service';
 
 describe('ossService', () => {
-  beforeEach(() => {
-    process.env.MINIO_PUBLIC_URL = 'http://localhost:9000';
-    process.env.MINIO_PHOTO_BUCKET = 'photos-bucket';
-    process.env.MINIO_ARTICLE_BUCKET = 'articles-bucket';
-  });
-
   afterEach(() => {
     vi.clearAllMocks();
-    delete process.env.MINIO_PUBLIC_URL;
-    delete process.env.MINIO_PHOTO_BUCKET;
-    delete process.env.MINIO_ARTICLE_BUCKET;
+    mockConfig.minioPublicUrl = 'http://localhost:9000';
+    mockConfig.minioPhotoBucket = 'photos-bucket';
+    mockConfig.minioArticleBucket = 'articles-bucket';
   });
 
   describe('getUrl', () => {
@@ -39,13 +48,13 @@ describe('ossService', () => {
     });
 
     it('returns empty string when public url is not configured', () => {
-      delete process.env.MINIO_PUBLIC_URL;
+      mockConfig.minioPublicUrl = '';
       const url = ossService.getUrl('photo', 'test.jpg');
       expect(url).toBe('');
     });
 
     it('returns url when only public url is configured (bucket not needed)', () => {
-      delete process.env.MINIO_PHOTO_BUCKET;
+      mockConfig.minioPhotoBucket = '';
       const url = ossService.getUrl('photo', 'test.jpg');
       expect(url).toBe('http://localhost:9000/pictures/test.jpg');
     });
@@ -78,7 +87,7 @@ describe('ossService', () => {
     });
 
     it('does nothing when bucket is not configured', async () => {
-      delete process.env.MINIO_PHOTO_BUCKET;
+      mockConfig.minioPhotoBucket = '';
       await ossService.deleteObject('photo', 'test.jpg');
       expect(mockRemoveObject).not.toHaveBeenCalled();
     });
@@ -107,7 +116,7 @@ describe('ossService', () => {
     });
 
     it('returns empty string when bucket is not configured', async () => {
-      delete process.env.MINIO_PHOTO_BUCKET;
+      mockConfig.minioPhotoBucket = '';
       const url = await ossService.presignUploadUrl('photo', 'test.jpg');
       expect(url).toBe('');
     });

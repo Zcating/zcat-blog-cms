@@ -1,6 +1,7 @@
 import { createMiddleware } from 'hono/factory';
 import jwt from 'jsonwebtoken';
 
+import { config } from '../common/config.service';
 import { tokenWhitelistService } from '../features/cms/auth/whitelist.service';
 
 // Extend Hono context variables type
@@ -21,8 +22,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
 
   const token = authHeader.slice(7);
   try {
-    const secret = process.env.JWT_SECRET ?? '';
-    const payload = jwt.verify(token, secret) as {
+    const payload = jwt.verify(token, config.jwtSecret) as {
       sub: string;
       username: string;
     };

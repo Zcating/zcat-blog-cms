@@ -14,13 +14,13 @@ vi.mock('../features/cms/auth/whitelist.service', () => ({
   },
 }));
 
+vi.mock('../common/config.service', () => ({
+  config: { jwtSecret: 'test-secret' },
+}));
+
 import { authMiddleware } from './auth';
 
 describe('authMiddleware', () => {
-  beforeEach(() => {
-    process.env.JWT_SECRET = 'test-secret';
-  });
-
   afterEach(() => {
     vi.clearAllMocks();
   });

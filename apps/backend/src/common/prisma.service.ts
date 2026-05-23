@@ -2,8 +2,10 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 import { PrismaClient } from '../../generated/prisma/client';
 
+import { config } from './config.service';
+
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL ?? '',
+  connectionString: config.databaseUrl,
 });
 
 export const prismaService = new PrismaClient({ adapter });

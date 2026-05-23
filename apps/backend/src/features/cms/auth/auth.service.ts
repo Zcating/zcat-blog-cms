@@ -2,6 +2,7 @@ import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 import { prismaService } from '../../../common';
+import { config } from '../../../common/config.service';
 
 import { tokenWhitelistService } from './whitelist.service';
 
@@ -31,7 +32,7 @@ export async function login(
 
   const token = jwt.sign(
     { username: user.username, sub: user.id },
-    process.env.JWT_SECRET as string,
+    config.jwtSecret,
     { expiresIn: '1d' },
   );
 
@@ -78,11 +79,9 @@ export async function register(
     },
   });
 
-  const token = jwt.sign(
-    { username, sub: user.id },
-    process.env.JWT_SECRET as string,
-    { expiresIn: '1d' },
-  );
+  const token = jwt.sign({ username, sub: user.id }, config.jwtSecret, {
+    expiresIn: '1d',
+  });
 
   return { code: 'SUCCESS' as const, accessToken: token };
 }

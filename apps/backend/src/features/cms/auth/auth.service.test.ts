@@ -17,6 +17,10 @@ vi.mock('../../../common', () => ({
   prismaService: mockPrisma,
 }));
 
+vi.mock('../../../common/config.service', () => ({
+  config: { jwtSecret: 'test-secret' },
+}));
+
 const mockBcrypt = vi.hoisted(() => ({
   compare: vi.fn(),
   hash: vi.fn(),
@@ -45,10 +49,6 @@ vi.mock('./whitelist.service', () => ({
 import { authService } from './auth.service';
 
 describe('authService', () => {
-  beforeEach(() => {
-    process.env.JWT_SECRET = 'test-secret';
-  });
-
   afterEach(() => {
     vi.clearAllMocks();
   });

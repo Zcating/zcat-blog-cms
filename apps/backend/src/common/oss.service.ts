@@ -1,40 +1,32 @@
 import { Client } from 'minio';
 
+import { config } from './config.service';
+
 type OssType = 'article' | 'photo';
 
 function getBucketConfig(type: OssType): { bucket: string; domain: string } {
-  const publicUrl = process.env.MINIO_PUBLIC_URL ?? '';
   const bucket =
-    type === 'photo'
-      ? (process.env.MINIO_PHOTO_BUCKET ?? '')
-      : (process.env.MINIO_ARTICLE_BUCKET ?? '');
-  return { bucket, domain: publicUrl };
+    type === 'photo' ? config.minioPhotoBucket : config.minioArticleBucket;
+  return { bucket, domain: config.minioPublicUrl };
 }
 
 function createMinioClient(): Client {
-  const endpoint = process.env.MINIO_ENDPOINT ?? 'localhost';
-  const port = parseInt(process.env.MINIO_PORT ?? '9000', 10);
-  const useSSL = process.env.MINIO_USE_SSL === 'true';
-  const accessKey = process.env.MINIO_ACCESS_KEY ?? '';
-  const secretKey = process.env.MINIO_SECRET_KEY ?? '';
-
   return new Client({
-    endPoint: endpoint,
-    port,
-    useSSL,
-    accessKey,
-    secretKey,
+    endPoint: config.minioEndpoint,
+    port: config.minioPort,
+    useSSL: config.minioUseSsl,
+    accessKey: config.minioAccessKey,
+    secretKey: config.minioSecretKey,
   });
 }
 
 const minioClient = createMinioClient();
 
 function getUrl(type: OssType, key: string): string {
-  const domain = process.env.MINIO_PUBLIC_URL ?? '';
-  if (!domain) {
+  if (!config.minioPublicUrl) {
     return '';
   }
-  return `${domain}/pictures/${key}`;
+  return `${config.minioPublicUrl}/pictures/${key}`;
 }
 
 async function deleteObject(type: OssType, key: string): Promise<void> {

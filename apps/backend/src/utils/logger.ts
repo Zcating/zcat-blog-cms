@@ -1,9 +1,11 @@
 import pino from 'pino';
 
-const isDev = process.env.NODE_ENV !== 'production';
+import { config } from '../common/config.service';
+
+const isDev = config.nodeEnv !== 'production';
 
 const pinoLogger = pino({
-  level: process.env.LOG_LEVEL || (isDev ? 'debug' : 'info'),
+  level: config.logLevel || (isDev ? 'debug' : 'info'),
   ...(isDev
     ? {
         transport: {
