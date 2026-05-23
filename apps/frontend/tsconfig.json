@@ -24,7 +24,6 @@
       ".",
       "./.react-router/types"
     ],
-    "baseUrl": ".",
     "paths": {
       "@cms/*": [
         "./app/*"
@@ -36,9 +35,9 @@
         "./app/api/*"
       ],
       "@cms/core": [
-        "app/shared"
+        "./app/shared"
       ],
-      "@cms/core/*": ["app/shared/*"]
+      "@cms/core/*": ["./app/shared/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
