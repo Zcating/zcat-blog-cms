@@ -66,10 +66,7 @@ vi.mock('@zcat/ui/shadcn/ui/tooltip', () => ({
     asChild?: boolean;
     children: React.ReactElement;
   }) => children,
-  TooltipContent: ({
-    children,
-    ...props
-  }: any) =>
+  TooltipContent: ({ children, ...props }: any) =>
     React.createElement('div', props, children),
 }));
 
