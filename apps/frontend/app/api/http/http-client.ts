@@ -59,7 +59,6 @@ export namespace HttpClient {
   }
 
   function getAuthHeaders(): Record<string, string> {
-    log('getAuthHeaders called');
     const headers: Record<string, string> = {};
 
     const cookieToken = Cookies.get('token');

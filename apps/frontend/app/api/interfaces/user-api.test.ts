@@ -74,7 +74,7 @@ describe('UserApi', () => {
         path: 'cms/user-info/update',
         params: {
           name: 'Updated',
-          contact: JSON.stringify({ email: 'u@test.com', github: 'u' }),
+          contact: { email: 'u@test.com', github: 'u' },
         },
       });
       expect(result.contact.email).toBe('u@test.com');

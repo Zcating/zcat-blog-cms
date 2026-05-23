@@ -38,11 +38,14 @@ describe('ArticlesApi', () => {
   });
 
   it('deletes an article by id', async () => {
-    delMock.mockResolvedValueOnce(undefined);
+    postMock.mockResolvedValueOnce(undefined);
 
     await ArticlesApi.deleteArticle(7);
 
-    expect(delMock).toHaveBeenCalledWith({ path: 'cms/articles/7' });
+    expect(postMock).toHaveBeenCalledWith({
+      path: 'cms/articles/delete',
+      params: { id: 7 },
+    });
   });
 
   it('uploads article images through the cms endpoint', async () => {

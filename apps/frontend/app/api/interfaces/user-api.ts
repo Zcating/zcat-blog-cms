@@ -37,10 +37,7 @@ export namespace UserApi {
   export async function updateUserInfo(data: UpdateUserInfoParams) {
     const result = await HttpClient.post<Record<string, string>>({
       path: 'cms/user-info/update',
-      params: {
-        ...data,
-        contact: JSON.stringify(data.contact),
-      },
+      params: data,
     });
 
     return {
