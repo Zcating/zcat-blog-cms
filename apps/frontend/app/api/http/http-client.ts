@@ -1,4 +1,4 @@
-﻿import Cookies from 'js-cookie';
+import Cookies from 'js-cookie';
 
 import { csrfContext } from '../context/csrf-context';
 import { getCurrentRequest } from '../context/request-context';
@@ -56,39 +56,6 @@ export namespace HttpClient {
       return { 'X-CSRF-Token': token };
     }
     return {};
-  }
-
-  function getAuthHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {};
-
-    const cookieToken = Cookies.get('token');
-    if (cookieToken) {
-      headers['Authorization'] = cookieToken;
-    }
-
-    const currentRequest = getCurrentRequest();
-    if (currentRequest) {
-      const cookieHeader = currentRequest.headers.get('Cookie') || '';
-      if (cookieHeader) {
-        headers['Cookie'] = cookieHeader;
-      }
-      if (!headers['Authorization']) {
-        const cookies = Object.fromEntries(
-          cookieHeader.split(';').map((c) => {
-            const [key, ...value] = c.trim().split('=');
-            return [
-              decodeURIComponent(key),
-              decodeURIComponent(value.join('=')),
-            ];
-          }),
-        );
-        if (cookies['token']) {
-          headers['Authorization'] = cookies['token'];
-        }
-      }
-    }
-
-    return headers;
   }
 
   function resolveApiUrl(path: string): string {
@@ -167,7 +134,6 @@ export namespace HttpClient {
     const request = normalizeRequestOptions(pathOrOptions, params, options);
     log('POST request', request.path, request.params);
     const headers: Record<string, string> = {
-      ...getAuthHeaders(),
       ...getCsrfHeader(),
     };
     let bodyData: string | FormData;
@@ -206,7 +172,6 @@ export namespace HttpClient {
     const queryPath = createQueryPath(request.path, request.params);
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'GET',
-      headers: getAuthHeaders(),
       signal: request.signal,
     });
     return handleResponse<T>(response);
@@ -231,7 +196,6 @@ export namespace HttpClient {
       body: JSON.stringify(request.params),
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeaders(),
         ...getCsrfHeader(),
       },
       signal: request.signal,
@@ -257,7 +221,6 @@ export namespace HttpClient {
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'DELETE',
       headers: {
-        ...getAuthHeaders(),
         ...getCsrfHeader(),
       },
       signal: request.signal,

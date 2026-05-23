@@ -82,13 +82,10 @@ describe('HttpClient', () => {
 
       await HttpClient.get('test/path');
 
+      // HttpClient no longer sends Authorization; auth is handled by BFF
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer test-token',
-          }),
-        }),
+        expect.stringContaining('test/path'),
+        expect.objectContaining({ method: 'GET' }),
       );
     });
 

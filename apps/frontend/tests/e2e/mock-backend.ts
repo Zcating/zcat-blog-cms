@@ -141,8 +141,10 @@ const server = createServer((request, response) => {
       sendJson(response, {
         name: (parsed.name as string) || 'Admin',
         contact:
-          (parsed.contact as string) ||
-          '{"email":"admin@test.com","github":"admin"}',
+          typeof parsed.contact === 'string'
+            ? parsed.contact
+            : JSON.stringify(parsed.contact) ||
+              '{"email":"admin@test.com","github":"admin"}',
         occupation: (parsed.occupation as string) || 'Developer',
         avatar: (parsed.avatar as string) || '',
         aboutMe: (parsed.aboutMe as string) || 'About me',
@@ -295,6 +297,6 @@ const server = createServer((request, response) => {
   );
 });
 
-server.listen(port, '127.0.0.1', () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`Mock backend listening on http://127.0.0.1:${port}`);
 });

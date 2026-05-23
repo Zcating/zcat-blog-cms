@@ -1,3 +1,5 @@
+import { getCurrentRequest } from '../api/context/request-context';
+
 import type { Route } from './+types/api-bff.$';
 
 const HOP_BY_HOP_HEADERS = [
@@ -48,29 +50,56 @@ function sanitizeResponseHeaders(response: Response): Headers {
   return headers;
 }
 
-function extractAuthToken(request: Request): string | null {
-  const authHeader = request.headers.get('Authorization');
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[BFF-DEBUG] extractAuthToken authHeader:', authHeader);
-  }
-  if (authHeader) return authHeader;
+function parseTokenFromCookieHeader(cookieHeader: string): string | null {
+  const cookies = Object.fromEntries(
+    cookieHeader.split(';').map((c) => {
+      const [key, ...rest] = c.trim().split('=');
+      return [decodeURIComponent(key), decodeURIComponent(rest.join('='))];
+    }),
+  );
+  return cookies['token'] || null;
+}
 
-  const cookieHeader = request.headers.get('Cookie');
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[BFF-DEBUG] extractAuthToken cookieHeader:', cookieHeader);
-  }
-  if (cookieHeader) {
-    const cookies = Object.fromEntries(
-      cookieHeader.split(';').map((c) => {
-        const [key, ...value] = c.trim().split('=');
-        return [key, value.join('=')];
-      }),
-    );
-    const token = cookies['token'] || null;
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[BFF-DEBUG] extractAuthToken cookie token:', token);
+function extractAuthToken(proxyRequest: Request): string | null {
+  const isDev = process.env.NODE_ENV === 'development';
+
+  // SSR path: HttpClient no longer sends auth headers; read from the original
+  // browser request stored in AsyncLocalStorage.
+  const currentRequest = getCurrentRequest();
+  if (currentRequest) {
+    if (isDev) {
+      console.log('[BFF] SSR mode - reading token from original request');
     }
-    return token;
+    const cookieHeader = currentRequest.headers.get('Cookie') || '';
+    if (cookieHeader) {
+      const token = parseTokenFromCookieHeader(cookieHeader);
+      if (isDev) {
+        console.log(
+          '[BFF] SSR extracted token:',
+          token ? `${token.slice(0, 20)}...` : null,
+        );
+      }
+      if (token) return token;
+    }
+    return null;
+  }
+
+  // Client-side path: the browser automatically attaches cookies to same-origin
+  // fetch requests. The BFF's own request already carries them.
+  const cookieHeader = proxyRequest.headers.get('Cookie') || '';
+  if (cookieHeader) {
+    const token = parseTokenFromCookieHeader(cookieHeader);
+    if (isDev) {
+      console.log(
+        '[BFF] Client-side extracted token:',
+        token ? `${token.slice(0, 20)}...` : null,
+      );
+    }
+    if (token) return token;
+  }
+
+  if (isDev) {
+    console.log('[BFF] No token found in request');
   }
   return null;
 }
