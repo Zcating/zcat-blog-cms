@@ -31,6 +31,8 @@
     "build": "tsx ./scripts/build.ts",
     "dev": "tsx ./scripts/dev.ts",
     "dev:e2e": "vite --config ./e2e/vite.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test --config playwright.config.ts",
     "test:e2e:ui": "playwright test --config playwright.config.ts --ui",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -66,7 +68,6 @@
     "@tailwindcss/typography": "^0.5.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "embla-carousel-react": "^8.6.0",
     "gsap": "^3.14.2",
@@ -93,12 +94,17 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^24.10.4",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^27.4.0",
     "typescript": "~5.9.3",
-    "vite": "^6.3.3"
+    "vite": "^6.3.3",
+    "vitest": "^4.0.18"
   }
 }
