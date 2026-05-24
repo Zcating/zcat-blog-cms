@@ -1,6 +1,7 @@
 import {
   Separator,
   SidebarTrigger,
+  ZDialog,
   ZSidebar,
   ZStickyHeader,
   ZView,
@@ -10,6 +11,7 @@ import {
   BookImageIcon,
   Gauge,
   ImageIcon,
+  LogOut,
   NotebookIcon,
   SettingsIcon,
   UserIcon,
@@ -23,6 +25,8 @@ import {
   isRouteErrorResponse,
   useLocation,
 } from 'react-router';
+
+import { AuthApi } from '@cms/api';
 
 const FRONTEND_VERSION = '1.0.0';
 
@@ -109,6 +113,20 @@ interface LayoutProps {
 
 function Layout(props: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const confirmed = await ZDialog.confirm({
+      title: '退出登录',
+      content: '确认退出当前账号？',
+      confirmText: '退出',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
+
+    await AuthApi.logout();
+    navigate('/login');
+  };
 
   const renderItem = (item: ZSidebarOption) => {
     if (!item.value) {
@@ -145,8 +163,19 @@ function Layout(props: LayoutProps) {
       currentValue={location.pathname}
       isActive={isActive}
       sidebarFooter={
-        <div className="text-xs text-muted-foreground text-center py-4">
-          v{FRONTEND_VERSION}
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-3 h-12 px-4 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors cursor-pointer text-left"
+          >
+            <LogOut className="size-5" />
+            <span>退出登录</span>
+          </button>
+          {/* <Separator className="my-1" />
+          <div className="text-xs text-muted-foreground text-center py-2">
+            v{FRONTEND_VERSION}
+          </div> */}
         </div>
       }
     >
