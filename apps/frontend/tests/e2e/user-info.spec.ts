@@ -15,7 +15,9 @@ test.describe('User Info', () => {
 
     // Verify display mode shows loader data
     await expect(page.getByText('Admin', { exact: true })).toBeVisible();
-    await expect(page.getByText('admin@test.com', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('admin@test.com', { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText('admin', { exact: true })).toBeVisible();
     await expect(page.getByText('Developer', { exact: true })).toBeVisible();
     await expect(page.getByText('About me', { exact: true })).toBeVisible();
@@ -35,8 +37,12 @@ test.describe('User Info', () => {
     await page.getByRole('button', { name: '保存' }).click();
 
     // Wait for display mode to show updated name
-    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('admin@test.com', { exact: true })).toBeVisible();
+    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(
+      page.getByText('admin@test.com', { exact: true }),
+    ).toBeVisible();
 
     // Click edit again, then cancel
     await page.getByRole('button', { name: '编辑' }).click();

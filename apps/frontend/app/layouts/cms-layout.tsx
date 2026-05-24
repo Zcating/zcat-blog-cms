@@ -1,6 +1,7 @@
 import {
   Separator,
   SidebarTrigger,
+  ZAvatar,
   ZDialog,
   ZSidebar,
   ZStickyHeader,
@@ -20,15 +21,19 @@ import React from 'react';
 import {
   Link,
   Outlet,
+  useLoaderData,
+  useLocation,
   useNavigate,
   useRouteError,
   isRouteErrorResponse,
-  useLocation,
 } from 'react-router';
 
-import { AuthApi } from '@cms/api';
+import { AuthApi, UserApi } from '@cms/api';
 
-const FRONTEND_VERSION = '1.0.0';
+export async function loader() {
+  const userInfo = await UserApi.userInfo();
+  return { name: userInfo.name, avatar: userInfo.avatar };
+}
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -114,6 +119,9 @@ interface LayoutProps {
 function Layout(props: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const loaderData = useLoaderData<{ name: string; avatar: string } | null>();
+  const name = loaderData?.name ?? '';
+  const avatar = loaderData?.avatar ?? '';
 
   const handleLogout = async () => {
     const confirmed = await ZDialog.confirm({
@@ -163,19 +171,23 @@ function Layout(props: LayoutProps) {
       currentValue={location.pathname}
       isActive={isActive}
       sidebarFooter={
-        <div className="flex flex-col">
+        <div className="flex items-center justify-between px-3 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <ZAvatar
+              src={avatar}
+              alt={name}
+              size="sm"
+              className="w-8 h-8 shrink-0"
+            />
+            <span className="text-sm font-medium truncate">{name}</span>
+          </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-3 h-12 px-4 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors cursor-pointer text-left"
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors shrink-0"
           >
-            <LogOut className="size-5" />
-            <span>退出登录</span>
+            <LogOut className="size-4" />
           </button>
-          <Separator className="my-1" />
-          <div className="text-xs text-muted-foreground text-center py-2">
-            v{FRONTEND_VERSION}
-          </div>
         </div>
       }
     >

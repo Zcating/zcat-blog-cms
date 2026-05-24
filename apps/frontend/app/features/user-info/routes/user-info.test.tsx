@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+﻿import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const mockUpdateUserInfo = vi.fn();
@@ -8,7 +8,11 @@ const setOptimisticMock = vi.fn();
 const commitOptimisticMock = vi.fn();
 
 vi.mock('@cms/core', () => ({
-  useOptimisticObject: () => [optimisticState, setOptimisticMock, commitOptimisticMock],
+  useOptimisticObject: () => [
+    optimisticState,
+    setOptimisticMock,
+    commitOptimisticMock,
+  ],
   Workspace: ({
     title,
     operation,
@@ -90,6 +94,7 @@ vi.mock('@zcat/ui', () => ({
         {children}
       </div>
     );
+    FormComponent.Item.displayName = 'FormComponentItem';
     return FormComponent;
   },
   useWatch: () => {},
