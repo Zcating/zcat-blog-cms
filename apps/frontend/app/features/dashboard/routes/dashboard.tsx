@@ -18,7 +18,13 @@ import { StatisticsApi } from '@cms/api';
 
 import type { Route } from './+types/dashboard';
 
-const Charts = lazy(() => import('../components/charts'));
+const VisitTrend = lazy(() =>
+  import('../components/charts').then((m) => ({ default: m.VisitTrend })),
+);
+
+const TopPages = lazy(() =>
+  import('../components/charts').then((m) => ({ default: m.TopPages })),
+);
 
 export async function loader() {
   const [summary, chartData] = await Promise.all([
@@ -110,8 +116,8 @@ export default function DashboardPage(props: Route.ComponentProps) {
               </div>
             }
           >
-            {isClient && <Charts.VisitTrend data={chartData} />}
-            {!isClient && <div className="h-[300px]" />}
+            {isClient && <VisitTrend data={chartData} />}
+            {!isClient && <div className="h-75" />}
           </Suspense>
         </CardContent>
       </Card>
@@ -123,13 +129,13 @@ export default function DashboardPage(props: Route.ComponentProps) {
         <CardContent>
           <Suspense
             fallback={
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              <div className="h-75 flex items-center justify-center text-muted-foreground">
                 加载中...
               </div>
             }
           >
-            {isClient && <Charts.TopPages data={summary.topPages} />}
-            {!isClient && <div className="h-[300px]" />}
+            {isClient && <TopPages data={summary.topPages} />}
+            {!isClient && <div className="h-75" />}
           </Suspense>
         </CardContent>
       </Card>

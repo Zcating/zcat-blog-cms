@@ -1,7 +1,7 @@
 import { redirect } from 'react-router';
 
 export async function loader() {
-  return redirect('/login');
+  return redirect('/dashboard');
 }
 
 export default function Home() {

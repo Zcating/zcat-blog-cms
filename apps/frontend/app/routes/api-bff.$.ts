@@ -61,47 +61,17 @@ function parseTokenFromCookieHeader(cookieHeader: string): string | null {
 }
 
 function extractAuthToken(proxyRequest: Request): string | null {
-  const isDev = process.env.NODE_ENV === 'development';
-
-  // SSR path: HttpClient no longer sends auth headers; read from the original
-  // browser request stored in AsyncLocalStorage.
-  const currentRequest = getCurrentRequest();
-  if (currentRequest) {
-    if (isDev) {
-      console.log('[BFF] SSR mode - reading token from original request');
-    }
-    const cookieHeader = currentRequest.headers.get('Cookie') || '';
-    if (cookieHeader) {
-      const token = parseTokenFromCookieHeader(cookieHeader);
-      if (isDev) {
-        console.log(
-          '[BFF] SSR extracted token:',
-          token ? `${token.slice(0, 20)}...` : null,
-        );
-      }
-      if (token) return token;
-    }
+  const cookieHeader = proxyRequest.headers.get('Cookie') || '';
+  if (!cookieHeader) {
     return null;
   }
 
-  // Client-side path: the browser automatically attaches cookies to same-origin
-  // fetch requests. The BFF's own request already carries them.
-  const cookieHeader = proxyRequest.headers.get('Cookie') || '';
-  if (cookieHeader) {
-    const token = parseTokenFromCookieHeader(cookieHeader);
-    if (isDev) {
-      console.log(
-        '[BFF] Client-side extracted token:',
-        token ? `${token.slice(0, 20)}...` : null,
-      );
-    }
-    if (token) return token;
+  const token = parseTokenFromCookieHeader(cookieHeader);
+  if (!token) {
+    return null;
   }
 
-  if (isDev) {
-    console.log('[BFF] No token found in request');
-  }
-  return null;
+  return token;
 }
 
 function logBffRequest(
@@ -149,6 +119,10 @@ export async function proxyToBackend(
 
   const duration = Date.now() - startTime;
   logBffRequest(method, targetUrl, response.status, duration);
+  console.log(
+    `[BFF] Response headers:`,
+    Object.fromEntries(response.headers.entries()),
+  );
 
   return new Response(response.body, {
     status: response.status,

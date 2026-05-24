@@ -1,16 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { postMock, saveTokenMock } = vi.hoisted(() => ({
-  postMock: vi.fn(),
-  saveTokenMock: vi.fn(),
+const { loginMock } = vi.hoisted(() => ({
+  loginMock: vi.fn(),
 }));
 
-vi.mock('../http/http-client', () => ({
-  HttpClient: {
-    post: postMock,
-    saveToken: saveTokenMock,
-  },
-}));
+vi.stubGlobal('fetch', loginMock);
 
 import { AuthApi } from './auth-api';
 
@@ -19,9 +13,10 @@ describe('AuthApi', () => {
     vi.clearAllMocks();
   });
 
-  it('calls login endpoint and saves token', async () => {
-    postMock.mockResolvedValueOnce({
-      accessToken: 'token-from-api',
+  it('calls login endpoint via BFF auth route', async () => {
+    loginMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ code: '0000', message: '登录成功' }),
     });
 
     await AuthApi.login({
@@ -29,13 +24,35 @@ describe('AuthApi', () => {
       password: '123456',
     });
 
-    expect(postMock).toHaveBeenCalledWith({
-      path: 'auth/login',
-      params: {
-        username: 'admin',
-        password: '123456',
-      },
+    expect(loginMock).toHaveBeenCalledWith('/api/auth-bff/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: '123456' }),
     });
-    expect(saveTokenMock).toHaveBeenCalledWith('token-from-api');
+  });
+
+  it('throws on login error', async () => {
+    loginMock.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ code: 'LOGIN_ERR', message: '用户名或密码错误' }),
+    });
+
+    await expect(
+      AuthApi.login({ username: 'admin', password: 'wrong' }),
+    ).rejects.toThrow('用户名或密码错误');
+  });
+
+  it('calls logout endpoint via BFF auth route', async () => {
+    loginMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ code: '0000', message: '已登出' }),
+    });
+
+    await AuthApi.logout();
+
+    expect(loginMock).toHaveBeenCalledWith('/api/auth-bff/logout', {
+      method: 'POST',
+    });
   });
 });

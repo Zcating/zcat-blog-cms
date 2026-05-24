@@ -17,6 +17,8 @@ export default [
   index('routes/home.tsx'),
   ...Object.values(authRoutes).map((r) => route(r.path, r.module)),
   route('api/bff/*', 'routes/api-bff.$.ts'),
+  route('api/auth-bff/login', 'routes/auth-bff.login.ts'),
+  route('api/auth-bff/logout', 'routes/auth-bff.logout.ts'),
   layout('layouts/cms-layout.tsx', [
     ...Object.values(dashboardRoutes).map((r) => route(r.path, r.module)),
     ...Object.values(articleRoutes).map((r) => route(r.path, r.module)),

@@ -1,4 +1,4 @@
-import { HttpClient } from '../http/http-client';
+type ApiResult = { code: string; message: string };
 
 export namespace AuthApi {
   export interface LoginParams {
@@ -26,14 +26,36 @@ export namespace AuthApi {
   }
 
   export async function login(params: LoginParams) {
-    const data = await HttpClient.post({ path: 'auth/login', params });
-    const token = data.accessToken;
-    HttpClient.saveToken(token);
+    const response = await fetch('/api/auth-bff/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    const result: ApiResult = await response.json();
+    if (result.code !== '0000') {
+      throw new Error(result.message);
+    }
+  }
+
+  export async function logout() {
+    const response = await fetch('/api/auth-bff/logout', {
+      method: 'POST',
+    });
+    const result: ApiResult = await response.json();
+    if (result.code !== '0000') {
+      throw new Error(result.message);
+    }
   }
 
   export async function register(params: RegisterParams) {
-    const data = await HttpClient.post({ path: 'auth/register', params });
-    const token = data.accessToken;
-    HttpClient.saveToken(token);
+    const response = await fetch('/api/auth-bff/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    const result: ApiResult = await response.json();
+    if (result.code !== '0000') {
+      throw new Error(result.message);
+    }
   }
 }

@@ -7,7 +7,6 @@ import {
   createZForm,
   ZButton,
   ZInput,
-  ZCheckbox,
   StaggerReveal,
 } from '@zcat/ui';
 import { useNavigate } from 'react-router';
@@ -69,13 +68,6 @@ export default function GuestHome() {
             <LoginForm.Item name="password" label="密码">
               <ZInput type="password" placeholder="请输入密码" />
             </LoginForm.Item>
-
-            <div className="form-control">
-              <label className="label cursor-pointer justify-start gap-3">
-                <ZCheckbox />
-                <span className="label-text">记住我</span>
-              </label>
-            </div>
 
             <div className="form-control mt-6">
               <ZButton className="w-full" type="submit">

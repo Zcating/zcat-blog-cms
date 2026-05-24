@@ -1,6 +1,3 @@
-import Cookies from 'js-cookie';
-
-import { csrfContext } from '../context/csrf-context';
 import { getCurrentRequest } from '../context/request-context';
 
 import { EventCenter } from './event-center';
@@ -14,12 +11,6 @@ interface RetryOptions {
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   retries: 3,
   retryDelay: 1000,
-};
-
-export const csrf = {
-  get: () => csrfContext.get(),
-  set: (token: string | null) => csrfContext.set(token),
-  clear: () => csrfContext.set(null),
 };
 
 /** During SSR, server-to-server fetch() calls don't carry browser cookies.
@@ -52,20 +43,8 @@ export namespace HttpClient {
 
   type RequestSignalOptions = Pick<RequestOptions, 'signal'>;
 
-  export function saveToken(token: string) {
-    Cookies.set('token', `Bearer ${token}`, { path: '/' });
-  }
-
   export function createAbortController(): AbortController {
     return new AbortController();
-  }
-
-  function getCsrfHeader(): Record<string, string> {
-    const token = csrfContext.get();
-    if (token) {
-      return { 'X-CSRF-Token': token };
-    }
-    return {};
   }
 
   function resolveApiUrl(path: string): string {
@@ -145,7 +124,6 @@ export namespace HttpClient {
     log('POST request', request.path, request.params);
     const headers: Record<string, string> = {
       ...getSsrCookieHeader(),
-      ...getCsrfHeader(),
     };
     let bodyData: string | FormData;
     if (request.params instanceof FormData) {
@@ -209,7 +187,6 @@ export namespace HttpClient {
       headers: {
         'Content-Type': 'application/json',
         ...getSsrCookieHeader(),
-        ...getCsrfHeader(),
       },
       signal: request.signal,
     });
@@ -235,7 +212,6 @@ export namespace HttpClient {
       method: 'DELETE',
       headers: {
         ...getSsrCookieHeader(),
-        ...getCsrfHeader(),
       },
       signal: request.signal,
     });
