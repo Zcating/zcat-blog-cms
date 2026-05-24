@@ -13,7 +13,6 @@
     ],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "rootDir": ".",
     "outDir": "dist",
@@ -37,7 +36,8 @@
   "include": [
     "src/**/*",
     "scripts/**/*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "vitest.setup.ts" 
   ],
   "exclude": [
     "tsup.config.ts",

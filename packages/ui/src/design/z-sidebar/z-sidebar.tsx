@@ -62,7 +62,7 @@ export function ZSidebar(props: ZSidebarProps) {
     header,
     sidebarHeader,
     sidebarFooter,
-    footer,
+    // footer,
     className,
     style,
     currentValue,
@@ -80,7 +80,7 @@ export function ZSidebar(props: ZSidebarProps) {
         {adaptedHeader}
       </ZView>
       <ZView className="flex flex-1">
-        <Sidebar className="top-header-height h-sidebar-height">
+        <Sidebar className="top-header-height h-content-height">
           <SidebarHeader>{adaptedSidebarHeader}</SidebarHeader>
           <SidebarContent className="mx-4">
             {options.map((item, index) => {

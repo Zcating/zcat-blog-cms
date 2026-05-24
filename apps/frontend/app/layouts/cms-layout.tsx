@@ -172,10 +172,10 @@ function Layout(props: LayoutProps) {
             <LogOut className="size-5" />
             <span>退出登录</span>
           </button>
-          {/* <Separator className="my-1" />
+          <Separator className="my-1" />
           <div className="text-xs text-muted-foreground text-center py-2">
             v{FRONTEND_VERSION}
-          </div> */}
+          </div>
         </div>
       }
     >
