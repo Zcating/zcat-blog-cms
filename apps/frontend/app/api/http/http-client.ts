@@ -22,6 +22,16 @@ export const csrf = {
   clear: () => csrfContext.set(null),
 };
 
+/** During SSR, server-to-server fetch() calls don't carry browser cookies.
+ *  This helper reads the Cookie header from the SSR request context so it
+ *  can be forwarded to BFF API calls. Returns empty object for client-side. */
+function getSsrCookieHeader(): Record<string, string> {
+  const currentRequest = getCurrentRequest();
+  if (!currentRequest) return {};
+  const cookieHeader = currentRequest.headers.get('Cookie');
+  return cookieHeader ? { Cookie: cookieHeader } : {};
+}
+
 export namespace HttpClient {
   const API_URL: string = '/api/bff';
 
@@ -134,6 +144,7 @@ export namespace HttpClient {
     const request = normalizeRequestOptions(pathOrOptions, params, options);
     log('POST request', request.path, request.params);
     const headers: Record<string, string> = {
+      ...getSsrCookieHeader(),
       ...getCsrfHeader(),
     };
     let bodyData: string | FormData;
@@ -172,6 +183,7 @@ export namespace HttpClient {
     const queryPath = createQueryPath(request.path, request.params);
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'GET',
+      headers: getSsrCookieHeader(),
       signal: request.signal,
     });
     return handleResponse<T>(response);
@@ -196,6 +208,7 @@ export namespace HttpClient {
       body: JSON.stringify(request.params),
       headers: {
         'Content-Type': 'application/json',
+        ...getSsrCookieHeader(),
         ...getCsrfHeader(),
       },
       signal: request.signal,
@@ -221,6 +234,7 @@ export namespace HttpClient {
     const response = await fetchWithRetry(resolveApiUrl(queryPath), {
       method: 'DELETE',
       headers: {
+        ...getSsrCookieHeader(),
         ...getCsrfHeader(),
       },
       signal: request.signal,
