@@ -31,7 +31,8 @@
     "docker:build:frontend": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y -p frontend",
     "docker:build:blog": "tsx ./scripts/docker-push.ts --env-file .env.deploy -y -p blog",
     "format": "oxfmt .",
-    "format:check": "oxfmt --check ."
+    "format:check": "oxfmt --check .",
+    "test": "pnpm -r run test"
   },
   "dependencies": {
     "dotenv": "^16.5.0",

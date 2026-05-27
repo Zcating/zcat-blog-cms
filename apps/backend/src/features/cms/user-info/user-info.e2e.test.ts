@@ -175,14 +175,14 @@ describe('userInfo E2E', () => {
       expect(res.status).toBe(400);
     });
 
-    it('returns 405 for unsupported methods on /user-info', async () => {
+    it('returns 404 for unsupported methods on /user-info', async () => {
       const app = createTestApp();
 
-      // DELETE should return 405
+      // DELETE should return 404 (Hono default for non-existent routes)
       const res = await app.request('/user-info', {
         method: 'DELETE',
       });
-      expect(res.status).toBe(405);
+      expect(res.status).toBe(404);
     });
   });
 });
