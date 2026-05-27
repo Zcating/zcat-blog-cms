@@ -58,16 +58,16 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| controller | ZChatController | - | 消息控制器，用于管理消息状态 |
-| onSend | (message: Message) => void \| Promise<void> | - | 发送消息时的回调函数 |
-| onRegenerate? | () => void \| Promise<void> | - | 重新生成回复时的回调函数 |
-| onAbort? | () => void | - | 停止响应时的回调函数 |
-| placeholder | string | 'Type a message...' | 输入框占位符 |
-| toolbar? | React.ReactNode | - | 自定义工具栏内容 |
-| emptyComponent? | React.ReactNode \| React.ComponentType | - | 空状态时显示的组件 |
-| className | string | - | 自定义样式类名 |
+| Attribute       | Type                                        | Default             | Description                  |
+| :-------------- | :------------------------------------------ | :------------------ | :--------------------------- |
+| controller      | ZChatController                             | -                   | 消息控制器，用于管理消息状态 |
+| onSend          | (message: Message) => void \| Promise<void> | -                   | 发送消息时的回调函数         |
+| onRegenerate?   | () => void \| Promise<void>                 | -                   | 重新生成回复时的回调函数     |
+| onAbort?        | () => void                                  | -                   | 停止响应时的回调函数         |
+| placeholder     | string                                      | 'Type a message...' | 输入框占位符                 |
+| toolbar?        | React.ReactNode                             | -                   | 自定义工具栏内容             |
+| emptyComponent? | React.ReactNode \| React.ComponentType      | -                   | 空状态时显示的组件           |
+| className       | string                                      | -                   | 自定义样式类名               |
 
 ## Message 类型
 

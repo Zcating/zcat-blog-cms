@@ -56,9 +56,9 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| variant | 'default' \| 'destructive' \| 'outline' \| 'secondary' \| 'ghost' \| 'link' | 'default' | 按钮样式变体 |
-| size | 'default' \| 'sm' \| 'lg' \| 'xl' \| 'icon' \| 'icon-sm' \| 'icon-lg' | 'default' | 按钮尺寸 |
-| asChild | boolean | false | 是否作为子组件渲染 |
-| ...props | React.ButtonHTMLAttributes | - | 支持所有原生 button 属性 |
+| Attribute | Type                                                                        | Default   | Description              |
+| :-------- | :-------------------------------------------------------------------------- | :-------- | :----------------------- |
+| variant   | 'default' \| 'destructive' \| 'outline' \| 'secondary' \| 'ghost' \| 'link' | 'default' | 按钮样式变体             |
+| size      | 'default' \| 'sm' \| 'lg' \| 'xl' \| 'icon' \| 'icon-sm' \| 'icon-lg'       | 'default' | 按钮尺寸                 |
+| asChild   | boolean                                                                     | false     | 是否作为子组件渲染       |
+| ...props  | React.ButtonHTMLAttributes                                                  | -         | 支持所有原生 button 属性 |

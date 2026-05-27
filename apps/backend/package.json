@@ -1,15 +1,15 @@
 {
   "name": "backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
   "private": true,
+  "description": "",
   "license": "UNLICENSED",
+  "author": "",
   "scripts": {
     "dev": "npx dotenv -e .env -- tsx watch src/main.ts",
     "build": "pnpm run db:generate:prod && tsc -p tsconfig.build.json",
     "build:dev": "pnpm run db:generate:dev && tsc -p tsconfig.build.json",
-    "lint": "eslint \"src/**/*.ts\" --max-warnings 0 --fix",
+    "lint": "oxlint \"src/**/*.ts\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",

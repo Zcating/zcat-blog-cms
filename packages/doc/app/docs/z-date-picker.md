@@ -34,9 +34,9 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| value | dayjs.Dayjs | - | 当前选中的日期（受控） |
-| defaultValue | dayjs.Dayjs | - | 默认选中的日期（非受控） |
-| onValueChange | (date: dayjs.Dayjs) => void | - | 日期改变时的回调 |
-| placeholder | string | '选择日期' | 输入框占位符 |
+| Attribute     | Type                        | Default    | Description              |
+| :------------ | :-------------------------- | :--------- | :----------------------- |
+| value         | dayjs.Dayjs                 | -          | 当前选中的日期（受控）   |
+| defaultValue  | dayjs.Dayjs                 | -          | 默认选中的日期（非受控） |
+| onValueChange | (date: dayjs.Dayjs) => void | -          | 日期改变时的回调         |
+| placeholder   | string                      | '选择日期' | 输入框占位符             |

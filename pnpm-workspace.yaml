@@ -7,7 +7,6 @@ packages:
 #   - build
 #   - dist
 
-
 ignoredBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'

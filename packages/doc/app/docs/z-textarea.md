@@ -54,9 +54,9 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| value | string | - | 文本域的值 |
-| onValueChange | (value: string) => void | - | 值改变时的回调 |
-| placeholder | string | - | 占位文本 |
-| disabled | boolean | false | 是否禁用 |
+| Attribute     | Type                    | Default | Description    |
+| :------------ | :---------------------- | :------ | :------------- |
+| value         | string                  | -       | 文本域的值     |
+| onValueChange | (value: string) => void | -       | 值改变时的回调 |
+| placeholder   | string                  | -       | 占位文本       |
+| disabled      | boolean                 | false   | 是否禁用       |

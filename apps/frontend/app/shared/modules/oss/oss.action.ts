@@ -27,7 +27,7 @@ function compressImage(
   quality: number,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    new Compressor(file as File, {
+    const compressor = new Compressor(file as File, {
       maxWidth,
       maxHeight,
       quality,
@@ -38,6 +38,7 @@ function compressImage(
         reject(err);
       },
     });
+    void compressor;
   });
 }
 

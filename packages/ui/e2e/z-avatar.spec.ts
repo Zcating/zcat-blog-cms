@@ -11,6 +11,8 @@ test.describe('ZAvatar smoke', () => {
   test('renders one fallback avatar example', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.locator('[data-testid="z-avatar-fallback"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="z-avatar-fallback"]'),
+    ).toBeVisible();
   });
 });

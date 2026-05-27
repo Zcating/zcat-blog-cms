@@ -38,10 +38,10 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| page | number | - | 当前页码（从 1 开始） |
-| totalPages | number | - | 总页数 |
-| onPageChange | (page: number) => void | - | 页码改变回调 |
-| getHref | (page: number) => string | - | 生成页码链接的方法 |
-| className | string | - | 自定义类名 |
+| Attribute    | Type                     | Default | Description           |
+| :----------- | :----------------------- | :------ | :-------------------- |
+| page         | number                   | -       | 当前页码（从 1 开始） |
+| totalPages   | number                   | -       | 总页数                |
+| onPageChange | (page: number) => void   | -       | 页码改变回调          |
+| getHref      | (page: number) => string | -       | 生成页码链接的方法    |
+| className    | string                   | -       | 自定义类名            |

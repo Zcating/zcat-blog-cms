@@ -77,6 +77,7 @@ describe('useOptimisticArray', () => {
 
   // React 19 useOptimistic 在 JSDOM 环境中无法正确触发乐观更新，
   // 这是 React 内部 hook 的行为，非本业务 hook 的逻辑问题。
+  // oxlint-disable-next-line vitest/no-disabled-tests
   it.skip('应该正确添加乐观更新', async () => {
     const { result } = renderHook(() =>
       useOptimisticArray<{ id: number; name: string }>(initialData, reduce),
@@ -93,6 +94,7 @@ describe('useOptimisticArray', () => {
     expect(result.current[0]).toContainEqual(newItem);
   });
 
+  // oxlint-disable-next-line vitest/no-disabled-tests
   it.skip('应该正确更新现有项', async () => {
     const { result } = renderHook(() =>
       useOptimisticArray<{ id: number; name: string }>(initialData, reduce),
@@ -147,6 +149,7 @@ describe('useOptimisticArray', () => {
     );
   });
 
+  // oxlint-disable-next-line vitest/no-disabled-tests
   it.skip('commitState rollback 应该回滚状态', async () => {
     const { result } = renderHook(() =>
       useOptimisticArray<{ id: number; name: string }>(initialData, reduce),

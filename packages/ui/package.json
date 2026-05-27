@@ -1,7 +1,11 @@
 {
   "name": "@zcat/ui",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,10 +27,6 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "tsx ./scripts/build.ts",
     "dev": "tsx ./scripts/dev.ts",
@@ -36,12 +36,7 @@
     "test:e2e": "playwright test --config playwright.config.ts",
     "test:e2e:ui": "playwright test --config playwright.config.ts --ui",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint --ext .ts,.tsx ./src --max-warnings 0 --fix"
-  },
-  "peerDependencies": {
-    "lucide-react": "^0.515.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "lint": "oxlint ./src --fix"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -106,5 +101,10 @@
     "typescript": "~5.9.3",
     "vite": "^6.3.3",
     "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "lucide-react": "^0.515.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

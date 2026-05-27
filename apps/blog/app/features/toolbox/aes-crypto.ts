@@ -56,7 +56,9 @@ const parseInput = (input: string, encoding: AesEncodingEnum) => {
 
     return CryptoJS.enc[encoding].parse(cleanInput);
   } catch (e) {
-    throw new Error(`无法使用 ${encoding} 解析输入: ${(e as Error).message}`);
+    throw new Error(`无法使用 ${encoding} 解析输入: ${(e as Error).message}`, {
+      cause: e,
+    });
   }
 };
 
@@ -67,7 +69,12 @@ const formatOutput = (
   try {
     return wordArray.toString(CryptoJS.enc[encoding]);
   } catch (e) {
-    throw new Error(`无法使用 ${encoding} 格式化输出: ${(e as Error).message}`);
+    throw new Error(
+      `无法使用 ${encoding} 格式化输出: ${(e as Error).message}`,
+      {
+        cause: e,
+      },
+    );
   }
 };
 

@@ -20,7 +20,7 @@ describe('errorHandler', () => {
 
   it('应该对非 Error 类型抛出原值', () => {
     expect(() => errorHandler('string error')).toThrow('string error');
-    expect(() => errorHandler(42)).toThrow();
-    expect(() => errorHandler(null)).toThrow();
+    expect(() => errorHandler(42)).toThrow('42');
+    expect(() => errorHandler(null)).toThrow('null');
   });
 });

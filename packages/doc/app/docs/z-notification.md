@@ -42,11 +42,11 @@ export function DemoComponent() {
 
 ## Methods
 
-| Method | Parameters | Description |
-| :--- | :--- | :--- |
-| show | message: string | 显示普通提示 |
-| success | message: string | 显示成功提示 |
-| error | message: string | 显示错误提示 |
-| info | message: string | 显示信息提示 |
-| warning | message: string | 显示警告提示 |
+| Method  | Parameters      | Description                |
+| :------ | :-------------- | :------------------------- |
+| show    | message: string | 显示普通提示               |
+| success | message: string | 显示成功提示               |
+| error   | message: string | 显示错误提示               |
+| info    | message: string | 显示信息提示               |
+| warning | message: string | 显示警告提示               |
 | loading | message: string | 显示加载提示，返回关闭函数 |
