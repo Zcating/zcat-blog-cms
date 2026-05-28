@@ -120,3 +120,7 @@
 - 管理后台：`apps/frontend/AGENTS.md`
 - 组件库：`packages/ui/AGENTS.md`
 - 组件库文档：`packages/doc/AGENTS.md`
+
+## TIPS
+
+- 测试账户密码: zcat_admin/admin123
