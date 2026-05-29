@@ -1,4 +1,10 @@
-﻿import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import type {
+  ComponentProps,
+  FormHTMLAttributes,
+  HTMLAttributes,
+  ReactNode,
+} from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const mockUpdateUserInfo = vi.fn();
@@ -6,6 +12,31 @@ const mockUpdateUserInfo = vi.fn();
 let optimisticState: Record<string, unknown> = {};
 const setOptimisticMock = vi.fn();
 const commitOptimisticMock = vi.fn();
+
+interface MockFormApi {
+  instance: {
+    reset: (values?: unknown) => void;
+    handleSubmit: (fn: () => void) => () => void;
+  };
+  submit: () => void;
+}
+
+type MockFormProps = FormHTMLAttributes<HTMLFormElement> & {
+  form: MockFormApi;
+  children: ReactNode;
+};
+
+type MockFormItemProps = HTMLAttributes<HTMLDivElement> & {
+  name: string;
+  label?: string;
+  children?: ReactNode;
+};
+
+interface MockFormComponent {
+  (props: MockFormProps): React.JSX.Element;
+  useForm: () => MockFormApi;
+  Item: (props: MockFormItemProps) => React.JSX.Element;
+}
 
 vi.mock('@cms/core', () => ({
   useOptimisticObject: () => [
@@ -67,34 +98,26 @@ vi.mock('@zcat/ui', () => ({
     </button>
   ),
   createZForm: () => {
-    const FormComponent = ({
-      children,
-      className,
-    }: {
-      form: Record<string, unknown>;
-      children: React.ReactNode;
-      className?: string;
-    }) => <form className={className}>{children}</form>;
-    FormComponent.displayName = 'FormComponent';
-    FormComponent.useForm = () => ({
-      instance: { reset: vi.fn(), handleSubmit: (fn: () => void) => fn },
-      submit: vi.fn(),
-    });
-    FormComponent.Item = ({
-      name,
-      label,
-      children,
-    }: {
-      name: string;
-      label: string;
-      children: React.ReactNode;
-    }) => (
-      <div data-testid={`form-item-${name}`}>
-        <label>{label}</label>
-        {children}
-      </div>
-    );
-    FormComponent.Item.displayName = 'FormComponentItem';
+    const FormComponent = Object.assign(
+      ({ children, ...props }: MockFormProps) => (
+        <form {...props}>{children}</form>
+      ),
+      {
+        useForm: (): MockFormApi => ({
+          instance: {
+            reset: vi.fn(),
+            handleSubmit: (fn: () => void) => () => fn(),
+          },
+          submit: vi.fn(),
+        }),
+        Item: ({ name, label, children, ...props }: MockFormItemProps) => (
+          <div data-testid={`form-item-${name}`} {...props}>
+            {label && <label>{label}</label>}
+            {children}
+          </div>
+        ),
+      },
+    ) as MockFormComponent;
     return FormComponent;
   },
   useWatch: () => {},
@@ -106,14 +129,15 @@ vi.mock('lucide-react', () => ({
 }));
 
 import UserInfo from './user-info';
+import type { Route } from './+types/user-info';
 
-interface MockRouteComponentProps {
-  loaderData: Record<string, unknown>;
-}
+type UserInfoProps = Route.ComponentProps;
+type UserInfoData = UserInfoProps['loaderData']['userInfo'];
+const mockMatches = [] as unknown as UserInfoProps['matches'];
 
 const createMockProps = (
-  overrides: Record<string, unknown> = {},
-): MockRouteComponentProps => ({
+  overrides: Partial<UserInfoData> = {},
+): UserInfoProps => ({
   loaderData: {
     userInfo: {
       name: 'Admin',
@@ -125,6 +149,9 @@ const createMockProps = (
     },
     ...overrides,
   },
+  params: {},
+  matches: mockMatches,
+  actionData: undefined,
 });
 
 describe('UserInfo Page', () => {
@@ -142,7 +169,7 @@ describe('UserInfo Page', () => {
 
   it('renders user info in display mode', () => {
     const props = createMockProps();
-    render(<UserInfo {...(props as Route.ComponentProps)} />);
+    render(<UserInfo {...props} />);
 
     expect(screen.getByText('个人资料')).toBeDefined();
     expect(screen.getByText('Admin')).toBeDefined();
@@ -156,7 +183,7 @@ describe('UserInfo Page', () => {
 
   it('switches to edit mode on edit button click', () => {
     const props = createMockProps();
-    render(<UserInfo {...(props as Route.ComponentProps)} />);
+    render(<UserInfo {...props} />);
 
     fireEvent.click(screen.getByText('编辑'));
 
@@ -181,7 +208,7 @@ describe('UserInfo Page', () => {
     });
 
     const props = createMockProps();
-    render(<UserInfo {...(props as Route.ComponentProps)} />);
+    render(<UserInfo {...props} />);
 
     expect(screen.getByText('编辑')).toBeDefined();
     fireEvent.click(screen.getByText('编辑'));
@@ -193,14 +220,14 @@ describe('UserInfo Page', () => {
     optimisticState = { ...optimisticState, loading: true };
 
     const props = createMockProps();
-    render(<UserInfo {...(props as Route.ComponentProps)} />);
+    render(<UserInfo {...props} />);
 
     expect(screen.getByTestId('loading-spinner')).toBeDefined();
   });
 
   it('switches back to display mode on cancel', () => {
     const props = createMockProps();
-    render(<UserInfo {...(props as Route.ComponentProps)} />);
+    render(<UserInfo {...props} />);
 
     fireEvent.click(screen.getByText('编辑'));
     fireEvent.click(screen.getByText('取消'));

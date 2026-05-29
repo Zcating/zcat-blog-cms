@@ -266,7 +266,7 @@ const server = createServer((request, response) => {
         albumId: (parsed.albumId as number | null) || null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      };
+      } as (typeof photos)[number];
       photos.push(newPhoto);
       sendJson(response, newPhoto);
     });

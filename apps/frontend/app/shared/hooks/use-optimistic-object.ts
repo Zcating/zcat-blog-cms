@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StateActionTypes<T = unknown> {
-  update: ['update', T];
+  update: ['update', Partial<T>];
   rollback: ['rollback'];
 }
 

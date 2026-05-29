@@ -9,10 +9,10 @@ describe('errorHandler', () => {
   const createApp = () => {
     const app = new Hono();
     app.onError(errorHandler);
-    app.get('/zod-error', () => {
+    app.get('/zod-error', (c) => {
       const schema = z.string().min(1);
       schema.parse('');
-      return null;
+      return c.json({});
     });
     app.get('/generic-error', () => {
       throw new Error('something broke');

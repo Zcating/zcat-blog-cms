@@ -45,7 +45,7 @@ vi.mock('@zcat/ui/shadcn', async () => {
 vi.mock('@zcat/ui/shadcn/ui/button', () => {
   const MockButton = React.forwardRef<
     HTMLButtonElement,
-    React.ComponentProps<'button'>
+    React.ComponentProps<'button'> & { asChild?: boolean }
   >(({ children, asChild: _asChild, ...props }, ref) =>
     React.createElement('button', { ref, type: 'button', ...props }, children),
   );
@@ -62,9 +62,10 @@ vi.mock('@zcat/ui/shadcn/ui/tooltip', () => ({
     React.createElement(React.Fragment, null, children),
   TooltipTrigger: ({
     children,
+    asChild: _asChild,
   }: {
+    children?: React.ReactNode;
     asChild?: boolean;
-    children: React.ReactElement;
   }) => children,
   TooltipContent: ({
     children,
@@ -72,8 +73,12 @@ vi.mock('@zcat/ui/shadcn/ui/tooltip', () => ({
     side: _side,
     sideOffset: _sideOffset,
     ...props
-  }: React.HTMLAttributes<HTMLDivElement>) =>
-    React.createElement('div', props, children),
+  }: React.HTMLAttributes<HTMLDivElement> & {
+    children?: React.ReactNode;
+    align?: string;
+    side?: string;
+    sideOffset?: number;
+  }) => React.createElement('div', props, children),
 }));
 
 vi.mock('@zcat/ui/shadcn/ui/input', () => {
@@ -96,18 +101,26 @@ const CheckboxCtx_ = React.createContext<CheckboxCtx>({});
 vi.mock('@zcat/ui/shadcn/ui/checkbox', () => {
   const MockCheckbox = React.forwardRef<
     HTMLButtonElement,
-    { checked?: boolean; onCheckedChange?: (checked: boolean) => void }
+    {
+      checked?: boolean;
+      onCheckedChange?: (checked: boolean) => void;
+      children?: React.ReactNode;
+    }
   >(({ checked, onCheckedChange, children, ...props }, ref) =>
     React.createElement(
       CheckboxCtx_.Provider,
       { value: { checked, onCheckedChange } },
-      React.createElement('button', {
-        ref,
-        type: 'button',
-        'data-state': checked ? 'checked' : 'unchecked',
-        onClick: () => onCheckedChange?.(!checked),
-        ...props,
-      }),
+      React.createElement(
+        'button',
+        {
+          ref,
+          type: 'button',
+          'data-state': checked ? 'checked' : 'unchecked',
+          onClick: () => onCheckedChange?.(!checked),
+          ...props,
+        },
+        children,
+      ),
     ),
   );
   MockCheckbox.displayName = 'MockCheckbox';

@@ -5,7 +5,6 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
-
   return {
     plugins: [
       tailwindcss(),

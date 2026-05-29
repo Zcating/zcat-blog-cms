@@ -1,18 +1,23 @@
 import React from 'react';
+import { delay } from 'es-toolkit';
 
-type AwaitFunction = (...args: any[]) => Promise<any> | void;
-interface LoadingFn<T extends AwaitFunction> {
-  (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>>;
+type AwaitFunction<TArgs extends unknown[] = unknown[], TResult = unknown> = (
+  ...args: TArgs
+) => Promise<TResult> | TResult;
+interface LoadingFn<TArgs extends unknown[], TResult> {
+  (...args: TArgs): Promise<Awaited<TResult>>;
   loading: boolean;
 }
 
-export function useLoadingFn<T extends AwaitFunction>(fn: T) {
+export function useLoadingFn<TArgs extends unknown[], TResult>(
+  fn: AwaitFunction<TArgs, TResult>,
+) {
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const loadingFn = async (...args: Parameters<T>) => {
+  const loadingFn = async (...args: TArgs) => {
     setIsLoading(true);
     try {
-      const [result] = await Promise.all([fn(...args), Promise.tick(1500)]);
+      const [result] = await Promise.all([fn(...args), delay(1500)]);
       return result;
     } finally {
       setIsLoading(false);
@@ -20,5 +25,5 @@ export function useLoadingFn<T extends AwaitFunction>(fn: T) {
   };
   loadingFn.loading = isLoading;
 
-  return loadingFn as LoadingFn<T>;
+  return loadingFn as LoadingFn<TArgs, TResult>;
 }

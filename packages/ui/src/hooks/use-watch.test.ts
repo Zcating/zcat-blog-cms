@@ -15,12 +15,12 @@ describe('useWatch', () => {
   it('calls callback when deps change', () => {
     const fn = vi.fn();
     const { rerender } = renderHook(({ deps }) => useWatch(deps, fn), {
-      initialProps: { deps: [1] as [number] },
+      initialProps: { deps: [1] as unknown as [] },
     });
 
     expect(fn).toHaveBeenCalledTimes(1);
 
-    rerender({ deps: [2] });
+    rerender({ deps: [2] as unknown as [] });
 
     expect(fn).toHaveBeenCalledTimes(2);
     expect(fn).toHaveBeenCalledWith(2);
@@ -30,10 +30,10 @@ describe('useWatch', () => {
     const cleanup = vi.fn();
     const fn = vi.fn(() => cleanup);
     const { rerender } = renderHook(({ deps }) => useWatch(deps, fn), {
-      initialProps: { deps: [1] as [number] },
+      initialProps: { deps: [1] as unknown as [] },
     });
 
-    rerender({ deps: [2] });
+    rerender({ deps: [2] as unknown as [] });
 
     expect(cleanup).toHaveBeenCalledTimes(1);
   });

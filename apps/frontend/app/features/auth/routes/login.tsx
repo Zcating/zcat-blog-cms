@@ -8,6 +8,7 @@ import {
   ZButton,
   ZInput,
   StaggerReveal,
+  ZNotification,
 } from '@zcat/ui';
 import { useNavigate } from 'react-router';
 import { z } from 'zod';
@@ -35,8 +36,15 @@ export default function GuestHome() {
       password: '',
     },
     onSubmit: async (data) => {
-      await AuthApi.login(data);
-      await navigate('/dashboard');
+      try {
+        await AuthApi.login(data);
+        await ZNotification.success('登录成功');
+        await navigate('/dashboard');
+      } catch (error) {
+        await ZNotification.error(
+          error instanceof Error ? error.message : '登录失败',
+        );
+      }
     },
   });
 

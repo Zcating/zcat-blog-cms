@@ -1,9 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-// Promise.tick is a non-standard extension, mock it to resolve immediately
-Promise.tick ??= () => Promise.resolve();
-
 import { useLoadingFn } from './use-loading-fn';
 
 describe('useLoadingFn', () => {

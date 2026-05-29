@@ -43,7 +43,7 @@ describe('userInfo E2E', () => {
         avatar: '',
         aboutMe: 'About me',
         abstract: 'Abstract',
-      });
+      } as any);
 
       const app = createTestApp();
       const res = await app.request('/user-info');
@@ -73,7 +73,7 @@ describe('userInfo E2E', () => {
         avatar: '',
         aboutMe: '',
         abstract: '',
-      });
+      } as any);
 
       const app = createTestApp();
 
@@ -125,7 +125,7 @@ describe('userInfo E2E', () => {
         avatar: '',
         aboutMe: 'Updated via PUT',
         abstract: 'PUT test',
-      });
+      } as any);
 
       const app = createTestApp();
 

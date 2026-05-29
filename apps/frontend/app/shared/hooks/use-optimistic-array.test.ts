@@ -11,19 +11,19 @@ const updateArray = <T>(arr: T[], items: T[]): T[] => {
 };
 
 vi.mock('@zcat/ui', () => ({
-  usePropsValue: (options: {
-    defaultValue?: unknown;
-    value?: unknown;
-    onChange?: () => void;
+  usePropsValue: <T>(options: {
+    defaultValue?: T;
+    value?: T;
+    onChange?: (value: T) => void;
   }) => {
     const [state, setState] = React.useState(
       options.defaultValue ?? options.value,
     );
     return [
       state,
-      (v: unknown) => {
+      (v: T) => {
         setState(v);
-        options.onChange?.(v as never);
+        options.onChange?.(v);
       },
     ] as const;
   },
@@ -47,7 +47,7 @@ describe('useOptimisticArray', () => {
 
   const reduce = (
     prev: typeof initialData,
-    data: { id: number; name: string },
+    data: (typeof initialData)[number],
   ) => {
     const exists = prev.find((item) => item.id === data.id);
     if (exists) {

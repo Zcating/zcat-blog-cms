@@ -68,7 +68,11 @@ describe('removeArray', () => {
 
   it('应该使用自定义 key 函数', () => {
     const strItems = [{ key: 'a', value: 1 }];
-    const result = removeArray(strItems, { key: 'a' }, (item) => item.key);
+    const result = removeArray(
+      strItems,
+      { key: 'a', value: 1 },
+      (item) => item.key,
+    );
     expect(result).toHaveLength(0);
   });
 });

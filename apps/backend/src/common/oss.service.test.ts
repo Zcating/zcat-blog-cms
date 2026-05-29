@@ -18,10 +18,10 @@ const mockRemoveObject = vi.hoisted(() => vi.fn());
 const mockPresignedPutObject = vi.hoisted(() => vi.fn());
 
 vi.mock('minio', () => {
-  const MockClient = function () {
-    this.removeObject = mockRemoveObject;
-    this.presignedPutObject = mockPresignedPutObject;
-  };
+  class MockClient {
+    removeObject = mockRemoveObject;
+    presignedPutObject = mockPresignedPutObject;
+  }
   return { Client: MockClient };
 });
 

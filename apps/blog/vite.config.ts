@@ -6,11 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd()) as ImportMetaEnv;
   return {
-    plugins: [
-      tailwindcss(),
-      ...(mode === 'test' ? [] : [reactRouter()]),
-      tsconfigPaths(),
-    ],
+    plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
     server: {
       host: '127.0.0.1',
       port: Number(env.VITE_PORT),

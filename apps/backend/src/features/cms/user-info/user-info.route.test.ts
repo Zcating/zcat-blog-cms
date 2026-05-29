@@ -47,7 +47,7 @@ describe('userInfoRoutes', () => {
       mockUserInfoService.get.mockResolvedValue({ name: 'Admin' });
       const app = new Hono();
       app.use('*', (c, next) => {
-        c.set('user', { userId: 5 });
+        c.set('user', { userId: 5, username: 'test' });
         return next();
       });
       app.route('/', userInfoRoutes);

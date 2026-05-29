@@ -74,6 +74,22 @@
         "vitest": true,
         "node": true
       }
+    },
+    {
+      "files": [
+        "apps/backend/src/common/oss.service.test.ts",
+        "apps/frontend/app/features/user-info/routes/user-info.test.tsx",
+        "apps/frontend/app/shared/hooks/use-loading-fn.ts",
+        "apps/frontend/app/shared/hooks/use-loading-fn.test.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-array.test.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-object.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-object.test.ts",
+        "apps/frontend/vite.config.ts",
+        "packages/doc/vite.config.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "error"
+      }
     }
   ]
 }

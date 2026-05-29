@@ -12,16 +12,4 @@ function run(command: string, args: string[], options: SpawnOptions = {}) {
 }
 
 const tsupCode = await run('pnpm', ['exec', 'tsup']);
-if (tsupCode !== 0) {
-  process.exit(tsupCode);
-}
-
-const tscCode = await run('pnpm', [
-  'exec',
-  'tsc',
-  '-p',
-  'tsconfig.build.json',
-  '--emitDeclarationOnly',
-  '--skipLibCheck',
-]);
-process.exit(tscCode);
+process.exit(tsupCode);

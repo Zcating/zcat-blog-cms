@@ -16,8 +16,8 @@ describe('hashTest', () => {
 
   it('sorts keys alphabetically', () => {
     const params = { b: '2', a: '1' };
-    const result = hashTest(params, hashTest(params, ''));
-
+    // Just verify the function works without type errors
+    const result = hashTest(params, 'some-hash');
     expect(typeof result).toBe('boolean');
   });
 

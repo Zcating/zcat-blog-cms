@@ -15,7 +15,7 @@ type ArrayStateDispatch<T> = <K extends keyof StateActionTypes<T>>(
   ...args: StateActionTypes<T>[K]
 ) => void;
 
-export function useOptimisticArray<T, U = unknown>(
+export function useOptimisticArray<T, U = T>(
   initialValue: T[],
   reduce: (prev: T[], data: U) => T[],
 ) {
