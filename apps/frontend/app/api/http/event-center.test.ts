@@ -11,8 +11,8 @@ describe('EventCenter', () => {
 
   it('应该注册并触发事件', () => {
     const callback = vi.fn();
-    EventCenter.subscribe('UNAUTH', callback);
-    EventCenter.emitEvent('UNAUTH', new Error('test'));
+    EventCenter.subscribe('ERROR', callback);
+    EventCenter.emitEvent('ERROR', new Error('test'));
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(new Error('test'));
   });
@@ -31,22 +31,23 @@ describe('EventCenter', () => {
 
   it('unsubscribe 应该移除监听器', () => {
     const callback = vi.fn();
-    const unsubscribe = EventCenter.subscribe('UNAUTH', callback);
+    const unsubscribe = EventCenter.subscribe('ERROR', callback);
     unsubscribe();
-    EventCenter.emitEvent('UNAUTH', new Error('test'));
+    EventCenter.emitEvent('ERROR', new Error('test'));
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('不同类型事件应该隔离', () => {
-    const unauthCb = vi.fn();
-    const errorCb = vi.fn();
+  it('不同监听器应该彼此独立', () => {
+    const removedCallback = vi.fn();
+    const activeCallback = vi.fn();
 
-    EventCenter.subscribe('UNAUTH', unauthCb);
-    EventCenter.subscribe('ERROR', errorCb);
-    EventCenter.emitEvent('UNAUTH', new Error('unauth'));
+    const unsubscribe = EventCenter.subscribe('ERROR', removedCallback);
+    EventCenter.subscribe('ERROR', activeCallback);
+    unsubscribe();
+    EventCenter.emitEvent('ERROR', new Error('error'));
 
-    expect(unauthCb).toHaveBeenCalledTimes(1);
-    expect(errorCb).not.toHaveBeenCalled();
+    expect(removedCallback).not.toHaveBeenCalled();
+    expect(activeCallback).toHaveBeenCalledTimes(1);
   });
 
   it('emitEvent 应该给所有监听器传递相同参数', () => {
@@ -63,10 +64,10 @@ describe('EventCenter', () => {
 
   it('unsubscribe 多次调用不应报错', () => {
     const callback = vi.fn();
-    const unsubscribe = EventCenter.subscribe('UNAUTH', callback);
+    const unsubscribe = EventCenter.subscribe('ERROR', callback);
     unsubscribe();
     unsubscribe();
-    EventCenter.emitEvent('UNAUTH', new Error('test'));
+    EventCenter.emitEvent('ERROR', new Error('test'));
     expect(callback).not.toHaveBeenCalled();
   });
 });

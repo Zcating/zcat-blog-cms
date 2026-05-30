@@ -1,6 +1,5 @@
 export namespace EventCenter {
   interface EventListener {
-    UNAUTH: (error: Error) => void;
     ERROR: (error: Error) => void;
   }
 
@@ -13,7 +12,6 @@ export namespace EventCenter {
   >[0];
 
   const eventListeners: EventListenerMap = {
-    UNAUTH: [],
     ERROR: [],
   };
 

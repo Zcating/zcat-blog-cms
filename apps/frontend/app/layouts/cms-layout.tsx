@@ -37,23 +37,20 @@ export async function loader() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  const navigate = useNavigate();
   const [message, setMessage] = React.useState('');
 
   React.useEffect(() => {
     if (isRouteErrorResponse(error)) {
       setMessage(`状态码：${error.status} \n 错误内容: ${error.statusText}`);
+      return;
     }
+
     if (error instanceof Error) {
-      if (error.message === 'Unauthorized') {
-        navigate('/login');
-      } else {
-        setMessage(error.message);
-      }
+      setMessage(error.message);
     } else {
       setMessage('未知错误');
     }
-  }, [navigate, error]);
+  }, [error]);
 
   return (
     <Layout>

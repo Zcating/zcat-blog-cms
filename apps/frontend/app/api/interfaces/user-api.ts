@@ -52,4 +52,12 @@ export namespace UserApi {
       abstract: result.abstract,
     };
   }
+
+  export async function isValid(): Promise<boolean> {
+    const result = await HttpClient.post<{ valid: boolean }>({
+      path: 'auth/is-valid',
+    });
+
+    return result.valid;
+  }
 }

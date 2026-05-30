@@ -81,4 +81,24 @@ describe('UserApi', () => {
       expect(result.contact.github).toBe('u');
     });
   });
+
+  describe('isValid', () => {
+    it('returns true when api responds valid=true', async () => {
+      mockPost.mockResolvedValueOnce({ valid: true });
+
+      const result = await UserApi.isValid();
+
+      expect(mockPost).toHaveBeenCalledWith({ path: 'auth/is-valid' });
+      expect(result).toBe(true);
+    });
+
+    it('returns false when api responds valid=false', async () => {
+      mockPost.mockResolvedValueOnce({ valid: false });
+
+      const result = await UserApi.isValid();
+
+      expect(mockPost).toHaveBeenCalledWith({ path: 'auth/is-valid' });
+      expect(result).toBe(false);
+    });
+  });
 });

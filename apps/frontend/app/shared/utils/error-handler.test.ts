@@ -20,7 +20,21 @@ describe('errorHandler', () => {
 
   it('应该对非 Error 类型抛出原值', () => {
     expect(() => errorHandler('string error')).toThrow('string error');
-    expect(() => errorHandler(42)).toThrow('42');
-    expect(() => errorHandler(null)).toThrow('null');
+    // 其他非 Error 类型用简单断言验证行为即可
+    let thrown: unknown = undefined;
+    try {
+      errorHandler(42);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBe(42);
+
+    thrown = undefined;
+    try {
+      errorHandler(null);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBe(null);
   });
 });

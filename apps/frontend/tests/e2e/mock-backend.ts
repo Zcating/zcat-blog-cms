@@ -87,6 +87,13 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (url.pathname === '/api/auth/is-valid' && request.method === 'POST') {
+    sendJson(response, {
+      valid: request.headers.authorization === 'Bearer frontend-e2e-token',
+    });
+    return;
+  }
+
   if (url.pathname === '/api/cms/statistics/summary') {
     sendJson(response, {
       totalVisits: 1,

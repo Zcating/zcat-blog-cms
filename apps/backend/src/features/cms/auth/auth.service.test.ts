@@ -29,6 +29,7 @@ const mockBcrypt = vi.hoisted(() => ({
 
 const mockJwt = vi.hoisted(() => ({
   sign: vi.fn(),
+  verify: vi.fn(),
 }));
 
 vi.mock('bcrypt', () => ({ default: mockBcrypt, ...mockBcrypt }));
@@ -36,12 +37,14 @@ vi.mock('jsonwebtoken', () => ({ default: mockJwt, ...mockJwt }));
 
 const whitelistMocks = vi.hoisted(() => ({
   create: vi.fn(),
+  validate: vi.fn(),
   remove: vi.fn(),
 }));
 
 vi.mock('./whitelist.service', () => ({
   tokenWhitelistService: {
     create: whitelistMocks.create,
+    validate: whitelistMocks.validate,
     remove: whitelistMocks.remove,
   },
 }));
@@ -166,6 +169,39 @@ describe('authService', () => {
       await authService.logout('test-token');
 
       expect(whitelistMocks.remove).toHaveBeenCalledWith('test-token');
+    });
+  });
+
+  describe('isValid', () => {
+    it('returns true when jwt is valid and token exists in whitelist', async () => {
+      mockJwt.verify.mockReturnValue({ sub: 1 });
+      whitelistMocks.validate.mockResolvedValue(true);
+
+      const result = await authService.isValid('valid-token');
+
+      expect(result).toBe(true);
+      expect(mockJwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret');
+      expect(whitelistMocks.validate).toHaveBeenCalledWith('valid-token');
+    });
+
+    it('returns false when token is not in whitelist', async () => {
+      mockJwt.verify.mockReturnValue({ sub: 1 });
+      whitelistMocks.validate.mockResolvedValue(false);
+
+      const result = await authService.isValid('missing-token');
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when jwt verification throws', async () => {
+      mockJwt.verify.mockImplementation(() => {
+        throw new Error('invalid token');
+      });
+
+      const result = await authService.isValid('invalid-token');
+
+      expect(result).toBe(false);
+      expect(whitelistMocks.validate).not.toHaveBeenCalled();
     });
   });
 });

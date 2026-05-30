@@ -15,6 +15,7 @@ import {
   initServerStorage,
   runWithRequest,
 } from './api/context/request-context';
+import { authMiddleware } from './auth/auth-middleware';
 
 import type { Route } from './+types/root';
 
@@ -26,7 +27,7 @@ export const middleware = [
     next: () => Promise<unknown>,
   ) => {
     await initServerStorage();
-    return runWithRequest(request, next);
+    return runWithRequest(request, () => authMiddleware({ request }, next));
   },
 ];
 
@@ -41,21 +42,16 @@ export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+
   React.useEffect(() => {
-    const subs = [
-      HttpClient.subscribeUnauthEvent(() => {
+    return HttpClient.subscribeErrorEvent((error) => {
+      if (error.message === 'Unauthorized') {
         navigate('/login');
-      }),
-      HttpClient.subscribeErrorEvent((error) => {
-        // TODO: 处理错误
-        // navigate('/error');
-        ZNotification.error(error.message);
-        console.log('error', error);
-      }),
-    ];
-    return () => {
-      subs.forEach((sub) => sub());
-    };
+        return;
+      }
+      ZNotification.error(error.message);
+      console.log('error', error);
+    });
   }, [navigate]);
 
   return (

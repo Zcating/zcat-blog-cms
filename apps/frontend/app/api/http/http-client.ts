@@ -218,18 +218,11 @@ export namespace HttpClient {
     return handleResponse<T>(response);
   }
 
-  export function subscribeUnauthEvent(callback: () => void) {
-    return EventCenter.subscribe('UNAUTH', callback);
-  }
-
   export function subscribeErrorEvent(callback: (error: Error) => void) {
     return EventCenter.subscribe('ERROR', callback);
   }
 
   async function handleResponse<T>(response: Response): Promise<T> {
-    if (response.status === 401) {
-      EventCenter.emitEvent('UNAUTH', new Error('UNAUTH'));
-    }
     const result = (await response.json()) as ResponseResult<T>;
     if (result.code !== '0000') {
       EventCenter.emitEvent('ERROR', new Error(result.message));

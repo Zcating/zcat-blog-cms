@@ -49,6 +49,38 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   }
 });
 
+authRoutes.post('/is-valid', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json(
+      createResult({
+        code: ResultCode.Success,
+        data: { valid: false },
+      }),
+    );
+  }
+
+  const token = authHeader.slice(7);
+  try {
+    const valid = await authService.isValid(token);
+
+    return c.json(
+      createResult({
+        code: ResultCode.Success,
+        data: { valid },
+      }),
+    );
+  } catch (error) {
+    logger.error('Is valid error:', error);
+    return c.json(
+      createResult({
+        code: ResultCode.UnknownError,
+        message: '校验失败',
+      }),
+    );
+  }
+});
+
 authRoutes.post('/logout', async (c) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {

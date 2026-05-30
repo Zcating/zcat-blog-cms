@@ -90,4 +90,13 @@ export async function logout(token: string) {
   await tokenWhitelistService.remove(token);
 }
 
-export const authService = { login, register, logout };
+export async function isValid(token: string): Promise<boolean> {
+  try {
+    jwt.verify(token, config.jwtSecret);
+    return await tokenWhitelistService.validate(token);
+  } catch {
+    return false;
+  }
+}
+
+export const authService = { login, register, logout, isValid };

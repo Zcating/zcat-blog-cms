@@ -91,25 +91,27 @@ describe('HttpClient', () => {
       expect(mockFetch.mock.calls[0][0]).toContain('name=test');
     });
 
-    it('should emit UNAUTH event on 401', async () => {
+    it('should emit ERROR event on 401 business error', async () => {
       const { EventCenter } = await import('./event-center');
       const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
       mockFetch.mockResolvedValueOnce({
         status: 401,
         json: () =>
-          Promise.resolve({ code: '0000', message: 'success', data: null }),
+          Promise.resolve({
+            code: '1001',
+            message: 'Unauthorized',
+            data: null,
+          }),
       });
 
-      try {
-        await HttpClient.get('test/path');
-      } catch {
-        // ignore
-      }
+      await expect(HttpClient.get('test/path')).rejects.toThrow('Unauthorized');
 
-      expect(emitSpy).toHaveBeenCalledWith('UNAUTH', expect.any(Error));
+      expect(emitSpy).toHaveBeenCalledWith('ERROR', new Error('Unauthorized'));
     });
 
     it('should throw on non-0000 response code', async () => {
+      const { EventCenter } = await import('./event-center');
+      const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -123,6 +125,7 @@ describe('HttpClient', () => {
       await expect(HttpClient.get('test/path')).rejects.toThrow(
         'Error message',
       );
+      expect(emitSpy).toHaveBeenCalledWith('ERROR', new Error('Error message'));
     });
   });
 

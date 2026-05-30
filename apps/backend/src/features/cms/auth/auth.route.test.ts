@@ -5,6 +5,7 @@ const mockAuthService = vi.hoisted(() => ({
   login: vi.fn(),
   register: vi.fn(),
   logout: vi.fn(),
+  isValid: vi.fn(),
 }));
 
 vi.mock('./auth.service', () => ({
@@ -175,6 +176,65 @@ describe('authRoutes', () => {
       const body = await res.json();
       expect(body.code).toBe('0000');
       expect(mockAuthService.logout).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /is-valid', () => {
+    it('returns valid false when Authorization header is missing', async () => {
+      const app = createApp();
+
+      const res = await app.request('/is-valid', { method: 'POST' });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.code).toBe('0000');
+      expect(body.data.valid).toBe(false);
+      expect(mockAuthService.isValid).not.toHaveBeenCalled();
+    });
+
+    it('returns service result when bearer token is provided', async () => {
+      mockAuthService.isValid.mockResolvedValue(true);
+      const app = createApp();
+
+      const res = await app.request('/is-valid', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+      });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.code).toBe('0000');
+      expect(body.data.valid).toBe(true);
+      expect(mockAuthService.isValid).toHaveBeenCalledWith('valid-token');
+    });
+
+    it('returns valid false when service reports invalid token', async () => {
+      mockAuthService.isValid.mockResolvedValue(false);
+      const app = createApp();
+
+      const res = await app.request('/is-valid', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer invalid-token' },
+      });
+
+      const body = await res.json();
+      expect(body.code).toBe('0000');
+      expect(body.data.valid).toBe(false);
+    });
+
+    it('returns unknown error when service rejects', async () => {
+      mockAuthService.isValid.mockRejectedValue(new Error('verify failed'));
+      const app = createApp();
+
+      const res = await app.request('/is-valid', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer broken-token' },
+      });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.code).toBe('ERR0006');
+      expect(body.message).toBe('校验失败');
     });
   });
 });
