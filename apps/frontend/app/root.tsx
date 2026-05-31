@@ -44,14 +44,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    return HttpClient.subscribeErrorEvent((error) => {
-      if (error.message === 'Unauthorized') {
-        navigate('/login');
-        return;
-      }
-      ZNotification.error(error.message);
-      console.log('error', error);
-    });
+    return HttpClient.subscribeErrorEvent(
+      (error: { _tag: string; message: string }) => {
+        if (error.message === 'Unauthorized') {
+          navigate('/login');
+          return;
+        }
+        ZNotification.error(error.message);
+        console.log('error', error);
+      },
+    );
   }, [navigate]);
 
   return (

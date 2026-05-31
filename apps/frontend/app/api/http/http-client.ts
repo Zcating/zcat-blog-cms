@@ -1,5 +1,5 @@
 import { getCurrentRequest } from '../context/request-context';
-import { type ApiError, mapResultCodeToTag } from '../errors';
+import { type ApiError, type ApiErrorTag, mapResultCodeToTag } from '../errors';
 import { createQueryPath } from './http-utils';
 
 interface RetryOptions {
@@ -217,14 +217,30 @@ export namespace HttpClient {
     return handleResponse<T>(response);
   }
 
+  type ErrorListener = (error: { _tag: ApiErrorTag; message: string }) => void;
+
+  const errorListeners: ErrorListener[] = [];
+
+  export function subscribeErrorEvent(callback: ErrorListener) {
+    errorListeners.push(callback);
+    return () => {
+      const index = errorListeners.indexOf(callback);
+      if (index !== -1) {
+        errorListeners.splice(index, 1);
+      }
+    };
+  }
+
   async function handleResponse<T>(response: Response): Promise<T> {
     const result = (await response.json()) as ResponseResult<T>;
     if (result.code !== '0000') {
       const tag = mapResultCodeToTag(result.code);
-      throw {
+      const error: ApiError = {
         _tag: tag ?? 'UnknownError',
         message: result.message,
-      } satisfies ApiError;
+      };
+      errorListeners.forEach((listener) => listener(error));
+      throw error;
     }
 
     return result.data;

@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect } from 'vitest';
-import { ApiErrorTag, ApiError, mapResultCodeToTag } from './errors';
+import { type ApiErrorTag, type ApiError, mapResultCodeToTag } from './errors';
 
 describe('ApiErrorTag', () => {
   it('should be a union of ResultCode error tags', () => {
