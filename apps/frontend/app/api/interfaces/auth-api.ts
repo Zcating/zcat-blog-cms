@@ -1,3 +1,5 @@
+import { type ApiError, mapResultCodeToTag } from '../errors';
+
 type ApiResult = { code: string; message: string };
 
 export namespace AuthApi {
@@ -25,6 +27,16 @@ export namespace AuthApi {
     email: string;
   }
 
+  function throwIfError(result: ApiResult): void {
+    if (result.code !== '0000') {
+      const tag = mapResultCodeToTag(result.code);
+      throw {
+        _tag: tag ?? 'UnknownError',
+        message: result.message,
+      } satisfies ApiError;
+    }
+  }
+
   export async function login(params: LoginParams) {
     const response = await fetch('/api/auth-bff/login', {
       method: 'POST',
@@ -32,9 +44,7 @@ export namespace AuthApi {
       body: JSON.stringify(params),
     });
     const result: ApiResult = await response.json();
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
+    throwIfError(result);
   }
 
   export async function logout() {
@@ -42,9 +52,7 @@ export namespace AuthApi {
       method: 'POST',
     });
     const result: ApiResult = await response.json();
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
+    throwIfError(result);
   }
 
   export async function register(params: RegisterParams) {
@@ -54,8 +62,6 @@ export namespace AuthApi {
       body: JSON.stringify(params),
     });
     const result: ApiResult = await response.json();
-    if (result.code !== '0000') {
-      throw new Error(result.message);
-    }
+    throwIfError(result);
   }
 }

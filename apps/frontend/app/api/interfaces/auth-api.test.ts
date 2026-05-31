@@ -35,12 +35,15 @@ describe('AuthApi', () => {
     loginMock.mockResolvedValueOnce({
       ok: true,
       json: () =>
-        Promise.resolve({ code: 'LOGIN_ERR', message: '用户名或密码错误' }),
+        Promise.resolve({ code: 'ERR0002', message: '用户名或密码错误' }),
     });
 
     await expect(
       AuthApi.login({ username: 'admin', password: 'wrong' }),
-    ).rejects.toThrow('用户名或密码错误');
+    ).rejects.toMatchObject({
+      _tag: 'LoginError',
+      message: '用户名或密码错误',
+    });
   });
 
   it('calls logout endpoint via BFF auth route', async () => {
