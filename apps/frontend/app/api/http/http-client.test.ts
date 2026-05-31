@@ -91,41 +91,38 @@ describe('HttpClient', () => {
       expect(mockFetch.mock.calls[0][0]).toContain('name=test');
     });
 
-    it('should emit ERROR event on 401 business error', async () => {
-      const { EventCenter } = await import('./event-center');
-      const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
+    it('should throw ApiError with _tag on 401 business error', async () => {
       mockFetch.mockResolvedValueOnce({
         status: 401,
         json: () =>
           Promise.resolve({
-            code: '1001',
+            code: 'ERR0002',
             message: 'Unauthorized',
             data: null,
           }),
       });
 
-      await expect(HttpClient.get('test/path')).rejects.toThrow('Unauthorized');
-
-      expect(emitSpy).toHaveBeenCalledWith('ERROR', new Error('Unauthorized'));
+      await expect(HttpClient.get('test/path')).rejects.toMatchObject({
+        _tag: 'LoginError',
+        message: 'Unauthorized',
+      });
     });
 
-    it('should throw on non-0000 response code', async () => {
-      const { EventCenter } = await import('./event-center');
-      const emitSpy = vi.spyOn(EventCenter, 'emitEvent');
+    it('should throw ApiError with _tag on non-0000 response code', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
-            code: '1001',
+            code: 'ERR0002',
             message: 'Error message',
             data: null,
           }),
       });
 
-      await expect(HttpClient.get('test/path')).rejects.toThrow(
-        'Error message',
-      );
-      expect(emitSpy).toHaveBeenCalledWith('ERROR', new Error('Error message'));
+      await expect(HttpClient.get('test/path')).rejects.toMatchObject({
+        _tag: 'LoginError',
+        message: 'Error message',
+      });
     });
   });
 

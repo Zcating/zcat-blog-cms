@@ -1,6 +1,5 @@
 import { getCurrentRequest } from '../context/request-context';
-
-import { EventCenter } from './event-center';
+import { type ApiError, mapResultCodeToTag } from '../errors';
 import { createQueryPath } from './http-utils';
 
 interface RetryOptions {
@@ -218,15 +217,14 @@ export namespace HttpClient {
     return handleResponse<T>(response);
   }
 
-  export function subscribeErrorEvent(callback: (error: Error) => void) {
-    return EventCenter.subscribe('ERROR', callback);
-  }
-
   async function handleResponse<T>(response: Response): Promise<T> {
     const result = (await response.json()) as ResponseResult<T>;
     if (result.code !== '0000') {
-      EventCenter.emitEvent('ERROR', new Error(result.message));
-      throw new Error(result.message);
+      const tag = mapResultCodeToTag(result.code);
+      throw {
+        _tag: tag ?? 'UnknownError',
+        message: result.message,
+      } satisfies ApiError;
     }
 
     return result.data;
