@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('User Info', () => {
+  test.beforeEach(async ({ request }) => {
+    await request.post('http://127.0.0.1:9090/api/test/reset');
+  });
+
   test('view and edit user info', async ({ page }) => {
     // Login first
     await page.goto('/login');
@@ -14,13 +18,14 @@ test.describe('User Info', () => {
     await expect(page.getByText('个人资料')).toBeVisible();
 
     // Verify display mode shows loader data
-    await expect(page.getByText('Admin', { exact: true })).toBeVisible();
+    const content = page.locator('#cms-layout-content');
+    await expect(content.getByText('Admin', { exact: true })).toBeVisible();
     await expect(
-      page.getByText('admin@test.com', { exact: true }),
+      content.getByText('admin@test.com', { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText('admin', { exact: true })).toBeVisible();
-    await expect(page.getByText('Developer', { exact: true })).toBeVisible();
-    await expect(page.getByText('About me', { exact: true })).toBeVisible();
+    await expect(content.getByText('admin', { exact: true })).toBeVisible();
+    await expect(content.getByText('Developer', { exact: true })).toBeVisible();
+    await expect(content.getByText('About me', { exact: true })).toBeVisible();
 
     // Click edit button
     await page.getByRole('button', { name: '编辑' }).click();
@@ -37,11 +42,13 @@ test.describe('User Info', () => {
     await page.getByRole('button', { name: '保存' }).click();
 
     // Wait for display mode to show updated name
-    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible({
+    await expect(
+      content.getByText('UpdatedAdmin', { exact: true }),
+    ).toBeVisible({
       timeout: 10000,
     });
     await expect(
-      page.getByText('admin@test.com', { exact: true }),
+      content.getByText('admin@test.com', { exact: true }),
     ).toBeVisible();
 
     // Click edit again, then cancel
@@ -49,6 +56,8 @@ test.describe('User Info', () => {
     await page.getByRole('button', { name: '取消' }).click();
 
     // Verify it reverted to display mode with the updated name still showing
-    await expect(page.getByText('UpdatedAdmin', { exact: true })).toBeVisible();
+    await expect(
+      content.getByText('UpdatedAdmin', { exact: true }),
+    ).toBeVisible();
   });
 });

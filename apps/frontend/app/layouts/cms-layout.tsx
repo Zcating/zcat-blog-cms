@@ -21,6 +21,7 @@ import React from 'react';
 import {
   Link,
   Outlet,
+  redirect,
   useLoaderData,
   useLocation,
   useNavigate,
@@ -31,8 +32,16 @@ import {
 import { AuthApi, UserApi } from '@cms/api';
 
 export async function loader() {
-  const userInfo = await UserApi.userInfo();
-  return { name: userInfo.name, avatar: userInfo.avatar };
+  try {
+    const userInfo = await UserApi.userInfo();
+    return { name: userInfo.name, avatar: userInfo.avatar };
+  } catch (error) {
+    const apiError = error as { message?: string };
+    if (apiError?.message === 'Unauthorized') {
+      throw redirect('/login');
+    }
+    throw error;
+  }
 }
 
 export function ErrorBoundary() {

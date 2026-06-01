@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ request }) => {
+  await request.post('http://127.0.0.1:9090/api/test/reset');
+});
+
 test('unauthenticated access to dashboard redirects to login', async ({
   page,
 }) => {
@@ -29,18 +33,8 @@ test('authenticated user gets Unauthorized should redirect to login', async ({
   await page.getByRole('button', { name: '登录' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 
-  // 现在让 mock 后端返回 Unauthorized
-  await page.route('**/api/bff/cms/user-info', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        code: '4010',
-        message: 'Unauthorized',
-        data: null,
-      }),
-    });
-  });
+  // 现在让 mock 后端的 auth 失效
+  await page.request.post('http://127.0.0.1:9090/api/test/invalidate-auth');
 
   // 刷新页面触发请求
   await page.reload();

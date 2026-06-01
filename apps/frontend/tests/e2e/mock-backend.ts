@@ -63,6 +63,7 @@ function getDefaultAlbums() {
 // In-memory store for E2E tests
 let albums = getDefaultAlbums();
 let photos = getDefaultPhotos();
+let authInvalid = false;
 
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? '/', `http://${request.headers.host}`);
@@ -71,6 +72,13 @@ const server = createServer((request, response) => {
   if (url.pathname === '/api/test/reset') {
     albums = getDefaultAlbums();
     photos = getDefaultPhotos();
+    authInvalid = false;
+    sendJson(response, { ok: true });
+    return;
+  }
+
+  if (url.pathname === '/api/test/invalidate-auth') {
+    authInvalid = url.searchParams.get('value') !== 'false';
     sendJson(response, { ok: true });
     return;
   }
@@ -88,6 +96,10 @@ const server = createServer((request, response) => {
   }
 
   if (url.pathname === '/api/auth/is-valid' && request.method === 'POST') {
+    if (authInvalid) {
+      sendJson(response, { valid: false });
+      return;
+    }
     sendJson(response, {
       valid: request.headers.authorization === 'Bearer frontend-e2e-token',
     });

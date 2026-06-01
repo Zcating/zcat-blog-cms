@@ -3,7 +3,7 @@
 test.describe('Albums', () => {
   // Reset shared mock backend state before each test
   test.beforeEach(async ({ request }) => {
-    await request.get('http://127.0.0.1:9090/api/test/reset');
+    await request.post('http://127.0.0.1:9090/api/test/reset');
   });
 
   test('list, create, and delete albums', async ({ page }) => {
