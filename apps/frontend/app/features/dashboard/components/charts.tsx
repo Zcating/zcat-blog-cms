@@ -21,7 +21,7 @@ export function VisitTrend({ data }: VisitTrendProps) {
       xField="date"
       yField="value"
       seriesField="category"
-      color={['#3b82f6', '#10b981']}
+      color={['var(--chart-1)', 'var(--chart-2)']}
       point={{
         size: 4,
         shape: 'circle',
@@ -55,12 +55,12 @@ export function TopPages({ data }: TopPagesProps) {
       height={300}
       xField="pageTitle"
       yField="visitCount"
-      color="#8884d8"
+      color="var(--chart-3)"
       columnWidthRatio={0.6}
       label={{
         position: 'top',
         style: {
-          fill: '#666',
+          fill: 'var(--muted-foreground)',
           fontSize: 12,
         },
       }}

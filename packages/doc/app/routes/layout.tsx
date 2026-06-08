@@ -83,7 +83,7 @@ const sidebarOptions: ZSidebarOption[] = [
       },
       {
         label: 'Markdown',
-        value: 'markdown',
+        value: DOCUMENT_CONFIGURES['z-markdown']?.to ?? 'z-markdown',
       },
       {
         label: '聊天',

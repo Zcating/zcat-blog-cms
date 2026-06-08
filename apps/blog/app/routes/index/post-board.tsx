@@ -8,7 +8,19 @@ import { PostExcerptCard } from '@blog/features';
 import type { Route } from '../index/+types/post-board';
 
 export function meta() {
-  return [{ title: '文章' }, { name: 'description', content: '个人技术博客' }];
+  const SITE = 'https://blog.zcat.example';
+  return [
+    { title: '文章 - ZCAT' },
+    { name: 'description', content: '个人技术博客文章列表' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: '文章 - ZCAT' },
+    { property: 'og:description', content: '个人技术博客文章列表' },
+    { property: 'og:url', content: `${SITE}/post-board` },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: '文章 - ZCAT' },
+    { name: 'twitter:description', content: '个人技术博客文章列表' },
+    { tagName: 'link', rel: 'canonical', href: `${SITE}/post-board` },
+  ];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -52,6 +64,7 @@ export default function PostBoardPage({ loaderData }: Route.ComponentProps) {
             data-post-excerpt-card="true"
             key={index.toString()}
             to={`/post-board/${article.id}`}
+            prefetch="intent"
             className="block"
           >
             <PostExcerptCard value={article} />

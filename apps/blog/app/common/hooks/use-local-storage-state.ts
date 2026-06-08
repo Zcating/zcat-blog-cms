@@ -15,7 +15,7 @@ export function useLocalStorageState<T>(key: string, defaultValue: T) {
   const setLocalStorageState = (value: T) => {
     setState(value);
     if (!isBrowser) {
-      return defaultValue;
+      return value;
     }
     window.localStorage.setItem(key, JSON.stringify(value));
   };

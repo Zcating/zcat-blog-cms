@@ -13,6 +13,7 @@ import {
   useClient,
 } from '@zcat/ui';
 import { lazy, Suspense } from 'react';
+import { useRevalidator } from 'react-router';
 
 import { StatisticsApi } from '@cms/api';
 
@@ -41,6 +42,7 @@ export async function loader() {
 export default function DashboardPage(props: Route.ComponentProps) {
   const { summary, chartData } = props.loaderData;
   const isClient = useClient();
+  const revalidator = useRevalidator();
 
   const statsCards = [
     {
@@ -48,7 +50,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
       value: summary.totalVisits.toLocaleString(),
       icon: (
         <TeamOutlined
-          style={{ color: 'oklch(62.3% 0.214 259.815)' }}
+          style={{ color: 'var(--chart-1)' }}
           className="text-3xl"
         />
       ),
@@ -58,7 +60,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
       value: summary.totalUniqueVisitors.toLocaleString(),
       icon: (
         <UserOutlined
-          style={{ color: 'oklch(72.3% 0.219 149.579)' }}
+          style={{ color: 'var(--chart-2)' }}
           className="text-3xl"
         />
       ),
@@ -68,7 +70,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
       value: summary.todayVisits.toLocaleString(),
       icon: (
         <LineChartOutlined
-          style={{ color: 'oklch(70.5% 0.213 47.604)' }}
+          style={{ color: 'var(--chart-3)' }}
           className="text-3xl"
         />
       ),
@@ -78,7 +80,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
       value: summary.todayUniqueVisitors.toLocaleString(),
       icon: (
         <SmileOutlined
-          style={{ color: 'oklch(62.7% 0.265 303.9)' }}
+          style={{ color: 'var(--chart-4)' }}
           className="text-3xl"
         />
       ),
@@ -89,7 +91,7 @@ export default function DashboardPage(props: Route.ComponentProps) {
     <div className="space-y-6 w-full p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">仪表盘</h1>
-        <ZButton onClick={() => window.location.reload()}>刷新数据</ZButton>
+        <ZButton onClick={() => revalidator.revalidate()} loading={revalidator.state === 'loading'}>刷新数据</ZButton>
       </div>
 
       <div className="flex gap-5">

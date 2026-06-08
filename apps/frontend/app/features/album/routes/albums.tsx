@@ -68,7 +68,8 @@ export default function Albums(props: Route.ComponentProps) {
       return [
         ...state,
         {
-          id: -Date.now(),
+          // crypto.randomUUID() 避免 Date.now() 冲突（连续点击新增会覆盖乐观更新）
+          id: -Number.parseInt(crypto.randomUUID().replace(/-/g, '').slice(0, 13), 16),
           name: values.name,
           available: values.available,
           description: values.description,

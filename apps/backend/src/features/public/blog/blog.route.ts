@@ -52,14 +52,12 @@ blogRoutes.get(
         orderBy: {
           publishAt: ORDER_MAP[query.order],
         },
-        select: {
-          id: true,
-          title: true,
-          excerpt: true,
-          createdAt: true,
-          updatedAt: true,
-          publishAt: true,
-          articleAndArticleTags: true,
+        include: {
+          articleAndArticleTags: {
+            include: {
+              articleTag: true,
+            },
+          },
         },
       });
 
