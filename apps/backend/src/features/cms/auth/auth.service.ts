@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+﻿import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 import { prismaService } from '../../../common';
@@ -55,6 +55,10 @@ export async function register(
   password: string,
   email: string,
 ) {
+  if (!config.allowRegister) {
+    return { code: 'REGISTER_LIMIT' as const };
+  }
+
   const users = await prismaService.user.findMany();
   if (users.length >= 1) {
     return { code: 'REGISTER_LIMIT' as const };

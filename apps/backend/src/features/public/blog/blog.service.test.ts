@@ -79,6 +79,26 @@ describe('blogService', () => {
         }),
       );
     });
+
+    // P0 A.14 — include articleAndArticleTags.articleTag so the list can render tags inline
+    it('includes articleAndArticleTags.articleTag in the query', async () => {
+      mockPrisma.article.findMany.mockResolvedValue([]);
+      mockPrisma.article.count.mockResolvedValue(0);
+
+      await blogService.getArticleList(1, 10);
+
+      expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            articleAndArticleTags: {
+              include: {
+                articleTag: true,
+              },
+            },
+          },
+        }),
+      );
+    });
   });
 
   describe('getArticleDetail', () => {

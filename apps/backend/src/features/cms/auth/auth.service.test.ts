@@ -18,7 +18,7 @@ vi.mock('../../../common', () => ({
 }));
 
 vi.mock('../../../common/config.service', () => ({
-  config: { jwtSecret: 'test-secret' },
+  config: { jwtSecret: 'test-secret', allowRegister: true },
 }));
 
 const mockBcrypt = vi.hoisted(() => ({
@@ -115,6 +115,21 @@ describe('authService', () => {
   });
 
   describe('register', () => {
+    it('returns REGISTER_LIMIT when allowRegister config is false (without querying DB)', async () => {
+      // config 是 Object.freeze 的，不能直接 spy；用 vi.doMock + vi.resetModules 让本用例单独生效
+      vi.doMock('../../../common/config.service', () => ({
+        config: { jwtSecret: 'test-secret', allowRegister: false },
+      }));
+      vi.resetModules();
+      const { authService: freshAuthService } = await import('./auth.service');
+
+      const result = await freshAuthService.register('user', 'pass', 'e@m.com');
+
+      expect(result).toEqual({ code: 'REGISTER_LIMIT' });
+      expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
     it('returns REGISTER_LIMIT when a user already exists', async () => {
       mockPrisma.user.findMany.mockResolvedValue([{ id: 1 }]);
 

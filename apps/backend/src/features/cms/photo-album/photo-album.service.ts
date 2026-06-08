@@ -30,15 +30,22 @@ export async function findAll(page: number, pageSize: number) {
     .map((album) => album.coverId)
     .filter((id): id is number => id !== null);
 
-  const covers =
-    coverIds.length > 0
-      ? await prismaService.photo.findMany({
-          where: { id: { in: coverIds } },
-        })
-      : [];
+  // 用 Map 一次构建 cover 索引，O(1) 查表代替 O(N) find
+  type CoverRow = Awaited<ReturnType<typeof prismaService.photo.findMany>>[number];
+  const coverMap = new Map<number, CoverRow>();
+  if (coverIds.length > 0) {
+    const covers: CoverRow[] = await prismaService.photo.findMany({
+      where: { id: { in: coverIds } },
+    });
+    for (const cover of covers) {
+      coverMap.set(cover.id, cover);
+    }
+  }
 
-  const data = albums.map((album) => {
-    const foundedCover = covers.find((cover) => cover.id === album.coverId);
+  type AlbumRow = Awaited<ReturnType<typeof prismaService.photoAlbum.findMany>>[number];
+  const data = (albums as AlbumRow[]).map((album) => {
+    const foundedCover =
+      album.coverId !== null ? coverMap.get(album.coverId) : undefined;
     const cover = foundedCover ? transformPhoto(foundedCover) : null;
     return {
       id: album.id,

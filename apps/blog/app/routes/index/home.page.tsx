@@ -11,7 +11,6 @@ import {
   Calendar,
   RainbowBorder,
 } from '@zcat/ui';
-import { useState } from 'react';
 import { createSearchParams, Link, useNavigate } from 'react-router';
 
 import { ArticleApi, UserApi } from '@blog/apis';
@@ -52,9 +51,18 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function meta() {
+  const SITE = 'https://blog.zcat.example';
   return [
     { title: 'ZCAT - 我知道你在看' },
     { name: 'description', content: '个人技术博客' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: 'ZCAT - 我知道你在看' },
+    { property: 'og:description', content: '个人技术博客' },
+    { property: 'og:url', content: SITE },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'ZCAT - 我知道你在看' },
+    { name: 'twitter:description', content: '个人技术博客' },
+    { tagName: 'link', rel: 'canonical', href: SITE },
   ];
 }
 
@@ -63,7 +71,6 @@ export function meta() {
  *
  */
 export default function HomePage(props: Route.ComponentProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const loaderData = props.loaderData;
   const userInfo = loaderData.userInfo;
   const pagination = loaderData.pagination;
@@ -127,9 +134,8 @@ export default function HomePage(props: Route.ComponentProps) {
             <CardContent className="flex justify-center">
               <Calendar
                 mode="single"
-                selected={date}
-                onSelect={setDate}
                 className="rounded-md border shadow-sm"
+                aria-hidden="true"
               />
             </CardContent>
           </Card>
@@ -144,6 +150,7 @@ export default function HomePage(props: Route.ComponentProps) {
             <Link
               data-home-article-card="true"
               to={`/post-board/${article.id}`}
+              prefetch="intent"
               className="block"
               key={index}
             >

@@ -1,8 +1,6 @@
 import * as ZcatUi from '@zcat/ui';
-import { Code, Copy, Eye, Check } from 'lucide-react';
-import * as lucideReact from 'lucide-react';
+import { Code, Copy, Eye, Check, ShieldAlert } from 'lucide-react';
 import React from 'react';
-import * as Sucrase from 'sucrase';
 
 interface ZExecutableCodeProps {
   children?: React.ReactNode;
@@ -10,74 +8,39 @@ interface ZExecutableCodeProps {
   className?: string;
 }
 
-interface ZExecutableProps {
-  code: string;
-}
-
-const ReactModule = React;
-
-function Executable({ code }: ZExecutableProps) {
-  const [renderedElement, setRenderedElement] =
-    React.useState<React.ReactNode>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  ZcatUi.useWatch([code], (code) => {
-    try {
-      if (!containerRef.current) {
-        return;
-      }
-
-      const transpiledCode = Sucrase.transform(code, {
-        transforms: ['typescript', 'jsx', 'imports'],
-        filePath: 'demo.tsx',
-      }).code;
-
-      const wrappedCode = `
-          "use strict";
-          const React = ReactModule;
-          const { createElement, useState } = React;
-          ${transpiledCode}
-        `;
-      const requireFn = (moduleName: string) => {
-        if (moduleName === 'react') {
-          return ReactModule;
-        }
-        if (moduleName === '@zcat/ui') {
-          return ZcatUi;
-        }
-        if (moduleName === 'lucide-react') {
-          return lucideReact;
-        }
-      };
-
-      /* eslint-disable @typescript-eslint/no-implied-eval */
-      const fn = new Function('ReactModule', 'require', 'exports', wrappedCode);
-
-      const exports: Record<string, React.ComponentType<any> | undefined> = {};
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      fn(ReactModule, requireFn, exports);
-      setRenderedElement(
-        <>
-          {Object.values(exports).map((component) => {
-            if (!ZcatUi.isFunction(component)) {
-              return;
-            }
-            return React.createElement(component, {});
-          })}
-        </>,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  });
+/**
+ * 文档站可执行代码块。
+ *
+ * 早期版本使用 `new Function` + sucrase 动态执行用户 Markdown 中的代码，存在
+ * XSS / 原型污染风险。新版改为：preview 窗格展示代码 + 安全提示，**不执行**。
+ * 用户在自己项目里 import 实际组件以验证行为。
+ */
+function ExecutablePreview({ code }: { code: string }) {
+  // 用 iframe sandbox 隔离渲染，避免主页面被任何潜在脚本污染
+  const html = React.useMemo(() => {
+    const escaped = code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return `<!doctype html>
+<html><head><meta charset="utf-8" /><style>
+  body { margin: 0; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; background: #0a0a0a; color: #fafafa; }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+  .notice { background: #1f1f1f; color: #fbbf24; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #444; }
+</style></head>
+<body>
+  <div class="notice">⚠️ 出于安全考虑，代码示例不在文档站执行。请把代码粘到你的项目里验证。</div>
+  <pre>${escaped}</pre>
+</body></html>`;
+  }, [code]);
 
   return (
-    <div className="space-y-4">
-      {error && <ZcatUi.Badge variant="destructive">{error}</ZcatUi.Badge>}
-      <div ref={containerRef} className="p-4">
-        {renderedElement}
-      </div>
-    </div>
+    <iframe
+      title="代码预览（仅展示）"
+      srcDoc={html}
+      sandbox=""
+      className="w-full min-h-[200px] border-0 rounded-md"
+    />
   );
 }
 
@@ -154,7 +117,7 @@ export function ExecutableCodeBlock({
       <ZcatUi.CardContent className="py-3">
         <ZcatUi.FoldAnimation isOpen={!isCollapsed}>
           <div className={viewMode === 'code' ? 'hidden' : 'block'}>
-            <Executable code={code} />
+            <ExecutablePreview code={code} />
           </div>
           <div className={viewMode === 'code' ? 'block' : 'hidden'}>
             <ZcatUi.ZSyntaxHighlighter language="tsx">

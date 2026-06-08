@@ -1,4 +1,4 @@
-function required(key: string): string {
+﻿function required(key: string): string {
   const val = process.env[key];
   if (!val) {
     throw new Error(`Missing required environment variable: ${key}`);
@@ -10,10 +10,34 @@ function optional(key: string, fallback: string): string {
   return process.env[key] ?? fallback;
 }
 
+function parseCorsOrigins(defaultOrigins: string[]): string[] {
+  const raw = process.env.CORS_ALLOWED_ORIGINS;
+  if (raw === undefined || raw.trim() === '') {
+    return [...defaultOrigins];
+  }
+  return raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0);
+}
+
+function parseAllowRegister(defaultValue: boolean): boolean {
+  const raw = process.env.ALLOW_REGISTER;
+  if (raw === undefined) {
+    return defaultValue;
+  }
+  return raw === 'true';
+}
+
+const nodeEnv = optional('NODE_ENV', 'development');
+const isProduction = nodeEnv === 'production';
+
+const devCorsOrigins = ['http://localhost:5000', 'http://localhost:1024'];
+
 export const config = Object.freeze({
   // App
   port: Number(optional('PORT', '9090')),
-  nodeEnv: optional('NODE_ENV', 'development'),
+  nodeEnv,
 
   // Database
   databaseUrl: required('DATABASE_URL'),
@@ -32,4 +56,8 @@ export const config = Object.freeze({
   minioSecretKey: optional('MINIO_SECRET_KEY', ''),
   minioPublicUrl: optional('MINIO_PUBLIC_URL', ''),
   minioBucket: optional('MINIO_BUCKET', ''),
+
+  // Security
+  corsAllowedOrigins: parseCorsOrigins(isProduction ? [] : devCorsOrigins),
+  allowRegister: parseAllowRegister(!isProduction),
 });

@@ -44,14 +44,12 @@ export async function getArticleList(
     orderBy: {
       publishAt: ORDER_MAP[order],
     },
-    select: {
-      id: true,
-      title: true,
-      excerpt: true,
-      createdAt: true,
-      updatedAt: true,
-      publishAt: true,
-      articleAndArticleTags: true,
+    include: {
+      articleAndArticleTags: {
+        include: {
+          articleTag: true,
+        },
+      },
     },
   });
 

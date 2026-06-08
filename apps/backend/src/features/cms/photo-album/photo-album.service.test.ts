@@ -87,6 +87,73 @@ describe('photoAlbumService', () => {
       expect(result.data[0].cover).toBeNull();
       expect(mockPrisma.photo.findMany).not.toHaveBeenCalled();
     });
+
+    // P0 A.13 — Map<id, photo> O(1) lookup instead of O(N) Array.find per album
+    it('matches each cover by id across multiple albums via Map lookup', async () => {
+      const albums = [
+        {
+          id: 1,
+          name: 'Album 1',
+          description: 'D1',
+          coverId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          available: true,
+        },
+        {
+          id: 2,
+          name: 'Album 2',
+          description: 'D2',
+          coverId: 20,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          available: true,
+        },
+        {
+          id: 3,
+          name: 'Album 3',
+          description: 'D3',
+          coverId: 30,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          available: true,
+        },
+      ];
+      const covers = [
+        { id: 10, url: 'u10', thumbnailUrl: 't10' },
+        { id: 20, url: 'u20', thumbnailUrl: 't20' },
+        { id: 30, url: 'u30', thumbnailUrl: 't30' },
+      ];
+
+      mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
+      mockPrisma.photoAlbum.count.mockResolvedValue(3);
+      // Single batched query for all covers
+      mockPrisma.photo.findMany.mockResolvedValue(covers);
+
+      const result = await photoAlbumService.findAll(1, 10);
+
+      expect(result.data).toHaveLength(3);
+      expect(result.data[0].cover).toEqual({
+        ...covers[0],
+        url: 'private-u10',
+        thumbnailUrl: 'private-t10',
+      });
+      expect(result.data[1].cover).toEqual({
+        ...covers[1],
+        url: 'private-u20',
+        thumbnailUrl: 'private-t20',
+      });
+      expect(result.data[2].cover).toEqual({
+        ...covers[2],
+        url: 'private-u30',
+        thumbnailUrl: 'private-t30',
+      });
+      // Exactly one photo.findMany, not one per album
+      expect(mockPrisma.photo.findMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.photo.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [10, 20, 30] } },
+      });
+    });
   });
 
   describe('findById', () => {

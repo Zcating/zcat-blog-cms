@@ -1,6 +1,7 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
+import { config } from './common/config.service';
 import { cmsRoutes } from './features/cms';
 import authRoutes from './features/cms/auth/auth.route';
 import { publicRoutes } from './features/public';
@@ -10,10 +11,13 @@ import { requestLogger } from './middleware/request-logger';
 // CORS
 const app = new Hono();
 
+const allowedOrigins = new Set(config.corsAllowedOrigins);
+
 app.use(
   '*',
   cors({
-    origin: (origin) => origin,
+    origin: (origin) => (origin && allowedOrigins.has(origin) ? origin : ''),
+    credentials: true,
   }),
 );
 

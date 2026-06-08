@@ -14,27 +14,40 @@ export default [
     route('gallery/:id', 'routes/index/gallery.id.tsx'),
   ]),
   layout('features/layouts/views/ai-chat.layout.tsx', [
-    route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),
+    route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx', [
+      { lazy: () => import('./routes/ai-chat/ai-chat.page') },
+    ]),
   ]),
   layout('features/layouts/views/toolbox.layout.tsx', [
-    route('toolbox', 'routes/toolbox/home.page.tsx'),
-    route('toolbox/base64-to-image', 'routes/toolbox/base64-to-image.page.tsx'),
-    route(
-      'toolbox/id-card-generator',
-      'routes/toolbox/id-card-generator.page.tsx',
-    ),
-    route('toolbox/ip-lookup', 'routes/toolbox/ip-lookup.page.tsx'),
-    route('toolbox/hash', 'routes/toolbox/hash.page.tsx'),
-    route('toolbox/rsa-crypto', 'routes/toolbox/rsa-crypto.page.tsx'),
-    route('toolbox/json-viewer', 'routes/toolbox/json-viewer.page.tsx'),
-    route('toolbox/aes-crypto', 'routes/toolbox/aes-crypto.page.tsx'),
-    route(
-      'toolbox/qrcode-generator',
-      'routes/toolbox/qrcode-generator.page.tsx',
-    ),
-    route(
-      'toolbox/markdown-to-html',
-      'routes/toolbox/markdown-to-html.page.tsx',
-    ),
+    route('toolbox', 'routes/toolbox/home.page.tsx', [
+      { lazy: () => import('./routes/toolbox/home.page') },
+    ]),
+    route('toolbox/base64-to-image', 'routes/toolbox/base64-to-image.page.tsx', [
+      { lazy: () => import('./routes/toolbox/base64-to-image.page') },
+    ]),
+    route('toolbox/id-card-generator', 'routes/toolbox/id-card-generator.page.tsx', [
+      { lazy: () => import('./routes/toolbox/id-card-generator.page') },
+    ]),
+    route('toolbox/ip-lookup', 'routes/toolbox/ip-lookup.page.tsx', [
+      { lazy: () => import('./routes/toolbox/ip-lookup.page') },
+    ]),
+    route('toolbox/hash', 'routes/toolbox/hash.page.tsx', [
+      { lazy: () => import('./routes/toolbox/hash.page') },
+    ]),
+    route('toolbox/rsa-crypto', 'routes/toolbox/rsa-crypto.page.tsx', [
+      { lazy: () => import('./routes/toolbox/rsa-crypto.page') },
+    ]),
+    route('toolbox/json-viewer', 'routes/toolbox/json-viewer.page.tsx', [
+      { lazy: () => import('./routes/toolbox/json-viewer.page') },
+    ]),
+    route('toolbox/aes-crypto', 'routes/toolbox/aes-crypto.page.tsx', [
+      { lazy: () => import('./routes/toolbox/aes-crypto.page') },
+    ]),
+    route('toolbox/qrcode-generator', 'routes/toolbox/qrcode-generator.page.tsx', [
+      { lazy: () => import('./routes/toolbox/qrcode-generator.page') },
+    ]),
+    route('toolbox/markdown-to-html', 'routes/toolbox/markdown-to-html.page.tsx', [
+      { lazy: () => import('./routes/toolbox/markdown-to-html.page') },
+    ]),
   ]),
 ] satisfies RouteConfig;
