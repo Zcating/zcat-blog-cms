@@ -1,12 +1,15 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { navigateMock, notificationErrorMock, subscribeErrorEventMock } =
-  vi.hoisted(() => ({
-    navigateMock: vi.fn(),
-    notificationErrorMock: vi.fn(),
-    subscribeErrorEventMock: vi.fn(),
-  }));
+const {
+  navigateMock,
+  notificationErrorMock,
+  subscribeErrorEventMock,
+} = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
+  notificationErrorMock: vi.fn(),
+  subscribeErrorEventMock: vi.fn(),
+}));
 
 vi.mock('@zcat/ui', () => ({
   ZNotification: {

@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockIsValid = vi.hoisted(() => vi.fn());
-const mockRedirect = vi.hoisted(() =>
-  vi.fn((path: string) => ({ __redirect: path })),
-);
+const mockRedirect = vi.hoisted(() => vi.fn((path: string) => ({ __redirect: path })));
 
 vi.mock('../api/interfaces/user-api', () => ({
   UserApi: {

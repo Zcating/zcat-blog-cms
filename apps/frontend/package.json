@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e .env -- react-router dev",
+    "dev:fresh": "node ../../scripts/kill-port.mjs 5000 && pnpm run dev",
     "build:dev": "react-router build --mode development",
     "build": "react-router build --mode production",
     "start": "react-router-serve ./build/server/index.js",
