@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+﻿import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockStatistic = vi.hoisted(() => ({
   create: vi.fn(),
@@ -8,9 +10,7 @@ const mockStatistic = vi.hoisted(() => ({
 }));
 
 vi.mock('./prisma.service', () => ({
-  prismaService: {
-    statistic: mockStatistic,
-  },
+  prismaService: { statistic: mockStatistic },
 }));
 
 const mockHashTest = vi.hoisted(() => vi.fn());
@@ -58,7 +58,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -81,7 +81,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'bad-hash' },
       };
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
@@ -98,7 +98,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, { ...validVisitorDto, browser: '' });
+      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, browser: '' }));
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
@@ -110,7 +110,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, { ...validVisitorDto, os: '' });
+      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, os: '' }));
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
@@ -122,7 +122,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, { ...validVisitorDto, device: '' });
+      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, device: '' }));
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
@@ -134,7 +134,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, { ...validVisitorDto, os: 'FreeBSD' });
+      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, os: 'FreeBSD' }));
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
@@ -148,7 +148,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash', 'x-forwarded-for': '10.0.0.1' },
       };
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: '10.0.0.0' }),
@@ -165,7 +165,7 @@ describe('statistic-service', () => {
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: 'unknown' }),
@@ -182,7 +182,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue('https://referrer.com'),
       };
 
-      await recordVisitor(request, { ...validVisitorDto, referrer: '' });
+      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, referrer: '' }));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ referrer: 'https://referrer.com' }),
@@ -200,7 +200,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue(''),
       } as any;
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: '203.0.113.0' }),
@@ -217,7 +217,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue(''),
       } as any;
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: '10.0.0.0' }),
@@ -234,7 +234,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue(''),
       } as any;
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: 'unknown' }),
@@ -251,7 +251,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue(''),
       } as any;
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: 'unknown' }),
@@ -268,7 +268,7 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue(''),
       } as any;
 
-      await recordVisitor(request, validVisitorDto);
+      await appRuntime.runPromise(recordVisitor(request, validVisitorDto));
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ ip: '2001:db8:1234:0:0:0:0:0' }),
@@ -284,7 +284,7 @@ describe('statistic-service', () => {
         { id: 2, pagePath: '/b' },
       ]);
 
-      const result = await getStatistics({});
+      const result = await appRuntime.runPromise(getStatistics({}));
 
       expect(result).toEqual({
         data: [
@@ -307,10 +307,8 @@ describe('statistic-service', () => {
       mockStatistic.count.mockResolvedValue(1);
       mockStatistic.findMany.mockResolvedValue([{ id: 1 }]);
 
-      const result = await getStatistics(
-        { pagePath: '/test', browser: 'Chrome' },
-        2,
-        5,
+      const result = await appRuntime.runPromise(
+        getStatistics({ pagePath: '/test', browser: 'Chrome' }, 2, 5),
       );
 
       expect(result.page).toBe(2);
@@ -327,7 +325,7 @@ describe('statistic-service', () => {
       mockStatistic.count.mockResolvedValue(0);
       mockStatistic.findMany.mockResolvedValue([]);
 
-      const result = await getStatistics({}, 1, 10);
+      const result = await appRuntime.runPromise(getStatistics({}, 1, 10));
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
@@ -354,7 +352,7 @@ describe('statistic-service', () => {
           { pagePath: '/c', pageTitle: 'Page C', _count: { id: 1 } },
         ]);
 
-      const result = await getSummary();
+      const result = await appRuntime.runPromise(getSummary());
 
       expect(result).toEqual({
         totalVisits: 100,
@@ -371,22 +369,17 @@ describe('statistic-service', () => {
 
     // P0 A.11 — 60s in-memory Cache
     it('caches the result: second call within 60s returns the same value without hitting DB', async () => {
-      // summaryCache is module-scoped; previous tests may have populated it.
-      // Advance Date.now past the 60s TTL so any stale entry is invalidated,
-      // letting this test exercise a fresh DB round-trip + cache hit.
       const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000);
 
       mockStatistic.count.mockResolvedValue(100);
       mockStatistic.groupBy.mockResolvedValue([]);
 
-      const first = await getSummary();
-      // One getSummary() round-trip = 2 count queries + 3 groupBy queries
+      const first = await appRuntime.runPromise(getSummary());
       expect(mockStatistic.count).toHaveBeenCalledTimes(2);
       expect(mockStatistic.groupBy).toHaveBeenCalledTimes(3);
 
-      const second = await getSummary();
+      const second = await appRuntime.runPromise(getSummary());
       expect(first).toBe(second);
-      // Cache hit: DB call counts unchanged
       expect(mockStatistic.count).toHaveBeenCalledTimes(2);
       expect(mockStatistic.groupBy).toHaveBeenCalledTimes(3);
 
@@ -395,7 +388,6 @@ describe('statistic-service', () => {
   });
 
   describe('getChartData', () => {
-    // P0 A.10 — single findMany + app-layer bucketing
     it('returns chart data with single findMany + app-layer bucketing', async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -410,7 +402,7 @@ describe('statistic-service', () => {
         { time: yesterday, ip: '3.3.3.3' },
       ]);
 
-      const result = await getChartData(2);
+      const result = await appRuntime.runPromise(getChartData(2));
 
       expect(result).toHaveLength(2);
       expect(mockStatistic.findMany).toHaveBeenCalledTimes(1);
@@ -431,7 +423,7 @@ describe('statistic-service', () => {
     it('returns chart data for single day', async () => {
       mockStatistic.findMany.mockResolvedValue([]);
 
-      const result = await getChartData(1);
+      const result = await appRuntime.runPromise(getChartData(1));
 
       expect(result).toHaveLength(1);
       expect(result[0].visits).toBe(0);
@@ -441,7 +433,7 @@ describe('statistic-service', () => {
     it('uses default of 7 days when called without argument', async () => {
       mockStatistic.findMany.mockResolvedValue([]);
 
-      const result = await getChartData();
+      const result = await appRuntime.runPromise(getChartData());
 
       expect(result).toHaveLength(7);
     });
