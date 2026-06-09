@@ -21,11 +21,11 @@ describe('app', () => {
 
   it('adds CORS headers when origin is provided', async () => {
     const res = await app.request('/api/health', {
-      headers: { Origin: 'http://localhost:3000' },
+      headers: { Origin: 'http://localhost:5000' },
     });
 
     expect(res.headers.get('access-control-allow-origin')).toBe(
-      'http://localhost:3000',
+      'http://localhost:5000',
     );
   });
 

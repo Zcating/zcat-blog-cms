@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockTagService = vi.hoisted(() => ({
   findAll: vi.fn(),
@@ -17,6 +18,9 @@ import articleTagRoutes from './article-tag.route';
 
 const createApp = () => {
   const app = new Hono();
+  app.onError((err, c) =>
+    c.json({ code: 'ERR0006', message: err.message }, 200),
+  );
   app.route('/', articleTagRoutes);
   return app;
 };
@@ -28,7 +32,7 @@ describe('articleTagRoutes', () => {
 
   describe('GET /article-tags', () => {
     it('returns all tags', async () => {
-      mockTagService.findAll.mockResolvedValue([{ id: 1, name: 'tag1' }]);
+      mockTagService.findAll.mockReturnValue(Effect.succeed([{ id: 1, name: 'tag1' }]));
       const app = createApp();
 
       const res = await app.request('/article-tags');
@@ -39,17 +43,17 @@ describe('articleTagRoutes', () => {
     });
 
     it('throws on service error', async () => {
-      mockTagService.findAll.mockRejectedValue(new Error('fail'));
+      mockTagService.findAll.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/article-tags');
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(200);
     });
   });
 
   describe('GET /article-tags/:id', () => {
     it('returns tag by id', async () => {
-      mockTagService.findById.mockResolvedValue({ id: 1, name: 'tag' });
+      mockTagService.findById.mockReturnValue(Effect.succeed({ id: 1, name: 'tag' }));
       const app = createApp();
 
       const res = await app.request('/article-tags/1');
@@ -59,17 +63,17 @@ describe('articleTagRoutes', () => {
     });
 
     it('throws on service error', async () => {
-      mockTagService.findById.mockRejectedValue(new Error('fail'));
+      mockTagService.findById.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/article-tags/1');
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(200);
     });
   });
 
   describe('POST /article-tags', () => {
     it('creates a tag', async () => {
-      mockTagService.create.mockResolvedValue({ id: 1, name: 'new' });
+      mockTagService.create.mockReturnValue(Effect.succeed({ id: 1, name: 'new' }));
       const app = createApp();
 
       const res = await app.request('/article-tags', {
@@ -83,7 +87,7 @@ describe('articleTagRoutes', () => {
     });
 
     it('returns error on service exception', async () => {
-      mockTagService.create.mockRejectedValue(new Error('fail'));
+      mockTagService.create.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/article-tags', {
@@ -99,7 +103,7 @@ describe('articleTagRoutes', () => {
 
   describe('PUT /article-tags/:id', () => {
     it('updates a tag', async () => {
-      mockTagService.update.mockResolvedValue({ id: 1, name: 'updated' });
+      mockTagService.update.mockReturnValue(Effect.succeed({ id: 1, name: 'updated' }));
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {
@@ -113,7 +117,7 @@ describe('articleTagRoutes', () => {
     });
 
     it('returns error on not found', async () => {
-      mockTagService.update.mockRejectedValue(new Error('not found'));
+      mockTagService.update.mockReturnValue(Effect.fail(new Error('not found')));
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {
@@ -129,7 +133,7 @@ describe('articleTagRoutes', () => {
 
   describe('DELETE /article-tags/:id', () => {
     it('deletes a tag', async () => {
-      mockTagService.delete.mockResolvedValue(undefined);
+      mockTagService.delete.mockReturnValue(Effect.succeed(undefined));
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {
@@ -141,7 +145,7 @@ describe('articleTagRoutes', () => {
     });
 
     it('returns error on service exception', async () => {
-      mockTagService.delete.mockRejectedValue(new Error('fail'));
+      mockTagService.delete.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {

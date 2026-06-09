@@ -1,7 +1,8 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -17,7 +18,9 @@ const articleRoutes = new Hono().basePath('/articles');
 articleRoutes.get('/', zValidator('query', PaginateQuerySchema), async (c) => {
   try {
     const query = c.req.valid('query');
-    const result = await articleService.findAll(query.page, query.pageSize);
+    const result = await appRuntime.runPromise(
+      articleService.findAll(query.page, query.pageSize),
+    );
 
     return c.json(
       createResult({
@@ -39,7 +42,7 @@ articleRoutes.get(
   async (c) => {
     try {
       const { id } = c.req.valid('query');
-      const article = await articleService.findById(id);
+      const article = await appRuntime.runPromise(articleService.findById(id));
 
       if (!article) {
         return c.json(
@@ -71,7 +74,7 @@ articleRoutes.post(
   async (c) => {
     try {
       const dto = c.req.valid('json');
-      const article = await articleService.create(dto);
+      const article = await appRuntime.runPromise(articleService.create(dto));
 
       return c.json(
         createResult({
@@ -99,7 +102,7 @@ articleRoutes.post(
   async (c) => {
     try {
       const dto = c.req.valid('json');
-      const result = await articleService.update(dto);
+      const result = await appRuntime.runPromise(articleService.update(dto));
 
       return c.json(
         createResult({
@@ -127,7 +130,7 @@ articleRoutes.post(
   async (c) => {
     try {
       const { id } = c.req.valid('json');
-      const deleted = await articleService.delete(id);
+      const deleted = await appRuntime.runPromise(articleService.delete(id));
 
       if (!deleted) {
         return c.json(
@@ -163,7 +166,9 @@ articleRoutes.post(
   async (c) => {
     try {
       const { images } = c.req.valid('json');
-      const urls = articleService.getUploadUrls(images);
+      const urls = await appRuntime.runPromise(
+        articleService.getUploadUrls(images),
+      );
 
       return c.json(
         createResult({

@@ -1,41 +1,15 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { recordVisitor, prismaService, ossService } from '@backend/common';
+import { recordVisitor } from '@backend/common';
+import { appRuntime } from '@backend/common/effect';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
-import { logger, safeNumber, safeParse, createPaginate } from '@backend/utils';
+import { logger } from '@backend/utils';
+
+import { blogService } from './blog.service';
 
 const blogRoutes = new Hono();
-
-const ORDER_MAP = {
-  latest: 'desc',
-  oldest: 'asc',
-} as const;
-
-type PhotoWithUrls = {
-  id: number;
-  url: string;
-  thumbnailUrl: string;
-};
-
-function transformPhoto<T extends PhotoWithUrls>(
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> &
-  Pick<PhotoWithUrls, 'url' | 'thumbnailUrl'> {
-  return {
-    ...photo,
-    url: ossService.getPrivateUrl(photo.url),
-    thumbnailUrl: ossService.getPrivateUrl(photo.thumbnailUrl),
-  };
-}
-
-async function photoFindMany(
-  args: Parameters<typeof prismaService.photo.findMany>[0],
-) {
-  const photos = await prismaService.photo.findMany(args);
-  return photos.map((photo) => transformPhoto(photo));
-}
 
 // GET /article/list - 获取文章列表
 blogRoutes.get(
@@ -47,36 +21,21 @@ blogRoutes.get(
 
       logger.info('获取文章列表, query:', query);
 
-      const articles = await prismaService.article.findMany({
-        ...createPaginate(query.page, query.pageSize),
-        orderBy: {
-          publishAt: ORDER_MAP[query.order],
-        },
-        include: {
-          articleAndArticleTags: {
-            include: {
-              articleTag: true,
-            },
-          },
-        },
-      });
+      const result = await appRuntime.runPromise(
+        blogService.getArticleList(
+          query.page,
+          query.pageSize,
+          query.order as 'latest' | 'oldest' | undefined,
+        ),
+      );
 
-      const total = await prismaService.article.count();
-
-      const data = {
-        data: articles,
-        totalPages: Math.ceil(total / query.pageSize),
-        page: query.page,
-        pageSize: query.pageSize,
-      };
-
-      logger.info('获取文章列表成功, data:', data);
+      logger.info('获取文章列表成功, data:', result);
 
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: 'success',
-          data,
+          data: result,
         }),
       );
     } catch (error) {
@@ -90,30 +49,9 @@ blogRoutes.get(
 blogRoutes.get('/article/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const safeId = safeNumber(id);
-
-    if (!safeId) {
-      return c.json(
-        createResult({
-          code: ResultCode.DatabaseError,
-          message: '文章不存在',
-        }),
-      );
-    }
-
-    const article = await prismaService.article.findUnique({
-      where: { id: safeId },
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-        publishAt: true,
-        articleAndArticleTags: true,
-      },
-    });
+    const article = await appRuntime.runPromise(
+      blogService.getArticleDetail(id),
+    );
 
     if (!article) {
       return c.json(
@@ -147,51 +85,15 @@ blogRoutes.get(
 
       logger.info('获取相册列表, query:', query);
 
-      const albumModels = await prismaService.photoAlbum.findMany({
-        ...createPaginate(query.page, query.pageSize),
-        where: {
-          available: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-          coverId: true,
-        },
-      });
-
-      const photos =
-        albumModels.length > 0
-          ? await photoFindMany({
-              where: {
-                albumId: {
-                  in: albumModels.map((item) => item.id),
-                },
-              },
-            })
-          : [];
-
-      const galleries = albumModels.map((item) => ({
-        id: item.id,
-        name: item.name,
-        cover: photos.find((photo) => photo.id === item.coverId) || null,
-        description: item.description,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      }));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(query.page, query.pageSize),
+      );
 
       return c.json(
         createResult({
           code: ResultCode.Success,
           message: 'success',
-          data: {
-            data: galleries,
-            total: galleries.length,
-            page: query.page,
-            pageSize: query.pageSize,
-          },
+          data: result,
         }),
       );
     } catch (error) {
@@ -205,47 +107,12 @@ blogRoutes.get(
 blogRoutes.get('/gallery/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const albumId = safeNumber(id);
 
     logger.info('获取相册详情, id:', id);
 
-    const album = await prismaService.photoAlbum.findUnique({
-      where: { id: albumId },
-      select: {
-        id: true,
-        name: true,
-        coverId: true,
-        description: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!album) {
-      return c.json(
-        createResult({
-          code: ResultCode.Success,
-          message: 'success',
-          data: null,
-        }),
-      );
-    }
-
-    const photos = await photoFindMany({
-      where: {
-        albumId: albumId,
-      },
-    });
-
-    const result = {
-      id: album.id,
-      name: album.name,
-      cover: photos.find((photo) => photo.id === album.coverId) || null,
-      description: album.description,
-      createdAt: album.createdAt,
-      updatedAt: album.updatedAt,
-      photos: photos.sort((a) => (a.id === album.coverId ? -1 : 1)),
-    };
+    const result = await appRuntime.runPromise(
+      blogService.getGalleryDetail(id),
+    );
 
     return c.json(
       createResult({
@@ -282,20 +149,21 @@ blogRoutes.post(
 
       logger.info('记录博客访客:', visitorDto.pagePath);
 
-      // Create a minimal request-like object compatible with recordVisitor
-      const request = {
-        headers: {
-          'data-hash': c.req.header('data-hash') || '',
-          'x-forwarded-for': c.req.header('x-forwarded-for') || '',
-        },
-        ip:
-          c.req.header('x-forwarded-for') ||
-          c.req.header('x-real-ip') ||
-          'unknown',
-        get: (name: string) => c.req.header(name) || '',
-      } as any;
+      const ip =
+        c.req.header('x-forwarded-for') ||
+        c.req.header('x-real-ip') ||
+        'unknown';
 
-      await recordVisitor(request, visitorDto);
+      await appRuntime.runPromise(
+        blogService.recordVisitor(
+          visitorDto,
+          {
+            'data-hash': c.req.header('data-hash') || '',
+            'x-forwarded-for': c.req.header('x-forwarded-for') || '',
+          },
+          ip,
+        ),
+      );
 
       return c.json(
         createResult({
@@ -321,34 +189,13 @@ blogRoutes.get('/user-info', async (c) => {
   try {
     logger.info('获取用户信息');
 
-    const userInfo = await prismaService.userInfo.findUnique({
-      where: {
-        id: 1,
-      },
-      select: {
-        name: true,
-        occupation: true,
-        abstract: true,
-        aboutMe: true,
-        contact: true,
-        avatar: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const userInfo = await appRuntime.runPromise(blogService.getUserInfo());
 
     return c.json(
       createResult({
         code: ResultCode.Success,
         message: 'success',
-        data: {
-          name: userInfo?.name || '',
-          occupation: userInfo?.occupation || '',
-          abstract: userInfo?.abstract || '',
-          aboutMe: userInfo?.aboutMe || '',
-          avatar: ossService.getPrivateUrl(userInfo?.avatar || ''),
-          contact: safeParse<Record<string, string>>(userInfo?.contact, {}),
-        },
+        data: userInfo,
       }),
     );
   } catch (error) {

@@ -1,16 +1,16 @@
-import { serve } from '@hono/node-server';
+﻿import { serve } from '@hono/node-server';
 
-import { logger } from '@backend/utils';
-
-import { app } from './app';
+import { appRuntime } from './common/effect/runtime';
 import { config } from './common/config.service';
-import { startTokenCleanup } from './features/cms/auth/whitelist-cleanup';
+import { app } from './app';
+import { cleanupProgram } from './features/cms/auth/whitelist-cleanup';
+import { logger } from './utils';
 
 serve({
   fetch: app.fetch,
   port: config.port,
 });
 
-startTokenCleanup();
+appRuntime.runFork(cleanupProgram);
 
 logger.info(`Server running on http://localhost:${config.port}`);

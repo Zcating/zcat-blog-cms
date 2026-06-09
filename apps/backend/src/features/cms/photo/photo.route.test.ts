@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockPhotoService = vi.hoisted(() => ({
   findAll: vi.fn(),
@@ -33,7 +34,7 @@ describe('photoRoutes', () => {
 
   describe('GET /photos', () => {
     it('returns paginated photos', async () => {
-      mockPhotoService.findAll.mockResolvedValue({ data: [], total: 0 });
+      mockPhotoService.findAll.mockReturnValue(Effect.succeed({ data: [], total: 0 }));
       const app = createApp();
 
       const res = await app.request('/photos');
@@ -45,7 +46,7 @@ describe('photoRoutes', () => {
 
   describe('GET /photos/empty-album', () => {
     it('returns empty album photos', async () => {
-      mockPhotoService.findEmptyAlbum.mockResolvedValue([]);
+      mockPhotoService.findEmptyAlbum.mockReturnValue(Effect.succeed([]));
       const app = createApp();
 
       const res = await app.request('/photos/empty-album');
@@ -57,7 +58,7 @@ describe('photoRoutes', () => {
 
   describe('GET /photos/detail', () => {
     it('returns photo detail', async () => {
-      mockPhotoService.findById.mockResolvedValue({ id: 1 });
+      mockPhotoService.findById.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/photos/detail?id=1');
@@ -67,7 +68,7 @@ describe('photoRoutes', () => {
     });
 
     it('returns success with null data when not found', async () => {
-      mockPhotoService.findById.mockResolvedValue(null);
+      mockPhotoService.findById.mockReturnValue(Effect.succeed(null));
       const app = createApp();
 
       const res = await app.request('/photos/detail?id=999');
@@ -80,7 +81,7 @@ describe('photoRoutes', () => {
 
   describe('POST /photos/create', () => {
     it('creates photo', async () => {
-      mockPhotoService.create.mockResolvedValue({ id: 1 });
+      mockPhotoService.create.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/photos/create', {
@@ -100,7 +101,7 @@ describe('photoRoutes', () => {
 
   describe('POST /photos/create/with-album', () => {
     it('creates photo with album', async () => {
-      mockPhotoService.create.mockResolvedValue({ id: 1 });
+      mockPhotoService.create.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/photos/create/with-album', {
@@ -119,7 +120,7 @@ describe('photoRoutes', () => {
     });
 
     it('returns error when create with-album service fails', async () => {
-      mockPhotoService.create.mockRejectedValue(new Error('create failed'));
+      mockPhotoService.create.mockReturnValue(Effect.fail(new Error('create failed')));
       const app = createApp();
 
       const res = await app.request('/photos/create/with-album', {
@@ -140,7 +141,7 @@ describe('photoRoutes', () => {
 
   describe('POST /photos/update', () => {
     it('updates photo', async () => {
-      mockPhotoService.update.mockResolvedValue({ id: 1 });
+      mockPhotoService.update.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/photos/update', {
@@ -154,7 +155,7 @@ describe('photoRoutes', () => {
     });
 
     it('returns error when update service fails', async () => {
-      mockPhotoService.update.mockRejectedValue(new Error('update failed'));
+      mockPhotoService.update.mockReturnValue(Effect.fail(new Error('update failed')));
       const app = createApp();
 
       const res = await app.request('/photos/update', {
@@ -170,7 +171,7 @@ describe('photoRoutes', () => {
 
   describe('POST /photos/update/with-album', () => {
     it('updates photo with album', async () => {
-      mockPhotoService.updateWithAlbum.mockResolvedValue({ id: 1 });
+      mockPhotoService.updateWithAlbum.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/photos/update/with-album', {
@@ -189,8 +190,8 @@ describe('photoRoutes', () => {
     });
 
     it('returns error when service fails', async () => {
-      mockPhotoService.updateWithAlbum.mockRejectedValue(
-        new Error('update failed'),
+      mockPhotoService.updateWithAlbum.mockReturnValue(
+        Effect.fail(new Error('update failed')),
       );
       const app = createApp();
 
@@ -212,7 +213,7 @@ describe('photoRoutes', () => {
 
   describe('POST /photos/delete', () => {
     it('deletes photo', async () => {
-      mockPhotoService.delete.mockResolvedValue(true);
+      mockPhotoService.delete.mockReturnValue(Effect.succeed(true));
       const app = createApp();
 
       const res = await app.request('/photos/delete', {
@@ -226,7 +227,7 @@ describe('photoRoutes', () => {
     });
 
     it('succeeds even when photo not found', async () => {
-      mockPhotoService.delete.mockResolvedValue(false);
+      mockPhotoService.delete.mockReturnValue(Effect.succeed(false));
       const app = createApp();
 
       const res = await app.request('/photos/delete', {
@@ -240,7 +241,7 @@ describe('photoRoutes', () => {
     });
 
     it('returns error when delete service fails', async () => {
-      mockPhotoService.delete.mockRejectedValue(new Error('delete failed'));
+      mockPhotoService.delete.mockReturnValue(Effect.fail(new Error('delete failed')));
       const app = createApp();
 
       const res = await app.request('/photos/delete', {

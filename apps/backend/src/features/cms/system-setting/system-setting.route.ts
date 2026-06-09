@@ -1,6 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -16,7 +17,9 @@ systemSettingRoutes.get(
   async (c) => {
     try {
       const { key } = c.req.valid('query');
-      const result = await systemSettingService.getUploadConfig(key);
+      const result = await appRuntime.runPromise(
+        systemSettingService.getUploadConfig(key),
+      );
 
       return c.json(
         createResult({

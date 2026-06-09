@@ -1,7 +1,8 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, PaginateQuerySchema, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -23,9 +24,8 @@ photoAlbumRoutes.get(
   async (c) => {
     try {
       const query = c.req.valid('query');
-      const result = await photoAlbumService.findAll(
-        query.page,
-        query.pageSize,
+      const result = await appRuntime.runPromise(
+        photoAlbumService.findAll(query.page, query.pageSize),
       );
 
       return c.json(
@@ -46,7 +46,9 @@ photoAlbumRoutes.get(
 photoAlbumRoutes.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const album = await photoAlbumService.findById(id);
+    const album = await appRuntime.runPromise(
+      photoAlbumService.findById(id),
+    );
 
     return c.json(
       createResult({
@@ -68,7 +70,9 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const album = await photoAlbumService.create(body);
+      const album = await appRuntime.runPromise(
+        photoAlbumService.create(body),
+      );
 
       return c.json(
         createResult({
@@ -99,7 +103,9 @@ photoAlbumRoutes.post(
           }),
         );
       }
-      const result = await photoAlbumService.update(body.id, body);
+      const result = await appRuntime.runPromise(
+        photoAlbumService.update(body.id, body),
+      );
 
       return c.json(
         createResult({
@@ -122,7 +128,7 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const { id } = c.req.valid('json');
-      await photoAlbumService.delete(id);
+      await appRuntime.runPromise(photoAlbumService.delete(id));
 
       return c.json(
         createResult({
@@ -144,7 +150,9 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      await photoAlbumService.setCover(body.albumId, body.photoId);
+      await appRuntime.runPromise(
+        photoAlbumService.setCover(body.albumId, body.photoId),
+      );
 
       return c.json(
         createResult({
@@ -166,9 +174,8 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const success = await photoAlbumService.addPhotos(
-        body.albumId,
-        body.photoIds,
+      const success = await appRuntime.runPromise(
+        photoAlbumService.addPhotos(body.albumId, body.photoIds),
       );
 
       if (!success) {

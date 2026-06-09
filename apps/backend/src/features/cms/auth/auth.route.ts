@@ -1,6 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -16,11 +17,13 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const userAgent = c.req.header('User-Agent');
 
   try {
-    const result = await authService.login(username, password, {
-      device,
-      ip,
-      userAgent,
-    });
+    const result = await appRuntime.runPromise(
+      authService.login(username, password, {
+        device,
+        ip,
+        userAgent,
+      }),
+    );
 
     if (!result) {
       return c.json(
@@ -55,18 +58,20 @@ authRoutes.post('/is-valid', async (c) => {
     return c.json(
       createResult({
         code: ResultCode.Success,
-        data: { valid: false },
+        message: 'success',
+        data: { valid: false as boolean },
       }),
     );
   }
 
   const token = authHeader.slice(7);
   try {
-    const valid = await authService.isValid(token);
+    const valid = await appRuntime.runPromise(authService.isValid(token));
 
     return c.json(
       createResult({
         code: ResultCode.Success,
+        message: 'success',
         data: { valid },
       }),
     );
@@ -94,7 +99,7 @@ authRoutes.post('/logout', async (c) => {
 
   const token = authHeader.slice(7);
   try {
-    await authService.logout(token);
+    await appRuntime.runPromise(authService.logout(token));
     return c.json(
       createResult({
         code: ResultCode.Success,
@@ -119,7 +124,9 @@ authRoutes.post(
     const { username, password, email } = c.req.valid('json');
 
     try {
-      const result = await authService.register(username, password, email);
+      const result = await appRuntime.runPromise(
+        authService.register(username, password, email),
+      );
 
       if (result.code === 'REGISTER_LIMIT') {
         return c.json(

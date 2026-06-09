@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 vi.mock('@backend/common', () => ({
   getStatistics: vi.fn(),
@@ -26,7 +27,9 @@ describe('statisticsRoutes', () => {
   describe('GET /statistics/detail', () => {
     it('returns statistics', async () => {
       const { getStatistics } = await import('@backend/common');
-      (getStatistics as any).mockResolvedValue({ data: [], total: 0 });
+      (getStatistics as any).mockReturnValue(
+        Effect.succeed({ data: [], total: 0 }),
+      );
       const app = createApp();
 
       const res = await app.request('/statistics/detail');
@@ -37,7 +40,7 @@ describe('statisticsRoutes', () => {
 
     it('returns error when getStatistics fails', async () => {
       const { getStatistics } = await import('@backend/common');
-      (getStatistics as any).mockRejectedValue(new Error('stats error'));
+      (getStatistics as any).mockReturnValue(Effect.fail(new Error('stats error')));
       const app = createApp();
 
       const res = await app.request('/statistics/detail');
@@ -50,7 +53,7 @@ describe('statisticsRoutes', () => {
   describe('GET /statistics/summary', () => {
     it('returns summary', async () => {
       const { getSummary } = await import('@backend/common');
-      (getSummary as any).mockResolvedValue({ totalVisits: 100 });
+      (getSummary as any).mockReturnValue(Effect.succeed({ totalVisits: 100 }));
       const app = createApp();
 
       const res = await app.request('/statistics/summary');
@@ -62,7 +65,7 @@ describe('statisticsRoutes', () => {
 
     it('returns error when getSummary fails', async () => {
       const { getSummary } = await import('@backend/common');
-      (getSummary as any).mockRejectedValue(new Error('summary error'));
+      (getSummary as any).mockReturnValue(Effect.fail(new Error('summary error')));
       const app = createApp();
 
       const res = await app.request('/statistics/summary');
@@ -75,7 +78,7 @@ describe('statisticsRoutes', () => {
   describe('GET /statistics/chart-data', () => {
     it('returns chart data', async () => {
       const { getChartData } = await import('@backend/common');
-      (getChartData as any).mockResolvedValue([]);
+      (getChartData as any).mockReturnValue(Effect.succeed([]));
       const app = createApp();
 
       const res = await app.request('/statistics/chart-data');
@@ -86,7 +89,7 @@ describe('statisticsRoutes', () => {
 
     it('returns error when getChartData fails', async () => {
       const { getChartData } = await import('@backend/common');
-      (getChartData as any).mockRejectedValue(new Error('chart error'));
+      (getChartData as any).mockReturnValue(Effect.fail(new Error('chart error')));
       const app = createApp();
 
       const res = await app.request('/statistics/chart-data');

@@ -1,6 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -15,7 +16,7 @@ const articleTagRoutes = new Hono().basePath('/article-tags');
 // GET / - 获取所有文章标签
 articleTagRoutes.get('/', async (c) => {
   try {
-    const tags = await articleTagService.findAll();
+    const tags = await appRuntime.runPromise(articleTagService.findAll());
 
     return c.json(
       createResult({
@@ -34,7 +35,7 @@ articleTagRoutes.get('/', async (c) => {
 articleTagRoutes.get('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    const tag = await articleTagService.findById(id);
+    const tag = await appRuntime.runPromise(articleTagService.findById(id));
 
     return c.json(
       createResult({
@@ -56,7 +57,7 @@ articleTagRoutes.post(
   async (c) => {
     try {
       const dto = c.req.valid('json');
-      const tag = await articleTagService.create(dto);
+      const tag = await appRuntime.runPromise(articleTagService.create(dto));
 
       return c.json(
         createResult({
@@ -85,7 +86,9 @@ articleTagRoutes.put(
     const id = c.req.param('id');
     try {
       const dto = c.req.valid('json');
-      const result = await articleTagService.update(id, dto);
+      const result = await appRuntime.runPromise(
+        articleTagService.update(id, dto),
+      );
 
       return c.json(
         createResult({
@@ -110,7 +113,7 @@ articleTagRoutes.put(
 articleTagRoutes.delete('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    await articleTagService.delete(id);
+    await appRuntime.runPromise(articleTagService.delete(id));
 
     return c.json(
       createResult({

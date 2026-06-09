@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockPrisma = vi.hoisted(() => ({
   article: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
@@ -13,9 +14,16 @@ const mockOss = vi.hoisted(() => ({
 }));
 
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
-vi.mock('@backend/common', () => ({
+
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOss,
+}));
+
+vi.mock('../../../common/statistic-service', () => ({
   recordVisitor: mockRecordVisitor,
 }));
 
@@ -216,7 +224,7 @@ describe('blogRoutes', () => {
 
   describe('POST /visitor', () => {
     it('records visitor', async () => {
-      mockRecordVisitor.mockResolvedValue(undefined);
+      mockRecordVisitor.mockReturnValue(Effect.succeed(undefined));
       const app = createApp();
 
       const res = await app.request('/visitor', {
@@ -230,7 +238,7 @@ describe('blogRoutes', () => {
     });
 
     it('returns success even on error', async () => {
-      mockRecordVisitor.mockRejectedValue(new Error('fail'));
+      mockRecordVisitor.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/visitor', {

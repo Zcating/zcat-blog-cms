@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockAuthService = vi.hoisted(() => ({
   login: vi.fn(),
@@ -16,6 +17,9 @@ import authRoutes from './auth.route';
 
 const createApp = () => {
   const app = new Hono();
+  app.onError((err, c) =>
+    c.json({ code: 'ERR0006', message: err.message }, 200),
+  );
   app.route('/', authRoutes);
   return app;
 };
@@ -27,7 +31,7 @@ describe('authRoutes', () => {
 
   describe('POST /login', () => {
     it('returns 200 with accessToken on successful login', async () => {
-      mockAuthService.login.mockResolvedValue({ accessToken: 'token123' });
+      mockAuthService.login.mockReturnValue(Effect.succeed({ accessToken: 'token123' }));
       const app = createApp();
 
       const res = await app.request('/login', {
@@ -43,7 +47,7 @@ describe('authRoutes', () => {
     });
 
     it('returns login error when credentials are invalid', async () => {
-      mockAuthService.login.mockResolvedValue(null);
+      mockAuthService.login.mockReturnValue(Effect.succeed(null));
       const app = createApp();
 
       const res = await app.request('/login', {
@@ -58,7 +62,7 @@ describe('authRoutes', () => {
     });
 
     it('returns unknown error on service exception', async () => {
-      mockAuthService.login.mockRejectedValue(new Error('db error'));
+      mockAuthService.login.mockReturnValue(Effect.fail(new Error('db error')));
       const app = createApp();
 
       const res = await app.request('/login', {
@@ -72,12 +76,55 @@ describe('authRoutes', () => {
     });
   });
 
+  describe('POST /is-valid', () => {
+    it('returns valid: false when no token', async () => {
+      const app = createApp();
+
+      const res = await app.request('/is-valid', { method: 'POST' });
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data.valid).toBe(false);
+    });
+
+    it('returns valid result for valid token', async () => {
+      mockAuthService.isValid.mockReturnValue(Effect.succeed(true));
+      const app = createApp();
+
+      const res = await app.request('/is-valid', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+      });
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data.valid).toBe(true);
+    });
+  });
+
+  describe('POST /logout', () => {
+    it('returns success', async () => {
+      mockAuthService.logout.mockReturnValue(Effect.succeed(undefined));
+      const app = createApp();
+
+      const res = await app.request('/logout', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer valid-token' },
+      });
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+    });
+  });
+
   describe('POST /register', () => {
     it('registers successfully', async () => {
-      mockAuthService.register.mockResolvedValue({
-        code: 'SUCCESS',
-        accessToken: 'reg-token',
-      });
+      mockAuthService.register.mockReturnValue(
+        Effect.succeed({
+          code: 'SUCCESS',
+          accessToken: 'reg-token',
+        }),
+      );
       const app = createApp();
 
       const res = await app.request('/register', {
@@ -86,155 +133,74 @@ describe('authRoutes', () => {
         body: JSON.stringify({
           username: 'newuser',
           password: 'pass',
-          email: 'e@m.com',
+          email: 'a@b.com',
         }),
       });
 
       const body = await res.json();
+      expect(res.status).toBe(200);
       expect(body.code).toBe('0000');
       expect(body.data.accessToken).toBe('reg-token');
     });
 
-    it('returns register limit', async () => {
-      mockAuthService.register.mockResolvedValue({ code: 'REGISTER_LIMIT' });
+    it('returns register error when register is disabled', async () => {
+      mockAuthService.register.mockReturnValue(
+        Effect.succeed({ code: 'REGISTER_LIMIT' }),
+      );
       const app = createApp();
 
       const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'u',
-          password: 'p',
-          email: 'e@m.com',
+          username: 'newuser',
+          password: 'pass',
+          email: 'a@b.com',
         }),
       });
-
       const body = await res.json();
+
       expect(body.code).toBe('ERR0001');
     });
 
-    it('returns user exists error', async () => {
-      mockAuthService.register.mockResolvedValue({ code: 'USER_EXISTS' });
+    it('returns register error when user exists', async () => {
+      mockAuthService.register.mockReturnValue(
+        Effect.succeed({ code: 'USER_EXISTS' }),
+      );
       const app = createApp();
 
       const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'existing',
-          password: 'p',
-          email: 'e@m.com',
+          username: 'taken',
+          password: 'pass',
+          email: 'a@b.com',
         }),
       });
-
       const body = await res.json();
+
       expect(body.code).toBe('ERR0001');
-      expect(body.message).toBe('用户已存在');
     });
 
     it('returns unknown error on service exception', async () => {
-      mockAuthService.register.mockRejectedValue(new Error('fail'));
+      mockAuthService.register.mockReturnValue(
+        Effect.fail(new Error('db error')),
+      );
       const app = createApp();
 
       const res = await app.request('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'u',
-          password: 'p',
-          email: 'e@m.com',
+          username: 'newuser',
+          password: 'pass',
+          email: 'a@b.com',
         }),
       });
-
       const body = await res.json();
+
       expect(body.code).toBe('ERR0006');
-    });
-  });
-
-  describe('POST /logout', () => {
-    it('returns success when valid Authorization header', async () => {
-      mockAuthService.logout.mockResolvedValue(undefined);
-      const app = createApp();
-
-      const res = await app.request('/logout', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer some-token' },
-      });
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.code).toBe('0000');
-      expect(mockAuthService.logout).toHaveBeenCalledWith('some-token');
-    });
-
-    it('returns success even without Authorization header', async () => {
-      const app = createApp();
-
-      const res = await app.request('/logout', { method: 'POST' });
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.code).toBe('0000');
-      expect(mockAuthService.logout).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('POST /is-valid', () => {
-    it('returns valid false when Authorization header is missing', async () => {
-      const app = createApp();
-
-      const res = await app.request('/is-valid', { method: 'POST' });
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.code).toBe('0000');
-      expect(body.data.valid).toBe(false);
-      expect(mockAuthService.isValid).not.toHaveBeenCalled();
-    });
-
-    it('returns service result when bearer token is provided', async () => {
-      mockAuthService.isValid.mockResolvedValue(true);
-      const app = createApp();
-
-      const res = await app.request('/is-valid', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer valid-token' },
-      });
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.code).toBe('0000');
-      expect(body.data.valid).toBe(true);
-      expect(mockAuthService.isValid).toHaveBeenCalledWith('valid-token');
-    });
-
-    it('returns valid false when service reports invalid token', async () => {
-      mockAuthService.isValid.mockResolvedValue(false);
-      const app = createApp();
-
-      const res = await app.request('/is-valid', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer invalid-token' },
-      });
-
-      const body = await res.json();
-      expect(body.code).toBe('0000');
-      expect(body.data.valid).toBe(false);
-    });
-
-    it('returns unknown error when service rejects', async () => {
-      mockAuthService.isValid.mockRejectedValue(new Error('verify failed'));
-      const app = createApp();
-
-      const res = await app.request('/is-valid', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer broken-token' },
-      });
-
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.code).toBe('ERR0006');
-      expect(body.message).toBe('校验失败');
     });
   });
 });

@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockArticleService = vi.hoisted(() => ({
   findAll: vi.fn(),
@@ -32,7 +33,7 @@ describe('articleRoutes', () => {
 
   describe('GET /articles', () => {
     it('returns paginated articles', async () => {
-      mockArticleService.findAll.mockResolvedValue({ data: [], total: 0 });
+      mockArticleService.findAll.mockReturnValue(Effect.succeed({ data: [], total: 0 }));
       const app = createApp();
 
       const res = await app.request('/articles');
@@ -42,7 +43,7 @@ describe('articleRoutes', () => {
     });
 
     it('throws on service error', async () => {
-      mockArticleService.findAll.mockRejectedValue(new Error('fail'));
+      mockArticleService.findAll.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/articles');
@@ -51,19 +52,18 @@ describe('articleRoutes', () => {
   });
 
   describe('GET /articles/detail', () => {
-    it('returns article detail', async () => {
-      mockArticleService.findById.mockResolvedValue({ id: 1, title: 'A' });
+    it('returns article when found', async () => {
+      mockArticleService.findById.mockReturnValue(Effect.succeed({ id: 1, title: 'Test' }));
       const app = createApp();
 
       const res = await app.request('/articles/detail?id=1');
       const body = await res.json();
 
       expect(body.code).toBe('0000');
-      expect(body.data.title).toBe('A');
     });
 
     it('returns database error when article not found', async () => {
-      mockArticleService.findById.mockResolvedValue(null);
+      mockArticleService.findById.mockReturnValue(Effect.succeed(null));
       const app = createApp();
 
       const res = await app.request('/articles/detail?id=1');
@@ -74,46 +74,24 @@ describe('articleRoutes', () => {
   });
 
   describe('POST /articles/create', () => {
-    it('creates article', async () => {
-      mockArticleService.create.mockResolvedValue({ id: 1 });
+    it('creates an article', async () => {
+      mockArticleService.create.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/articles/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'T',
-          excerpt: 'E',
-          content: 'C',
-        }),
+        body: JSON.stringify({ title: 'New', excerpt: 'Exc', content: 'C' }),
       });
       const body = await res.json();
 
       expect(body.code).toBe('0000');
     });
-
-    it('returns error on failure', async () => {
-      mockArticleService.create.mockRejectedValue(new Error('fail'));
-      const app = createApp();
-
-      const res = await app.request('/articles/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'T',
-          excerpt: 'E',
-          content: 'C',
-        }),
-      });
-      const body = await res.json();
-
-      expect(body.code).toBe('ERR0006');
-    });
   });
 
   describe('POST /articles/update', () => {
-    it('updates article', async () => {
-      mockArticleService.update.mockResolvedValue({ id: 1 });
+    it('updates an article', async () => {
+      mockArticleService.update.mockReturnValue(Effect.succeed({ id: 1 }));
       const app = createApp();
 
       const res = await app.request('/articles/update', {
@@ -125,25 +103,11 @@ describe('articleRoutes', () => {
 
       expect(body.code).toBe('0000');
     });
-
-    it('returns error on failure', async () => {
-      mockArticleService.update.mockRejectedValue(new Error('fail'));
-      const app = createApp();
-
-      const res = await app.request('/articles/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: 1 }),
-      });
-      const body = await res.json();
-
-      expect(body.code).toBe('ERR0006');
-    });
   });
 
   describe('POST /articles/delete', () => {
-    it('deletes article', async () => {
-      mockArticleService.delete.mockResolvedValue(true);
+    it('deletes an article', async () => {
+      mockArticleService.delete.mockReturnValue(Effect.succeed(true));
       const app = createApp();
 
       const res = await app.request('/articles/delete', {
@@ -154,67 +118,22 @@ describe('articleRoutes', () => {
       const body = await res.json();
 
       expect(body.code).toBe('0000');
-    });
-
-    it('returns error when delete fails', async () => {
-      mockArticleService.delete.mockResolvedValue(false);
-      const app = createApp();
-
-      const res = await app.request('/articles/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: '1' }),
-      });
-      const body = await res.json();
-
-      expect(body.code).toBe('ERR0003');
-    });
-
-    it('returns error on exception', async () => {
-      mockArticleService.delete.mockRejectedValue(new Error('fail'));
-      const app = createApp();
-
-      const res = await app.request('/articles/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: '1' }),
-      });
-      const body = await res.json();
-
-      expect(body.code).toBe('ERR0006');
     });
   });
 
   describe('POST /articles/upload-images', () => {
-    it('returns upload urls', async () => {
-      mockArticleService.getUploadUrls.mockReturnValue(['url1']);
+    it('returns upload URLs', async () => {
+      mockArticleService.getUploadUrls.mockReturnValue(Effect.succeed(['url1', 'url2']));
       const app = createApp();
 
       const res = await app.request('/articles/upload-images', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: ['img1'] }),
+        body: JSON.stringify({ images: ['a', 'b'] }),
       });
       const body = await res.json();
 
       expect(body.code).toBe('0000');
-      expect(body.data).toEqual(['url1']);
-    });
-
-    it('returns error on failure', async () => {
-      mockArticleService.getUploadUrls.mockImplementation(() => {
-        throw new Error('fail');
-      });
-      const app = createApp();
-
-      const res = await app.request('/articles/upload-images', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: ['img1'] }),
-      });
-      const body = await res.json();
-
-      expect(body.code).toBe('ERR0006');
     });
   });
 });

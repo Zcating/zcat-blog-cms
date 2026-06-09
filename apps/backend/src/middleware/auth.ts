@@ -1,6 +1,7 @@
-import { createMiddleware } from 'hono/factory';
+﻿import { createMiddleware } from 'hono/factory';
 import jwt from 'jsonwebtoken';
 
+import { appRuntime } from '../common/effect/runtime';
 import { config } from '../common/config.service';
 import { tokenWhitelistService } from '../features/cms/auth/whitelist.service';
 
@@ -27,7 +28,9 @@ export const authMiddleware = createMiddleware(async (c, next) => {
       username: string;
     };
 
-    const isValid = await tokenWhitelistService.validate(token);
+    const isValid = await appRuntime.runPromise(
+      tokenWhitelistService.validate(token),
+    );
     if (!isValid) {
       return c.json({ code: 'ERR0002', message: 'Unauthorized' }, 401);
     }

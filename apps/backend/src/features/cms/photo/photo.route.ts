@@ -1,7 +1,8 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -23,10 +24,8 @@ const photoRoutes = new Hono().basePath('/photos');
 photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {
   try {
     const query = c.req.valid('query');
-    const result = await photoService.findAll(
-      query.albumId,
-      query.page,
-      query.pageSize,
+    const result = await appRuntime.runPromise(
+      photoService.findAll(query.albumId, query.page, query.pageSize),
     );
 
     return c.json(
@@ -45,7 +44,9 @@ photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {
 // GET /empty-album - 获取所有未所属相册的照片
 photoRoutes.get('/empty-album', async (c) => {
   try {
-    const result = await photoService.findEmptyAlbum();
+    const result = await appRuntime.runPromise(
+      photoService.findEmptyAlbum(),
+    );
 
     return c.json(
       createResult({
@@ -67,7 +68,7 @@ photoRoutes.get(
   async (c) => {
     try {
       const { id } = c.req.valid('query');
-      const photo = await photoService.findById(id);
+      const photo = await appRuntime.runPromise(photoService.findById(id));
 
       if (!photo) {
         return c.json(
@@ -100,7 +101,7 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const photo = await photoService.create(body);
+      const photo = await appRuntime.runPromise(photoService.create(body));
 
       return c.json(
         createResult({
@@ -123,7 +124,7 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const photo = await photoService.create(body);
+      const photo = await appRuntime.runPromise(photoService.create(body));
 
       return c.json(
         createResult({
@@ -146,7 +147,9 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const photo = await photoService.update(body.id, body);
+      const photo = await appRuntime.runPromise(
+        photoService.update(body.id, body),
+      );
 
       return c.json(
         createResult({
@@ -169,10 +172,8 @@ photoRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const result = await photoService.updateWithAlbum(
-        body.id,
-        body.albumId,
-        body,
+      const result = await appRuntime.runPromise(
+        photoService.updateWithAlbum(body.id, body.albumId, body),
       );
 
       return c.json(
@@ -196,7 +197,7 @@ photoRoutes.post(
   async (c) => {
     try {
       const { id } = c.req.valid('json');
-      const deleted = await photoService.delete(id);
+      const deleted = await appRuntime.runPromise(photoService.delete(id));
 
       if (!deleted) {
         return c.json(

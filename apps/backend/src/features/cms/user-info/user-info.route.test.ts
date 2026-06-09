@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockUserInfoService = vi.hoisted(() => ({
   get: vi.fn(),
@@ -14,6 +15,9 @@ import userInfoRoutes from './user-info.route';
 
 const createApp = () => {
   const app = new Hono();
+  app.onError((err, c) =>
+    c.json({ code: 'ERR0006', message: err.message }, 200),
+  );
   app.route('/', userInfoRoutes);
   return app;
 };
@@ -25,7 +29,7 @@ describe('userInfoRoutes', () => {
 
   describe('GET /user-info', () => {
     it('returns user info', async () => {
-      mockUserInfoService.get.mockResolvedValue({ name: 'Admin' });
+      mockUserInfoService.get.mockReturnValue(Effect.succeed({ name: 'Admin' }));
       const app = createApp();
 
       const res = await app.request('/user-info');
@@ -35,16 +39,18 @@ describe('userInfoRoutes', () => {
       expect(body.data.name).toBe('Admin');
     });
 
-    it('throws on service error', async () => {
-      mockUserInfoService.get.mockRejectedValue(new Error('fail'));
+    it('returns error on service failure', async () => {
+      mockUserInfoService.get.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/user-info');
-      expect(res.status).toBe(500);
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
     });
 
     it('passes userId from auth context to service', async () => {
-      mockUserInfoService.get.mockResolvedValue({ name: 'Admin' });
+      mockUserInfoService.get.mockReturnValue(Effect.succeed({ name: 'Admin' }));
       const app = new Hono();
       app.use('*', (c, next) => {
         c.set('user', { userId: 5, username: 'test' });
@@ -62,7 +68,7 @@ describe('userInfoRoutes', () => {
 
   describe('POST /user-info/update', () => {
     it('updates user info', async () => {
-      mockUserInfoService.update.mockResolvedValue({ name: 'Updated' });
+      mockUserInfoService.update.mockReturnValue(Effect.succeed({ name: 'Updated' }));
       const app = createApp();
 
       const res = await app.request('/user-info/update', {
@@ -83,7 +89,7 @@ describe('userInfoRoutes', () => {
     });
 
     it('returns validation error on missing user', async () => {
-      mockUserInfoService.update.mockResolvedValue(null);
+      mockUserInfoService.update.mockReturnValue(Effect.succeed(null));
       const app = createApp();
 
       const res = await app.request('/user-info/update', {
@@ -103,8 +109,8 @@ describe('userInfoRoutes', () => {
       expect(body.code).toBe('ERR0005');
     });
 
-    it('throws on service error', async () => {
-      mockUserInfoService.update.mockRejectedValue(new Error('fail'));
+    it('returns error on service failure', async () => {
+      mockUserInfoService.update.mockReturnValue(Effect.fail(new Error('fail')));
       const app = createApp();
 
       const res = await app.request('/user-info/update', {
@@ -119,7 +125,9 @@ describe('userInfoRoutes', () => {
           abstract: '',
         }),
       });
-      expect(res.status).toBe(500);
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
     });
 
     it('returns validation error on empty name', async () => {

@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockJwt = vi.hoisted(() => ({
   verify: vi.fn(),
@@ -8,6 +9,17 @@ const mockJwt = vi.hoisted(() => ({
 vi.mock('jsonwebtoken', () => ({ default: mockJwt, ...mockJwt }));
 
 const mockWhitelistValidate = vi.hoisted(() => vi.fn());
+
+// Mock the singleton files so the Effect tags pick up the mocks
+// and the real MinIO client / Prisma client are not loaded.
+vi.mock('../common/prisma.service', () => ({
+  prismaService: { tokenWhitelist: { findUnique: vi.fn(), deleteMany: vi.fn() } },
+}));
+
+vi.mock('../common/oss.service', () => ({
+  ossService: { getPrivateUrl: vi.fn(), presignUploadUrl: vi.fn(), deleteFile: vi.fn() },
+}));
+
 vi.mock('../features/cms/auth/whitelist.service', () => ({
   tokenWhitelistService: {
     validate: mockWhitelistValidate,
@@ -37,7 +49,7 @@ describe('authMiddleware', () => {
 
   it('allows request with valid Bearer token in whitelist', async () => {
     mockJwt.verify.mockReturnValue({ sub: '1', username: 'admin' });
-    mockWhitelistValidate.mockResolvedValue(true);
+    mockWhitelistValidate.mockReturnValue(Effect.succeed(true));
     const app = createApp();
 
     const res = await app.request('/protected/data', {
@@ -52,7 +64,7 @@ describe('authMiddleware', () => {
 
   it('returns 401 when token not in whitelist', async () => {
     mockJwt.verify.mockReturnValue({ sub: '1', username: 'admin' });
-    mockWhitelistValidate.mockResolvedValue(false);
+    mockWhitelistValidate.mockReturnValue(Effect.succeed(false));
     const app = createApp();
 
     const res = await app.request('/protected/data', {

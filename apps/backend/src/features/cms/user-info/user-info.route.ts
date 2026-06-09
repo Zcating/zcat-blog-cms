@@ -1,6 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -13,7 +14,9 @@ const userInfoRoutes = new Hono().basePath('/user-info');
 userInfoRoutes.get('/', async (c) => {
   try {
     const user = c.get('user');
-    const result = await userInfoService.get(user?.userId);
+    const result = await appRuntime.runPromise(
+      userInfoService.get(user?.userId),
+    );
 
     return c.json(
       createResult({
@@ -36,7 +39,9 @@ userInfoRoutes.post(
     try {
       const user = c.get('user');
       const body = c.req.valid('json');
-      const result = await userInfoService.update(user?.userId, body);
+      const result = await appRuntime.runPromise(
+        userInfoService.update(user?.userId, body),
+      );
 
       if (!result) {
         return c.json(
@@ -66,7 +71,9 @@ userInfoRoutes.put('/', zValidator('json', UserInfoSchema), async (c) => {
   try {
     const user = c.get('user');
     const body = c.req.valid('json');
-    const result = await userInfoService.update(user?.userId, body);
+    const result = await appRuntime.runPromise(
+      userInfoService.update(user?.userId, body),
+    );
 
     if (!result) {
       return c.json(

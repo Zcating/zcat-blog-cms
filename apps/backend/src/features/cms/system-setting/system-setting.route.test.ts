@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockSettingService = vi.hoisted(() => ({
   getUploadConfig: vi.fn(),
@@ -27,10 +28,12 @@ describe('systemSettingRoutes', () => {
 
   describe('GET /system-setting/upload-config', () => {
     it('returns presignedUrl', async () => {
-      mockSettingService.getUploadConfig.mockResolvedValue({
-        presignedUrl:
-          'http://localhost:9000/photos-bucket/test.jpg?presigned=abc',
-      });
+      mockSettingService.getUploadConfig.mockReturnValue(
+        Effect.succeed({
+          presignedUrl:
+            'http://localhost:9000/photos-bucket/test.jpg?presigned=abc',
+        }),
+      );
       const app = createApp();
 
       const res = await app.request(
@@ -45,7 +48,9 @@ describe('systemSettingRoutes', () => {
     });
 
     it('returns error on exception', async () => {
-      mockSettingService.getUploadConfig.mockRejectedValue(new Error('fail'));
+      mockSettingService.getUploadConfig.mockReturnValue(
+        Effect.fail(new Error('fail')),
+      );
       const app = createApp();
 
       const res = await app.request(

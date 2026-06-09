@@ -1,8 +1,9 @@
-import { zValidator } from '@hono/zod-validator';
+﻿import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { getStatistics, getSummary, getChartData } from '@backend/common';
+import { getChartData, getStatistics, getSummary } from '@backend/common';
+import { appRuntime } from '@backend/common/effect';
 import { createResult, ResultCode } from '@backend/model';
 import { logger } from '@backend/utils';
 
@@ -21,10 +22,12 @@ statisticsRoutes.get(
 
       logger.info('开始获取统计数据');
 
-      const result = await getStatistics(
-        { pagePath, ip, browser, os, device },
-        page,
-        limit,
+      const result = await appRuntime.runPromise(
+        getStatistics(
+          { pagePath, ip, browser, os, device },
+          page,
+          limit,
+        ),
       );
 
       logger.info('成功获取统计数据');
@@ -48,7 +51,7 @@ statisticsRoutes.get('/summary', async (c) => {
   try {
     logger.info('开始获取统计摘要');
 
-    const summary = await getSummary();
+    const summary = await appRuntime.runPromise(getSummary());
 
     logger.info('成功获取统计摘要');
 
@@ -76,7 +79,7 @@ statisticsRoutes.get(
       logger.info(`开始获取图表数据，天数: ${days}`);
 
       const daysCount = parseInt(days, 10) || 7;
-      const chartData = await getChartData(daysCount);
+      const chartData = await appRuntime.runPromise(getChartData(daysCount));
 
       logger.info('成功获取图表数据');
 
