@@ -39,8 +39,8 @@ export const logger = {
   info(msg: string, ...args: unknown[]): void {
     (pinoLogger.info as (...args: unknown[]) => void)(msg, ...args);
   },
-  warn(msg: string, ...args: unknown[]): void {
-    (pinoLogger.warn as (...args: unknown[]) => void)(msg, ...args);
+  warn(...args: unknown[]): void {
+    (pinoLogger.warn as (...args: unknown[]) => void)(...args);
   },
   debug(msg: string, ...args: unknown[]): void {
     (pinoLogger.debug as (...args: unknown[]) => void)(msg, ...args);
