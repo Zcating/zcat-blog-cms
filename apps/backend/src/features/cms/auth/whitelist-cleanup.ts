@@ -1,34 +1,29 @@
+﻿import { Effect, Schedule } from 'effect';
+
 import { logger } from '@backend/utils';
 
 import { tokenWhitelistService } from './whitelist.service';
 
-let cleanupInterval: ReturnType<typeof setInterval> | null = null;
-
-const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
-
-export function startTokenCleanup() {
-  if (cleanupInterval) {
-    return;
+/**
+ * Single cleanup iteration. Exported separately so tests can run it
+ * without the `Effect.repeat` schedule in the way.
+ */
+export const cleanupOnce = Effect.gen(function* () {
+  const count = yield* tokenWhitelistService.cleanupExpired();
+  if (count > 0) {
+    logger.info(`Token cleanup: removed ${count} expired entries`);
   }
+  return count;
+});
 
-  logger.info('Token cleanup scheduler started');
-
-  cleanupInterval = setInterval(async () => {
-    try {
-      const count = await tokenWhitelistService.cleanupExpired();
-      if (count > 0) {
-        logger.info(`Token cleanup: removed ${count} expired entries`);
-      }
-    } catch (error) {
-      logger.error('Token cleanup failed:', error);
-    }
-  }, CLEANUP_INTERVAL_MS);
-}
-
-export function stopTokenCleanup() {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
-    logger.info('Token cleanup scheduler stopped');
-  }
-}
+/**
+ * Long-running program that re-runs the cleanup every hour. Started from
+ * `main.ts` via `appRuntime.runFork(cleanupProgram)`. Failures are logged
+ * and swallowed so a transient error does not stop the schedule.
+ */
+export const cleanupProgram = cleanupOnce.pipe(
+  Effect.repeat(Schedule.spaced('1 hour')),
+  Effect.catchAllCause((cause) =>
+    Effect.sync(() => logger.error('Token cleanup failed:', cause)),
+  ),
+);

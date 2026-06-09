@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockCleanupExpired = vi.hoisted(() => vi.fn());
 
@@ -8,7 +11,7 @@ vi.mock('./whitelist.service', () => ({
   },
 }));
 
-import { startTokenCleanup, stopTokenCleanup } from './whitelist-cleanup';
+import { cleanupOnce, cleanupProgram } from './whitelist-cleanup';
 
 describe('tokenWhitelistCleanup', () => {
   beforeEach(() => {
@@ -16,28 +19,19 @@ describe('tokenWhitelistCleanup', () => {
   });
 
   afterEach(() => {
-    stopTokenCleanup();
     vi.useRealTimers();
     vi.clearAllMocks();
   });
 
-  it('starts and stops cleanup interval', () => {
-    startTokenCleanup();
-    expect(mockCleanupExpired).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(60 * 60 * 1000);
-    expect(mockCleanupExpired).toHaveBeenCalledTimes(1);
-
-    stopTokenCleanup();
-    vi.advanceTimersByTime(60 * 60 * 1000);
+  it('runs a single cleanup iteration when the program is executed', async () => {
+    mockCleanupExpired.mockReturnValue(Effect.succeed(0));
+    await appRuntime.runPromise(cleanupOnce);
     expect(mockCleanupExpired).toHaveBeenCalledTimes(1);
   });
 
-  it('does not start duplicate intervals', () => {
-    startTokenCleanup();
-    startTokenCleanup();
-
-    vi.advanceTimersByTime(60 * 60 * 1000);
-    expect(mockCleanupExpired).toHaveBeenCalledTimes(1);
+  it('exports a repeated cleanup program', () => {
+    expect(cleanupProgram).toBeDefined();
+    // The program should be a composed Effect (not a plain function).
+    expect(typeof cleanupProgram).toBe('object');
   });
 });

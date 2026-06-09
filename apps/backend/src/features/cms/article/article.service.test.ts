@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   article: {
@@ -15,8 +17,11 @@ const mockOssService = vi.hoisted(() => ({
   getArticleUrl: vi.fn(),
 }));
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOssService,
 }));
 
@@ -43,7 +48,7 @@ describe('articleService', () => {
       mockPrisma.article.findMany.mockResolvedValue(articles);
       mockPrisma.article.count.mockResolvedValue(1);
 
-      const result = await articleService.findAll(1, 10);
+      const result = await appRuntime.runPromise(articleService.findAll(1, 10));
 
       expect(result.data).toEqual(articles);
       expect(result.total).toBe(1);
@@ -56,7 +61,7 @@ describe('articleService', () => {
       mockPrisma.article.findMany.mockResolvedValue([]);
       mockPrisma.article.count.mockResolvedValue(25);
 
-      const result = await articleService.findAll(1, 10);
+      const result = await appRuntime.runPromise(articleService.findAll(1, 10));
 
       expect(result.totalPages).toBe(3);
     });
@@ -67,13 +72,13 @@ describe('articleService', () => {
       const article = { id: 1, title: 'Test' };
       mockPrisma.article.findUnique.mockResolvedValue(article);
 
-      const result = await articleService.findById('1');
+      const result = await appRuntime.runPromise(articleService.findById('1'));
 
       expect(result).toEqual(article);
     });
 
     it('returns null when id is invalid', async () => {
-      const result = await articleService.findById('0');
+      const result = await appRuntime.runPromise(articleService.findById('0'));
 
       expect(result).toBeNull();
       expect(mockPrisma.article.findUnique).not.toHaveBeenCalled();
@@ -82,7 +87,7 @@ describe('articleService', () => {
     it('returns null when article not found', async () => {
       mockPrisma.article.findUnique.mockResolvedValue(null);
 
-      const result = await articleService.findById('1');
+      const result = await appRuntime.runPromise(articleService.findById('1'));
 
       expect(result).toBeNull();
     });
@@ -94,7 +99,7 @@ describe('articleService', () => {
       const created = { id: 1, ...dto };
       mockPrisma.article.create.mockResolvedValue(created);
 
-      const result = await articleService.create(dto);
+      const result = await appRuntime.runPromise(articleService.create(dto));
 
       expect(result).toEqual(created);
       expect(mockPrisma.article.create).toHaveBeenCalledWith({ data: dto });
@@ -107,7 +112,7 @@ describe('articleService', () => {
       const updated = { id: 1, title: 'Updated' };
       mockPrisma.article.update.mockResolvedValue(updated);
 
-      const result = await articleService.update(dto);
+      const result = await appRuntime.runPromise(articleService.update(dto));
 
       expect(result).toEqual(updated);
       expect(mockPrisma.article.update).toHaveBeenCalledWith({
@@ -121,13 +126,13 @@ describe('articleService', () => {
     it('deletes article when id is valid', async () => {
       mockPrisma.article.delete.mockResolvedValue({ id: 1 });
 
-      const result = await articleService.delete('1');
+      const result = await appRuntime.runPromise(articleService.delete('1'));
 
       expect(result).toBe(true);
     });
 
     it('returns false when id is invalid', async () => {
-      const result = await articleService.delete('0');
+      const result = await appRuntime.runPromise(articleService.delete('0'));
 
       expect(result).toBe(false);
       expect(mockPrisma.article.delete).not.toHaveBeenCalled();
@@ -135,12 +140,14 @@ describe('articleService', () => {
   });
 
   describe('getUploadUrls', () => {
-    it('returns upload URLs for images', () => {
+    it('returns upload URLs for images', async () => {
       mockOssService.getArticleUrl
         .mockReturnValueOnce('url1')
         .mockReturnValueOnce('url2');
 
-      const result = articleService.getUploadUrls(['img1', 'img2']);
+      const result = await appRuntime.runPromise(
+        articleService.getUploadUrls(['img1', 'img2']),
+      );
 
       expect(result).toEqual(['url1', 'url2']);
       expect(mockOssService.getArticleUrl).toHaveBeenCalledTimes(2);

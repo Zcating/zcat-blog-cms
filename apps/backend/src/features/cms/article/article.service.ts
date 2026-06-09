@@ -1,76 +1,90 @@
-import { Prisma } from '@prisma/client';
+﻿import { Effect } from 'effect';
+import { Prisma } from '@backend/prisma';
 
 import { createPaginate, safeNumber } from '@backend/utils';
+import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-import { ossService, prismaService } from '../../../common';
+export function findAll(page: number, pageSize: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const result = yield* tryPromise(() =>
+      prisma.article.findMany({
+        orderBy: { createdAt: 'desc' },
+        ...createPaginate(page, pageSize),
+        select: {
+          id: true,
+          title: true,
+          excerpt: true,
+          createdAt: true,
+          updatedAt: true,
+          createByUserId: true,
+          publishAt: true,
+        },
+      }),
+    );
+    const total = yield* tryPromise(() => prisma.article.count());
 
-export async function findAll(page: number, pageSize: number) {
-  const result = await prismaService.article.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-    ...createPaginate(page, pageSize),
-    select: {
-      id: true,
-      title: true,
-      excerpt: true,
-      createdAt: true,
-      updatedAt: true,
-      createByUserId: true,
-      publishAt: true,
-    },
-  });
-  const total = await prismaService.article.count();
-
-  return {
-    data: result,
-    totalPages: Math.ceil(total / pageSize),
-    page,
-    pageSize,
-    total,
-  };
-}
-
-export async function findById(id: string) {
-  const safeId = safeNumber(id, 0);
-  if (!safeId) {
-    return null;
-  }
-
-  return prismaService.article.findUnique({
-    where: { id: safeId },
+    return {
+      data: result,
+      totalPages: Math.ceil(total / pageSize),
+      page,
+      pageSize,
+      total,
+    };
   });
 }
 
-export async function create(dto: Prisma.ArticleCreateInput) {
-  return prismaService.article.create({
-    data: dto,
+export function findById(id: string) {
+  return Effect.gen(function* () {
+    const safeId = safeNumber(id, 0);
+    if (!safeId) {
+      return null;
+    }
+
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.article.findUnique({ where: { id: safeId } }),
+    );
   });
 }
 
-export async function update(dto: Prisma.ArticleUpdateInput & { id: number }) {
-  const { id, ...data } = dto;
-  return prismaService.article.update({
-    where: { id },
-    data,
+export function create(dto: Prisma.ArticleCreateInput) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() => prisma.article.create({ data: dto }));
   });
 }
 
-export async function deleteById(id: string) {
-  const safeId = safeNumber(id, 0);
-  if (!safeId) {
-    return false;
-  }
-
-  await prismaService.article.delete({
-    where: { id: safeId },
+export function update(dto: Prisma.ArticleUpdateInput & { id: number }) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const { id, ...data } = dto;
+    return yield* tryPromise(() =>
+      prisma.article.update({ where: { id }, data }),
+    );
   });
+}
 
-  return true;
+export function deleteById(id: string) {
+  return Effect.gen(function* () {
+    const safeId = safeNumber(id, 0);
+    if (!safeId) {
+      return false;
+    }
+
+    const prisma = yield* PrismaService;
+    yield* tryPromise(() =>
+      prisma.article.delete({ where: { id: safeId } }),
+    );
+    return true;
+  });
 }
 
 export function getUploadUrls(images: string[]) {
-  return images.map((image) => ossService.getArticleUrl(image));
+  return Effect.gen(function* () {
+    const oss = yield* OssService;
+    return images.map((image) => oss.getArticleUrl(image));
+  });
 }
 
 export const articleService = {

@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   article: {
@@ -24,9 +27,15 @@ const mockOssService = vi.hoisted(() => ({
 
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
 
-vi.mock('@backend/common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOssService,
+}));
+
+vi.mock('../../../common/statistic-service', () => ({
   recordVisitor: mockRecordVisitor,
 }));
 
@@ -43,7 +52,9 @@ describe('blogService', () => {
       mockPrisma.article.findMany.mockResolvedValue(articles);
       mockPrisma.article.count.mockResolvedValue(1);
 
-      const result = await blogService.getArticleList(1, 10, 'latest');
+      const result = await appRuntime.runPromise(
+        blogService.getArticleList(1, 10, 'latest'),
+      );
 
       expect(result.data).toEqual(articles);
       expect(result.totalPages).toBe(1);
@@ -58,7 +69,7 @@ describe('blogService', () => {
       mockPrisma.article.findMany.mockResolvedValue([]);
       mockPrisma.article.count.mockResolvedValue(0);
 
-      await blogService.getArticleList(1, 10, 'oldest');
+      await appRuntime.runPromise(blogService.getArticleList(1, 10, 'oldest'));
 
       expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -71,7 +82,7 @@ describe('blogService', () => {
       mockPrisma.article.findMany.mockResolvedValue([]);
       mockPrisma.article.count.mockResolvedValue(0);
 
-      await blogService.getArticleList(1, 10);
+      await appRuntime.runPromise(blogService.getArticleList(1, 10));
 
       expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -85,7 +96,7 @@ describe('blogService', () => {
       mockPrisma.article.findMany.mockResolvedValue([]);
       mockPrisma.article.count.mockResolvedValue(0);
 
-      await blogService.getArticleList(1, 10);
+      await appRuntime.runPromise(blogService.getArticleList(1, 10));
 
       expect(mockPrisma.article.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -106,19 +117,19 @@ describe('blogService', () => {
       const article = { id: 1, title: 'Detail' };
       mockPrisma.article.findUnique.mockResolvedValue(article);
 
-      const result = await blogService.getArticleDetail('1');
+      const result = await appRuntime.runPromise(blogService.getArticleDetail('1'));
 
       expect(result).toEqual(article);
     });
 
     it('returns null when id is invalid (0)', async () => {
-      const result = await blogService.getArticleDetail('0');
+      const result = await appRuntime.runPromise(blogService.getArticleDetail('0'));
 
       expect(result).toBeNull();
     });
 
     it('returns null when id is non-numeric', async () => {
-      const result = await blogService.getArticleDetail('abc');
+      const result = await appRuntime.runPromise(blogService.getArticleDetail('abc'));
 
       expect(result).toBeNull();
     });
@@ -126,7 +137,7 @@ describe('blogService', () => {
     it('returns null when not found', async () => {
       mockPrisma.article.findUnique.mockResolvedValue(null);
 
-      const result = await blogService.getArticleDetail('1');
+      const result = await appRuntime.runPromise(blogService.getArticleDetail('1'));
 
       expect(result).toBeNull();
     });
@@ -149,7 +160,7 @@ describe('blogService', () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
       mockPrisma.photo.findMany.mockResolvedValue(photos);
 
-      const result = await blogService.getGalleryList(1, 10);
+      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].cover).toBeDefined();
@@ -169,7 +180,7 @@ describe('blogService', () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
       mockPrisma.photo.findMany.mockResolvedValue([]);
 
-      const result = await blogService.getGalleryList(1, 10);
+      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
 
       expect(result.data[0].cover).toBeNull();
     });
@@ -178,7 +189,7 @@ describe('blogService', () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue([]);
       mockPrisma.photo.findMany.mockResolvedValue([]);
 
-      const result = await blogService.getGalleryList(1, 10);
+      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
@@ -203,7 +214,7 @@ describe('blogService', () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(album);
       mockPrisma.photo.findMany.mockResolvedValue(photos);
 
-      const result = await blogService.getGalleryDetail('1');
+      const result = await appRuntime.runPromise(blogService.getGalleryDetail('1'));
 
       expect(result).toBeDefined();
       expect(result!.photos).toHaveLength(2);
@@ -214,7 +225,7 @@ describe('blogService', () => {
     it('returns null when album not found', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
 
-      const result = await blogService.getGalleryDetail('999');
+      const result = await appRuntime.runPromise(blogService.getGalleryDetail('999'));
 
       expect(result).toBeNull();
     });
@@ -222,21 +233,23 @@ describe('blogService', () => {
 
   describe('recordVisitor', () => {
     it('calls recordVisitor from common with constructed request', async () => {
-      mockRecordVisitor.mockResolvedValue(undefined);
+      mockRecordVisitor.mockReturnValue(Effect.succeed(undefined));
 
-      await blogService.recordVisitor(
-        {
-          pagePath: '/test',
-          pageTitle: 'Test',
-          referrer: 'ref',
-          browser: 'Chrome',
-          os: 'macOS',
-          device: 'Desktop',
-          deviceId: 'abc',
-          hmac: 'hmac-value',
-        },
-        { 'data-hash': 'hash123', 'x-forwarded-for': '1.2.3.4' },
-        '5.6.7.8',
+      await appRuntime.runPromise(
+        blogService.recordVisitor(
+          {
+            pagePath: '/test',
+            pageTitle: 'Test',
+            referrer: 'ref',
+            browser: 'Chrome',
+            os: 'macOS',
+            device: 'Desktop',
+            deviceId: 'abc',
+            hmac: 'hmac-value',
+          },
+          { 'data-hash': 'hash123', 'x-forwarded-for': '1.2.3.4' },
+          '5.6.7.8',
+        ),
       );
 
       expect(mockRecordVisitor).toHaveBeenCalledWith(
@@ -268,7 +281,7 @@ describe('blogService', () => {
       };
       mockPrisma.userInfo.findUnique.mockResolvedValue(userInfo);
 
-      const result = await blogService.getUserInfo();
+      const result = await appRuntime.runPromise(blogService.getUserInfo());
 
       expect(result.name).toBe('Admin');
       expect(result.contact).toEqual({ email: 'a@b.com' });
@@ -278,7 +291,7 @@ describe('blogService', () => {
     it('returns defaults when user info not found', async () => {
       mockPrisma.userInfo.findUnique.mockResolvedValue(null);
 
-      const result = await blogService.getUserInfo();
+      const result = await appRuntime.runPromise(blogService.getUserInfo());
 
       expect(result.name).toBe('');
       expect(result.contact).toEqual({});

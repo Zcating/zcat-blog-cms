@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   $transaction: vi.fn(),
@@ -25,8 +27,11 @@ mockPrisma.$transaction.mockImplementation(async (callback) =>
   callback(mockPrisma),
 );
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOssService,
 }));
 
@@ -45,7 +50,9 @@ describe('photoService', () => {
       mockPrisma.photo.findMany.mockResolvedValue(photos);
       mockPrisma.photo.count.mockResolvedValue(1);
 
-      const result = await photoService.findAll(undefined, 1, 10);
+      const result = await appRuntime.runPromise(
+        photoService.findAll(undefined, 1, 10),
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -53,7 +60,7 @@ describe('photoService', () => {
     });
 
     it('returns empty when albumId is invalid (<= 0)', async () => {
-      const result = await photoService.findAll(0, 1, 10);
+      const result = await appRuntime.runPromise(photoService.findAll(0, 1, 10));
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
@@ -64,7 +71,7 @@ describe('photoService', () => {
       mockPrisma.photo.findMany.mockResolvedValue([]);
       mockPrisma.photo.count.mockResolvedValue(0);
 
-      await photoService.findAll(5, 1, 10);
+      await appRuntime.runPromise(photoService.findAll(5, 1, 10));
 
       expect(mockPrisma.photo.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -80,7 +87,9 @@ describe('photoService', () => {
       mockPrisma.photo.findMany.mockResolvedValue(photos);
       mockPrisma.photo.count.mockResolvedValue(1);
 
-      const result = await photoService.findAll(undefined, 1, 10);
+      const result = await appRuntime.runPromise(
+        photoService.findAll(undefined, 1, 10),
+      );
 
       expect(result.data[0].url).toBe('private-orig');
       expect(result.data[0].thumbnailUrl).toBe('private-orig-t');
@@ -92,7 +101,7 @@ describe('photoService', () => {
       const photos = [{ id: 1, url: 'u', thumbnailUrl: 't', name: 'P1' }];
       mockPrisma.photo.findMany.mockResolvedValue(photos);
 
-      const result = await photoService.findEmptyAlbum();
+      const result = await appRuntime.runPromise(photoService.findEmptyAlbum());
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.photo.findMany).toHaveBeenCalledWith({
@@ -109,7 +118,7 @@ describe('photoService', () => {
         thumbnailUrl: 't',
       });
 
-      const result = await photoService.findById(1);
+      const result = await appRuntime.runPromise(photoService.findById(1));
 
       expect(result).not.toBeNull();
       expect(result!.url).toBe('private-u');
@@ -118,7 +127,7 @@ describe('photoService', () => {
     it('returns null when not found', async () => {
       mockPrisma.photo.findUnique.mockResolvedValue(null);
 
-      const result = await photoService.findById(999);
+      const result = await appRuntime.runPromise(photoService.findById(999));
 
       expect(result).toBeNull();
     });
@@ -134,11 +143,13 @@ describe('photoService', () => {
         albumId: null,
       });
 
-      const result = await photoService.create({
-        name: '',
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      const result = await appRuntime.runPromise(
+        photoService.create({
+          name: '',
+          url: 'u',
+          thumbnailUrl: 't',
+        }),
+      );
 
       expect(mockPrisma.photo.create).toHaveBeenCalledWith({
         data: {
@@ -160,12 +171,14 @@ describe('photoService', () => {
         albumId: 1,
       });
 
-      const result = await photoService.create({
-        name: 'P',
-        url: 'u',
-        thumbnailUrl: 't',
-        albumId: 1,
-      });
+      const result = await appRuntime.runPromise(
+        photoService.create({
+          name: 'P',
+          url: 'u',
+          thumbnailUrl: 't',
+          albumId: 1,
+        }),
+      );
 
       expect(result.albumId).toBe(1);
     });
@@ -179,7 +192,9 @@ describe('photoService', () => {
         thumbnailUrl: 't',
       });
 
-      const result = await photoService.update(1, { name: 'Updated' });
+      const result = await appRuntime.runPromise(
+        photoService.update(1, { name: 'Updated' }),
+      );
 
       expect(result).not.toBeNull();
       expect(mockPrisma.photo.update).toHaveBeenCalledWith({
@@ -203,10 +218,12 @@ describe('photoService', () => {
         thumbnailUrl: 't',
       });
 
-      const result = await photoService.updateWithAlbum(1, 1, {
-        name: 'P',
-        isCover: true,
-      });
+      const result = await appRuntime.runPromise(
+        photoService.updateWithAlbum(1, 1, {
+          name: 'P',
+          isCover: true,
+        }),
+      );
 
       expect(mockPrisma.photoAlbum.update).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -227,7 +244,9 @@ describe('photoService', () => {
         thumbnailUrl: 't',
       });
 
-      await photoService.updateWithAlbum(1, 1, { name: 'P' });
+      await appRuntime.runPromise(
+        photoService.updateWithAlbum(1, 1, { name: 'P' }),
+      );
 
       expect(mockPrisma.photoAlbum.update).not.toHaveBeenCalled();
     });
@@ -246,7 +265,9 @@ describe('photoService', () => {
         thumbnailUrl: 't',
       });
 
-      await photoService.updateWithAlbum(1, 2, { name: 'Moved' });
+      await appRuntime.runPromise(
+        photoService.updateWithAlbum(1, 2, { name: 'Moved' }),
+      );
 
       expect(mockPrisma.photoAlbum.updateMany).toHaveBeenCalledWith({
         where: { coverId: 1, id: { not: 2 } },
@@ -257,6 +278,8 @@ describe('photoService', () => {
 
   describe('delete', () => {
     it('deletes photo when found', async () => {
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(mockPrisma));
+      mockOssService.deleteFile.mockResolvedValue(true);
       mockPrisma.photo.findUnique.mockResolvedValue({
         id: 1,
         url: 'u',
@@ -264,13 +287,15 @@ describe('photoService', () => {
       });
       mockPrisma.photo.delete.mockResolvedValue({ id: 1 });
 
-      const result = await photoService.delete(1);
+      const result = await appRuntime.runPromise(photoService.delete(1));
 
       expect(result).toBe(true);
       expect(mockOssService.deleteFile).toHaveBeenCalledTimes(2);
     });
 
     it('clears cover references before deleting a photo', async () => {
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(mockPrisma));
+      mockOssService.deleteFile.mockResolvedValue(true);
       mockPrisma.photo.findUnique.mockResolvedValue({
         id: 1,
         url: 'u',
@@ -278,7 +303,7 @@ describe('photoService', () => {
       });
       mockPrisma.photo.delete.mockResolvedValue({ id: 1 });
 
-      await photoService.delete(1);
+      await appRuntime.runPromise(photoService.delete(1));
 
       expect(mockPrisma.photoAlbum.updateMany).toHaveBeenCalledWith({
         where: { coverId: 1 },
@@ -289,7 +314,7 @@ describe('photoService', () => {
     it('returns false when photo not found', async () => {
       mockPrisma.photo.findUnique.mockResolvedValue(null);
 
-      const result = await photoService.delete(999);
+      const result = await appRuntime.runPromise(photoService.delete(999));
 
       expect(result).toBe(false);
       expect(mockPrisma.photo.delete).not.toHaveBeenCalled();

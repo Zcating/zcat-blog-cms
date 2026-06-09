@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   userInfo: {
@@ -12,8 +14,11 @@ const mockOssService = vi.hoisted(() => ({
   getPrivateUrl: vi.fn((url: string) => `private-${url}`),
 }));
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOssService,
 }));
 
@@ -26,7 +31,7 @@ describe('userInfoService', () => {
 
   describe('get', () => {
     it('returns null when userId is not provided', async () => {
-      const result = await userInfoService.get(undefined);
+      const result = await appRuntime.runPromise(userInfoService.get(undefined));
 
       expect(result).toBeNull();
     });
@@ -44,7 +49,7 @@ describe('userInfoService', () => {
       };
       mockPrisma.userInfo.findUnique.mockResolvedValue(userInfo);
 
-      const result = await userInfoService.get(1);
+      const result = await appRuntime.runPromise(userInfoService.get(1));
 
       expect(result).toBeDefined();
       expect(result!.avatar).toBe('private-avatar.jpg');
@@ -63,7 +68,7 @@ describe('userInfoService', () => {
         userId: 1,
       });
 
-      const result = await userInfoService.get(1);
+      const result = await appRuntime.runPromise(userInfoService.get(1));
 
       expect(result).toBeDefined();
       expect(mockPrisma.userInfo.create).toHaveBeenCalledWith({
@@ -92,7 +97,7 @@ describe('userInfoService', () => {
       };
       mockPrisma.userInfo.findUnique.mockResolvedValue(userInfo);
 
-      const result = await userInfoService.get(1);
+      const result = await appRuntime.runPromise(userInfoService.get(1));
 
       expect(result).toBeDefined();
       expect(result!.avatar).toBeNull();
@@ -101,9 +106,9 @@ describe('userInfoService', () => {
 
   describe('update', () => {
     it('returns null when userId is not provided', async () => {
-      const result = await userInfoService.update(undefined, {
-        name: 'Test',
-      });
+      const result = await appRuntime.runPromise(
+        userInfoService.update(undefined, { name: 'Test' }),
+      );
 
       expect(result).toBeNull();
     });
@@ -121,10 +126,12 @@ describe('userInfoService', () => {
       };
       mockPrisma.userInfo.update.mockResolvedValue(updated);
 
-      const result = await userInfoService.update(1, {
-        name: 'Updated',
-        contact: {},
-      });
+      const result = await appRuntime.runPromise(
+        userInfoService.update(1, {
+          name: 'Updated',
+          contact: {},
+        }),
+      );
 
       expect(result).toBeDefined();
       expect(mockPrisma.userInfo.update).toHaveBeenCalledWith({
@@ -153,9 +160,11 @@ describe('userInfoService', () => {
       };
       mockPrisma.userInfo.update.mockResolvedValue(updated);
 
-      const result = await userInfoService.update(1, {
-        name: 'Updated',
-      });
+      const result = await appRuntime.runPromise(
+        userInfoService.update(1, {
+          name: 'Updated',
+        }),
+      );
 
       expect(result).toBeDefined();
       expect(mockPrisma.userInfo.update).toHaveBeenCalledWith({
@@ -184,14 +193,16 @@ describe('userInfoService', () => {
       };
       mockPrisma.userInfo.update.mockResolvedValue(updated);
 
-      const result = await userInfoService.update(1, {
-        name: 'Full',
-        contact: { email: 'a@b.com', github: 'u' },
-        occupation: 'Dev',
-        avatar: 'avatar.jpg',
-        aboutMe: 'About me',
-        abstract: 'Abs',
-      });
+      const result = await appRuntime.runPromise(
+        userInfoService.update(1, {
+          name: 'Full',
+          contact: { email: 'a@b.com', github: 'u' },
+          occupation: 'Dev',
+          avatar: 'avatar.jpg',
+          aboutMe: 'About me',
+          abstract: 'Abs',
+        }),
+      );
 
       expect(result).toBeDefined();
       expect(result!.name).toBe('Full');

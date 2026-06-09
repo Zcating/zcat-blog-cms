@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   tokenWhitelist: {
@@ -11,7 +13,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
 }));
 
@@ -36,14 +38,16 @@ describe('tokenWhitelistService', () => {
       };
       mockPrisma.tokenWhitelist.create.mockResolvedValue(mockEntry);
 
-      const result = await tokenWhitelistService.create({
-        token: 'my-jwt-token',
-        userId: 1,
-        device: 'Chrome',
-        ip: '127.0.0.1',
-        userAgent: 'Mozilla/5.0',
-        expiresAt: new Date('2026-12-31'),
-      });
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.create({
+          token: 'my-jwt-token',
+          userId: 1,
+          device: 'Chrome',
+          ip: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+          expiresAt: new Date('2026-12-31'),
+        }),
+      );
 
       expect(result).toEqual(mockEntry);
       expect(mockPrisma.tokenWhitelist.create).toHaveBeenCalledWith({
@@ -73,11 +77,13 @@ describe('tokenWhitelistService', () => {
         createdAt: new Date(),
       });
 
-      const result = await tokenWhitelistService.create({
-        token: 'token',
-        userId: 1,
-        expiresAt: new Date(),
-      });
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.create({
+          token: 'token',
+          userId: 1,
+          expiresAt: new Date(),
+        }),
+      );
 
       expect(result).toBeDefined();
       expect(
@@ -96,18 +102,23 @@ describe('tokenWhitelistService', () => {
         expiresAt: futureDate,
       });
 
-      const result = await tokenWhitelistService.validate('valid-token');
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.validate('valid-token'),
+      );
       expect(result).toBe(true);
     });
 
     it('returns false when token not in whitelist', async () => {
       mockPrisma.tokenWhitelist.findUnique.mockResolvedValue(null);
 
-      const result = await tokenWhitelistService.validate('unknown-token');
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.validate('unknown-token'),
+      );
       expect(result).toBe(false);
     });
 
     it('returns false and deletes expired token', async () => {
+      mockPrisma.tokenWhitelist.deleteMany.mockResolvedValue({ count: 1 });
       const pastDate = new Date(Date.now() - 86400000);
       mockPrisma.tokenWhitelist.findUnique.mockResolvedValue({
         id: 1,
@@ -116,7 +127,9 @@ describe('tokenWhitelistService', () => {
         expiresAt: pastDate,
       });
 
-      const result = await tokenWhitelistService.validate('expired-token');
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.validate('expired-token'),
+      );
       expect(result).toBe(false);
       expect(mockPrisma.tokenWhitelist.deleteMany).toHaveBeenCalledWith({
         where: { tokenHash: expect.any(String) },
@@ -128,7 +141,7 @@ describe('tokenWhitelistService', () => {
     it('removes token by hash', async () => {
       mockPrisma.tokenWhitelist.deleteMany.mockResolvedValue({ count: 1 });
 
-      await tokenWhitelistService.remove('some-token');
+      await appRuntime.runPromise(tokenWhitelistService.remove('some-token'));
       expect(mockPrisma.tokenWhitelist.deleteMany).toHaveBeenCalledWith({
         where: { tokenHash: expect.any(String) },
       });
@@ -139,7 +152,7 @@ describe('tokenWhitelistService', () => {
     it('removes all tokens for a user', async () => {
       mockPrisma.tokenWhitelist.deleteMany.mockResolvedValue({ count: 3 });
 
-      await tokenWhitelistService.removeByUser(1);
+      await appRuntime.runPromise(tokenWhitelistService.removeByUser(1));
       expect(mockPrisma.tokenWhitelist.deleteMany).toHaveBeenCalledWith({
         where: { userId: 1 },
       });
@@ -150,7 +163,7 @@ describe('tokenWhitelistService', () => {
     it('removes a token by id', async () => {
       mockPrisma.tokenWhitelist.delete.mockResolvedValue({ id: 1 });
 
-      await tokenWhitelistService.removeById(1);
+      await appRuntime.runPromise(tokenWhitelistService.removeById(1));
       expect(mockPrisma.tokenWhitelist.delete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
@@ -171,7 +184,9 @@ describe('tokenWhitelistService', () => {
       ];
       mockPrisma.tokenWhitelist.findMany.mockResolvedValue(mockEntries);
 
-      const result = await tokenWhitelistService.findByUser(1);
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.findByUser(1),
+      );
       expect(result).toEqual(mockEntries);
       expect(mockPrisma.tokenWhitelist.findMany).toHaveBeenCalledWith({
         where: { userId: 1 },
@@ -192,7 +207,9 @@ describe('tokenWhitelistService', () => {
     it('deletes expired token entries', async () => {
       mockPrisma.tokenWhitelist.deleteMany.mockResolvedValue({ count: 5 });
 
-      const result = await tokenWhitelistService.cleanupExpired();
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.cleanupExpired(),
+      );
       expect(result).toBe(5);
       expect(mockPrisma.tokenWhitelist.deleteMany).toHaveBeenCalledWith({
         where: { expiresAt: { lt: expect.any(Date) } },
@@ -204,7 +221,9 @@ describe('tokenWhitelistService', () => {
     it('returns count of active tokens for a user', async () => {
       mockPrisma.tokenWhitelist.count.mockResolvedValue(2);
 
-      const result = await tokenWhitelistService.countByUser(1);
+      const result = await appRuntime.runPromise(
+        tokenWhitelistService.countByUser(1),
+      );
       expect(result).toBe(2);
       expect(mockPrisma.tokenWhitelist.count).toHaveBeenCalledWith({
         where: { userId: 1 },

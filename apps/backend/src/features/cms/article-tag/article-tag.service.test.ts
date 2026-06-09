@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   articleTag: {
@@ -10,7 +12,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
 }));
 
@@ -26,7 +28,7 @@ describe('articleTagService', () => {
       const tags = [{ id: 1, name: 'tag1' }];
       mockPrisma.articleTag.findMany.mockResolvedValue(tags);
 
-      const result = await articleTagService.findAll();
+      const result = await appRuntime.runPromise(articleTagService.findAll());
 
       expect(result).toEqual(tags);
       expect(mockPrisma.articleTag.findMany).toHaveBeenCalledWith();
@@ -38,7 +40,7 @@ describe('articleTagService', () => {
       const tag = { id: 1, name: 'tag1' };
       mockPrisma.articleTag.findUnique.mockResolvedValue(tag);
 
-      const result = await articleTagService.findById('1');
+      const result = await appRuntime.runPromise(articleTagService.findById('1'));
 
       expect(result).toEqual(tag);
       expect(mockPrisma.articleTag.findUnique).toHaveBeenCalledWith({
@@ -52,7 +54,9 @@ describe('articleTagService', () => {
       const tag = { id: 1, name: 'new-tag' };
       mockPrisma.articleTag.create.mockResolvedValue(tag);
 
-      const result = await articleTagService.create({ name: 'new-tag' });
+      const result = await appRuntime.runPromise(
+        articleTagService.create({ name: 'new-tag' }),
+      );
 
       expect(result).toEqual(tag);
       expect(mockPrisma.articleTag.create).toHaveBeenCalledWith({
@@ -66,7 +70,9 @@ describe('articleTagService', () => {
       const tag = { id: 1, name: 'updated' };
       mockPrisma.articleTag.update.mockResolvedValue(tag);
 
-      const result = await articleTagService.update('1', { name: 'updated' });
+      const result = await appRuntime.runPromise(
+        articleTagService.update('1', { name: 'updated' }),
+      );
 
       expect(result).toEqual(tag);
       expect(mockPrisma.articleTag.update).toHaveBeenCalledWith({
@@ -80,7 +86,7 @@ describe('articleTagService', () => {
     it('deletes a tag by id', async () => {
       mockPrisma.articleTag.delete.mockResolvedValue({ id: 1 });
 
-      await articleTagService.delete('1');
+      await appRuntime.runPromise(articleTagService.delete('1'));
 
       expect(mockPrisma.articleTag.delete).toHaveBeenCalledWith({
         where: { id: 1 },

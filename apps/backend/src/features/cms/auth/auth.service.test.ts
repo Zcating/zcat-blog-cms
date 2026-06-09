@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+import { Effect } from 'effect';
 
 const mockPrisma = vi.hoisted(() => ({
   user: {
@@ -13,8 +14,14 @@ const mockPrisma = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../common', () => ({
+// Mock the singleton files so the Effect tags pick up the mocks
+// and the real MinIO client is not loaded.
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
+  ossService: { getPrivateUrl: vi.fn(), presignUploadUrl: vi.fn(), deleteFile: vi.fn() },
 }));
 
 vi.mock('../../../common/config.service', () => ({
@@ -49,6 +56,7 @@ vi.mock('./whitelist.service', () => ({
   },
 }));
 
+import { appRuntime } from '@backend/common/effect';
 import { authService } from './auth.service';
 
 describe('authService', () => {
@@ -66,13 +74,15 @@ describe('authService', () => {
       });
       mockBcrypt.compare.mockResolvedValue(true);
       mockJwt.sign.mockReturnValue('token123');
-      whitelistMocks.create.mockResolvedValue({ id: 1 });
+      whitelistMocks.create.mockReturnValue(Effect.succeed({ id: 1 }));
 
-      const result = await authService.login('admin', 'password', {
-        device: 'Chrome',
-        ip: '127.0.0.1',
-        userAgent: 'Mozilla/5.0',
-      });
+      const result = await appRuntime.runPromise(
+        authService.login('admin', 'password', {
+          device: 'Chrome',
+          ip: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      );
 
       expect(result).toEqual({ accessToken: 'token123' });
       expect(mockBcrypt.compare).toHaveBeenCalledWith(
@@ -92,7 +102,9 @@ describe('authService', () => {
     it('returns null when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      const result = await authService.login('nonexistent', 'password');
+      const result = await appRuntime.runPromise(
+        authService.login('nonexistent', 'password'),
+      );
 
       expect(result).toBeNull();
       expect(whitelistMocks.create).not.toHaveBeenCalled();
@@ -107,7 +119,9 @@ describe('authService', () => {
       });
       mockBcrypt.compare.mockResolvedValue(false);
 
-      const result = await authService.login('admin', 'wrong');
+      const result = await appRuntime.runPromise(
+        authService.login('admin', 'wrong'),
+      );
 
       expect(result).toBeNull();
       expect(whitelistMocks.create).not.toHaveBeenCalled();
@@ -115,15 +129,16 @@ describe('authService', () => {
   });
 
   describe('register', () => {
-    it('returns REGISTER_LIMIT when allowRegister config is false (without querying DB)', async () => {
-      // config 是 Object.freeze 的，不能直接 spy；用 vi.doMock + vi.resetModules 让本用例单独生效
+    it('returns REGISTER_LIMIT when allowRegister config is false', async () => {
       vi.doMock('../../../common/config.service', () => ({
         config: { jwtSecret: 'test-secret', allowRegister: false },
       }));
       vi.resetModules();
       const { authService: freshAuthService } = await import('./auth.service');
 
-      const result = await freshAuthService.register('user', 'pass', 'e@m.com');
+      const result = await appRuntime.runPromise(
+        freshAuthService.register('user', 'pass', 'e@m.com'),
+      );
 
       expect(result).toEqual({ code: 'REGISTER_LIMIT' });
       expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
@@ -133,7 +148,9 @@ describe('authService', () => {
     it('returns REGISTER_LIMIT when a user already exists', async () => {
       mockPrisma.user.findMany.mockResolvedValue([{ id: 1 }]);
 
-      const result = await authService.register('user', 'pass', 'e@m.com');
+      const result = await appRuntime.runPromise(
+        authService.register('user', 'pass', 'e@m.com'),
+      );
 
       expect(result).toEqual({ code: 'REGISTER_LIMIT' });
     });
@@ -142,7 +159,9 @@ describe('authService', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.findUnique.mockResolvedValue({ id: 1 });
 
-      const result = await authService.register('taken', 'pass', 'e@m.com');
+      const result = await appRuntime.runPromise(
+        authService.register('taken', 'pass', 'e@m.com'),
+      );
 
       expect(result).toEqual({ code: 'USER_EXISTS' });
     });
@@ -155,7 +174,9 @@ describe('authService', () => {
       mockJwt.sign.mockReturnValue('reg-token');
       mockPrisma.user.create.mockResolvedValue({ id: 99, username: 'newuser' });
 
-      const result = await authService.register('newuser', 'pass', 'e@m.com');
+      const result = await appRuntime.runPromise(
+        authService.register('newuser', 'pass', 'e@m.com'),
+      );
 
       expect(result).toEqual({
         code: 'SUCCESS',
@@ -179,9 +200,9 @@ describe('authService', () => {
 
   describe('logout', () => {
     it('removes token from whitelist', async () => {
-      whitelistMocks.remove.mockResolvedValue(undefined);
+      whitelistMocks.remove.mockReturnValue(Effect.succeed(undefined));
 
-      await authService.logout('test-token');
+      await appRuntime.runPromise(authService.logout('test-token'));
 
       expect(whitelistMocks.remove).toHaveBeenCalledWith('test-token');
     });
@@ -190,9 +211,11 @@ describe('authService', () => {
   describe('isValid', () => {
     it('returns true when jwt is valid and token exists in whitelist', async () => {
       mockJwt.verify.mockReturnValue({ sub: 1 });
-      whitelistMocks.validate.mockResolvedValue(true);
+      whitelistMocks.validate.mockReturnValue(Effect.succeed(true));
 
-      const result = await authService.isValid('valid-token');
+      const result = await appRuntime.runPromise(
+        authService.isValid('valid-token'),
+      );
 
       expect(result).toBe(true);
       expect(mockJwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret');
@@ -201,9 +224,11 @@ describe('authService', () => {
 
     it('returns false when token is not in whitelist', async () => {
       mockJwt.verify.mockReturnValue({ sub: 1 });
-      whitelistMocks.validate.mockResolvedValue(false);
+      whitelistMocks.validate.mockReturnValue(Effect.succeed(false));
 
-      const result = await authService.isValid('missing-token');
+      const result = await appRuntime.runPromise(
+        authService.isValid('missing-token'),
+      );
 
       expect(result).toBe(false);
     });
@@ -213,7 +238,9 @@ describe('authService', () => {
         throw new Error('invalid token');
       });
 
-      const result = await authService.isValid('invalid-token');
+      const result = await appRuntime.runPromise(
+        authService.isValid('invalid-token'),
+      );
 
       expect(result).toBe(false);
       expect(whitelistMocks.validate).not.toHaveBeenCalled();

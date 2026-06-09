@@ -1,31 +1,50 @@
-import { prismaService } from '../../../common';
+﻿import { Effect } from 'effect';
+
+import { PrismaService, tryPromise } from '../../../common/effect';
 
 export function findAll() {
-  return prismaService.articleTag.findMany();
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() => prisma.articleTag.findMany());
+  });
 }
 
 export function findById(id: string) {
-  return prismaService.articleTag.findUnique({
-    where: { id: parseInt(id, 10) },
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.articleTag.findUnique({ where: { id: parseInt(id, 10) } }),
+    );
   });
 }
 
 export function create(dto: { name: string }) {
-  return prismaService.articleTag.create({
-    data: dto,
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.articleTag.create({ data: dto }),
+    );
   });
 }
 
 export function update(id: string, dto: { name?: string }) {
-  return prismaService.articleTag.update({
-    where: { id: parseInt(id, 10) },
-    data: dto,
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.articleTag.update({
+        where: { id: parseInt(id, 10) },
+        data: dto,
+      }),
+    );
   });
 }
 
 export function deleteById(id: string) {
-  return prismaService.articleTag.delete({
-    where: { id: parseInt(id, 10) },
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    yield* tryPromise(() =>
+      prisma.articleTag.delete({ where: { id: parseInt(id, 10) } }),
+    );
   });
 }
 

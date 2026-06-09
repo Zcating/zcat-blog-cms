@@ -1,8 +1,10 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+﻿import { describe, expect, it, vi, beforeEach } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPresignUploadUrl = vi.hoisted(() => vi.fn());
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/oss.service', () => ({
   ossService: {
     presignUploadUrl: mockPresignUploadUrl,
   },
@@ -20,8 +22,9 @@ describe('systemSettingService', () => {
       mockPresignUploadUrl.mockResolvedValueOnce(
         'http://localhost:9000/pictures-bucket/photos/test.jpg?presigned=abc',
       );
-      const result =
-        await systemSettingService.getUploadConfig('photos/test.jpg');
+      const result = await appRuntime.runPromise(
+        systemSettingService.getUploadConfig('photos/test.jpg'),
+      );
 
       expect(result).toEqual({
         presignedUrl:

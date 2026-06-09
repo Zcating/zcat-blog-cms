@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
+
+import { appRuntime } from '@backend/common/effect';
 
 const mockPrisma = vi.hoisted(() => ({
   $transaction: vi.fn(),
@@ -25,8 +27,11 @@ mockPrisma.$transaction.mockImplementation(async (callback) =>
   callback(mockPrisma),
 );
 
-vi.mock('../../../common', () => ({
+vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
   ossService: mockOssService,
 }));
 
@@ -56,7 +61,7 @@ describe('photoAlbumService', () => {
       mockPrisma.photoAlbum.count.mockResolvedValue(1);
       mockPrisma.photo.findMany.mockResolvedValue(covers);
 
-      const result = await photoAlbumService.findAll(1, 10);
+      const result = await appRuntime.runPromise(photoAlbumService.findAll(1, 10));
 
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -82,7 +87,7 @@ describe('photoAlbumService', () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
       mockPrisma.photoAlbum.count.mockResolvedValue(1);
 
-      const result = await photoAlbumService.findAll(1, 10);
+      const result = await appRuntime.runPromise(photoAlbumService.findAll(1, 10));
 
       expect(result.data[0].cover).toBeNull();
       expect(mockPrisma.photo.findMany).not.toHaveBeenCalled();
@@ -130,7 +135,7 @@ describe('photoAlbumService', () => {
       // Single batched query for all covers
       mockPrisma.photo.findMany.mockResolvedValue(covers);
 
-      const result = await photoAlbumService.findAll(1, 10);
+      const result = await appRuntime.runPromise(photoAlbumService.findAll(1, 10));
 
       expect(result.data).toHaveLength(3);
       expect(result.data[0].cover).toEqual({
@@ -161,7 +166,7 @@ describe('photoAlbumService', () => {
       const album = { id: 1, name: 'Album' };
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(album);
 
-      const result = await photoAlbumService.findById('1');
+      const result = await appRuntime.runPromise(photoAlbumService.findById('1'));
 
       expect(result).toEqual(album);
       expect(mockPrisma.photoAlbum.findUnique).toHaveBeenCalledWith({
@@ -175,10 +180,12 @@ describe('photoAlbumService', () => {
       const album = { id: 1, name: 'New', description: 'Desc' };
       mockPrisma.photoAlbum.create.mockResolvedValue(album);
 
-      const result = await photoAlbumService.create({
-        name: 'New',
-        description: 'Desc',
-      });
+      const result = await appRuntime.runPromise(
+        photoAlbumService.create({
+          name: 'New',
+          description: 'Desc',
+        }),
+      );
 
       expect(result).toEqual(album);
     });
@@ -186,7 +193,7 @@ describe('photoAlbumService', () => {
     it('creates an album with default description', async () => {
       mockPrisma.photoAlbum.create.mockResolvedValue({ id: 1 });
 
-      await photoAlbumService.create({ name: 'New' });
+      await appRuntime.runPromise(photoAlbumService.create({ name: 'New' }));
 
       expect(mockPrisma.photoAlbum.create).toHaveBeenCalledWith({
         data: { name: 'New', description: '' },
@@ -198,7 +205,9 @@ describe('photoAlbumService', () => {
     it('updates an album', async () => {
       mockPrisma.photoAlbum.update.mockResolvedValue({ id: 1 });
 
-      const result = await photoAlbumService.update(1, { name: 'Updated' });
+      const result = await appRuntime.runPromise(
+        photoAlbumService.update(1, { name: 'Updated' }),
+      );
 
       expect(mockPrisma.photoAlbum.update).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -211,7 +220,7 @@ describe('photoAlbumService', () => {
     it('deletes album by id', async () => {
       mockPrisma.photoAlbum.delete.mockResolvedValue({ id: 1 });
 
-      await photoAlbumService.delete('1');
+      await appRuntime.runPromise(photoAlbumService.delete('1'));
 
       expect(mockPrisma.photoAlbum.delete).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -226,7 +235,7 @@ describe('photoAlbumService', () => {
         albumId: 1,
       });
 
-      await photoAlbumService.setCover(1, 5);
+      await appRuntime.runPromise(photoAlbumService.setCover(1, 5));
 
       expect(mockPrisma.photoAlbum.update).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -240,18 +249,21 @@ describe('photoAlbumService', () => {
         albumId: 2,
       });
 
-      await expect(photoAlbumService.setCover(1, 5)).rejects.toThrow(
-        '封面照片必须属于当前相册',
-      );
+      await expect(
+        appRuntime.runPromise(photoAlbumService.setCover(1, 5)),
+      ).rejects.toThrow('封面照片必须属于当前相册');
       expect(mockPrisma.photoAlbum.update).not.toHaveBeenCalled();
     });
   });
 
   describe('addPhotos', () => {
-    it('adds photos to album when album exists', async () => {
-      mockPrisma.photoAlbum.findUnique.mockResolvedValue({ id: 1 });
+      it('adds photos to album when album exists', async () => {
+        mockPrisma.photoAlbum.findUnique.mockResolvedValue({ id: 1 });
+        mockPrisma.photo.updateMany.mockResolvedValue({ count: 3 });
 
-      const result = await photoAlbumService.addPhotos(1, [1, 2, 3]);
+        const result = await appRuntime.runPromise(
+          photoAlbumService.addPhotos(1, [1, 2, 3]),
+      );
 
       expect(result).toBe(true);
       expect(mockPrisma.photo.updateMany).toHaveBeenCalledWith({
@@ -263,7 +275,9 @@ describe('photoAlbumService', () => {
     it('returns false when album does not exist', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
 
-      const result = await photoAlbumService.addPhotos(999, [1]);
+      const result = await appRuntime.runPromise(
+        photoAlbumService.addPhotos(999, [1]),
+      );
 
       expect(result).toBe(false);
       expect(mockPrisma.photo.updateMany).not.toHaveBeenCalled();

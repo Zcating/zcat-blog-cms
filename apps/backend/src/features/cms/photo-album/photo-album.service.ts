@@ -1,6 +1,7 @@
-import { createPaginate } from '@backend/utils';
+﻿import { Effect } from 'effect';
 
-import { ossService, prismaService } from '../../../common';
+import { createPaginate } from '@backend/utils';
+import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
 type PhotoWithUrls = {
   url: string;
@@ -8,78 +9,95 @@ type PhotoWithUrls = {
 };
 
 function transformPhoto<T extends PhotoWithUrls>(
+  oss: { getPrivateUrl: (url: string) => string },
   photo: T,
 ): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
   return {
     ...photo,
-    url: ossService.getPrivateUrl(photo.url),
-    thumbnailUrl: ossService.getPrivateUrl(photo.thumbnailUrl),
+    url: oss.getPrivateUrl(photo.url),
+    thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
   };
 }
 
-export async function findAll(page: number, pageSize: number) {
-  const [albums, total] = await Promise.all([
-    prismaService.photoAlbum.findMany({
-      orderBy: { createdAt: 'desc' },
-      ...createPaginate(page, pageSize),
-    }),
-    prismaService.photoAlbum.count(),
-  ]);
+export function findAll(page: number, pageSize: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const [albums, total] = yield* Effect.all([
+      tryPromise(() =>
+        prisma.photoAlbum.findMany({
+          orderBy: { createdAt: 'desc' },
+          ...createPaginate(page, pageSize),
+        }),
+      ),
+      tryPromise(() => prisma.photoAlbum.count()),
+    ]);
 
-  const coverIds = albums
-    .map((album) => album.coverId)
-    .filter((id): id is number => id !== null);
+    const coverIds = albums
+      .map((album) => album.coverId)
+      .filter((id): id is number => id !== null);
 
-  // 用 Map 一次构建 cover 索引，O(1) 查表代替 O(N) find
-  type CoverRow = Awaited<ReturnType<typeof prismaService.photo.findMany>>[number];
-  const coverMap = new Map<number, CoverRow>();
-  if (coverIds.length > 0) {
-    const covers: CoverRow[] = await prismaService.photo.findMany({
-      where: { id: { in: coverIds } },
-    });
-    for (const cover of covers) {
-      coverMap.set(cover.id, cover);
+    // 用 Map 一次构建 cover 索引，O(1) 查表代替 O(N) find
+    type CoverRow = Awaited<ReturnType<typeof prisma.photo.findMany>>[number];
+    const coverMap = new Map<number, CoverRow>();
+    if (coverIds.length > 0) {
+      const covers: CoverRow[] = yield* tryPromise(() =>
+        prisma.photo.findMany({ where: { id: { in: coverIds } } }),
+      );
+      for (const cover of covers) {
+        coverMap.set(cover.id, cover);
+      }
     }
-  }
 
-  type AlbumRow = Awaited<ReturnType<typeof prismaService.photoAlbum.findMany>>[number];
-  const data = (albums as AlbumRow[]).map((album) => {
-    const foundedCover =
-      album.coverId !== null ? coverMap.get(album.coverId) : undefined;
-    const cover = foundedCover ? transformPhoto(foundedCover) : null;
+    const oss = yield* OssService;
+    type AlbumRow = Awaited<
+      ReturnType<typeof prisma.photoAlbum.findMany>
+    >[number];
+    const data = (albums as AlbumRow[]).map((album) => {
+      const foundedCover =
+        album.coverId !== null ? coverMap.get(album.coverId) : undefined;
+      const cover = foundedCover ? transformPhoto(oss, foundedCover) : null;
+      return {
+        id: album.id,
+        name: album.name,
+        description: album.description,
+        coverId: album.coverId,
+        createdAt: album.createdAt,
+        updatedAt: album.updatedAt,
+        available: album.available,
+        cover,
+      };
+    });
+
     return {
-      id: album.id,
-      name: album.name,
-      description: album.description,
-      coverId: album.coverId,
-      createdAt: album.createdAt,
-      updatedAt: album.updatedAt,
-      available: album.available,
-      cover,
+      data,
+      totalPages: Math.ceil(total / pageSize),
+      page,
+      pageSize,
+      total,
     };
   });
-
-  return {
-    data,
-    totalPages: Math.ceil(total / pageSize),
-    page,
-    pageSize,
-    total,
-  };
 }
 
 export function findById(id: string) {
-  return prismaService.photoAlbum.findUnique({
-    where: { id: parseInt(id, 10) },
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.photoAlbum.findUnique({ where: { id: parseInt(id, 10) } }),
+    );
   });
 }
 
 export function create(data: { name: string; description?: string }) {
-  return prismaService.photoAlbum.create({
-    data: {
-      name: data.name,
-      description: data.description ?? '',
-    },
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.photoAlbum.create({
+        data: {
+          name: data.name,
+          description: data.description ?? '',
+        },
+      }),
+    );
   });
 }
 
@@ -87,51 +105,66 @@ export function update(
   id: number,
   data: { name?: string; description?: string; available?: boolean },
 ) {
-  return prismaService.photoAlbum.update({
-    where: { id },
-    data,
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    return yield* tryPromise(() =>
+      prisma.photoAlbum.update({ where: { id }, data }),
+    );
   });
 }
 
 export function deleteById(id: string) {
-  return prismaService.photoAlbum.delete({
-    where: { id: parseInt(id, 10) },
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    yield* tryPromise(() =>
+      prisma.photoAlbum.delete({ where: { id: parseInt(id, 10) } }),
+    );
   });
 }
 
-export async function setCover(albumId: number, photoId: number) {
-  await prismaService.$transaction(async (tx) => {
-    const photo = await tx.photo.findUnique({
-      where: { id: photoId },
-      select: { albumId: true },
-    });
+export function setCover(albumId: number, photoId: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    yield* tryPromise(() =>
+      prisma.$transaction(async (tx) => {
+        const photo = await tx.photo.findUnique({
+          where: { id: photoId },
+          select: { albumId: true },
+        });
 
-    if (!photo || photo.albumId !== albumId) {
-      throw new Error('封面照片必须属于当前相册');
+        if (!photo || photo.albumId !== albumId) {
+          throw new Error('封面照片必须属于当前相册');
+        }
+
+        await tx.photoAlbum.update({
+          where: { id: albumId },
+          data: { coverId: photoId },
+        });
+      }),
+    );
+  });
+}
+
+export function addPhotos(albumId: number, photoIds: number[]) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const album = yield* tryPromise(() =>
+      prisma.photoAlbum.findUnique({ where: { id: albumId } }),
+    );
+
+    if (!album) {
+      return false;
     }
 
-    await tx.photoAlbum.update({
-      where: { id: albumId },
-      data: { coverId: photoId },
-    });
+    yield* tryPromise(() =>
+      prisma.photo.updateMany({
+        where: { id: { in: photoIds } },
+        data: { albumId },
+      }),
+    );
+
+    return true;
   });
-}
-
-export async function addPhotos(albumId: number, photoIds: number[]) {
-  const album = await prismaService.photoAlbum.findUnique({
-    where: { id: albumId },
-  });
-
-  if (!album) {
-    return false;
-  }
-
-  await prismaService.photo.updateMany({
-    where: { id: { in: photoIds } },
-    data: { albumId },
-  });
-
-  return true;
 }
 
 export const photoAlbumService = {

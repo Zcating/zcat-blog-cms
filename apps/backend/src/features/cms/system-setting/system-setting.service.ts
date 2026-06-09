@@ -1,8 +1,15 @@
-import { ossService } from '../../../common';
+﻿import { Effect } from 'effect';
 
-export async function getUploadConfig(key: string) {
-  const presignedUrl = await ossService.presignUploadUrl(key);
-  return { presignedUrl };
+import { OssService, tryPromise } from '../../../common/effect';
+
+export function getUploadConfig(key: string) {
+  return Effect.gen(function* () {
+    const oss = yield* OssService;
+    const presignedUrl = yield* tryPromise(() =>
+      oss.presignUploadUrl(key),
+    );
+    return { presignedUrl };
+  });
 }
 
 export const systemSettingService = { getUploadConfig };
