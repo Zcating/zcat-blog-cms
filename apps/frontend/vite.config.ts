@@ -1,5 +1,7 @@
-import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import { nitro } from 'nitro/vite';
+import viteReact from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
@@ -8,7 +10,22 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       tailwindcss(),
-      ...(mode === 'test' ? [] : [reactRouter()]),
+      ...(mode === 'test'
+        ? []
+        : [
+            // tanstackStart MUST come before viteReact().
+            tanstackStart({
+              srcDirectory: 'app',
+              router: {
+                routesDirectory: './routes',
+              },
+            }),
+            viteReact(),
+            // nitro() runs the final SSR/CSR rollup output through the
+            // node-server preset so `pnpm start` can serve
+            // `.output/server/index.mjs`.
+            nitro(),
+          ]),
       tsconfigPaths(),
     ],
     server: {

@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
   },
   projects: [
@@ -24,10 +24,14 @@ export default defineConfig({
       timeout: 120000,
     },
     {
-      command: 'pnpm exec react-router dev --host 127.0.0.1 --port 4173',
-      url: 'http://127.0.0.1:4173/login',
+      command: 'node .output/server/index.mjs',
+      url: 'http://127.0.0.1:3000/login',
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
+      env: {
+        BACKEND_API_URL: 'http://127.0.0.1:9090/api',
+        NODE_ENV: 'production',
+      },
     },
   ],
 });

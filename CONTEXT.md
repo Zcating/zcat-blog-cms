@@ -2,16 +2,16 @@
 
 ## 认证领域 (Authentication)
 
-| 术语           | 定义                                                                                                                                                                                                                                                |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Token Cookie   | 名为 `token` 的 httpOnly Cookie，存储 JWT（含 `Bearer ` 前缀），`SameSite=Strict`，由 BFF auth route 负责写入和清除                                                                                                                                 |
-| CSRF 策略      | 不实现 CSRF token 校验。由 `SameSite=Strict` 同源策略防御                                                                                                                                                                                           |
-| Token 生命周期 | 单 JWT，永不过期。生命周期完全由后端 whitelist 表的 `create`/`remove` 管理。用户不主动登出则一直有效                                                                                                                                                |
-| 前端携带模式   | 浏览器自动携带 `token` Cookie，frontend JS 层不读写该 Cookie。`js-cookie` 不再用于 token                                                                                                                                                            |
-| 路由守卫       | 不实现传统意义的路由守卫（middleware 拦截请求）。认证检查在 loader 层通过 `auth-middleware.ts` 实现。未授权时 Effect 错误向上冒泡至 loader/action 层，由其 catch 并执行 `redirect("/login")`（2026-05 引入 Effect 后，原 `EventCenter` 链路已废弃） |
-| 用户信息管理   | 登录后不主动获取用户信息，不缓存。各页面按需调用接口                                                                                                                                                                                                |
-| 记住我         | 已移除，登录页不显示                                                                                                                                                                                                                                |
-| CMS 退出登录   | CMS layout sidebar footer 新增"退出登录"项（LogOut 图标 + 文字），点击后通过 ZDialog.confirm 二次确认，确认后调用 AuthApi.logout() → BFF 清除 httpOnly cookie → 前端 navigate('/login')                                                             |
+| 术语           | 定义                                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token Cookie   | 名为 `token` 的 httpOnly Cookie，存储 JWT（含 `Bearer ` 前缀），`SameSite=Strict`。浏览器自动携带，frontend JS 不读写；写入和清除属于服务端认证流程                   |
+| CSRF 策略      | 不实现 CSRF token 校验。由 `SameSite=Strict` 同源策略防御                                                                                                             |
+| Token 生命周期 | 单 JWT，永不过期。生命周期完全由后端 whitelist 表的 `create`/`remove` 管理。用户不主动登出则一直有效                                                                  |
+| 前端携带模式   | 浏览器自动携带 `token` Cookie，frontend JS 层不读写该 Cookie。`js-cookie` 不再用于 token                                                                              |
+| 访问校验       | 未认证用户访问受保护页面时被重定向到登录页；受保护的数据读取和操作还会在服务端再次校验，页面跳转规则本身不构成授权依据                                                |
+| 用户信息管理   | 进入受保护 CMS 后获取当前用户信息供全局外壳使用；具体业务数据仍按需获取                                                                                               |
+| 记住我         | 已移除，登录页不显示                                                                                                                                                  |
+| CMS 退出登录   | CMS layout sidebar footer 新增"退出登录"项（LogOut 图标 + 文字），点击后通过 ZDialog.confirm 二次确认，确认后由服务端认证流程清除 httpOnly Cookie，前端再导航到登录页 |
 
 ## API 响应码 (API Response Codes)
 

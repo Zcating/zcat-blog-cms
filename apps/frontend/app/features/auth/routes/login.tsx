@@ -10,10 +10,10 @@ import {
   StaggerReveal,
   ZNotification,
 } from '@zcat/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { AuthApi } from '@cms/api';
+import { login } from '@cms/server/auth';
 
 export function meta() {
   return [
@@ -37,9 +37,15 @@ export default function GuestHome() {
     },
     onSubmit: async (data) => {
       try {
-        await AuthApi.login(data);
+        await login({
+          data: { username: data.username, password: data.password },
+        });
         await ZNotification.success('登录成功');
-        await navigate('/dashboard');
+        // Phase 1 only registers the /login route in routeTree.gen.ts; the
+        // dashboard route will be migrated to a file-based route in Phase 2.
+        // The cast preserves the runtime behavior without forcing a Phase 2
+        // type registration dependency.
+        await navigate({ to: '/dashboard' } as never);
       } catch (error) {
         await ZNotification.error(
           error instanceof Error ? error.message : '登录失败',

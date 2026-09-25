@@ -2,19 +2,18 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { loginMock, navigateMock } = vi.hoisted(() => ({
-  loginMock: vi.fn().mockResolvedValue(undefined),
+  loginMock: vi.fn().mockResolvedValue({ code: '0000', message: '登录成功' }),
   navigateMock: vi.fn(),
 }));
 
-vi.mock('@cms/api', () => ({
-  AuthApi: {
-    login: loginMock,
-  },
+vi.mock('@cms/server/auth', () => ({
+  login: loginMock,
 }));
 
-vi.mock('react-router', async () => {
-  const actual =
-    await vi.importActual<typeof import('react-router')>('react-router');
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual<typeof import('@tanstack/react-router')>(
+    '@tanstack/react-router',
+  );
 
   return {
     ...actual,
@@ -42,11 +41,10 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
-        username: 'admin',
-        password: '123456',
+        data: { username: 'admin', password: '123456' },
       });
     });
 
-    expect(navigateMock).toHaveBeenCalledWith('/dashboard');
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/dashboard' });
   });
 });

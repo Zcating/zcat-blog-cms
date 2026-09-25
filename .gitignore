@@ -1,5 +1,8 @@
 # compiled output
 /dist
+/.output/
+/apps/frontend/dist/
+/apps/frontend/.output/
 /node_modules
 /build
 
@@ -72,3 +75,6 @@ docs/superpowers/
 # Git worktrees
 .worktrees/
 worktrees/
+
+# Deepwork local progress
+.slim/deepwork/

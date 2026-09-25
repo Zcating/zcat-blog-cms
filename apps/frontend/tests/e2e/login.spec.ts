@@ -12,7 +12,7 @@ test('unauthenticated access to dashboard redirects to login', async ({
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test('login redirects to dashboard after a successful submit', async ({
+test('login through server function redirects to dashboard after successful submit', async ({
   page,
 }) => {
   await page.goto('/login');
