@@ -1,21 +1,33 @@
 /**
  * TanStack Start server-function boundary for auth operations.
  *
- * Phase 1: exposes login/logout as public server functions that:
- * - POST directly to the backend /auth/login and /auth/logout endpoints
- * - Manage the HttpOnly `token` cookie (name: `token`, value: `Bearer <token>`)
- * - Never route through /api/bff/*
+ * Phase 2a compatibility shim: consumes the shared `app/server` helpers
+ * (transport, env, cookies, errors, result) so domain code paths share a
+ * single Fastify-envelope contract. The public surface — `login` and
+ * `logout` server functions — is unchanged so existing feature code keeps
+ * importing from `@cms/server/auth`.
+ *
+ * Behavior preserved from Phase 1:
+ *   - POST directly to the backend `/auth/login` and `/auth/logout`
+ *     endpoints. No `/api/bff/*` is touched.
+ *   - Manage the HttpOnly `token` Cookie (name `token`, value
+ *     `Bearer <jwt>`).
+ *   - Single JWT, never auto-refreshed.
  */
 
 import { z } from 'zod';
 import { createServerFn } from '@tanstack/react-start';
-import {
-  deleteCookie,
-  getCookie,
-  setCookie,
-} from '@tanstack/start-server-core';
 
-import { mapResultCodeToTag, type ApiError } from '@cms/api/errors';
+import {
+  clearSessionCookie,
+  liveCookieIO,
+  parseSessionCookie,
+  setSessionCookie,
+} from '@cms/server/cookies';
+import { envelopeToApiError, type ApiError } from '@cms/server/errors';
+import { resolveBackendApiUrl } from '@cms/server/env';
+import { ResponseValidationError, envelopeSchema } from '@cms/server/result';
+import { postAuthorizedJson, postJson } from '@cms/server/transport';
 
 // ---------------------------------------------------------------------------
 // Input schema
@@ -29,124 +41,63 @@ const LoginInputSchema = z.object({
 type LoginInput = z.infer<typeof LoginInputSchema>;
 
 // ---------------------------------------------------------------------------
-// Backend URL resolution (server-only runtime env)
+// Backend response schemas (per-operation contracts).
 // ---------------------------------------------------------------------------
 
-function resolveBackendBaseUrl(): string {
-  const env =
-    typeof process !== 'undefined' ? process.env.BACKEND_API_URL : undefined;
-  if (!env) {
-    throw new Error('Missing BACKEND_API_URL environment variable');
-  }
-  return env.replace(/\/+$/, '');
-}
+const LoginDataSchema = z.object({
+  accessToken: z.string().min(1),
+});
 
 // ---------------------------------------------------------------------------
-// Cookie constants
-// ---------------------------------------------------------------------------
-
-const COOKIE_NAME = 'token';
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'strict' as const,
-  path: '/',
-} as const;
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-function extractBearerToken(): string | null {
-  const raw = getCookie(COOKIE_NAME);
-  if (!raw) return null;
-  return raw.startsWith('Bearer ') ? raw.slice(7) : raw;
-}
-
-function throwOnError(result: { code: string; message: string }): never {
-  const tag = mapResultCodeToTag(result.code);
-  const error: ApiError =
-    tag !== null
-      ? { _tag: tag, message: result.message }
-      : { _tag: 'UnknownError', message: result.message };
-  throw error;
-}
-
-// ---------------------------------------------------------------------------
-// Raw handler: login
-// ---------------------------------------------------------------------------
-
-async function loginHandler(input: LoginInput): Promise<{
-  code: string;
-  message: string;
-}> {
-  const backendUrl = resolveBackendBaseUrl();
-  const response = await fetch(`${backendUrl}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-
-  const result = (await response.json()) as {
-    code: string;
-    message: string;
-    data?: { accessToken: string };
-  };
-
-  if (result.code !== '0000') {
-    throwOnError(result);
-  }
-
-  // Set the HttpOnly cookie with Bearer token
-  setCookie(COOKIE_NAME, `Bearer ${result.data!.accessToken}`, COOKIE_OPTIONS);
-
-  return { code: '0000', message: '登录成功' };
-}
-
-// ---------------------------------------------------------------------------
-// Raw handler: logout
-// ---------------------------------------------------------------------------
-
-async function logoutHandler(): Promise<{
-  code: string;
-  message: string;
-}> {
-  const backendUrl = resolveBackendBaseUrl();
-  const token = extractBearerToken();
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  // Call backend logout to remove from whitelist; ignore errors
-  await fetch(`${backendUrl}/auth/logout`, {
-    method: 'POST',
-    headers,
-  }).catch(() => {});
-
-  // Clear the token cookie
-  deleteCookie(COOKIE_NAME, { ...COOKIE_OPTIONS, maxAge: 0 });
-
-  return { code: '0000', message: '已登出' };
-}
-
-// ---------------------------------------------------------------------------
-// Server function: login (Fetcher wrapper)
+// Server function: login
 // ---------------------------------------------------------------------------
 
 export const login = createServerFn({ method: 'POST' })
   .validator((data: unknown): LoginInput => LoginInputSchema.parse(data))
   .handler(async ({ data }) => {
-    return loginHandler(data);
+    try {
+      const result = await postJson({
+        path: '/auth/login',
+        body: { username: data.username, password: data.password },
+        env: { resolveBaseUrl: resolveBackendApiUrl },
+        dataSchema: LoginDataSchema,
+      });
+      setSessionCookie(`Bearer ${result.accessToken}`);
+      return { code: '0000', message: '登录成功' };
+    } catch (error) {
+      // Convert any envelope-level ResponseValidationError to a typed
+      // ApiError so the public login surface keeps the existing
+      // `ApiError`-shaped failure vocabulary.
+      if (error instanceof ResponseValidationError) {
+        const apiError: ApiError = envelopeToApiError({
+          code: 'ERR0006',
+          message: error.message,
+        }) ?? { _tag: 'UnknownError', message: error.message };
+        throw apiError;
+      }
+      throw error;
+    }
   });
 
 // ---------------------------------------------------------------------------
-// Server function: logout (Fetcher wrapper)
+// Server function: logout
 // ---------------------------------------------------------------------------
 
 export const logout = createServerFn({ method: 'POST' }).handler(async () => {
-  return logoutHandler();
+  // Best-effort backend logout — failures must not block Cookie clearing.
+  // We deliberately swallow errors here to preserve the Phase 1 contract:
+  // the local Cookie is always cleared, even if the backend is down.
+  const cookie = liveCookieIO();
+  const token = parseSessionCookie(cookie);
+
+  if (token) {
+    await postAuthorizedJson({
+      path: '/auth/logout',
+      body: {},
+      env: { resolveBaseUrl: resolveBackendApiUrl },
+    }).catch(() => undefined);
+  }
+
+  clearSessionCookie();
+  return { code: '0000', message: '已登出' };
 });
