@@ -3,7 +3,8 @@
  *
  * Replaces the legacy generic `HttpClient.post(path, ...)` API. Each
  * helper is a concrete operation (postJson, postAuthorizedJson,
- * deleteAuthorized) so domain code never picks an endpoint conditionally.
+ * deleteAuthorized, getAuthorizedJson) so domain code never picks an
+ * endpoint conditionally.
  *
  * Rules enforced by every helper in this file:
  *   1. No automatic retries. The `fetch` boundary is called exactly once.
@@ -48,6 +49,11 @@ interface BaseCallOptions {
   env: BackendEnv;
   cookie?: CookieIO;
   fetch?: FetchLike;
+}
+
+interface GetAuthorizedOptions<T> extends BaseCallOptions {
+  query?: Record<string, string | number | undefined>;
+  dataSchema?: DataSchema<T>;
 }
 
 interface PostJsonOptions extends BaseCallOptions {
@@ -142,6 +148,19 @@ function resolveUrl(env: BackendEnv, path: string): string {
   return `${base}${normalizedPath}`;
 }
 
+function buildQueryString(
+  query: Record<string, string | number | undefined>,
+): string {
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined) continue;
+    parts.push(
+      `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    );
+  }
+  return parts.length === 0 ? '' : `?${parts.join('&')}`;
+}
+
 /**
  * POST a JSON body to the backend (no Authorization forwarding).
  *
@@ -204,6 +223,42 @@ export async function deleteAuthorized<T = unknown>(
   const headers = buildHeaders(undefined, cookie, true);
   const init: RequestInit = {
     method: 'DELETE',
+    headers,
+  };
+  return sendAndParse<T>(url, init, fetchImpl, options.dataSchema);
+}
+
+/**
+ * Issue a GET to the backend with the request's Cookie Bearer
+ * forwarded (when present) and parse the response envelope.
+ *
+ * Use for protected reads. The optional `query` map is URL-encoded into
+ * the query string with `encodeURIComponent`; `undefined` values are
+ * dropped so the backend never sees a stray `key=undefined` segment.
+ *
+ * The `path` may either be the bare route (`/cms/articles`) or a route
+ * already containing its own query (`/cms/articles?foo=bar`) — when it
+ * does, the helper does NOT append an additional `?` so callers can keep
+ * pre-built query strings in `path` without double-encoding.
+ */
+export async function getAuthorizedJson<T = unknown>(
+  options: GetAuthorizedOptions<T>,
+): Promise<T> {
+  const fetchImpl = options.fetch ?? defaultFetch;
+  const cookie = options.cookie ?? liveCookieIO();
+  const base = options.env.resolveBaseUrl();
+  const normalizedPath = options.path.startsWith('/')
+    ? options.path
+    : `/${options.path}`;
+  const builtQuery = buildQueryString(options.query ?? {});
+  // If the caller baked a query string into `path`, never append another.
+  const hasInlineQuery = normalizedPath.includes('?');
+  const url = `${base}${normalizedPath}${
+    builtQuery && !hasInlineQuery ? builtQuery : ''
+  }`;
+  const headers = buildHeaders(undefined, cookie, true);
+  const init: RequestInit = {
+    method: 'GET',
     headers,
   };
   return sendAndParse<T>(url, init, fetchImpl, options.dataSchema);

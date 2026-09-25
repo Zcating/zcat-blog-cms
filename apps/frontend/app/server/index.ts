@@ -35,6 +35,7 @@ export type { CookieIO } from './cookies';
 
 export {
   deleteAuthorized,
+  getAuthorizedJson,
   postAuthorizedJson,
   postJson,
   responseValidationError as transportResponseValidationError,

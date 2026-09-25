@@ -18,7 +18,12 @@ import { z } from 'zod';
 
 import type { CookieIO } from './cookies';
 import { responseValidationError } from './result';
-import { postJson, postAuthorizedJson, deleteAuthorized } from './transport';
+import {
+  deleteAuthorized,
+  getAuthorizedJson,
+  postAuthorizedJson,
+  postJson,
+} from './transport';
 
 const idObjectSchema = z.object({ id: z.number() });
 
@@ -255,5 +260,189 @@ describe('deleteAuthorized', () => {
 describe('transport — module re-exports', () => {
   it('exposes responseValidationError as a helper', () => {
     expect(typeof responseValidationError).toBe('function');
+  });
+});
+
+describe('getAuthorizedJson', () => {
+  it('GETs the resolved base URL + path with no query string when none is supplied', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: { id: 1 } },
+    });
+    const result = await getAuthorizedJson({
+      path: '/widgets',
+      env: baseEnv,
+      cookie: makeCookieIo(),
+      fetch: fetchImpl,
+    });
+    expect(result).toEqual({ id: 1 });
+
+    const [url, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(url).toBe('http://backend.local/api/widgets');
+    expect(init.method).toBe('GET');
+    expect(init.headers.Accept).toBe('application/json');
+    expect(init.body).toBeUndefined();
+  });
+
+  it('URL-encodes a query map (string + number values) and skips undefined', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: {} },
+    });
+    await getAuthorizedJson({
+      path: '/things',
+      query: { page: 2, pageSize: 25, tag: 'hello world', unused: undefined },
+      env: baseEnv,
+      cookie: makeCookieIo(),
+      fetch: fetchImpl,
+    });
+    const [url] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(url).toContain('/things?');
+    expect(url).toContain('page=2');
+    expect(url).toContain('pageSize=25');
+    expect(url).toContain('tag=hello%20world');
+    expect(url).not.toContain('unused');
+    expect(url).not.toContain('undefined');
+  });
+
+  it('forwards the Cookie Bearer as an Authorization header (with Bearer prefix)', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: {} },
+    });
+    await getAuthorizedJson({
+      path: '/private',
+      env: baseEnv,
+      cookie: makeCookieIo({ getCookie: vi.fn(() => 'Bearer abc.def.ghi') }),
+      fetch: fetchImpl,
+    });
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(init.headers.Authorization).toBe('Bearer abc.def.ghi');
+  });
+
+  it('re-wraps a raw-token Cookie so the backend always sees "Bearer <token>"', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: {} },
+    });
+    await getAuthorizedJson({
+      path: '/private',
+      env: baseEnv,
+      cookie: makeCookieIo({ getCookie: vi.fn(() => 'raw-token-only') }),
+      fetch: fetchImpl,
+    });
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(init.headers.Authorization).toBe('Bearer raw-token-only');
+  });
+
+  it('omits the Authorization header when no session Cookie is present', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: {} },
+    });
+    await getAuthorizedJson({
+      path: '/public',
+      env: baseEnv,
+      cookie: makeCookieIo(),
+      fetch: fetchImpl,
+    });
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(init.headers.Authorization).toBeUndefined();
+  });
+
+  it('unwraps a success envelope and validates data against the provided Zod schema', async () => {
+    const fetchImpl = makeFetch({
+      body: {
+        code: '0000',
+        message: 'ok',
+        data: { id: 42, name: 'widget' },
+      },
+    });
+    const result = await getAuthorizedJson<{ id: number; name: string }>({
+      path: '/widgets/42',
+      env: baseEnv,
+      cookie: makeCookieIo(),
+      fetch: fetchImpl,
+      dataSchema: z.object({ id: z.number(), name: z.string() }),
+    });
+    expect(result).toEqual({ id: 42, name: 'widget' });
+  });
+
+  it('throws a typed ApiError (no envelope data leakage) on a non-success envelope', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: 'ERR0002', message: '会话已过期', data: { hint: 'leak' } },
+    });
+    await expect(
+      getAuthorizedJson({
+        path: '/private',
+        env: baseEnv,
+        cookie: makeCookieIo({ getCookie: vi.fn(() => 'Bearer stale') }),
+        fetch: fetchImpl,
+      }),
+    ).rejects.toMatchObject({ _tag: 'LoginError', message: '会话已过期' });
+  });
+
+  it('throws a typed ResponseValidationError when the body is missing the envelope', async () => {
+    const fetchImpl = makeFetch({ body: { totally: 'invalid' } });
+    await expect(
+      getAuthorizedJson({
+        path: '/x',
+        env: baseEnv,
+        cookie: makeCookieIo(),
+        fetch: fetchImpl,
+      }),
+    ).rejects.toMatchObject({ name: 'ResponseValidationError' });
+  });
+
+  it('throws a typed ResponseValidationError when the success envelope fails the data schema', async () => {
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: { id: 'oops' } },
+    });
+    await expect(
+      getAuthorizedJson<{ id: number }>({
+        path: '/x',
+        env: baseEnv,
+        cookie: makeCookieIo(),
+        fetch: fetchImpl,
+        dataSchema: idObjectSchema,
+      }),
+    ).rejects.toMatchObject({ name: 'ResponseValidationError' });
+  });
+
+  it('throws a typed ResponseValidationError when the body is not JSON', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      status: 200,
+      ok: true,
+      json: async () => {
+        throw new SyntaxError('bad json');
+      },
+    })) as unknown as typeof fetch;
+    await expect(
+      getAuthorizedJson({
+        path: '/x',
+        env: baseEnv,
+        cookie: makeCookieIo(),
+        fetch: fetchImpl,
+      }),
+    ).rejects.toMatchObject({ name: 'ResponseValidationError' });
+  });
+
+  it('issues exactly one fetch call (no retries) and reads the base URL from the injected env', async () => {
+    const customEnv = { resolveBaseUrl: () => 'http://override.local/api' };
+    const fetchImpl = makeFetch({
+      body: { code: '0000', message: 'ok', data: {} },
+    });
+    await getAuthorizedJson({
+      path: '/x',
+      env: customEnv,
+      cookie: makeCookieIo(),
+      fetch: fetchImpl,
+    });
+    expect(
+      (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls,
+    ).toHaveLength(1);
+    const [url] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(url).toBe('http://override.local/api/x');
   });
 });
