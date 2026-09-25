@@ -13,14 +13,15 @@
  * The helpers are written as pure functions over a `CookieIO` interface
  * so they can be unit-tested without a live TanStack Start request
  * context. The default `liveCookieIO` factory resolves the live getters
- * from `@tanstack/react-start/server`.
+ * from `@tanstack/react-start/server` via the sibling
+ * `cookies.server.ts` module — that split keeps this facade free of
+ * any direct `@tanstack/react-start/server` import so the TanStack
+ * Start bundler can tree-shake the chain when it would otherwise pull
+ * server-only code into the client graph (notably through
+ * `auth-middleware.ts`).
  */
 
-import {
-  deleteCookie as startDeleteCookie,
-  getCookie as startGetCookie,
-  setCookie as startSetCookie,
-} from '@tanstack/react-start/server';
+import { liveCookieIO } from './cookies.server';
 
 /** Name of the session cookie that carries the JWT. */
 export const TOKEN_COOKIE_NAME = 'token';
@@ -40,31 +41,12 @@ export interface CookieIO {
 }
 
 /**
- * Live implementation backed by `@tanstack/react-start/server`.
- *
- * Captures references at call time so request-context swapping works
- * correctly across server invocations.
+ * Re-export the live implementation so existing consumers can keep
+ * importing `liveCookieIO` from `@cms/server/cookies`. The actual
+ * factory body lives in `cookies.server.ts`; this re-export only
+ * surfaces the symbol without re-importing the server-only specifier.
  */
-export function liveCookieIO(): CookieIO {
-  return {
-    getCookie: (name) => startGetCookie(name),
-    setCookie: (name, value, options) => {
-      // The public API accepts a CookieSerializeOptions object; tests
-      // pass a plain Record, which is structurally compatible.
-      startSetCookie(
-        name,
-        value,
-        options as Parameters<typeof startSetCookie>[2],
-      );
-    },
-    deleteCookie: (name, options) => {
-      startDeleteCookie(
-        name,
-        options as Parameters<typeof startDeleteCookie>[1],
-      );
-    },
-  };
-}
+export { liveCookieIO } from './cookies.server';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,

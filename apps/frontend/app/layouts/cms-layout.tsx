@@ -1,3 +1,26 @@
+/**
+ * TanStack Router adaptation of the legacy CMS shell.
+ *
+ * The shell renders a sidebar + main content area for every
+ * authenticated CMS page. It is mounted by the pathless `_cms`
+ * layout route, which passes the current user via the
+ * `cmsUser` prop.
+ *
+ * What changed vs. the React Router version:
+ *   - `useNavigate`, `useLocation` now come from `@tanstack/react-router`.
+ *   - The legacy `loader()` (which read `UserApi.userInfo()` and
+ *     redirected on 401) is gone — the `_cms` `beforeLoad` is the
+ *     single source of truth for the auth gate.
+ *   - `Logout` is a button that triggers `logout` from `@cms/server/auth`
+ *     (preserving the dialog confirmation + the existing server-function
+ *     contract), then clears the entire private Query cache and
+ *     navigates to `/login`.
+ *
+ * The component deliberately keeps the existing `@zcat/ui` sidebar
+ * primitives and the menu shape so the visual identity of the
+ * shell is preserved. Phase 3a does not redesign UI.
+ */
+
 import {
   Separator,
   SidebarTrigger,
@@ -18,116 +41,45 @@ import {
   UserIcon,
 } from 'lucide-react';
 import React from 'react';
-import {
-  Link,
-  Outlet,
-  redirect,
-  useLoaderData,
-  useLocation,
-  useNavigate,
-  useRouteError,
-  isRouteErrorResponse,
-} from 'react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { AuthApi, UserApi } from '@cms/api';
+import { logout } from '@cms/server/auth';
+import { clearPrivateQueryCache } from '@cms/shared/query';
 
-export async function loader() {
-  try {
-    const userInfo = await UserApi.userInfo();
-    return { name: userInfo.name, avatar: userInfo.avatar };
-  } catch (error) {
-    const apiError = error as { message?: string };
-    if (apiError?.message === 'Unauthorized') {
-      throw redirect('/login');
-    }
-    throw error;
-  }
+import type { CmsShellUser } from '@cms/shared/auth/cms-access';
+
+/**
+ * Layout entry — receives the pre-loaded shell user from the
+ * `_cms` route via prop drilling. We deliberately do NOT reach
+ * into the router context here so the layout file can be tested
+ * with a plain JSX render.
+ */
+export function CMSLayoutShell({
+  cmsUser,
+  children,
+}: {
+  cmsUser?: CmsShellUser;
+  children: React.ReactNode;
+}) {
+  return <Layout cmsUser={cmsUser}>{children}</Layout>;
 }
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-  const [message, setMessage] = React.useState('');
-
-  React.useEffect(() => {
-    if (isRouteErrorResponse(error)) {
-      setMessage(`状态码：${error.status} \n 错误内容: ${error.statusText}`);
-      return;
-    }
-
-    if (error instanceof Error) {
-      setMessage(error.message);
-    } else {
-      setMessage('未知错误');
-    }
-  }, [error]);
-
-  return (
-    <Layout>
-      <div>{message}</div>
-    </Layout>
-  );
-}
-
-export default function CMSLayout() {
-  return (
-    <Layout>
-      <Outlet />
-    </Layout>
-  );
-}
-
-const menuItems: ZSidebarOption[] = [
-  {
-    label: '仪表盘',
-    value: '/dashboard',
-    icon: Gauge,
-  },
-  {
-    label: '文章管理',
-    value: '/articles',
-    icon: NotebookIcon,
-  },
-  // {
-  //   label: '分类管理',
-  //   value: '/article-categories',
-  //   icon: (props: any) => <TagsOutlined {...props} style={{ ...props.style, color: 'oklch(0.48 0.18 55)' }} />,
-  // },
-  {
-    label: '相册管理',
-    value: '/albums',
-    icon: BookImageIcon,
-  },
-  {
-    label: '照片管理',
-    value: '/photos',
-    icon: ImageIcon,
-  },
-  {
-    label: '用户信息',
-    value: '/user-info',
-    icon: UserIcon,
-  },
-  {
-    label: '系统设置',
-    value: '/settings',
-    icon: SettingsIcon,
-  },
-];
 
 function isActive(value: string | undefined, activeValue: string | undefined) {
   return !!activeValue?.startsWith(value ?? '');
 }
 
 interface LayoutProps {
+  cmsUser?: CmsShellUser;
   children: React.ReactNode;
 }
 
-function Layout(props: LayoutProps) {
+function Layout({ cmsUser, children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const loaderData = useLoaderData<{ name: string; avatar: string } | null>();
-  const name = loaderData?.name ?? '';
-  const avatar = loaderData?.avatar ?? '';
+  const queryClient = useQueryClient();
+  const name = cmsUser?.name ?? '';
+  const avatar = cmsUser?.avatar ?? '';
 
   const handleLogout = async () => {
     const confirmed = await ZDialog.confirm({
@@ -138,8 +90,12 @@ function Layout(props: LayoutProps) {
     });
     if (!confirmed) return;
 
-    await AuthApi.logout();
-    navigate('/login');
+    await logout();
+    // Wipe the entire private Query cache so no stale user/tenant
+    // data lingers on the next session. The browser singleton is
+    // preserved — only the entries are dropped.
+    clearPrivateQueryCache(queryClient);
+    await navigate({ to: '/login' });
   };
 
   const renderItem = (item: ZSidebarOption) => {
@@ -202,9 +158,50 @@ function Layout(props: LayoutProps) {
           id="cms-layout-content"
           className="absolute top-0 left-0 bottom-0 right-0 overflow-auto"
         >
-          {props.children}
+          {children}
         </ZView>
       </ZView>
     </ZSidebar>
   );
+}
+
+const menuItems: ZSidebarOption[] = [
+  {
+    label: '仪表盘',
+    value: '/dashboard',
+    icon: Gauge,
+  },
+  {
+    label: '文章管理',
+    value: '/articles',
+    icon: NotebookIcon,
+  },
+  {
+    label: '相册管理',
+    value: '/albums',
+    icon: BookImageIcon,
+  },
+  {
+    label: '照片管理',
+    value: '/photos',
+    icon: ImageIcon,
+  },
+  {
+    label: '用户信息',
+    value: '/user-info',
+    icon: UserIcon,
+  },
+  {
+    label: '系统设置',
+    value: '/settings',
+    icon: SettingsIcon,
+  },
+];
+
+// Re-export the legacy default so the legacy route entry still
+// compiles while feature-domain routes are migrated in Phase 3b.
+// Phase 3a does not mount this directly — `_cms.tsx` imports the
+// named `CMSLayoutShell` export above.
+export default function CMSLayout() {
+  return <Layout cmsUser={undefined}>{null}</Layout>;
 }

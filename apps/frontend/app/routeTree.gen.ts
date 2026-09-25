@@ -9,38 +9,78 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root';
+import { Route as IndexRouteImport } from './routes/index';
+import { Route as CmsRouteImport } from './routes/_cms';
 import { Route as LoginRouteImport } from './routes/login';
+import { Route as CmsDashboardRouteImport } from './routes/_cms/dashboard';
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const CmsRoute = CmsRouteImport.update({
+  id: '/_cms',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any);
+const CmsDashboardRoute = CmsDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => CmsRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
+  '/dashboard': typeof CmsDashboardRoute;
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
+  '/dashboard': typeof CmsDashboardRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
+  '/': typeof IndexRoute;
+  '/_cms': typeof CmsRouteWithChildren;
   '/login': typeof LoginRoute;
+  '/_cms/dashboard': typeof CmsDashboardRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/login';
+  fullPaths: '/' | '/login' | '/dashboard';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/login';
-  id: '__root__' | '/login';
+  to: '/' | '/login' | '/dashboard';
+  id: '__root__' | '/' | '/_cms' | '/login' | '/_cms/dashboard';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute;
+  CmsRoute: typeof CmsRouteWithChildren;
   LoginRoute: typeof LoginRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/_cms': {
+      id: '/_cms';
+      path: '';
+      fullPath: '/';
+      preLoaderRoute: typeof CmsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/login': {
       id: '/login';
       path: '/login';
@@ -48,10 +88,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_cms/dashboard': {
+      id: '/_cms/dashboard';
+      path: '/dashboard';
+      fullPath: '/dashboard';
+      preLoaderRoute: typeof CmsDashboardRouteImport;
+      parentRoute: typeof CmsRoute;
+    };
   }
 }
 
+interface CmsRouteChildren {
+  CmsDashboardRoute: typeof CmsDashboardRoute;
+}
+
+const CmsRouteChildren: CmsRouteChildren = {
+  CmsDashboardRoute: CmsDashboardRoute,
+};
+
+const CmsRouteWithChildren = CmsRoute._addFileChildren(CmsRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  CmsRoute: CmsRouteWithChildren,
   LoginRoute: LoginRoute,
 };
 export const routeTree = rootRouteImport
@@ -59,10 +118,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>();
 
 import type { getRouter } from './router.tsx';
-import type { createStart } from '@tanstack/react-start';
+import type { startInstance } from './start.ts';
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true;
     router: Awaited<ReturnType<typeof getRouter>>;
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
   }
 }

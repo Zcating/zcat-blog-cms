@@ -21,10 +21,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   createProtectedFunctionMiddleware,
-  runProtectedFunctionGate,
   type ProtectedFunctionContext,
 } from './auth-middleware';
 import type { CookieIO } from './cookies';
+import {
+  runProtectedFunctionGate,
+  type MiddlewareServerInput,
+} from './auth-middleware.server';
 
 function makeCookieIo(cookieValue: string | undefined): CookieIO {
   return {
@@ -91,7 +94,10 @@ describe('runProtectedFunctionGate', () => {
       userId: 'intruder',
     };
 
-    await runProtectedFunctionGate({ next, context: bogusContext }, { cookie });
+    await runProtectedFunctionGate(
+      { next, context: bogusContext } as MiddlewareServerInput,
+      { cookie },
+    );
 
     expect(next).toHaveBeenCalledTimes(1);
   });

@@ -10,6 +10,7 @@ import {
   StaggerReveal,
   ZNotification,
 } from '@zcat/ui';
+import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
 import { z } from 'zod';
 
@@ -29,6 +30,12 @@ const LoginForm = createZForm({
 
 export default function GuestHome() {
   const navigate = useNavigate();
+  // Phase 3a remediation: wrap the server function with
+  // `useServerFn` so it integrates with TanStack Start's start
+  // handler the same way the official docs recommend. This is the
+  // path that survives the React Query SSR integration without
+  // dropping the Set-Cookie response before the next navigation.
+  const submitLogin = useServerFn(login);
 
   const form = LoginForm.useForm({
     defaultValues: {
@@ -37,15 +44,14 @@ export default function GuestHome() {
     },
     onSubmit: async (data) => {
       try {
-        await login({
+        await submitLogin({
           data: { username: data.username, password: data.password },
         });
         await ZNotification.success('登录成功');
-        // Phase 1 only registers the /login route in routeTree.gen.ts; the
-        // dashboard route will be migrated to a file-based route in Phase 2.
-        // The cast preserves the runtime behavior without forcing a Phase 2
-        // type registration dependency.
-        await navigate({ to: '/dashboard' } as never);
+        // Phase 3a registers the `/dashboard` route via the `_cms` layout
+        // placeholder, so the navigation now resolves through the typed
+        // route union — no cast needed.
+        await navigate({ to: '/dashboard' });
       } catch (error) {
         await ZNotification.error(
           error instanceof Error ? error.message : '登录失败',

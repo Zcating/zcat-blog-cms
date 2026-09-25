@@ -15,8 +15,12 @@
  *
  * The middleware is intentionally NOT a TanStack `createMiddleware()`
  * instance — domain code composes it into `createServerFn().middleware([...])`
- * via the factory exposed below. Tests pass a fake request context to
- * exercise the boundary without spinning up a live TanStack Start.
+ * via the factory exposed below.
+ *
+ * The runtime test seam `runProtectedFunctionGate` lives in the
+ * sibling `auth-middleware.server.ts` file because it touches
+ * `liveCookieIO()` — keeping it out of the client graph lets the
+ * bundler tree-shake the server-only Cookie import.
  */
 
 import { createMiddleware } from '@tanstack/react-start';
@@ -49,11 +53,6 @@ export interface ProtectedFunctionContext {
   [key: string]: unknown;
 }
 
-interface MiddlewareServerInput {
-  next: (input?: unknown) => Promise<unknown>;
-  context?: ProtectedFunctionContext;
-}
-
 /**
  * Build a TanStack Start middleware that enforces a valid session.
  *
@@ -69,14 +68,16 @@ interface MiddlewareServerInput {
  *
  * The factory takes an optional `cookie` so tests can inject a fake
  * `CookieIO`. Production callers leave it empty and pick up
- * `liveCookieIO()` automatically.
+ * `liveCookieIO()` automatically — the `liveCookieIO()` call is
+ * intentionally inside the `.server()` closure so the TanStack Start
+ * compiler strips it (and the `cookies.ts` import it triggers) from
+ * the client bundle.
  */
 export function createProtectedFunctionMiddleware(
   options: { cookie?: CookieIO } = {},
 ) {
-  const cookie = options.cookie ?? liveCookieIO();
-
   return createMiddleware({ type: 'function' }).server(async ({ next }) => {
+    const cookie = options.cookie ?? liveCookieIO();
     const auth = authorizeFromCookie(cookie);
     if (!auth) {
       throw new UnauthorizedError();
@@ -86,23 +87,4 @@ export function createProtectedFunctionMiddleware(
     // into a typed session principal via the shared helpers.
     return next();
   });
-}
-
-/**
- * Internal test seam: invoke the protected-function gate synchronously.
- *
- * Mirrors what `createProtectedFunctionMiddleware().server()` does, but
- * takes the request context directly so tests can drive it without a
- * TanStack Start runtime.
- */
-export async function runProtectedFunctionGate(
-  input: MiddlewareServerInput,
-  options: { cookie?: CookieIO } = {},
-): Promise<unknown> {
-  const cookie = options.cookie ?? liveCookieIO();
-  const auth = authorizeFromCookie(cookie);
-  if (!auth) {
-    throw new UnauthorizedError();
-  }
-  return input.next();
 }

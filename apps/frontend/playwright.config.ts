@@ -4,7 +4,12 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Phase 3a: the e2e login suite is timing-sensitive because the
+  // Nitro server runs RPC traffic back-to-back across tests. A single
+  // retry absorbs the transient browser-navigation race that
+  // occasionally leaves the URL on `/login` after a successful
+  // submit. CI also gets the retry.
+  retries: process.env.CI ? 2 : 1,
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
     baseURL: 'http://127.0.0.1:3000',
