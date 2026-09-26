@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import type React from 'react';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import zod from 'zod';
 
+import { createZForm } from '../z-form/create-z-form';
 import { ZInput } from './z-input';
 
 describe('ZInput', () => {
@@ -30,5 +33,68 @@ describe('ZInput', () => {
     render(<ZInput data-testid="input" disabled />);
 
     expect(screen.getByTestId('input')).toBeDisabled();
+  });
+});
+
+const UserForm = createZForm({ username: zod.string() });
+
+function UserFormHarness() {
+  const form = UserForm.useForm({
+    onSubmit: () => {},
+    defaultValues: { username: '' },
+  });
+
+  return (
+    <UserForm form={form}>
+      <UserForm.Item label="用户名" name="username">
+        <ZInput data-testid="username" />
+      </UserForm.Item>
+      <output data-testid="value">{form.instance.watch('username')}</output>
+    </UserForm>
+  );
+}
+
+describe('ZInput 表单字段容器内的值级变更通道', () => {
+  it('每次按键都通过值级通道上报，表单值同步跟随', async () => {
+    render(<UserFormHarness />);
+
+    const input = screen.getByTestId('username');
+    await userEvent.type(input, 'a');
+    expect(screen.getByTestId('value')).toHaveTextContent('a');
+    await userEvent.type(input, 'b');
+    expect(screen.getByTestId('value')).toHaveTextContent('ab');
+    await userEvent.type(input, 'c');
+    expect(screen.getByTestId('value')).toHaveTextContent('abc');
+  });
+
+  it('字段容器注入的 DOM 事件级通道不会接管上报，值级通道仍然收到值', async () => {
+    const onValueChange = vi.fn();
+    const domChannel = vi.fn();
+    const injected = {
+      onChange: domChannel,
+    } as unknown as React.ComponentProps<typeof ZInput>;
+    render(
+      <ZInput
+        data-testid="input"
+        onValueChange={onValueChange}
+        {...injected}
+      />,
+    );
+
+    await userEvent.type(screen.getByTestId('input'), 'a');
+
+    expect(onValueChange).toHaveBeenCalledWith('a');
+    expect(domChannel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ZInput 公共 props', () => {
+  it('不提供 DOM 事件级变更通道', () => {
+    expectTypeOf<React.ComponentProps<typeof ZInput>>().not.toHaveProperty(
+      'onChange',
+    );
+    expectTypeOf<React.ComponentProps<typeof ZInput>>().toHaveProperty(
+      'onValueChange',
+    );
   });
 });

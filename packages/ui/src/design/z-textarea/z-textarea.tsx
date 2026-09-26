@@ -2,7 +2,10 @@ import * as React from 'react';
 
 import { cn, Textarea } from '@zcat/ui/shadcn';
 
-interface ZTextareaProps extends React.ComponentProps<'textarea'> {
+interface ZTextareaProps extends Omit<
+  React.ComponentProps<'textarea'>,
+  'onChange'
+> {
   value?: string;
   onValueChange?: (value: string) => void;
 }
