@@ -1,7 +1,4 @@
-/**
- * Thin route wrapper for `/articles/$articleId` — the pathless
- * `_cms` layout supplies the auth guard and the Query client.
- *
+/*
  * The loader prefetches
  * `articleDetailQueryOptions({ id: articleId })` so the detail page
  * can `useSuspenseQuery` from a warm cache slot. An invalid

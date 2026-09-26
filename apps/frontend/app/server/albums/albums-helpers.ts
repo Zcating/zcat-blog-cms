@@ -1,26 +1,13 @@
-/**
- * Pure (testable) server-boundary helpers for the photo-albums domain.
+/*
+ * Tests inject `fetch` directly into the helpers — the ONLY mocked
+ * boundary.
  *
- * These helpers are the single source of truth for the Fastify fetch
- * shape of every album operation. The TanStack Start server functions in
- * `./index.ts` are a thin shell that wires each helper to its middleware
- * + validator. Tests inject `fetch` directly into the helpers — the ONLY
- * mocked boundary.
- *
- * Design rules (per Phase 2b contract):
- *   - Endpoints preserved: /cms/photo-albums (GET), /cms/photo-albums/:id
- *     (GET), /cms/photo-albums (POST), /cms/photo-albums/update (POST),
- *     /cms/photo-albums/delete (POST), /cms/photo-albums/cover (POST),
- *     /cms/photo-albums/add-photos (POST).
- *   - Payload shapes preserved: input objects mirror the backend Hono
+ * Design rules:
+ *   - Input objects mirror the backend Hono
  *     `zValidator('query' / 'json')` schemas; output schemas mirror the
  *     Prisma SELECT returned by the service.
  *   - Errors map through the shared `envelopeToApiError` so the existing
  *     ResultCode -> ApiErrorTag vocabulary is reused.
- *   - No `/api/bff/*`. No `VITE_*` fallback. No retries.
- *   - Reads delegate to the shared `getAuthorizedJson` from
- *     `@cms/server/transport`; writes delegate to `postAuthorizedJson`.
- *     No domain-local fetch plumbing remains.
  */
 
 import { z } from 'zod';
@@ -55,10 +42,6 @@ import {
   type UpdatePhotoAlbumInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Options plumbing
-// ---------------------------------------------------------------------------
-
 export interface FetchOptions {
   env?: BackendEnv;
   cookie?: CookieIO;
@@ -67,17 +50,10 @@ export interface FetchOptions {
 
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
-// ---------------------------------------------------------------------------
 // Void success envelope (data: null) — backend delete / cover /
 // add-photos routes omit the `data` field entirely. `z.unknown()`
 // accepts any data slot including `null` and `undefined`.
-// ---------------------------------------------------------------------------
-
 const voidDataSchema = z.unknown();
-
-// ---------------------------------------------------------------------------
-// fetchPhotoAlbums
-// ---------------------------------------------------------------------------
 
 export async function fetchPhotoAlbums(
   input: GetPhotoAlbumsInput | undefined,
@@ -94,10 +70,6 @@ export async function fetchPhotoAlbums(
   });
 }
 
-// ---------------------------------------------------------------------------
-// fetchPhotoAlbum
-// ---------------------------------------------------------------------------
-
 export async function fetchPhotoAlbum(
   input: GetPhotoAlbumInput,
   options: FetchOptions = {},
@@ -111,10 +83,6 @@ export async function fetchPhotoAlbum(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// createPhotoAlbum
-// ---------------------------------------------------------------------------
 
 export async function createPhotoAlbum(
   input: CreatePhotoAlbumInput,
@@ -134,10 +102,6 @@ export async function createPhotoAlbum(
     dataSchema: PhotoAlbumSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// updatePhotoAlbum
-// ---------------------------------------------------------------------------
 
 /**
  * Mirrors the legacy `updatePhotoAlbum` body shape exactly: all four
@@ -165,13 +129,10 @@ export async function updatePhotoAlbum(
   });
 }
 
-// ---------------------------------------------------------------------------
-// deletePhotoAlbum
-//
-// The backend `zValidator('json', z.object({ id: z.string() }))` accepts
-// a string, so the legacy `{ id: String(id) }` body shape is preserved.
-// ---------------------------------------------------------------------------
-
+/**
+ * The backend `zValidator('json', z.object({ id: z.string() }))` accepts
+ * a string, so the legacy `{ id: String(id) }` body shape is preserved.
+ */
 export async function deletePhotoAlbum(
   input: { id: number },
   options: FetchOptions = {},
@@ -185,10 +146,6 @@ export async function deletePhotoAlbum(
     dataSchema: voidDataSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// setPhotoAlbumCover
-// ---------------------------------------------------------------------------
 
 export async function setPhotoAlbumCover(
   input: SetPhotoAlbumCoverInput,
@@ -204,10 +161,6 @@ export async function setPhotoAlbumCover(
     dataSchema: voidDataSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// addPhotos
-// ---------------------------------------------------------------------------
 
 export async function addPhotos(
   input: AddPhotosInput,

@@ -1,4 +1,4 @@
-/**
+/*
  * Server-only test seam for the protected-function middleware.
  *
  * The runtime check that mirrors `createProtectedFunctionMiddleware()`
@@ -6,8 +6,7 @@
  * the gate without spinning up a live TanStack Start request context.
  *
  * The file keeps its `.server.ts` name so import protection can never
- * place it in a client graph; it is a test-only seam and nothing in
- * `app/server` imports it.
+ * place it in a client graph.
  */
 
 import { authorizeFromCookie, liveCookieIO, type CookieIO } from './cookies';

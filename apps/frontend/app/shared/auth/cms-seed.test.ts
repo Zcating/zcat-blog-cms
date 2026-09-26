@@ -1,7 +1,4 @@
-/**
- * Tests that prove `_cms.beforeLoad` seeds the complete `UserInfo`
- * into the Query cache, not only the shell display subset.
- *
+/*
  * Contract under test:
  *   - After a successful `decideCmsAccess` run, the route must call
  *     `context.queryClient.setQueryData(userInfoQueryOptions().queryKey, fullUser)`
@@ -11,11 +8,6 @@
  *     component, but the Query cache itself must carry the full
  *     payload so downstream `useQuery(userInfoQueryOptions())` reads
  *     see it.
- *
- * The current `decideCmsAccess` helper returns only a `CmsShellUser`
- * (name + avatar). The test exposes the gap the gate flagged:
- * the route must perform the cache write itself, not delegate to
- * the helper.
  */
 
 import { QueryClient } from '@tanstack/react-query';

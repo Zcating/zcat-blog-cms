@@ -1,25 +1,13 @@
-/**
- * Pure (testable) server-boundary helpers for the users domain.
+/*
+ * Tests inject `fetch` directly into the helpers — the ONLY mocked
+ * boundary.
  *
- * These helpers are the single source of truth for the Fastify fetch
- * shape of every user/session operation. The TanStack Start server
- * functions in `./index.ts` are a thin shell that wires each helper to
- * its middleware + validator. Tests inject `fetch` directly into the
- * helpers — the ONLY mocked boundary.
- *
- * Design rules (per Phase 2b contract):
- *   - Endpoints preserved: /cms/user-info (GET), /cms/user-info/update
- *     (POST), /auth/is-valid (POST).
- *   - Payload shapes preserved: `contact` is a JSON string in the
- *     backend response and MUST be parsed at the boundary into an
- *     object. On write, the helper sends `contact` as an object (the
- *     backend serialises it itself).
+ * Design rules:
+ *   - `contact` is a JSON string in the backend response and MUST be
+ *     parsed at the boundary into an object. On write, the helper sends
+ *     `contact` as an object (the backend serialises it itself).
  *   - Errors are mapped through the shared `envelopeToApiError` so the
  *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- *   - No `/api/bff/*`. No `VITE_*` fallback. No retries.
- *   - Reads delegate to the shared `getAuthorizedJson` from
- *     `@cms/server/transport`; writes delegate to `postAuthorizedJson`.
- *     No domain-local fetch plumbing remains.
  */
 
 import { z } from 'zod';
@@ -31,10 +19,6 @@ import {
   type BackendEnv,
   type FetchLike,
 } from '@cms/server/transport';
-
-// ---------------------------------------------------------------------------
-// Schemas
-// ---------------------------------------------------------------------------
 
 /**
  * `contact` arrives from the backend as a JSON string. We accept both
@@ -77,7 +61,6 @@ const UserInfoDataSchema = z.object({
   abstract: z.string(),
 });
 
-/** Typed user-info shape returned to callers. */
 export interface UserInfo {
   name: string;
   contact: { email: string; github: string };
@@ -111,19 +94,11 @@ const SessionValidityDataSchema = z.object({
   valid: z.boolean(),
 });
 
-// ---------------------------------------------------------------------------
-// Options plumbing
-// ---------------------------------------------------------------------------
-
 interface FetchOptions {
   env: BackendEnv;
   cookie?: CookieIO;
   fetch?: FetchLike;
 }
-
-// ---------------------------------------------------------------------------
-// fetchCurrentUser
-// ---------------------------------------------------------------------------
 
 export async function fetchCurrentUser(
   options: FetchOptions,
@@ -136,10 +111,6 @@ export async function fetchCurrentUser(
     dataSchema: UserInfoDataSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// updateCurrentUser
-// ---------------------------------------------------------------------------
 
 export interface UpdateCurrentUserOptions extends FetchOptions {
   body: UpdateUserInfoBody;
@@ -162,10 +133,6 @@ export async function updateCurrentUser(
     dataSchema: UserInfoDataSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// fetchSessionValidity
-// ---------------------------------------------------------------------------
 
 export async function fetchSessionValidity(
   options: FetchOptions,

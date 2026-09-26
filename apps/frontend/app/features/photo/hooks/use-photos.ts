@@ -1,27 +1,3 @@
-/**
- * Hooks for the photos list page.
- *
- * `usePhotosList` is the read-side seam for the page: it returns
- * the canonical paginated photos Query slot so the page can
- * `useSuspenseQuery` from a warm cache without touching
- * `useLoaderData` or the legacy `HttpClient`. The mutation hooks
- * (`useCreatePhoto`, `useUpdatePhoto`, `useDeletePhoto`) carry the
- * optimistic-update + rollback contract that the page needs to
- * preserve the legacy UX.
- *
- * Each mutation:
- *   - snapshots the canonical Query slot before mutating,
- *   - writes the optimistic value into the cache via
- *     `setQueryData`,
- *   - rolls the cache back to the snapshot on error,
- *   - replaces the optimistic placeholder with the server's
- *     response on success.
- *
- * The `no retry` guarantee is preserved by the per-request
- * `QueryClient` factory (`makeQueryClient` sets
- * `defaultOptions.mutations.retry = false`).
- */
-
 import {
   useMutation,
   useQueryClient,
@@ -62,11 +38,6 @@ export interface PhotoFormPayload {
   image?: string;
 }
 
-/**
- * Optimistic create — uploads + records via `OssAction.createPhoto`
- * and inserts the server's response into the canonical cache
- * slot. The rollback path restores the pre-mutation snapshot.
- */
 export function useCreatePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
   const options = photoListQueryOptions(input);
@@ -107,10 +78,6 @@ export function useCreatePhoto(input: UsePhotosListInput) {
   });
 }
 
-/**
- * Optimistic update — calls `OssAction.updatePhoto` and replaces
- * the matching entry in the cache.
- */
 export function useUpdatePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
   const options = photoListQueryOptions(input);
@@ -158,10 +125,6 @@ export function useUpdatePhoto(input: UsePhotosListInput) {
   });
 }
 
-/**
- * Optimistic delete — calls `OssAction.deletePhoto` and removes
- * the matching entry from the cache.
- */
 export function useDeletePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
   const options = photoListQueryOptions(input);

@@ -1,6 +1,4 @@
-/**
- * Runtime server-only environment resolution.
- *
+/*
  * Server functions read `BACKEND_API_URL` per request (NOT at module
  * scope). This matches the TanStack Start execution model where module
  * scope runs before any request exists and edge runtimes inject env
@@ -22,10 +20,7 @@ export class BackendUrlMissingError extends Error {
 }
 
 /**
- * Read and normalize `BACKEND_API_URL` at request time.
- *
- * Trailing slashes are stripped. Empty / whitespace-only values are
- * rejected. There is intentionally NO `VITE_*` fallback — public client
+ * There is intentionally NO `VITE_*` fallback — public client
  * variables must never leak into the server-side boundary.
  */
 export function resolveBackendApiUrl(): string {

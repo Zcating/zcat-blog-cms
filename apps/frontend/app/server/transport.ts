@@ -1,11 +1,4 @@
-/**
- * Explicit-operation transport helpers.
- *
- * Replaces the legacy generic `HttpClient.post(path, ...)` API. Each
- * helper is a concrete operation (postJson, postAuthorizedJson,
- * deleteAuthorized, getAuthorizedJson) so domain code never picks an
- * endpoint conditionally.
- *
+/*
  * Rules enforced by every helper in this file:
  *   1. No automatic retries. The `fetch` boundary is called exactly once.
  *   2. No `/api/bff/*` URLs. Only the resolved backend base URL is used.
@@ -162,8 +155,6 @@ function buildQueryString(
 }
 
 /**
- * POST a JSON body to the backend (no Authorization forwarding).
- *
  * Use for login-style endpoints where the session Cookie does not yet
  * exist. Authorized operations MUST go through `postAuthorizedJson`
  * instead.
@@ -187,10 +178,7 @@ export async function postJson<T = unknown>(
   return sendAndParse<T>(url, init, fetchImpl, options.dataSchema);
 }
 
-/**
- * POST a JSON body to the backend with the request's Cookie Bearer
- * forwarded as an `Authorization` header. Use for protected writes.
- */
+/** Authorized operations MUST go through this helper. */
 export async function postAuthorizedJson<T = unknown>(
   options: PostJsonOptions & { dataSchema?: DataSchema<T> },
 ): Promise<T> {
@@ -210,10 +198,7 @@ export async function postAuthorizedJson<T = unknown>(
   return sendAndParse<T>(url, init, fetchImpl, options.dataSchema);
 }
 
-/**
- * Issue a DELETE to the backend with the request's Cookie Bearer
- * forwarded. Use for protected deletes.
- */
+/** Use for protected deletes. */
 export async function deleteAuthorized<T = unknown>(
   options: DeleteAuthorizedOptions & { dataSchema?: DataSchema<T> },
 ): Promise<T> {
@@ -229,9 +214,6 @@ export async function deleteAuthorized<T = unknown>(
 }
 
 /**
- * Issue a GET to the backend with the request's Cookie Bearer
- * forwarded (when present) and parse the response envelope.
- *
  * Use for protected reads. The optional `query` map is URL-encoded into
  * the query string with `encodeURIComponent`; `undefined` values are
  * dropped so the backend never sees a stray `key=undefined` segment.
@@ -251,7 +233,6 @@ export async function getAuthorizedJson<T = unknown>(
     ? options.path
     : `/${options.path}`;
   const builtQuery = buildQueryString(options.query ?? {});
-  // If the caller baked a query string into `path`, never append another.
   const hasInlineQuery = normalizedPath.includes('?');
   const url = `${base}${normalizedPath}${
     builtQuery && !hasInlineQuery ? builtQuery : ''

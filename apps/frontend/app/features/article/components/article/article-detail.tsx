@@ -1,7 +1,5 @@
-/**
- * Article detail page (feature component).
- *
- * Phase 3b contract: the page reads from the TanStack Query cache
+/*
+ * The page reads from the TanStack Query cache
  * via `useSuspenseQuery(articleDetailQueryOptions({ id }))`. The
  * thin route file at `app/routes/_cms/articles.$articleId.tsx`
  * ensures the cache slot is hot before the page renders.

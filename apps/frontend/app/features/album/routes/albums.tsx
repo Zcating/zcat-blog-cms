@@ -1,15 +1,7 @@
 /**
- * 相册列表页（Phase 3b）。
- *
- * 数据来源：TanStack Query，通过 `useSuspenseQuery` 从
- * `photoAlbumsListQueryOptions(...)` 读取。路由 loader 已通过
- * `context.queryClient.query({ ...options, staleTime: 'static' })`
- * 预热缓存，本组件不再读 `useLoaderData` / `HttpClient`。
- *
  * 乐观更新：创建 / 编辑 / 删除全部走 `../hooks/use-albums`，由 hook
- * 写入 Query 缓存并在失败时回滚到快照。页面只保留表单接线与路由跳转，
- * 不再维护数组状态——loader 以 `staleTime: 'static'` 预热，只写本地
- * 状态的变更会在下次挂载时丢失。
+ * 写入 Query 缓存并在失败时回滚到快照。页面不维护数组状态——loader 以
+ * `staleTime: 'static'` 预热，只写本地状态的变更会在下次挂载时丢失。
  */
 
 import { ZButton, ZGrid } from '@zcat/ui';

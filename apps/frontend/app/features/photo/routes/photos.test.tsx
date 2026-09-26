@@ -1,22 +1,7 @@
-/**
- * Tests for the photos list page (`Photos`).
- *
- * Scope (Phase 3b photos lane):
- *   1. The page reads its paginated data from `useSuspenseQuery`
- *      against `photoListQueryOptions` (Query, not loaderData).
- *   2. It renders the photo cards through `PhotoCard`.
- *   3. Empty pagination renders the empty state and a "新增" button.
- *   4. Create mutation uploads + records via `OssAction.createPhoto`
- *      and inserts the new photo into the Query cache optimistically.
- *   5. Update mutation calls `OssAction.updatePhoto` and replaces
- *      the entry in the cache.
- *   6. Delete mutation calls `OssAction.deletePhoto` after a
- *      confirmation dialog and removes the entry optimistically.
- *
+/*
  * Mocks (external server/query boundary only):
  *   - `@cms/server/photos`     — server function surface (read)
- *   - `@cms/core`              — `useOptimisticArray` /
- *                                `PaginationWorkspace` /
+ *   - `@cms/core`              — `PaginationWorkspace` /
  *                                `createSchemaForm` factory /
  *                                `OssAction` are exercised as-is;
  *                                the schema-form factory is stubbed
@@ -87,10 +72,9 @@ const updatePhotoActionMock = vi.fn();
 const deletePhotoActionMock = vi.fn();
 
 // Stub only the schema-form factory and the OssAction entry points
-// that drive upload+create / update / delete. The optimistic
-// reducer, `PaginationWorkspace`, and `useOptimisticArray` are
-// exercised as-is so the optimistic / rollback semantics stay
-// real.
+// that drive upload+create / update / delete. `PaginationWorkspace`
+// and the hooks' optimistic reducers are exercised as-is so the
+// optimistic / rollback semantics stay real.
 vi.mock('@cms/core', async () => {
   const actual = await vi.importActual<typeof import('@cms/core')>('@cms/core');
   return {

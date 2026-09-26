@@ -1,9 +1,5 @@
-/**
- * Public Cookie / session helpers for the TanStack Start server boundary.
- *
- * These helpers wrap the public `@tanstack/react-start/server` API
- * (`getCookie`, `setCookie`, `deleteCookie`) and preserve the existing
- * `token` Cookie convention:
+/*
+ * Cookie / session contract for the TanStack Start server boundary:
  *
  *   - HttpOnly (defeats XSS-based exfiltration).
  *   - SameSite=Strict (per `CONTEXT.md`).
@@ -15,12 +11,14 @@
  * context. `liveCookieIO` resolves the real implementation per request
  * through `createIsomorphicFn` plus a dynamic import of
  * `@tanstack/react-start/server`, so this module keeps no static
- * server-only specifier for the client bundle to resolve.
+ * server-only specifier for the client bundle to resolve. A
+ * `.server.`-suffixed file cannot be used for the same purpose: TanStack
+ * import protection evaluates at resolve time, so a statically
+ * server-only module cannot be shared by a client-reachable module.
  */
 
 import { createIsomorphicFn } from '@tanstack/react-start';
 
-/** Name of the session cookie that carries the JWT. */
 export const TOKEN_COOKIE_NAME = 'token';
 
 /**
@@ -58,6 +56,9 @@ const resolveLiveCookieIO = createIsomorphicFn()
     };
   })
   .client((): Promise<CookieIO> => {
+    // Throwing rather than returning a no-op keeps a client-side call
+    // from silently looking like "no session" and redirecting instead of
+    // surfacing the mistake.
     throw new Error('liveCookieIO can only be called on the server');
   });
 
@@ -72,8 +73,6 @@ export async function liveCookieIO(): Promise<CookieIO> {
 }
 
 /**
- * Write the session token Cookie using the standard flags.
- *
  * Accepts either a raw token (`abc.def.ghi`) or a Bearer-prefixed value
  * (`Bearer abc.def.ghi`). The caller is responsible for the format — the
  * helper never re-wraps.
@@ -82,19 +81,16 @@ export function setSessionCookie(token: string, cookie: CookieIO): void {
   cookie.setCookie(TOKEN_COOKIE_NAME, token, { ...COOKIE_OPTIONS });
 }
 
-/**
- * Clear the session token Cookie. Uses `Max-Age=0` to signal expiry.
- */
+/** Uses `Max-Age=0` to signal expiry. */
 export function clearSessionCookie(cookie: CookieIO): void {
   cookie.deleteCookie(TOKEN_COOKIE_NAME, { ...COOKIE_OPTIONS, maxAge: 0 });
 }
 
 /**
- * Read the session Cookie and strip exactly ONE leading `Bearer ` prefix.
- *
- * Returns `null` when the Cookie is missing or empty. The Cookie value
- * is preserved as-is when there is no Bearer prefix — the JWT may be
- * stored in either format and downstream code re-wraps it.
+ * Strips exactly ONE leading `Bearer ` prefix. Returns `null` when the
+ * Cookie is missing or empty. The Cookie value is preserved as-is when
+ * there is no Bearer prefix — the JWT may be stored in either format and
+ * downstream code re-wraps it.
  */
 export function parseSessionCookie(cookie: CookieIO): string | null {
   const raw = cookie.getCookie(TOKEN_COOKIE_NAME);
@@ -105,11 +101,8 @@ export function parseSessionCookie(cookie: CookieIO): string | null {
 
 /**
  * Resolve the Cookie into a Bearer-prefixed string suitable for an
- * outbound `Authorization` header.
- *
- * - Missing/empty Cookie -> `null` (caller should reject the request).
- * - Cookie already prefixed -> returned verbatim.
- * - Raw token Cookie -> re-wrapped to `Bearer <token>`.
+ * outbound `Authorization` header. Returns `null` when there is no
+ * session — rejecting the request is the caller's job.
  */
 export function authorizeFromCookie(cookie: CookieIO): string | null {
   const raw = cookie.getCookie(TOKEN_COOKIE_NAME);
@@ -117,13 +110,6 @@ export function authorizeFromCookie(cookie: CookieIO): string | null {
   return raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
 }
 
-/**
- * Build a ready-to-use `Authorization` header value from the session
- * Cookie. Returns `null` when there is no session.
- *
- * Convenience wrapper around `authorizeFromCookie` for callers that
- * only need the header value.
- */
 export function buildAuthorizationHeader(cookie: CookieIO): string | null {
   return authorizeFromCookie(cookie);
 }

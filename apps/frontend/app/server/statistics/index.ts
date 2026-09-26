@@ -1,9 +1,5 @@
-/**
- * TanStack Start server-function lane for the statistics domain.
- *
- * The `StatisticsApi` operations (`cms/statistics/summary`,
- * `cms/statistics/chart-data`, `cms/statistics/detail`) all ride the
- * shared server boundary. Every operation:
+/*
+ * Every operation:
  *
  *   - Reads `BACKEND_API_URL` per request via the shared
  *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
@@ -16,14 +12,8 @@
  *   - Has no automatic retries. The `fetch` boundary is called exactly
  *     once per operation.
  *
- * The export surface:
- *   - `getStatisticsSummaryServerFn` / `getStatisticsChartDataServerFn`
- *     / `getStatisticsDetailServerFn` — `createServerFn({ method: 'GET' })`
- *     wrappers guarded by the protected-function middleware.
- *   - `statisticsSummaryOptions` / `statisticsChartDataOptions` /
- *     `statisticsDetailOptions` — stable `queryOptions` factories that
- *     key off the operation and re-use the server-function body so
- *     consumers don't need to know the wire details.
+ * The `queryOptions` factories key off the operation and re-use the
+ * server-function body so consumers don't need to know the wire details.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -38,10 +28,6 @@ import {
   type BackendEnv,
   type FetchLike,
 } from '@cms/server/transport';
-
-// ---------------------------------------------------------------------------
-// Per-operation response schemas
-// ---------------------------------------------------------------------------
 
 const StatisticsTopPageSchema = z.object({
   pagePath: z.string(),
@@ -75,10 +61,7 @@ const StatisticsDetailRowSchema = z.object({
   device: z.string(),
 });
 
-// ---------------------------------------------------------------------------
-// QueryFn factories (the wire-boundary seam used by the server functions below).
-// ---------------------------------------------------------------------------
-
+// The wire-boundary seam used by the server functions below.
 interface QueryFnDeps {
   env?: BackendEnv;
   cookie?: CookieIO;
@@ -87,11 +70,6 @@ interface QueryFnDeps {
 
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
-/**
- * `queryFn` for the statistics-summary read. Exposed so tests can drive
- * the wire boundary directly without re-implementing the schema /
- * envelope logic.
- */
 export function statisticsSummaryQueryFn(
   deps: QueryFnDeps = {},
 ): Promise<z.infer<typeof StatisticsSummarySchema>> {
@@ -104,9 +82,6 @@ export function statisticsSummaryQueryFn(
   });
 }
 
-/**
- * `queryFn` for the statistics-chart-data read.
- */
 export function statisticsChartDataQueryFn(
   deps: QueryFnDeps = {},
 ): Promise<z.infer<typeof StatisticsChartPointSchema>[]> {
@@ -119,9 +94,6 @@ export function statisticsChartDataQueryFn(
   });
 }
 
-/**
- * `queryFn` for the statistics-detail read.
- */
 export function statisticsDetailQueryFn(
   deps: QueryFnDeps = {},
 ): Promise<z.infer<typeof StatisticsDetailRowSchema>[]> {
@@ -133,10 +105,6 @@ export function statisticsDetailQueryFn(
     fetch: deps.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// queryOptions factories
-// ---------------------------------------------------------------------------
 
 export function statisticsSummaryOptions() {
   return queryOptions({
@@ -158,10 +126,6 @@ export function statisticsDetailOptions() {
     queryFn: () => getStatisticsDetailServerFn(),
   });
 }
-
-// ---------------------------------------------------------------------------
-// Protected server functions
-// ---------------------------------------------------------------------------
 
 const protectedMiddleware = createProtectedFunctionMiddleware();
 
@@ -188,10 +152,6 @@ export const getStatisticsDetailServerFn = createServerFn({
   .handler(async () => {
     return statisticsDetailQueryFn();
   });
-
-// ---------------------------------------------------------------------------
-// Type-only re-exports
-// ---------------------------------------------------------------------------
 
 export type StatisticsSummary = z.infer<typeof StatisticsSummarySchema>;
 export type StatisticsChartData = z.infer<typeof StatisticsChartPointSchema>;

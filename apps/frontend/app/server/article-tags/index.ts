@@ -1,8 +1,5 @@
-/**
- * TanStack Start server-function lane for the article-tags domain.
- *
- * Migrates the legacy `ArticleTagsApi` operation surface onto the
- * Phase-2a shared server boundary:
+/*
+ * Article-tags operation surface:
  *
  *   - listArticleTags       — GET    /cms/article-tags         (protected)
  *   - getArticleTag         — GET    /cms/article-tags/:id     (protected)
@@ -12,13 +9,11 @@
  *
  * Server functions are thin shells over the pure helpers in
  * `./article-tags-helpers.ts`. Each protected function composes the
- * shared `createProtectedFunctionMiddleware`. Endpoint paths, payload
- * shapes, and the ResultCode -> ApiErrorTag mapping are preserved
- * from the legacy `ArticleTagsApi` client interface.
+ * shared `createProtectedFunctionMiddleware`.
  *
- * Stable `queryOptions` factories are exported for Phase 3 consumers
- * (loaders, route components). They reference the server functions by
- * identity so the cache key stays in sync with the RPC.
+ * Stable `queryOptions` factories are exported for loaders and route
+ * components. They reference the server functions by identity so the
+ * cache key stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -45,15 +40,7 @@ import {
   type UpdateArticleTagInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 const protectedMiddleware = createProtectedFunctionMiddleware();
-
-// ---------------------------------------------------------------------------
-// Server functions
-// ---------------------------------------------------------------------------
 
 export const listArticleTagsServerFn = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -110,13 +97,9 @@ export const deleteArticleTagServerFn = createServerFn({ method: 'POST' })
     }),
   );
 
-// ---------------------------------------------------------------------------
-// Stable queryOptions factories
-// ---------------------------------------------------------------------------
-
 /**
  * `queryOptions` for the article-tag list. Stable across calls so
- * Phase 3 consumers can place it in module-scope consts.
+ * consumers can place it in module-scope consts.
  */
 export function articleTagsListQueryOptions() {
   return queryOptions({
@@ -125,9 +108,7 @@ export function articleTagsListQueryOptions() {
   });
 }
 
-/**
- * `queryOptions` for a single article-tag read. Keyed by id.
- */
+/** Keyed by id. */
 export function articleTagDetailQueryOptions(input: GetArticleTagInput) {
   return queryOptions({
     queryKey: ['article-tags', 'detail', input.id] as const,

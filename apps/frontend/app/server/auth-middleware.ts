@@ -1,6 +1,4 @@
-/**
- * Protected server-function middleware.
- *
+/*
  * The middleware is the security boundary for any `createServerFn` that
  * reads or writes private data. It rejects a missing or empty session
  * Cookie BEFORE calling `next()` so an attacker cannot reach the
@@ -29,10 +27,6 @@ import { UNAUTHORIZED_ERROR_CODE } from '@cms/shared/auth/unauthorized';
 import { authorizeFromCookie, liveCookieIO, type CookieIO } from './cookies';
 
 /**
- * Thrown when a protected server function is called without a valid
- * session. The thrown value is an `Error` (not a redirect) so the RPC
- * caller sees a structured failure rather than an HTML redirect target.
- *
  * The default message is the machine code, not prose: the RPC boundary
  * keeps only `message`, so it is the one field the client can match on
  * to recognise the rejection. See `@cms/shared/auth/unauthorized`.
@@ -47,9 +41,8 @@ export class UnauthorizedError extends Error {
 }
 
 /**
- * Context shape that domain middleware should accept. The middleware
- * itself never reads any field on this shape — it only consults the
- * injected `cookie` — but documenting the expected shape keeps callers
+ * The middleware never reads any field on this shape — it only consults
+ * the injected `cookie` — but documenting the expected shape keeps callers
  * from accidentally passing auth state through the context object.
  */
 export interface ProtectedFunctionContext {
@@ -59,18 +52,6 @@ export interface ProtectedFunctionContext {
 }
 
 /**
- * Build a TanStack Start middleware that enforces a valid session.
- *
- * Usage:
- *
- *   const protectedMiddleware = createProtectedFunctionMiddleware();
- *
- *   export const getMyData = createServerFn({ method: 'GET' })
- *     .middleware([protectedMiddleware])
- *     .handler(async () => {
- *       // session is guaranteed to be present here
- *     });
- *
  * The factory takes an optional `cookie` so tests can inject a fake
  * `CookieIO`. Production callers leave it empty and pick up
  * `liveCookieIO()` automatically — that call is intentionally inside

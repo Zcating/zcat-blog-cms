@@ -1,12 +1,7 @@
-/**
- * Article list page (feature component).
- *
- * Phase 3b contract: the page reads from the TanStack Query cache,
- * never from `useLoaderData` or the legacy `HttpClient`. Pagination,
- * optimistic delete, and the empty / error / loading states are
- * owned by this component. The thin route file in
- * `app/routes/_cms/articles.tsx` is the only place that wires the
- * loader.
+/*
+ * The page reads from the TanStack Query cache, never from
+ * `useLoaderData`. The thin route file in `app/routes/_cms/articles.tsx`
+ * is the only place that wires the loader.
  *
  * The list schema deliberately omits `content` and `tags` — the
  * backend's `cms/articles` list endpoint does not project those

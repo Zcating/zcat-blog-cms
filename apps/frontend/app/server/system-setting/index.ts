@@ -1,9 +1,5 @@
-/**
- * TanStack Start server-function lane for the system-setting domain.
- *
- * `SystemSettingApi.getUploadUrl(key)` (which used to ride the
- * `/api/bff/cms/system-setting/upload-config` proxy) now rides the
- * shared server boundary. The new operation:
+/*
+ * Every operation:
  *
  *   - Reads `BACKEND_API_URL` per request via the shared
  *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
@@ -20,11 +16,9 @@
  *   - Has no automatic retries. The `fetch` boundary is called exactly
  *     once per operation.
  *
- * The export surface:
- *   - `getSystemSettingUploadUrlServerFn` — `createServerFn({ method: 'GET' })`
- *     wrapper guarded by the protected-function middleware. This is the
- *     only read path: every consumer calls it, so a query factory here
- *     would reach `liveCookieIO` in the browser, where it throws.
+ * `getSystemSettingUploadUrlServerFn` is the only read path: every
+ * consumer calls it, so a query factory here would reach `liveCookieIO`
+ * in the browser, where it throws.
  */
 
 import { createServerFn } from '@tanstack/react-start';
@@ -39,10 +33,6 @@ import {
   type FetchLike,
 } from '@cms/server/transport';
 
-// ---------------------------------------------------------------------------
-// Input + response schemas
-// ---------------------------------------------------------------------------
-
 const GetUploadUrlInputSchema = z.object({
   key: z.string().min(1),
 });
@@ -50,10 +40,6 @@ const GetUploadUrlInputSchema = z.object({
 const UploadConfigResultSchema = z.object({
   presignedUrl: z.string(),
 });
-
-// ---------------------------------------------------------------------------
-// QueryFn factories
-// ---------------------------------------------------------------------------
 
 interface UploadUrlQueryFnDeps {
   env?: BackendEnv;
@@ -73,10 +59,10 @@ export function systemSettingUploadUrlQueryFn({
 }: UploadUrlQueryFnInput & UploadUrlQueryFnDeps): Promise<
   z.infer<typeof UploadConfigResultSchema>
 > {
-  // Build the query path the same way the legacy `createQueryPath` did:
-  // append `?key=<urlencoded>` so backend validators match. The shared
+  // The shared
   // `getAuthorizedJson` URL-encodes the query map via `encodeURIComponent`,
-  // so passing `{ key }` produces the same wire form.
+  // so passing `{ key }` produces the `?key=<urlencoded>` form the backend
+  // validators expect.
   return getAuthorizedJson<z.infer<typeof UploadConfigResultSchema>>({
     path: '/cms/system-setting/upload-config',
     query: { key },
@@ -86,10 +72,6 @@ export function systemSettingUploadUrlQueryFn({
     fetch: deps.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// Protected server function
-// ---------------------------------------------------------------------------
 
 const protectedMiddleware = createProtectedFunctionMiddleware();
 
@@ -101,10 +83,6 @@ export const getSystemSettingUploadUrlServerFn = createServerFn({
   .handler(async ({ data }) => {
     return systemSettingUploadUrlQueryFn({ key: data.key });
   });
-
-// ---------------------------------------------------------------------------
-// Re-exports for Phase 3 (type-only)
-// ---------------------------------------------------------------------------
 
 export type GetUploadUrlInput = z.infer<typeof GetUploadUrlInputSchema>;
 export type UploadConfigResult = z.infer<typeof UploadConfigResultSchema>;

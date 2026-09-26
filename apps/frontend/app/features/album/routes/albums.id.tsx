@@ -1,22 +1,8 @@
 /**
- * 相册详情页（Phase 3b）。
- *
- * 数据来源：TanStack Query，通过三个并行的 `useSuspenseQuery`
- * 分别读取：
- *   1. `photoAlbumDetailQueryOptions({ id })`  — 当前相册元数据
- *   2. `photoListQueryOptions({ albumId, ... })` — 该相册下的照片分页
- *   3. `emptyAlbumPhotosQueryOptions()`        — 用于「选择照片」
- *                                                弹窗的未关联照片列表
- *
- * 路由 loader 已通过
- * `context.queryClient.query({ ...options, staleTime: 'static' })`
- * 并行预热上述三个缓存槽；本组件不再读 `useLoaderData` / `HttpClient`。
- *
  * 乐观更新：相册编辑、照片的创建 / 编辑 / 删除 / 关联、设置封面全部走
  * `../hooks/use-albums` 与 `../hooks/use-album-photos`，由 hook 写入
- * Query 缓存并在失败时回滚到快照。页面只保留弹窗、表单接线与事件绑定，
- * 不再维护数组状态——loader 以 `staleTime: 'static'` 预热，只写本地
- * 状态的变更会在下次挂载时丢失。
+ * Query 缓存并在失败时回滚到快照。页面不维护数组状态——loader 以
+ * `staleTime: 'static'` 预热，只写本地状态的变更会在下次挂载时丢失。
  */
 
 import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
@@ -309,12 +295,8 @@ const useAlbumForm = createSchemaForm({
 });
 
 /**
- * 相册封面设置
- *
  * `coverId` 直接读相册详情缓存，`useSetAlbumCover` 写入该槽，因此
  * 重新挂载后按钮状态依然与服务端一致。
- * @param {PhotoAlbumDetail} album 相册详情
- * @returns 封面设置组件
  */
 function useCoverSetter(album: PhotoAlbumDetail) {
   const setCoverMutation = useSetAlbumCover(album.id);

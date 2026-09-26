@@ -1,20 +1,4 @@
-/**
- * Tests for the album list page (`Albums`).
- *
- * Scope (Phase 3b album lane):
- *   1. The page reads its paginated data from `useSuspenseQuery`
- *      against `photoAlbumsListQueryOptions` (Query, not loaderData).
- *   2. It renders the existing album cards through `AlbumImageCard`.
- *   3. Empty pagination renders the empty state and a "新增相册"
- *      operation button.
- *   4. Create mutation goes through `createPhotoAlbum` server
- *      function and updates the Query cache on success / rolls back
- *      on failure.
- *   5. Delete mutation goes through `deletePhotoAlbum` server
- *      function and removes the entry optimistically.
- *   6. Edit mutation goes through `updatePhotoAlbum` server
- *      function and replaces the entry optimistically.
- *
+/*
  * Mocks (external server/query boundary only):
  *   - `@cms/server/albums`     — server function surface
  *   - `@cms/core`              — `PaginationWorkspace` /

@@ -1,18 +1,10 @@
-/**
- * Album cache mutations for the album list and album detail pages.
- *
+/*
  * The route loaders prefetch the album slots with
  * `staleTime: 'static'`, so a mutation that never writes the Query
  * cache is never refetched: the next mount re-seeds from the
- * unmutated payload. Every hook here therefore
+ * unmutated payload.
  *
- *   - snapshots the album cache slots it is about to touch,
- *   - writes the optimistic value in with `setQueryData`,
- *   - replaces the optimistic placeholder with the server response
- *     on success,
- *   - restores the snapshot on rejection.
- *
- * No retries — per the Phase 3b contract, ADR-0003. `useUpdateAlbum`
+ * No retries, per ADR-0003. `useUpdateAlbum`
  * is shared by both pages because an album rename has to reach the
  * list slot and the detail slot, whichever page issued it.
  */
@@ -85,8 +77,7 @@ function restoreLists(
 }
 
 /**
- * 乐观新增：调用 `createPhotoAlbum`，并把服务端返回的相册写入列表缓存
- * （失败时回滚到快照）。
+ * 乐观新增：调用 `createPhotoAlbum`，失败时回滚到快照。
  */
 export function useCreateAlbum(input: UseAlbumListInput) {
   const queryClient = useQueryClient();
@@ -265,8 +256,7 @@ export function useUpdateAlbum() {
 }
 
 /**
- * 乐观删除：调用 `deletePhotoAlbum`，并从列表缓存移除该相册（失败时回滚
- * 到快照）。
+ * 乐观删除：从列表缓存移除该相册，失败时回滚到快照。
  */
 export function useDeleteAlbum(input: UseAlbumListInput) {
   const queryClient = useQueryClient();

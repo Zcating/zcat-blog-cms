@@ -1,12 +1,7 @@
-/**
- * Thin route wrapper for `/albums` — the pathless `_cms` layout
- * supplies the auth guard and the Query client.
- *
+/*
  * The loader prefetches the paginated albums Query via
  * `context.queryClient.query({ ...photoAlbumsListQueryOptions(...), staleTime: 'static' })`
- * so the page can `useSuspenseQuery` from a warm cache slot. The
- * page itself reads from Query, not from `useLoaderData` /
- * `HttpClient` — that is the Phase 3b boundary.
+ * so the page can `useSuspenseQuery` from a warm cache slot.
  *
  * `page` / `pageSize` come from the router's parsed search object
  * (`location.search`). Defaults mirror the legacy list page

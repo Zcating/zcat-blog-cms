@@ -1,20 +1,6 @@
-/**
- * Tests for the Phase 3b user-info page.
- *
- * Public behavior seam (what the page is responsible for):
- *   - Reads the current user from the canonical
- *     `userInfoQueryOptions()` cache key (`['users', 'current']`).
- *   - Renders display + edit modes with the same fields and
- *     validation behaviour as the legacy implementation.
- *   - On save, calls the protected `updateCurrentUser` server
- *     function and invalidates the user-info query on success.
- *   - Shows a pending indicator while the mutation is in flight
- *     and surfaces an error message on failure (no silent retry).
- *
+/*
  * The page MUST NOT call any of the legacy `UserApi` / `OssAction`
- * surfaces; those are being retired. Only the `@cms/server/users`
- * server function is mocked here so the test pins the migration
- * contract.
+ * surfaces; only the `@cms/server/users` server function is mocked here.
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

@@ -1,8 +1,5 @@
-/**
- * Zod schemas for the articles domain.
- *
- * The backend's `cms/articles` Hono routes accept and return the
- * shapes documented here. The Fastify-style `{ code, message, data }`
+/*
+ * The `{ code, message, data }`
  * envelope is unwrapped by `parseEnvelope`; these schemas only
  * describe the payload that lives in `data`.
  *
@@ -15,8 +12,6 @@
 import { z } from 'zod';
 
 /**
- * Coerce a value to a positive integer with a default.
- *
  * Mirrors the backend's `safeNumber` helper so the server function
  * input matches what Hono's `zValidator('query')` would produce.
  */
@@ -31,10 +26,6 @@ const coercePageSize = z.union([z.number(), z.string()]).transform((value) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
 });
-
-// ---------------------------------------------------------------------------
-// Inputs
-// ---------------------------------------------------------------------------
 
 export const GetArticlesInputSchema = z.object({
   page: coercePage.optional().default(1),
@@ -84,15 +75,10 @@ export type UploadArticleImagesInput = z.infer<
   typeof UploadArticleImagesInputSchema
 >;
 
-// ---------------------------------------------------------------------------
-// Outputs (unwrapped `data` payloads)
-// ---------------------------------------------------------------------------
-
 /**
  * The article SELECT in `articleService.findAll` does NOT include
- * `content` — only the listing columns. The legacy interface kept a
- * `content` field for parity, but the backend never returns it for
- * the list endpoint. We mirror the real backend SELECT here.
+ * `content` — only the listing columns. We mirror the real backend
+ * SELECT here.
  */
 export const ArticleSchema = z.object({
   id: z.number().int(),

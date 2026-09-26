@@ -1,7 +1,4 @@
-/**
- * Thin route wrapper for `/albums/$albumId` — the pathless `_cms`
- * layout supplies the auth guard and the Query client.
- *
+/*
  * The loader prefetches THREE parallel Query slots via
  * `context.queryClient.query({ ...options, staleTime: 'static' })`
  * so the page can `useSuspenseQuery` from warm cache slots:

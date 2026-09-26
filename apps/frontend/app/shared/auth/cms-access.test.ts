@@ -1,18 +1,5 @@
-/**
- * Tests for the `_cms` pathless layout route guard helpers.
- *
- * The `beforeLoad` of the protected CMS layout calls a pure helper
- * to decide whether the current session is valid. If not, the helper
- * returns a `redirect` decision the route can throw.
- *
- * This test exercises the pure decision helper directly so we can
- * pin the contract without spinning up a TanStack Start runtime.
- *
- * The helper deliberately only consumes the typed `isValid` server
- * function — protected server functions already enforce the real
- * auth boundary at the data endpoint. This guard is UX only.
- *
- * Phase 3a remediation: the helper must retain the COMPLETE
+/*
+ * The helper must retain the COMPLETE
  * `UserInfo` returned by `getCurrentUser` (under `userFull`) and
  * surface only the shell display subset (under `user`). The route
  * writes `userFull` into the Query cache; the shell uses `user`.

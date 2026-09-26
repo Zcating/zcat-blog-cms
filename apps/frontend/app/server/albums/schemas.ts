@@ -1,10 +1,6 @@
-/**
- * Zod schemas for the photo-albums domain.
- *
- * The backend's `cms/photo-albums` Hono routes accept and return the
- * shapes documented here. The Fastify-style `{ code, message, data }`
- * envelope is unwrapped by `parseEnvelope`; these schemas only describe
- * the payload that lives in `data`.
+/*
+ * The `{ code, message, data }` envelope is unwrapped by `parseEnvelope`;
+ * these schemas only describe the payload that lives in `data`.
  *
  * Sources:
  *   - apps/backend/src/features/cms/photo-album/photo-album.schema.ts
@@ -14,11 +10,8 @@
 
 import { z } from 'zod';
 
-// ---------------------------------------------------------------------------
-// Coercion helpers — mirror the backend `safeNumber` style so server
-// function inputs match what Hono's `zValidator('query')` would produce.
-// ---------------------------------------------------------------------------
-
+// Mirror the backend `safeNumber` style so server function inputs match
+// what Hono's `zValidator('query')` would produce.
 const coercePage = z.union([z.number(), z.string()]).transform((value) => {
   if (typeof value === 'number') return value;
   const parsed = Number.parseInt(value, 10);
@@ -30,10 +23,6 @@ const coercePageSize = z.union([z.number(), z.string()]).transform((value) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
 });
-
-// ---------------------------------------------------------------------------
-// Inputs
-// ---------------------------------------------------------------------------
 
 export const GetPhotoAlbumsInputSchema = z.object({
   page: coercePage.optional().default(1),
@@ -56,11 +45,7 @@ export const CreatePhotoAlbumInputSchema = z.object({
 
 export type CreatePhotoAlbumInput = z.infer<typeof CreatePhotoAlbumInputSchema>;
 
-/**
- * Mirrors the legacy `updatePhotoAlbum` call: `name`, `description`,
- * `available` are independently optional so a caller can patch any one
- * of them. The id is the route discriminator and is required.
- */
+/** The id is the route discriminator and is required. */
 export const UpdatePhotoAlbumInputSchema = z.object({
   id: z.coerce.number().int().positive(),
   name: z.string().optional(),
@@ -96,10 +81,6 @@ export const DeletePhotoAlbumInputSchema = z.object({
 });
 
 export type DeletePhotoAlbumInput = z.infer<typeof DeletePhotoAlbumInputSchema>;
-
-// ---------------------------------------------------------------------------
-// Outputs (unwrapped `data` payloads)
-// ---------------------------------------------------------------------------
 
 /**
  * Cover photo embedded in the album list response.

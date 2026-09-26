@@ -1,27 +1,15 @@
-/**
- * Pure (testable) server-boundary helpers for the article-tags domain.
+/*
+ * Tests inject `fetch` directly into the helpers — the ONLY mocked
+ * boundary.
  *
- * These helpers are the single source of truth for the Fastify fetch
- * shape of every article-tag operation. The TanStack Start server
- * functions in `./index.ts` are a thin shell that wires each helper
- * to its middleware + validator. Tests inject `fetch` directly into
- * the helpers — the ONLY mocked boundary.
- *
- * Design rules (per Phase 2b contract):
- *   - Endpoints preserved: /cms/article-tags (GET), /cms/article-tags/:id
- *     (GET), /cms/article-tags (POST), /cms/article-tags/:id (PUT),
- *     /cms/article-tags/:id (DELETE).
- *   - Payload shapes preserved: input objects mirror the backend
+ * Design rules:
+ *   - Input objects mirror the backend
  *     Hono `zValidator('json')` schemas; output schemas mirror the
  *     Prisma `findMany` / `findUnique` results.
  *   - Errors map through the shared `envelopeToApiError` so the
  *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- *   - No `/api/bff/*`. No `VITE_*` fallback. No retries.
- *   - GETs delegate to the shared `getAuthorizedJson` from
- *     `@cms/server/transport`; POSTs/DELETEs delegate to the shared
- *     `postAuthorizedJson` / `deleteAuthorized`. The PUT update
- *     method is non-standard in the shared transport, so a single
- *     minimal PUT helper remains in this file.
+ *   - The PUT update method is non-standard in the shared transport, so a
+ *     single minimal PUT helper remains in this file.
  */
 
 import { z } from 'zod';
@@ -56,10 +44,6 @@ import {
   type UpdateArticleTagInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Options plumbing
-// ---------------------------------------------------------------------------
-
 export interface FetchOptions {
   env?: BackendEnv;
   cookie?: CookieIO;
@@ -68,16 +52,11 @@ export interface FetchOptions {
 
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
-// ---------------------------------------------------------------------------
-// Local PUT helper.
-//
 // The shared `transport.ts` exposes GET / POST / DELETE; the article-tags
 // update endpoint is a PUT, so a single minimal inline helper remains in
 // this file. It composes the same `Authorize`, `Content-Type`, and
 // envelope/error primitives as the shared transport without re-reading
 // or re-implementing them.
-// ---------------------------------------------------------------------------
-
 interface PutAuthorizedOptions {
   env: BackendEnv;
   cookie?: CookieIO;
@@ -147,15 +126,7 @@ async function putAuthorizedJson<T = unknown>(
   return parseEnvelope<T>(envelopeCheck.data, options.dataSchema as never);
 }
 
-// ---------------------------------------------------------------------------
-// Void success envelope (data: null).
-// ---------------------------------------------------------------------------
-
 const voidDataSchema = z.unknown();
-
-// ---------------------------------------------------------------------------
-// listArticleTags
-// ---------------------------------------------------------------------------
 
 export async function listArticleTags(
   options: FetchOptions = {},
@@ -168,10 +139,6 @@ export async function listArticleTags(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// fetchArticleTag
-// ---------------------------------------------------------------------------
 
 export async function fetchArticleTag(
   input: GetArticleTagInput,
@@ -186,10 +153,6 @@ export async function fetchArticleTag(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// createArticleTag
-// ---------------------------------------------------------------------------
 
 export async function createArticleTag(
   input: CreateArticleTagInput,
@@ -206,10 +169,6 @@ export async function createArticleTag(
   });
 }
 
-// ---------------------------------------------------------------------------
-// updateArticleTag
-// ---------------------------------------------------------------------------
-
 export async function updateArticleTag(
   input: UpdateArticleTagInput,
   options: FetchOptions = {},
@@ -224,10 +183,6 @@ export async function updateArticleTag(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// deleteArticleTag
-// ---------------------------------------------------------------------------
 
 export async function deleteArticleTag(
   input: DeleteArticleTagInput,

@@ -1,7 +1,4 @@
-/**
- * Thin route wrapper for `/articles` — the pathless `_cms` layout
- * supplies the auth guard and the Query client.
- *
+/*
  * The loader prefetches two Query slots via
  * `context.queryClient.query({ ...options, staleTime: 'static' })`
  * so the page can `useSuspenseQuery` from a warm cache:
@@ -13,8 +10,7 @@
  *      the in-page tag manager renders without a second trip.
  *
  * `page` / `pageSize` come from the URL search params. Defaults
- * mirror the legacy list page (1 / 10). The page itself reads
- * from Query, not `useLoaderData` / `HttpClient`.
+ * mirror the legacy list page (1 / 10).
  */
 
 import { createFileRoute } from '@tanstack/react-router';

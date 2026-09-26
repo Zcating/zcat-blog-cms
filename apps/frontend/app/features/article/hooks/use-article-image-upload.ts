@@ -1,20 +1,6 @@
-/**
- * Browser-direct OSS upload pipeline for article Markdown images.
- *
- * The legacy `OssAction.uploadArticleImagesContent` hid the upload
- * steps inside `@cms/shared/modules/oss`. Phase 3b splits that
- * responsibility between the server lane (typed contracts only) and
- * this client lane (browser-only operations that touch the DOM):
- *
- *   1. Walk the markdown body for `![alt](blob:...)` references and
- *      extract each `blob:` URL in order.
- *   2. For each URL, fetch the blob, get a presigned URL from
- *      `getSystemSettingUploadUrlServerFn`, and `PUT` the bytes
- *      directly from the browser to that presigned URL — never
- *      streaming the bytes through the CMS server.
- *   3. Hand the resolved OSS keys to `uploadArticleImages` so the
- *      backend can resolve them into public CDN URLs, and use the
- *      returned URL list to rewrite the markdown.
+/*
+ * `PUT` the bytes directly from the browser to the presigned URL —
+ * never stream the bytes through the CMS server.
  *
  * The image-extraction regex, the markdown rewrite, and the
  * `blob:` -> OSS-key mapping all live in this lane so the editor
@@ -113,10 +99,6 @@ async function uploadBlobToPresignedUrl(blobUrl: string): Promise<string> {
 }
 
 /**
- * Public entry point. Walks the markdown body, uploads each
- * `blob:` image directly to OSS, then forwards the resolved keys
- * to `uploadArticleImages` and returns the backend's CDN URL list.
- *
  * Returns the backend-resolved URLs (not the raw OSS keys) — the
  * editor rewrites the markdown with them before `createArticle` /
  * `updateArticle` accepts it, so the persisted body must contain
@@ -134,6 +116,4 @@ export async function uploadArticleMarkdownImages(
   return uploadArticleImages({ data: { images: keys } });
 }
 
-// Type-only re-export so consumers don't have to import
-// `@cms/server/system-setting` directly when shaping tests.
 export type { UploadConfigResult };

@@ -1,7 +1,4 @@
-/**
- * Thin route wrapper for `/articles/edit` — the pathless `_cms`
- * layout supplies the auth guard and the Query client.
- *
+/*
  * Loader behaviour:
  *   - `id` is read from the URL search params (optional). When
  *     present and parseable, the loader hydrates
@@ -11,10 +8,6 @@
  *     for the detail slot — the editor renders a blank form.
  *   - The tag list Query is always warmed up so the editor's tag
  *     selector renders without a second round-trip.
- *
- * The page itself reads from Query, never from `useLoaderData` /
- * `HttpClient`. The Markdown editor handles its own local draft
- * state.
  */
 
 import { createFileRoute } from '@tanstack/react-router';

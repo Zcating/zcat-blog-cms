@@ -1,7 +1,5 @@
-/**
- * TanStack Start server-function boundary for the users domain.
- *
- * Phase 2b migration of the complete user/session operation surface:
+/*
+ * User/session operation surface:
  *   - `getCurrentUser`     — GET  /cms/user-info      (protected)
  *   - `updateCurrentUser`  — POST /cms/user-info/update (protected)
  *   - `isValid`            — POST /auth/is-valid      (public auth/session check)
@@ -12,12 +10,9 @@
  * public operation but is still explicit and typed — it forwards the
  * Cookie Bearer so the backend can identify the session being checked.
  *
- * Stable `queryOptions` factories are exported for Phase 3 consumers
- * (loaders, route components). They reference the server functions by
- * identity so the cache key stays in sync with the RPC.
- *
- * Endpoint paths, payload shapes, and ResultCode -> ApiErrorTag
- * mapping are preserved from the legacy `UserApi` client interface.
+ * Stable `queryOptions` factories are exported for loaders and route
+ * components. They reference the server functions by identity so the
+ * cache key stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -36,20 +31,12 @@ import {
   type UserInfo,
 } from './users-helpers';
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 /**
  * Single protected-function middleware instance shared by every private
  * operation in this domain. The factory is called at module scope so
  * the resulting middleware is referentially stable across imports.
  */
 const protectedMiddleware = createProtectedFunctionMiddleware();
-
-// ---------------------------------------------------------------------------
-// Server functions
-// ---------------------------------------------------------------------------
 
 export const getCurrentUser = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -87,17 +74,10 @@ export const isValid = createServerFn({ method: 'POST' }).handler(async () =>
   }),
 );
 
-// ---------------------------------------------------------------------------
-// Stable queryOptions factories
-// ---------------------------------------------------------------------------
-
 /**
- * `queryOptions` for the current user. The object identity is stable
- * across calls so Phase 3 consumers can place it in module-scope consts
- * and feed it to `useQuery` / `queryClient.prefetchQuery` directly.
- *
- * The factory memoises the result on first call so `userInfoQueryOptions()`
- * always returns the same object reference.
+ * Object identity is stable across calls so consumers can place it in
+ * module-scope consts and feed it to `useQuery` /
+ * `queryClient.prefetchQuery` directly.
  */
 const _userInfoQueryOptions = queryOptions<UserInfo>({
   queryKey: ['users', 'current'],

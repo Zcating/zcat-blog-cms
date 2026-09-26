@@ -1,18 +1,3 @@
-/**
- * Optimistic-delete helper for the article list page.
- *
- * The legacy `articles.tsx` mutated local state via
- * `useOptimisticArray`. Phase 3b replaces that with a real TanStack
- * Query cache mutation: the list page subscribes to the cached
- * `articlesListQueryOptions` payload, the helper splices the deleted
- * row out of the cache, fires the `deleteArticle` server function,
- * and rolls back the splice on rejection. No retries — per the
- * Phase 3b contract, ADR-0003.
- *
- * No `HttpClient`, no `useLoaderData`. The Query client is the
- * only state container this helper touches.
- */
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
@@ -26,11 +11,7 @@ interface DeleteArgs {
 }
 
 /**
- * Returns a stable callback that performs an optimistic delete on
- * the cached article list and rolls back if the server call fails.
- *
- * The cache key is the canonical `articlesListQueryOptions({ page, pageSize })`
- * shape. Only the page the caller passes is mutated — pages the
+ * Only the page the caller passes is mutated — pages the
  * user is not currently viewing are not touched (no cross-page
  * pre-emptive invalidation).
  */
@@ -66,8 +47,8 @@ export function useArticleListDelete(
       try {
         await mutation.mutateAsync({ id });
       } catch (error) {
-        // Rollback to the pre-mutation snapshot. We restore the
-        // exact shape so list ordering stays consistent.
+        // Restore the exact pre-mutation shape so list ordering and
+        // `total` stay consistent.
         queryClient.setQueryData(listOptions.queryKey, snapshot);
         throw error;
       }

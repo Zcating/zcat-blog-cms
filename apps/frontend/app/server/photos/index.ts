@@ -1,8 +1,5 @@
-/**
- * TanStack Start server-function lane for the photos domain.
- *
- * Migrates the legacy `PhotosApi` operation surface onto the Phase-2a
- * shared server boundary:
+/*
+ * Photos operation surface:
  *
  *   - getPhotos              — GET    /cms/photos?albumId=&page=&pageSize=  (protected)
  *   - getEmptyAlbumPhotos    — GET    /cms/photos/empty-album               (protected)
@@ -15,13 +12,11 @@
  *
  * Server functions are thin shells over the pure helpers in
  * `./photos-helpers.ts`. Each protected function composes the shared
- * `createProtectedFunctionMiddleware`. Endpoint paths, payload shapes,
- * and the ResultCode -> ApiErrorTag mapping are preserved from the
- * the legacy `PhotosApi` client interface.
+ * `createProtectedFunctionMiddleware`.
  *
- * Stable `queryOptions` factories are exported for Phase 3 consumers
- * (loaders, route components). They reference the server functions by
- * identity so the cache key stays in sync with the RPC.
+ * Stable `queryOptions` factories are exported for loaders and route
+ * components. They reference the server functions by identity so the
+ * cache key stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -57,15 +52,7 @@ import {
   type UpdatePhotoInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 const protectedMiddleware = createProtectedFunctionMiddleware();
-
-// ---------------------------------------------------------------------------
-// Server functions
-// ---------------------------------------------------------------------------
 
 export const getPhotos = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -152,14 +139,10 @@ export const deletePhoto = createServerFn({ method: 'POST' })
     }),
   );
 
-// ---------------------------------------------------------------------------
-// Stable queryOptions factories
-// ---------------------------------------------------------------------------
-
 /**
- * `queryOptions` for the paginated photo list. The query key encodes
+ * The query key encodes
  * the effective `albumId / page / pageSize` so each (album, page) has
- * its own cache slot — Phase 3 consumers can mutate one album without
+ * its own cache slot — consumers can mutate one album without
  * invalidating sibling albums.
  */
 export function photoListQueryOptions(input: Partial<GetPhotosInput> = {}) {
@@ -170,9 +153,7 @@ export function photoListQueryOptions(input: Partial<GetPhotosInput> = {}) {
   });
 }
 
-/**
- * `queryOptions` for a single photo read. Keyed by id.
- */
+/** Keyed by id. */
 export function photoDetailQueryOptions(input: GetPhotoInput) {
   return queryOptions({
     queryKey: ['photos', 'detail', input.id] as const,
@@ -181,8 +162,8 @@ export function photoDetailQueryOptions(input: GetPhotoInput) {
 }
 
 /**
- * `queryOptions` for the empty-album selector (photos with no album
- * assignment). Shared across the album "select photo" modal so the
+ * Photos with no album
+ * assignment. Shared across the album "select photo" modal so the
  * selector list stays cached across multiple opens in a session.
  */
 export function emptyAlbumPhotosQueryOptions() {

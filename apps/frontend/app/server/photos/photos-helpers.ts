@@ -1,26 +1,13 @@
-/**
- * Pure (testable) server-boundary helpers for the photos domain.
+/*
+ * Tests inject `fetch` directly into the helpers — the ONLY mocked
+ * boundary.
  *
- * These helpers are the single source of truth for the Fastify fetch
- * shape of every photo operation. The TanStack Start server functions in
- * `./index.ts` are a thin shell that wires each helper to its middleware
- * + validator. Tests inject `fetch` directly into the helpers — the ONLY
- * mocked boundary.
- *
- * Design rules (per Phase 2b contract):
- *   - Endpoints preserved: /cms/photos (GET), /cms/photos/empty-album
- *     (GET), /cms/photos/detail (GET), /cms/photos/create (POST),
- *     /cms/photos/create/with-album (POST), /cms/photos/update (POST),
- *     /cms/photos/update/with-album (POST), /cms/photos/delete (POST).
- *   - Payload shapes preserved: input objects mirror the backend Hono
+ * Design rules:
+ *   - Input objects mirror the backend Hono
  *     `zValidator('query' / 'json')` schemas; output schemas mirror the
  *     Prisma SELECT returned by the service.
  *   - Errors map through the shared `envelopeToApiError` so the existing
  *     ResultCode -> ApiErrorTag vocabulary is reused.
- *   - No `/api/bff/*`. No `VITE_*` fallback. No retries.
- *   - Reads delegate to the shared `getAuthorizedJson` from
- *     `@cms/server/transport`; writes delegate to `postAuthorizedJson`.
- *     No domain-local fetch plumbing remains.
  */
 
 import { z } from 'zod';
@@ -55,10 +42,6 @@ import {
   type UpdatePhotoInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Options plumbing
-// ---------------------------------------------------------------------------
-
 export interface FetchOptions {
   env?: BackendEnv;
   cookie?: CookieIO;
@@ -67,16 +50,9 @@ export interface FetchOptions {
 
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
-// ---------------------------------------------------------------------------
 // Void success envelope (data: null) — backend delete route omits the
 // `data` field entirely.
-// ---------------------------------------------------------------------------
-
 const voidDataSchema = z.unknown();
-
-// ---------------------------------------------------------------------------
-// fetchPhotos
-// ---------------------------------------------------------------------------
 
 export async function fetchPhotos(
   input: GetPhotosInput | undefined,
@@ -97,10 +73,6 @@ export async function fetchPhotos(
   });
 }
 
-// ---------------------------------------------------------------------------
-// fetchEmptyAlbumPhotos
-// ---------------------------------------------------------------------------
-
 export async function fetchEmptyAlbumPhotos(
   options: FetchOptions = {},
 ): Promise<Photo[]> {
@@ -112,10 +84,6 @@ export async function fetchEmptyAlbumPhotos(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// fetchPhoto
-// ---------------------------------------------------------------------------
 
 export async function fetchPhoto(
   input: GetPhotoInput,
@@ -131,10 +99,6 @@ export async function fetchPhoto(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// createPhoto
-// ---------------------------------------------------------------------------
 
 export async function createPhoto(
   input: CreatePhotoInput,
@@ -155,10 +119,6 @@ export async function createPhoto(
   });
 }
 
-// ---------------------------------------------------------------------------
-// createAlbumPhoto
-// ---------------------------------------------------------------------------
-
 export async function createAlbumPhoto(
   input: CreateAlbumPhotoInput,
   options: FetchOptions = {},
@@ -178,10 +138,6 @@ export async function createAlbumPhoto(
     dataSchema: PhotoSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// updatePhoto
-// ---------------------------------------------------------------------------
 
 /**
  * Mirrors the legacy `updatePhoto` body shape: only the `id` is
@@ -214,10 +170,6 @@ export async function updatePhoto(
   });
 }
 
-// ---------------------------------------------------------------------------
-// updateAlbumPhoto
-// ---------------------------------------------------------------------------
-
 export async function updateAlbumPhoto(
   input: UpdateAlbumPhotoInput,
   options: FetchOptions = {},
@@ -239,10 +191,6 @@ export async function updateAlbumPhoto(
     dataSchema: PhotoSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// deletePhoto
-// ---------------------------------------------------------------------------
 
 export async function deletePhoto(
   input: DeletePhotoInput,

@@ -33,11 +33,9 @@ const LoginForm = createZForm({
 export default function GuestHome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  // Phase 3a remediation: wrap the server function with
-  // `useServerFn` so it integrates with TanStack Start's start
-  // handler the same way the official docs recommend. This is the
-  // path that survives the React Query SSR integration without
-  // dropping the Set-Cookie response before the next navigation.
+  // `useServerFn` is the path that survives the React Query SSR
+  // integration without dropping the Set-Cookie response before the
+  // next navigation.
   const submitLogin = useServerFn(login);
 
   const form = LoginForm.useForm({
@@ -59,9 +57,6 @@ export default function GuestHome() {
         // Same helper the logout handler, the `_cms` guard and the
         // cache `onError` hooks use.
         clearPrivateQueryCache(queryClient);
-        // Phase 3a registers the `/dashboard` route via the `_cms` layout
-        // placeholder, so the navigation now resolves through the typed
-        // route union — no cast needed.
         await navigate({ to: '/dashboard' });
       } catch (error) {
         await ZNotification.error(

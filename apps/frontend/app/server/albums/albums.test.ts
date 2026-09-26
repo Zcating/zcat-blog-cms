@@ -1,15 +1,8 @@
-/**
- * Contract tests for the albums domain server boundary.
- *
- * Scope:
- *   1. Zod schemas (input + output) accept and reject the right payloads.
- *   2. Core helpers unwrap Fastify envelopes, forward the session
- *      Cookie on protected operations, and surface typed `ApiError` /
- *      `ResponseValidationError` for failures.
- *   3. The shared `fetch` boundary is the only seam that gets mocked.
- *      Helpers from `@cms/server` (transport, env, cookies, middleware)
- *      are exercised as-is so the tests do not invent a parallel
- *      infrastructure.
+/*
+ * The shared `fetch` boundary is the only seam that gets mocked.
+ * Helpers from `@cms/server` (transport, env, cookies, middleware)
+ * are exercised as-is so the tests do not invent a parallel
+ * infrastructure.
  *
  * These tests intentionally do NOT exercise the RPC boundary. The
  * `createServerFn` wrapper adds TanStack Start's middleware/validator
@@ -78,10 +71,6 @@ afterEach(() => {
     process.env.BACKEND_API_URL = ORIGINAL_BACKEND_URL;
   }
 });
-
-// ---------------------------------------------------------------------------
-// Schema tests
-// ---------------------------------------------------------------------------
 
 describe('PhotoAlbumCoverSchema', () => {
   it('parses a cover photo payload', () => {
@@ -264,10 +253,6 @@ describe('GetPhotoAlbumsInputSchema', () => {
     expect(parsed.pageSize).toBe(10);
   });
 });
-
-// ---------------------------------------------------------------------------
-// Server function tests — fetch boundary is the only mock.
-// ---------------------------------------------------------------------------
 
 describe('fetchPhotoAlbums', () => {
   it('GETs the backend paginated list and unwraps the envelope', async () => {

@@ -1,11 +1,4 @@
-/**
- * Article-tag cache mutation helpers.
- *
- * Mirrors `useArticleListDelete` for the article-tag cache. Each
- * helper performs an optimistic mutation against
- * `articleTagsListQueryOptions().queryKey`, fires the corresponding
- * server function, and rolls back on rejection. No retries.
- *
+/*
  * The mutations live here (rather than inside the manager
  * component) so the manager can stay declarative and so tests can
  * assert the cache shape independently of the React tree.

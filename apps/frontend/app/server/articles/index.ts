@@ -1,8 +1,5 @@
-/**
- * TanStack Start server-function lane for the articles domain.
- *
- * Migrates the legacy `ArticlesApi` operation surface onto the
- * Phase-2a shared server boundary:
+/*
+ * Articles operation surface:
  *
  *   - getArticles            — GET  /cms/articles?page=&pageSize= (protected)
  *   - getArticle             — GET  /cms/articles/detail?id=     (protected)
@@ -13,13 +10,11 @@
  *
  * Server functions are thin shells over the pure helpers in
  * `./articles-helpers.ts`. Each protected function composes the
- * shared `createProtectedFunctionMiddleware`. Endpoint paths, payload
- * shapes, and the ResultCode -> ApiErrorTag mapping are preserved
- * from the legacy `ArticlesApi` client interface.
+ * shared `createProtectedFunctionMiddleware`.
  *
- * Stable `queryOptions` factories are exported for Phase 3 consumers
- * (loaders, route components). They reference the server functions by
- * identity so the cache key stays in sync with the RPC.
+ * Stable `queryOptions` factories are exported for loaders and route
+ * components. They reference the server functions by identity so the
+ * cache key stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -51,15 +46,7 @@ import {
   type UploadArticleImagesInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 const protectedMiddleware = createProtectedFunctionMiddleware();
-
-// ---------------------------------------------------------------------------
-// Server functions
-// ---------------------------------------------------------------------------
 
 export const getArticles = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -129,12 +116,8 @@ export const uploadArticleImages = createServerFn({ method: 'POST' })
     }),
   );
 
-// ---------------------------------------------------------------------------
-// Stable queryOptions factories
-// ---------------------------------------------------------------------------
-
 /**
- * `queryOptions` for the paginated article list. Keyed by the
+ * Keyed by the
  * `(page, pageSize)` tuple so each page has its own cache slot.
  */
 export function articlesListQueryOptions(
@@ -147,9 +130,7 @@ export function articlesListQueryOptions(
   });
 }
 
-/**
- * `queryOptions` for the article detail read. Keyed by id.
- */
+/** Keyed by id. */
 export function articleDetailQueryOptions(input: GetArticleInput) {
   return queryOptions({
     queryKey: ['articles', 'detail', input.id] as const,

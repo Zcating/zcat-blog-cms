@@ -1,31 +1,11 @@
-/**
- * Phase 3b photos list page.
+/*
+ * The page MUST read its paginated data from the canonical
+ * `photoListQueryOptions` cache. The route loader prefetches the cache
+ * slot via `queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`
+ * so SSR has a warm cache by the time the page mounts.
  *
- * Behaviour preserved from the legacy implementation:
- *   - Paginated photo grid scoped by `(albumId, page, pageSize)`.
- *   - "新增" button opens the create-photo form, posts through
- *     `OssAction.createPhoto`, and refreshes the Query cache.
- *   - Each photo card exposes 编辑 / 删除; both flows post
- *     through `OssAction` and update the Query cache with the
- *     server's response.
- *   - Delete confirms via `ZDialog.confirm`.
- *   - Empty pagination renders the empty state.
- *
- * Migration contract (Phase 3b):
- *   - The page MUST read its paginated data from the canonical
- *     `photoListQueryOptions` cache (Query, not `loaderData` /
- *     `HttpClient`). The route loader prefetches the cache slot via
- *     `queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`
- *     so SSR has a warm cache by the time the page mounts.
- *   - Mutations go through the `usePhotosList` /
- *     `useCreatePhoto` / `useUpdatePhoto` / `useDeletePhoto`
- *     hooks in `../hooks/use-photos`, which call `OssAction` and
- *     carry the optimistic-update + rollback contract. The
- *     hooks are the only seams the test mocks.
- *   - The Query cache is updated via `setQueryData` so the grid
- *     reflects the new server payload. On mutation failure, the
- *     cache is restored from a snapshot taken before the
- *     optimistic update — no automatic retries.
+ * On mutation failure, the cache is restored from a snapshot taken
+ * before the optimistic update — no automatic retries.
  */
 
 import { ZButton, ZDialog, ZGrid } from '@zcat/ui';

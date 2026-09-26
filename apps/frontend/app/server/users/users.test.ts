@@ -1,12 +1,5 @@
-/**
- * Focused contract tests for the users domain server boundary.
- *
- * What is under test:
- *   - `fetchCurrentUser`  — GET /cms/user-info (protected).
- *   - `updateCurrentUser` — POST /cms/user-info/update (protected).
- *   - `fetchSessionValidity` — POST /auth/is-valid (explicit typed check).
- *
- * Mocking policy (per Phase 2b constraints):
+/*
+ * Mocking policy:
  *   - The ONLY thing tests may mock is the external Fastify fetch boundary.
  *   - No internal Start / helper / transport mocks.
  *   - No raw-handler-only seam: tests exercise the pure helper that the

@@ -1,20 +1,6 @@
-/**
- * TanStack Router adaptation of the legacy CMS shell.
- *
- * The shell renders a sidebar + main content area for every
- * authenticated CMS page. It is mounted by the pathless `_cms`
- * layout route, which passes the current user via the
- * `cmsUser` prop.
- *
- * What changed vs. the React Router version:
- *   - `useNavigate`, `useLocation` now come from `@tanstack/react-router`.
- *   - The legacy `loader()` (which read `UserApi.userInfo()` and
- *     redirected on 401) is gone — the `_cms` `beforeLoad` is the
- *     single source of truth for the auth gate.
- *   - `Logout` is a button that triggers `logout` from `@cms/server/auth`
- *     (preserving the dialog confirmation + the existing server-function
- *     contract), then clears the entire private Query cache and
- *     navigates to `/login`.
+/*
+ * The `_cms` `beforeLoad` is the single source of truth for the auth
+ * gate — there is no `loader()` here on purpose.
  *
  * The component deliberately keeps the existing `@zcat/ui` sidebar
  * primitives and the menu shape so the visual identity of the
@@ -210,9 +196,3 @@ const menuItems: ZSidebarOption[] = [
     icon: SettingsIcon,
   },
 ];
-
-// Unused default export kept for the bare-shell shape. Nothing mounts
-// it: `_cms.tsx` imports the named `CMSLayoutShell` export above.
-export default function CMSLayout() {
-  return <Layout cmsUser={undefined}>{null}</Layout>;
-}

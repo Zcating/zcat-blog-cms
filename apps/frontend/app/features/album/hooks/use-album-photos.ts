@@ -1,14 +1,4 @@
-/**
- * Photo cache mutations for the album detail page.
- *
- * Mirrors `use-albums` for the photo slots the detail route
- * prefetches: the album's paginated photo list
- * (`photoListQueryOptions({ albumId, page, pageSize })`) and the
- * album record (`photoAlbumDetailQueryOptions({ id })`). Each hook
- * snapshots the slot, writes the optimistic value with
- * `setQueryData`, and restores the snapshot when the server call
- * rejects. No retries.
- *
+/*
  * `useSetAlbumCover` is the one mutation that cannot be fully
  * optimistic: the album list embeds the cover *photo* object, which
  * this page does not hold, so the list slot is invalidated instead.

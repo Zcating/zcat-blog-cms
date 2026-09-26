@@ -1,10 +1,8 @@
-/**
- * Article create / edit page (feature component).
- *
- * Phase 3b contract: the editor reads the existing article (if any)
- * from the TanStack Query cache, never from `useLoaderData`. The
- * thin route file at `app/routes/_cms/articles.edit.tsx` ensures
- * the cache slot is hot before the page renders.
+/*
+ * The editor reads the existing article (if any) from the TanStack
+ * Query cache, never from `useLoaderData`. The thin route file at
+ * `app/routes/_cms/articles.edit.tsx` ensures the cache slot is hot
+ * before the page renders.
  *
  * Save flow:
  *   1. Run the markdown body through

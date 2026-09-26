@@ -1,15 +1,4 @@
-/**
- * Tests for the `_cms/photos` route file.
- *
- * Scope:
- *   - The loader reads `page` and `pageSize` from the router's
- *     parsed `location.search` (defaulting to 1 / 20).
- *   - The loader honours an optional `albumId` filter from that
- *     same search object.
- *   - The loader calls
- *     `context.queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`
- *     so SSR has a hydrated cache slot before the page reads it.
- *
+/*
  * The only mocked boundary is the server-function surface
  * (`@cms/server/photos`); the `QueryClient` and helper are
  * exercised as-is.

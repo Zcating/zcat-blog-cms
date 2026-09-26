@@ -1,23 +1,11 @@
-/**
- * TanStack Start root route.
- *
- * Phase 3a remediation: the official
- * `@tanstack/react-router-ssr-query` integration (wired in
- * `app/router.tsx`) owns the `QueryClientProvider` wrap and the
- * SSR `dehydrate` / browser `hydrate` lifecycle. We do NOT add a
- * second `QueryClientProvider` / `HydrationBoundary` here — doing
- * so would create a nested provider conflict and a manual
+/*
+ * We do NOT add a second `QueryClientProvider` / `HydrationBoundary`
+ * here — doing so would create a nested provider conflict and a manual
  * hydrate that double-writes the cache.
  *
  * The `createRootRouteWithContext<{ queryClient: QueryClient }>()`
  * declaration is what makes the per-request `QueryClient` visible
- * to child routes via `context.queryClient`. The integration
- * supplies the Query provider and handles SSR dehydration,
- * hydration, and streaming. The root component simply renders
- * the document scaffold.
- *
- * Head, scripts, and the basic HTML scaffold are unchanged from
- * Phase 1.
+ * to child routes via `context.queryClient`.
  */
 
 import '../app.css';

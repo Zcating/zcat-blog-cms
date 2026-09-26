@@ -1,33 +1,12 @@
-/**
- * Phase 3b user-info page.
+/*
+ * The page MUST read user data from the canonical
+ * `userInfoQueryOptions()` cache (key `['users', 'current']`).
+ * The `_cms` layout already seeds this cache during SSR; the
+ * page is the reader, not the writer of the initial payload.
  *
- * Behaviour preserved from the legacy implementation:
- *   - Reads the full `UserInfo` payload (display + edit modes).
- *   - Edits use the same zod-validated form fields and the same
- *     layout (avatar / name / contact / occupation / abstract /
- *     aboutMe).
- *   - Edit/Save/Cancel buttons, the pending overlay during save,
- *     and the reset-on-cancel behaviour all stay identical.
- *   - Avatar continues to flow through `safeObjectURL` so a
- *     `Blob` (upload preview) and a `string` (URL) are accepted.
- *
- * Migration contract (Phase 3b):
- *   - The page MUST read user data from the canonical
- *     `userInfoQueryOptions()` cache (key `['users', 'current']`).
- *     The `_cms` layout already seeds this cache during SSR; the
- *     page is the reader, not the writer of the initial payload.
- *   - The page MUST call the protected `updateCurrentUser` server
- *     function from `@cms/server/users` — not the legacy
- *     `OssAction.updateUserInfo` / `UserApi.updateUserInfo`
- *     surfaces. The returned payload is written back into the
- *     cache under the same key via `setQueryData` so the sidebar
- *     avatar (which also reads from this query) refreshes
- *     synchronously without a refetch.
- *   - No automatic retries: `retry: false` is configured in the
- *     per-request `QueryClient` factory (`makeQueryClient`).
- *   - Mutation failures surface a user-visible error message and
- *     clear the pending state without discarding the form so the
- *     user can retry.
+ * The returned payload is written back into the cache under the same
+ * key via `setQueryData` so the sidebar avatar (which also reads from
+ * this query) refreshes synchronously without a refetch.
  */
 
 import {

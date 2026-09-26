@@ -1,6 +1,4 @@
-/**
- * Cache-management helpers used by the CMS shell.
- *
+/*
  * `clearPrivateQueryCache` is called from every place a session
  * changes:
  *   - successful logout (after the cookie has been cleared server-side),
@@ -28,9 +26,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 
 /**
- * Empty the entire query and mutation caches of the supplied client.
- *
- * Safe to call on any state of the cache (empty, full, mid-flight).
  * The client instance itself is preserved — only the cached data
  * is dropped so the surrounding `QueryClientProvider` stays mounted.
  */

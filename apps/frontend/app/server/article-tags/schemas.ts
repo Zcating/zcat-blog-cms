@@ -1,8 +1,5 @@
-/**
- * Zod schemas for the article-tags domain.
- *
- * The backend's `cms/article-tags` Hono routes accept and return the
- * shapes documented here. The Fastify-style `{ code, message, data }`
+/*
+ * The `{ code, message, data }`
  * envelope is unwrapped by `parseEnvelope`; these schemas only
  * describe the payload that lives in `data`.
  *
@@ -12,10 +9,6 @@
  */
 
 import { z } from 'zod';
-
-// ---------------------------------------------------------------------------
-// Inputs
-// ---------------------------------------------------------------------------
 
 export const ListArticleTagsInputSchema = z.object({}).optional();
 
@@ -45,10 +38,6 @@ export const DeleteArticleTagInputSchema = z.object({
 });
 
 export type DeleteArticleTagInput = z.infer<typeof DeleteArticleTagInputSchema>;
-
-// ---------------------------------------------------------------------------
-// Outputs (unwrapped `data` payloads)
-// ---------------------------------------------------------------------------
 
 /**
  * Mirrors `prisma.articleTag.findMany()` — the backend does not

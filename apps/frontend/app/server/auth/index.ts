@@ -1,18 +1,5 @@
-/**
- * TanStack Start server-function boundary for auth operations.
- *
- * Phase 2a compatibility shim: consumes the shared `app/server` helpers
- * (transport, env, cookies, errors, result) so domain code paths share a
- * single Fastify-envelope contract. The public surface — `login` and
- * `logout` server functions — is unchanged so existing feature code keeps
- * importing from `@cms/server/auth`.
- *
- * Behavior preserved from Phase 1:
- *   - POST directly to the backend `/auth/login` and `/auth/logout`
- *     endpoints. No `/api/bff/*` is touched.
- *   - Manage the HttpOnly `token` Cookie (name `token`, value
- *     `Bearer <jwt>`).
- *   - Single JWT, never auto-refreshed.
+/*
+ * Single JWT, never auto-refreshed.
  */
 
 import { z } from 'zod';
@@ -29,10 +16,6 @@ import { resolveBackendApiUrl } from '@cms/server/env';
 import { ResponseValidationError, envelopeSchema } from '@cms/server/result';
 import { postAuthorizedJson, postJson } from '@cms/server/transport';
 
-// ---------------------------------------------------------------------------
-// Input schema
-// ---------------------------------------------------------------------------
-
 const LoginInputSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
@@ -40,17 +23,10 @@ const LoginInputSchema = z.object({
 
 type LoginInput = z.infer<typeof LoginInputSchema>;
 
-// ---------------------------------------------------------------------------
-// Backend response schemas (per-operation contracts).
-// ---------------------------------------------------------------------------
-
+// Per-operation backend response contract.
 const LoginDataSchema = z.object({
   accessToken: z.string().min(1),
 });
-
-// ---------------------------------------------------------------------------
-// Server function: login
-// ---------------------------------------------------------------------------
 
 export const login = createServerFn({ method: 'POST' })
   .validator((data: unknown): LoginInput => LoginInputSchema.parse(data))
@@ -79,13 +55,8 @@ export const login = createServerFn({ method: 'POST' })
     }
   });
 
-// ---------------------------------------------------------------------------
-// Server function: logout
-// ---------------------------------------------------------------------------
-
 export const logout = createServerFn({ method: 'POST' }).handler(async () => {
-  // Best-effort backend logout — failures must not block Cookie clearing.
-  // We deliberately swallow errors here to preserve the Phase 1 contract:
+  // Best-effort backend logout — failures must not block Cookie clearing:
   // the local Cookie is always cleared, even if the backend is down.
   const cookie = await liveCookieIO();
   const token = parseSessionCookie(cookie);

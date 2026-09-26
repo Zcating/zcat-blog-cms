@@ -1,8 +1,5 @@
-/**
- * TanStack Start server-function lane for the photo-albums domain.
- *
- * Migrates the legacy `AlbumsApi` operation surface onto the Phase-2a
- * shared server boundary:
+/*
+ * Photo-albums operation surface:
  *
  *   - getPhotoAlbums        — GET    /cms/photo-albums?page=&pageSize=  (protected)
  *   - getPhotoAlbum         — GET    /cms/photo-albums/:id              (protected)
@@ -14,13 +11,11 @@
  *
  * Server functions are thin shells over the pure helpers in
  * `./albums-helpers.ts`. Each protected function composes the shared
- * `createProtectedFunctionMiddleware`. Endpoint paths, payload shapes,
- * and the ResultCode -> ApiErrorTag mapping are preserved from the
- * legacy `AlbumsApi` client interface.
+ * `createProtectedFunctionMiddleware`.
  *
- * Stable `queryOptions` factories are exported for Phase 3 consumers
- * (loaders, route components). They reference the server functions by
- * identity so the cache key stays in sync with the RPC.
+ * Stable `queryOptions` factories are exported for loaders and route
+ * components. They reference the server functions by identity so the
+ * cache key stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -55,15 +50,7 @@ import {
   type UpdatePhotoAlbumInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 const protectedMiddleware = createProtectedFunctionMiddleware();
-
-// ---------------------------------------------------------------------------
-// Server functions
-// ---------------------------------------------------------------------------
 
 export const getPhotoAlbums = createServerFn({ method: 'GET' })
   .middleware([protectedMiddleware])
@@ -147,13 +134,9 @@ export const addPhotos = createServerFn({ method: 'POST' })
     }),
   );
 
-// ---------------------------------------------------------------------------
-// Stable queryOptions factories
-// ---------------------------------------------------------------------------
-
 /**
- * `queryOptions` for the paginated album list. Keyed by the
- * `(page, pageSize)` tuple so each page has its own cache slot.
+ * Keyed by the `(page, pageSize)` tuple so each page has its own cache
+ * slot.
  */
 export function photoAlbumsListQueryOptions(
   input: Partial<GetPhotoAlbumsInput> = {},
@@ -165,9 +148,7 @@ export function photoAlbumsListQueryOptions(
   });
 }
 
-/**
- * `queryOptions` for the album detail read. Keyed by id.
- */
+/** Keyed by id. */
 export function photoAlbumDetailQueryOptions(input: GetPhotoAlbumInput) {
   return queryOptions({
     queryKey: ['albums', 'detail', input.id] as const,
@@ -176,10 +157,10 @@ export function photoAlbumDetailQueryOptions(input: GetPhotoAlbumInput) {
 }
 
 /**
- * `queryOptions` for the album "cover" sidebar / hero view. Shares the
- * same backing data shape as the detail query but uses a distinct key
- * so consumers can scope cache lifecycles independently (e.g. refresh
- * cover on `setPhotoAlbumCover` without invalidating detail screens).
+ * Shares the same backing data shape as the detail query but uses a
+ * distinct key so consumers can scope cache lifecycles independently
+ * (e.g. refresh cover on `setPhotoAlbumCover` without invalidating detail
+ * screens).
  */
 export function photoAlbumCoverQueryOptions(input: GetPhotoAlbumInput) {
   return queryOptions({

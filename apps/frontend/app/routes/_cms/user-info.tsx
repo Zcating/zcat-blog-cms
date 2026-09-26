@@ -1,19 +1,13 @@
-/**
- * Thin TanStack Router entry for the user-info page.
+/*
+ * The `_cms` layout already seeds the FULL `UserInfo` payload into the
+ * per-request Query cache under the canonical
+ * `userInfoQueryOptions().queryKey` (`['users', 'current']`).
  *
- * Phase 3b contract:
- *   - The `_cms` layout already seeds the FULL `UserInfo` payload
- *     into the per-request Query cache under the canonical
- *     `userInfoQueryOptions().queryKey` (`['users', 'current']`).
- *   - This loader only ensures the query is hot when the user
- *     lands on `/user-info` directly (e.g. via a hard refresh or
- *     a deep link). If the layout already populated the cache,
- *     `query({ ...options, staleTime: 'static' })` returns the
- *     cached value immediately.
- *   - The page itself reads via `useQuery(userInfoQueryOptions())`
- *     — never via `useLoaderData` or the legacy `HttpClient`. The
- *     route file is intentionally thin: no data shape, no view
- *     logic, just the navigation contract.
+ * This loader only ensures the query is hot when the user
+ * lands on `/user-info` directly (e.g. via a hard refresh or
+ * a deep link). If the layout already populated the cache,
+ * `query({ ...options, staleTime: 'static' })` returns the
+ * cached value immediately.
  */
 
 import { createFileRoute } from '@tanstack/react-router';

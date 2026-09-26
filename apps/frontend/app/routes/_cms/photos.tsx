@@ -1,26 +1,13 @@
-/**
- * Thin route wrapper for `/photos` — the pathless `_cms` layout
- * supplies the auth guard and the Query client.
- *
+/*
  * The loader prefetches the paginated photos Query via
  * `context.queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`
- * so the page can `useSuspenseQuery` from a warm cache slot. The
- * page itself reads from Query, not from `useLoaderData` /
- * `HttpClient` — that is the Phase 3b boundary.
+ * so the page can `useSuspenseQuery` from a warm cache slot.
  *
  * `page` / `pageSize` come from the URL search params. Defaults
  * mirror the legacy list page (1 / 20). An optional `albumId`
  * filter scopes the list to a single album; the page also exposes
  * an empty filter when none is set, so the cache slot is the
  * unfiltered photos list.
- *
- * Note: the loader warms the cache slot with
- * `queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`.
- * With `staleTime: 'static'`, the `query()` call returns the cached
- * value immediately if it already exists and never refetches while
- * the entry lives — the same "ensure the cache is warm for SSR /
- * navigation" semantics the deprecated
- * `QueryClient.ensureQueryData` used to provide.
  *
  * The loader is exported as a top-level `loader` function so the
  * route file's loader contract is unit-testable in isolation.
@@ -60,13 +47,11 @@ export async function loader({ search, context }: PhotosLoaderArgs) {
   const pageSize = search.pageSize ?? 20;
   const albumId = search.albumId;
 
-  // Warm the cache slot with `QueryClient.query` +
-  // `staleTime: 'static'` (the replacement for the deprecated
-  // `QueryClient.ensureQueryData`). Spread the
-  // `photoListQueryOptions(...)` result so the canonical query key +
-  // queryFn + Zod-validated input are preserved, then override
-  // `staleTime` so the cached entry never re-fetches while it lives —
-  // same semantics as the legacy `ensureQueryData` call.
+  // Spread the `photoListQueryOptions(...)` result so the canonical
+  // query key + queryFn + Zod-validated input are preserved, then
+  // override `staleTime` so the cached entry never re-fetches while it
+  // lives — the same "ensure the cache is warm for SSR / navigation"
+  // semantics the deprecated `QueryClient.ensureQueryData` provided.
   return context.queryClient.query({
     ...photoListQueryOptions({
       albumId,

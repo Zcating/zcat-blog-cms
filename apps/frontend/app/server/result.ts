@@ -1,9 +1,6 @@
-/**
- * Fastify response envelope contract.
- *
- * Every JSON response from the backend follows the `{ code, message, data }`
- * envelope. Success is signalled by `code === '0000'`; non-success codes
- * map to the existing `ApiErrorTag` vocabulary in `./errors`.
+/*
+ * Success is signalled by `code === '0000'`; non-success codes map to the
+ * existing `ApiErrorTag` vocabulary in `./errors`.
  *
  * Server functions unwrap success envelopes to their `data` payload via
  * `parseEnvelope`. Anything that does not validate as a success envelope is
@@ -14,11 +11,8 @@
 import { z } from 'zod';
 
 /**
- * Zod schema for the success-only Fastify envelope.
- *
  * The literal `'0000'` discriminator keeps the parser strict: a non-success
- * envelope never reaches the caller's `data` field, because `parseEnvelope`
- * refuses to accept it.
+ * envelope never reaches the caller's `data` field.
  */
 export const successEnvelopeSchema = z.object({
   code: z.literal('0000'),
@@ -45,8 +39,6 @@ export type EnvelopeIssue = {
 };
 
 /**
- * Thrown when a backend response fails schema validation.
- *
  * Carries the original payload and the Zod issues so callers can log a
  * structured failure without re-parsing the body.
  */
@@ -75,20 +67,12 @@ export function responseValidationError(
   return new ResponseValidationError(message, payload, issues);
 }
 
-/**
- * Optional Zod schema for the envelope's `data` field. When provided,
- * `parseEnvelope` runs the schema against the parsed data and throws a
- * typed `ResponseValidationError` on mismatch.
- */
 export type DataSchema<T> = z.ZodType<T>;
 
 /**
- * Parse a backend JSON body as a success envelope and return its `data`.
- *
  * Throws `ResponseValidationError` for:
  *  - A non-success `code` (callers should route non-success bodies through
  *    `envelopeToApiError` instead of `parseEnvelope`).
- *  - A payload that fails the `successEnvelopeSchema` shape check.
  *  - When a `dataSchema` is provided, a `data` field that does not match
  *    the schema (e.g. backend accidentally returned `data` as a JSON
  *    string instead of the expected object).

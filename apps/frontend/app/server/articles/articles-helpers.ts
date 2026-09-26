@@ -1,25 +1,13 @@
-/**
- * Pure (testable) server-boundary helpers for the articles domain.
+/*
+ * Tests inject `fetch` directly into the helpers — the ONLY mocked
+ * boundary.
  *
- * These helpers are the single source of truth for the Fastify fetch
- * shape of every article operation. The TanStack Start server
- * functions in `./index.ts` are a thin shell that wires each helper
- * to its middleware + validator. Tests inject `fetch` directly into
- * the helpers — the ONLY mocked boundary.
- *
- * Design rules (per Phase 2b contract):
- *   - Endpoints preserved: /cms/articles (GET), /cms/articles/detail
- *     (GET), /cms/articles/create (POST), /cms/articles/update (POST),
- *     /cms/articles/delete (POST), /cms/articles/upload-images (POST).
- *   - Payload shapes preserved: input objects mirror the backend
+ * Design rules:
+ *   - Input objects mirror the backend
  *     Hono `zValidator('query' / 'json')` schemas; output schemas
  *     mirror the Prisma SELECT returned by the service.
  *   - Errors map through the shared `envelopeToApiError` so the
  *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- *   - No `/api/bff/*`. No `VITE_*` fallback. No retries.
- *   - Reads delegate to the shared `getAuthorizedJson` from
- *     `@cms/server/transport`; writes delegate to `postAuthorizedJson`.
- *     No domain-local fetch plumbing remains.
  */
 
 import { z } from 'zod';
@@ -52,10 +40,6 @@ import {
   type UploadArticleImagesInput,
 } from './schemas';
 
-// ---------------------------------------------------------------------------
-// Options plumbing
-// ---------------------------------------------------------------------------
-
 export interface FetchOptions {
   env?: BackendEnv;
   cookie?: CookieIO;
@@ -64,15 +48,7 @@ export interface FetchOptions {
 
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
-// ---------------------------------------------------------------------------
-// Void success envelope (data: null).
-// ---------------------------------------------------------------------------
-
 const voidDataSchema = z.unknown();
-
-// ---------------------------------------------------------------------------
-// fetchArticles
-// ---------------------------------------------------------------------------
 
 export async function fetchArticles(
   input: GetArticlesInput | undefined,
@@ -89,10 +65,6 @@ export async function fetchArticles(
   });
 }
 
-// ---------------------------------------------------------------------------
-// fetchArticle
-// ---------------------------------------------------------------------------
-
 export async function fetchArticle(
   input: GetArticleInput,
   options: FetchOptions = {},
@@ -107,10 +79,6 @@ export async function fetchArticle(
     fetch: options.fetch,
   });
 }
-
-// ---------------------------------------------------------------------------
-// createArticle
-// ---------------------------------------------------------------------------
 
 export async function createArticle(
   input: CreateArticleInput,
@@ -127,10 +95,6 @@ export async function createArticle(
   });
 }
 
-// ---------------------------------------------------------------------------
-// updateArticle
-// ---------------------------------------------------------------------------
-
 export async function updateArticle(
   input: UpdateArticleInput,
   options: FetchOptions = {},
@@ -146,10 +110,6 @@ export async function updateArticle(
   });
 }
 
-// ---------------------------------------------------------------------------
-// deleteArticle
-// ---------------------------------------------------------------------------
-
 export async function deleteArticle(
   input: DeleteArticleInput,
   options: FetchOptions = {},
@@ -164,10 +124,6 @@ export async function deleteArticle(
     dataSchema: voidDataSchema,
   });
 }
-
-// ---------------------------------------------------------------------------
-// fetchArticleUploadImages
-// ---------------------------------------------------------------------------
 
 export async function fetchArticleUploadImages(
   input: UploadArticleImagesInput,

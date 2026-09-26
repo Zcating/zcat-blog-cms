@@ -1,18 +1,4 @@
-/**
- * Tests for the `_cms/albums/$albumId` route file.
- *
- * Scope:
- *   - The loader reads `albumId` from `params.albumId` and the
- *     `page` / `pageSize` pagination from the router's parsed
- *     search object (defaulting to 1 / 20).
- *   - The loader hydrates three parallel Query slots in one
- *     `Promise.all`:
- *       1. `photoAlbumDetailQueryOptions({ id })`
- *       2. `photoListQueryOptions({ albumId, page, pageSize })`
- *       3. `emptyAlbumPhotosQueryOptions()`
- *   - Invalid `albumId` (NaN / non-numeric) causes the loader to
- *     throw so the route's error boundary can take over.
- *
+/*
  * Only the server-function surface (`@cms/server/albums`,
  * `@cms/server/photos`) is mocked. The `QueryClient` is
  * exercised as-is.

@@ -1,13 +1,4 @@
-/**
- * Tests for the official `@tanstack/react-router-ssr-query` integration.
- *
- * These tests prove the integration wires `Wrap`, `dehydrate`, and
- * `hydrate` on the router so the rest of the codebase does NOT have
- * to add a parallel `QueryClientProvider` / `HydrationBoundary`
- * pair. We exercise the public API: `setupRouterSsrQueryIntegration`,
- * `createRouter`, and the resulting `router.options.{Wrap,
- * dehydrate, hydrate}`.
- *
+/*
  * No internal TanStack modules are mocked. The failure mode the
  * tests guard against: a "hand-wired" version that wraps the tree
  * manually in `QueryClientProvider` AND runs the official

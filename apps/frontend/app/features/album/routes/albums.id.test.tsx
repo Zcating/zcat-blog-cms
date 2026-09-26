@@ -1,22 +1,4 @@
-/**
- * Tests for the album detail page (`AlbumsId`).
- *
- * Scope (Phase 3b album lane):
- *   1. The page reads its three data slices from `useSuspenseQuery`
- *      (album detail, paginated photos, empty-album photos), not
- *      from `loaderData`.
- *   2. It renders the photo grid through `PhotoCard` and the page
- *      header (`相册名称：…`, `相册描述：…`).
- *   3. The cover setter button toggles between "设为封面" / "取消封面"
- *      and calls `setPhotoAlbumCover` with the right `(albumId, photoId)`
- *      pair.
- *   4. The "选择照片" flow opens `showPhotoSelector` and posts the
- *      selected `photoIds` to `addPhotos`.
- *   5. The "添加照片" create flow uploads via `OssAction.createAlbumPhoto`
- *      and commits the new photo to the optimistic list.
- *   6. The "删除照片" flow asks for confirmation and posts to
- *      `OssAction.deletePhoto`.
- *
+/*
  * Mocks (external server/query boundary only):
  *   - `@cms/server/albums`     — server function surface
  *   - `@cms/server/photos`     — server function surface

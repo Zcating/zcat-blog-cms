@@ -1,10 +1,6 @@
-/**
- * Zod schemas for the photos domain.
- *
- * The backend's `cms/photos` Hono routes accept and return the shapes
- * documented here. The Fastify-style `{ code, message, data }` envelope
- * is unwrapped by `parseEnvelope`; these schemas only describe the
- * payload that lives in `data`.
+/*
+ * The `{ code, message, data }` envelope is unwrapped by `parseEnvelope`;
+ * these schemas only describe the payload that lives in `data`.
  *
  * Sources:
  *   - apps/backend/src/features/cms/photo/photo.schema.ts
@@ -14,11 +10,8 @@
 
 import { z } from 'zod';
 
-// ---------------------------------------------------------------------------
-// Coercion helpers — mirror the backend `safeNumber` style so server
-// function inputs match what Hono's `zValidator('query')` would produce.
-// ---------------------------------------------------------------------------
-
+// Mirror the backend `safeNumber` style so server function inputs match
+// what Hono's `zValidator('query')` would produce.
 const coercePage = z.union([z.number(), z.string()]).transform((value) => {
   if (typeof value === 'number') return value;
   const parsed = Number.parseInt(value, 10);
@@ -49,10 +42,6 @@ const coerceBoolean = z.preprocess((value) => {
   if (value === 'false') return false;
   return value;
 }, z.boolean());
-
-// ---------------------------------------------------------------------------
-// Inputs
-// ---------------------------------------------------------------------------
 
 export const GetPhotosInputSchema = z.object({
   albumId: coerceAlbumId,
@@ -85,10 +74,7 @@ export const CreateAlbumPhotoInputSchema = z.object({
 
 export type CreateAlbumPhotoInput = z.infer<typeof CreateAlbumPhotoInputSchema>;
 
-/**
- * Update payload mirrors the legacy `updatePhoto` call: all five fields
- * are independently optional so the caller can patch any one of them.
- */
+/** All five fields are independently optional so the caller can patch any one of them. */
 export const UpdatePhotoInputSchema = z.object({
   id: z.coerce.number().int().positive(),
   name: z.string().optional(),
@@ -121,10 +107,6 @@ export const DeletePhotoInputSchema = z.object({
 });
 
 export type DeletePhotoInput = z.infer<typeof DeletePhotoInputSchema>;
-
-// ---------------------------------------------------------------------------
-// Outputs (unwrapped `data` payloads)
-// ---------------------------------------------------------------------------
 
 /**
  * Photo payload returned by every photo endpoint. `albumId` is nullable
