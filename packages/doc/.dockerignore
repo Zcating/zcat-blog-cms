@@ -1,4 +1,6 @@
-.react-router
+.output
+.nitro
+.vite
 build
 node_modules
 README.md

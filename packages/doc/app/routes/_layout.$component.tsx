@@ -6,24 +6,17 @@ import {
   type ZMarkdownCodeProps,
 } from '@zcat/ui';
 import React from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { ExecutableCodeBlock } from '~/features';
 
 import { DOCUMENT_CONFIGURES } from '../docs';
 
-import type { Route } from './+types/index.page';
-
-export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: `${loaderData?.title || 'Docs'} - @zcat/ui` },
-    {
-      name: 'description',
-      content: `${loaderData?.title || 'Component'} documentation`,
-    },
-  ];
+interface DocumentLoaderArgs {
+  params: { component?: string };
 }
 
-export async function clientLoader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: DocumentLoaderArgs) {
   const componentName = (params.component ||
     'button') as keyof typeof DOCUMENT_CONFIGURES;
 
@@ -35,13 +28,31 @@ export async function clientLoader({ params }: Route.LoaderArgs) {
 
     const content = await configure.contentImporter().then((m) => m.default);
     return { content, title: configure.title };
-  } catch (e) {
+  } catch {
     return {
       content: `# 404 Not Found\n\n文档 **${componentName}** 不存在。`,
       title: 'Not Found',
     };
   }
 }
+
+type DocumentLoaderData = Awaited<ReturnType<typeof loader>>;
+
+export const Route = createFileRoute('/_layout/$component')({
+  head: ({ match }) => {
+    const data = match.loaderData as DocumentLoaderData | undefined;
+    const title = data?.title || 'Docs';
+    const label = data?.title || 'Component';
+    return {
+      meta: [
+        { title: `${title} - @zcat/ui` },
+        { name: 'description', content: `${label} documentation` },
+      ],
+    };
+  },
+  loader,
+  component: DocsPage,
+});
 
 function patchComponents(components: ZMarkdownComponents) {
   return {
@@ -55,8 +66,8 @@ function patchComponents(components: ZMarkdownComponents) {
   };
 }
 
-export default function DocsPage(props: Route.ComponentProps) {
-  const { content } = props.loaderData;
+function DocsPage() {
+  const { content } = Route.useLoaderData();
 
   return (
     <ZMarkdown

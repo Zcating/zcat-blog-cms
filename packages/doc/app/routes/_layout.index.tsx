@@ -1,19 +1,20 @@
 import { ZButton } from '@zcat/ui';
-import { Link } from 'react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
-import type { Route } from './+types/home.page';
+export const Route = createFileRoute('/_layout/')({
+  head: () => ({
+    meta: [
+      { title: 'Introduction - @zcat/ui' },
+      {
+        name: 'description',
+        content: 'Documentation for @zcat/ui component library',
+      },
+    ],
+  }),
+  component: Home,
+});
 
-export function meta() {
-  return [
-    { title: 'Introduction - @zcat/ui' },
-    {
-      name: 'description',
-      content: 'Documentation for @zcat/ui component library',
-    },
-  ];
-}
-
-export default function Home() {
+function Home() {
   return (
     <div className="max-w-3xl space-y-8">
       <div className="space-y-4">
@@ -24,7 +25,7 @@ export default function Home() {
           Web 应用。
         </p>
         <div className="flex gap-4">
-          <Link to="/button">
+          <Link to="/$component" params={{ component: 'button' }}>
             <ZButton size="lg">开始使用</ZButton>
           </Link>
           <ZButton variant="outline" size="lg">

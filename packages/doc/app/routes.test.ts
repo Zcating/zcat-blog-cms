@@ -7,31 +7,35 @@
  * component still compiles.
  */
 
+import { createRouter } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
-import routeConfig from './routes';
+import { routeTree } from './routeTree.gen';
 
-interface RouteEntry {
-  index?: boolean;
-  path?: string;
-  children?: RouteEntry[];
-}
-
-const [layoutRoute] = routeConfig as unknown as RouteEntry[];
+const router = createRouter({ routeTree });
 
 describe('route table', () => {
   it('nests both entry points under a single layout route', () => {
-    expect(routeConfig).toHaveLength(1);
-    expect(layoutRoute.children).toHaveLength(2);
+    const [matchedRoutes] = router.getMatchedRoutes('/button');
+
+    expect(router.routeTree.children).toHaveLength(1);
+    expect(matchedRoutes.map((route) => route.id)).toEqual([
+      '__root__',
+      '/_layout',
+      '/_layout/$component',
+    ]);
   });
 
   it('serves the home page at /', () => {
-    expect(layoutRoute.children?.some((entry) => entry.index)).toBe(true);
+    const [matchedRoutes] = router.getMatchedRoutes('/');
+
+    expect(matchedRoutes.at(-1)?.id).toBe('/_layout/');
   });
 
   it('serves documents at the dynamic /:component segment', () => {
-    expect(layoutRoute.children?.map((entry) => entry.path)).toContain(
-      '/:component',
-    );
+    const [, params, foundRoute] = router.getMatchedRoutes('/z-sidebar');
+
+    expect(foundRoute?.id).toBe('/_layout/$component');
+    expect(params).toEqual({ component: 'z-sidebar' });
   });
 });

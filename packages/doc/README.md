@@ -1,87 +1,39 @@
-# Welcome to React Router!
+# doc
 
-A modern, production-ready template for building full-stack React applications using React Router.
+`@zcat/ui` 组件库文档站（`packages/doc`）。
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 技术栈
 
-## Features
+- React 19 + TanStack Start（Vite + file-based routing，SSR 由 Nitro 输出）
+- TanStack Router
+- Tailwind CSS 4
+- 组件与文档渲染来自 `@zcat/ui`（`packages/ui`）
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 开发命令
 
-## Getting Started
+在仓库根目录执行：
 
-### Installation
+- 启动开发服务器：`pnpm --filter doc run dev`
+- 类型检查：`pnpm --filter doc run typecheck`
+- 单元测试：`pnpm --filter doc run test`
+- Lint：`pnpm --filter doc run lint`
 
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
+## 构建与运行
 
 ```bash
-npm run dev
+pnpm --filter doc run build
+pnpm --filter doc run start
 ```
 
-Your application will be available at `http://localhost:5173`.
+构建产物输出到 `.output/`，`start` 通过 `.output/server/index.mjs` 提供 SSR 服务。
 
-## Building for Production
+## 目录结构
 
-Create a production build:
+- `app/routes/`：路由文件，`routeTree.gen.ts` 由 TanStack 插件生成，勿手动修改
+- `app/docs/`：`DOCUMENT_CONFIGURES` 注册表与 markdown 源文件，侧边栏与 `/:component` loader 共用该注册表
+- `app/features/`：文档站自身的组件
 
-```bash
-npm run build
-```
+## 路由
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- `/`：首页
+- `/:component`：按 `DOCUMENT_CONFIGURES` 解析对应 markdown；未注册的名称回落到 404 文档内容

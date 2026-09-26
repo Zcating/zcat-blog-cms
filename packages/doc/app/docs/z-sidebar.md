@@ -7,7 +7,7 @@
 ```typescript
 import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
 import { Home, Settings, User } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet } from '@tanstack/react-router';
 
 const sidebarOptions: ZSidebarOption[] = [
   {

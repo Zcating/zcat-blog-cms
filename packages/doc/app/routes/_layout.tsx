@@ -14,7 +14,7 @@ import {
   MenuSquareIcon,
   NavigationIcon,
 } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet, createFileRoute } from '@tanstack/react-router';
 
 import { DOCUMENT_CONFIGURES } from '../docs';
 
@@ -131,7 +131,11 @@ const sidebarOptions: ZSidebarOption[] = [
   },
 ];
 
-export default function Layout() {
+export const Route = createFileRoute('/_layout')({
+  component: Layout,
+});
+
+function Layout() {
   const renderItem = (item: ZSidebarOption) => {
     if (!item.value) {
       return (
@@ -142,7 +146,11 @@ export default function Layout() {
       );
     }
     return (
-      <Link to={`/${item.value}`} className="flex items-center gap-3">
+      <Link
+        to="/$component"
+        params={{ component: item.value }}
+        className="flex items-center gap-3"
+      >
         {item.icon ? (
           <item.icon className="size-4" />
         ) : (
