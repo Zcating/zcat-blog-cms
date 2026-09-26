@@ -5,6 +5,11 @@
 /.react-router/
 /build/
 
+# TanStack Start
+/.output/
+/.nitro/
+/.vite/
+
 # Playwright
 /playwright-report/
 /test-results/

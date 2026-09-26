@@ -2,17 +2,17 @@
   "name": "blog",
   "private": true,
   "files": [
-    "build"
+    ".output"
   ],
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e .env -- react-router dev",
+    "dev": "dotenv -e .env -- vite dev",
     "dev:fresh": "node ../../scripts/kill-port.mjs 1024 && pnpm run dev",
-    "dev:prod": "react-router dev --mode production",
-    "build:dev": "react-router build --mode development",
-    "build": "react-router build --mode production",
-    "start:dev": "npx cross-env PORT=1024 react-router-serve ./build/server/index.js",
-    "start": "PORT=1024 react-router-serve ./build/server/index.js",
+    "dev:prod": "vite dev --mode production",
+    "build:dev": "vite build --mode development",
+    "build": "vite build --mode production",
+    "start:dev": "npx cross-env PORT=1024 node .output/server/index.mjs",
+    "start": "node .output/server/index.mjs",
     "typecheck": "react-router typegen && tsc",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,7 +26,7 @@
     "@hookform/resolvers": "^5.2.1",
     "@originjs/crypto-js-wasm": "^1.1.1",
     "@react-router/node": "^7.9.1",
-    "@react-router/serve": "^7.9.1",
+    "@tanstack/react-start": "1.168.58",
     "@zcat/ui": "workspace:*",
     "@zumer/snapdom": "^2.0.2",
     "class-variance-authority": "^0.7.1",
@@ -69,11 +69,14 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^6.1.1",
     "@vitest/ui": "4.1.3",
     "jsdom": "^27.4.0",
+    "nitro": "3.0.260903-beta",
     "tailwindcss": "^4.1.4",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5.8.3",
+    "vite": "^8.2.2",
     "vitest": "^4.0.18"
   }
 }

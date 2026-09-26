@@ -1,12 +1,39 @@
-import { reactRouter } from '@react-router/dev/vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import tailwindcss from '@tailwindcss/vite';
+import viteReact from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { nitro } from 'nitro/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd()) as ImportMetaEnv;
   return {
-    plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+    plugins: [
+      tailwindcss(),
+      ...(mode === 'test'
+        ? []
+        : [
+            // tanstackStart MUST come before viteReact().
+            tanstackStart({
+              srcDirectory: 'app',
+              router: {
+                routesDirectory: './routes',
+                // The index/, toolbox/ and ai-chat/ subtrees plus the two
+                // bracket-escaped xml routes are still React Router v7
+                // modules, migrated in later phases. They are matched by
+                // basename so the generator skips the whole subtree.
+                routeFileIgnorePattern:
+                  '^(?:index|toolbox|ai-chat|rss\\[\\.\\]xml\\.ts|sitemap\\[\\.\\]xml\\.ts)$|\\.(?:test|spec)\\.[jt]sx?$',
+              },
+            }),
+            viteReact(),
+            // nitro() runs the final SSR/CSR rollup output through the
+            // node-server preset so `pnpm start` can serve
+            // `.output/server/index.mjs`.
+            nitro(),
+          ]),
+      tsconfigPaths(),
+    ],
     server: {
       host: '127.0.0.1',
       port: Number(env.VITE_PORT),
@@ -30,55 +57,6 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./vitest.setup.ts'],
       include: ['app/**/*.{test,spec}.{ts,tsx}'],
       globals: true,
-    },
-    ssr: {
-      external: [
-        '@originjs/crypto-js-wasm',
-        'asn1.js',
-        'mermaid',
-        'cytoscape',
-        'dagre',
-        'graphlib',
-        'unified',
-        'react-markdown',
-        'remark-parse',
-        'remark-math',
-        'remark-gfm',
-        'remark-rehype',
-        'rehype-stringify',
-        'rehype-katex',
-      ],
-      noExternal: ['@zcat/ui'],
-    },
-    build: {
-      chunkSizeWarningLimit: 2000,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) {
-              return 'app';
-            }
-            if (
-              id.includes('mermaid') ||
-              id.includes('cytoscape') ||
-              id.includes('dagre') ||
-              id.includes('graphlib')
-            ) {
-              return 'diagram';
-            }
-            if (id.includes('crypto-js')) {
-              return 'crypto';
-            }
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react';
-            }
-            if (id.includes('zcat')) {
-              return 'zcat-ui';
-            }
-            return 'vendor';
-          },
-        },
-      },
     },
   };
 });
