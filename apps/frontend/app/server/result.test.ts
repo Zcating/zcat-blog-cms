@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
+  envelopeSchema,
   parseEnvelope,
   responseValidationError,
   successEnvelopeSchema,
@@ -63,6 +64,43 @@ describe('successEnvelopeSchema', () => {
     const parsed = successEnvelopeSchema.safeParse({
       code: '0000',
       data: { id: 1 },
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
+
+describe('envelopeSchema', () => {
+  it('accepts the backend auth middleware 401 body, which carries no data key', () => {
+    // apps/backend/src/middleware/auth.ts:21,35,44
+    //   c.json({ code: 'ERR0002', message: 'Unauthorized' }, 401)
+    // Round-tripped through JSON so the payload is the exact wire body.
+    const parsed = envelopeSchema.safeParse(
+      JSON.parse(JSON.stringify({ code: 'ERR0002', message: 'Unauthorized' })),
+    );
+    expect(parsed.success).toBe(true);
+  });
+
+  it('accepts a success envelope that does carry data', () => {
+    const parsed = envelopeSchema.safeParse({
+      code: '0000',
+      message: 'ok',
+      data: { id: 1 },
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('rejects a body with no message', () => {
+    const parsed = envelopeSchema.safeParse({ code: 'ERR0002' });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('keeps data mandatory on a success envelope', () => {
+    // The strictness is what stops a non-success body from reaching a
+    // caller's data slot, so it must not be relaxed alongside
+    // `envelopeSchema`.
+    const parsed = successEnvelopeSchema.safeParse({
+      code: '0000',
+      message: 'ok',
     });
     expect(parsed.success).toBe(false);
   });

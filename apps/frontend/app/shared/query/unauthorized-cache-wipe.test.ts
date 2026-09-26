@@ -50,6 +50,7 @@ vi.mock('@cms/server/users', () => ({
 import { MutationObserver, type QueryClient } from '@tanstack/react-query';
 
 import { UnauthorizedError } from '../../server/auth-middleware';
+import { envelopeToApiError } from '../../server/errors';
 import { UNAUTHORIZED_ERROR_CODE } from '../auth/unauthorized';
 import { makeQueryClient } from './query-client';
 
@@ -274,6 +275,110 @@ describe('makeQueryClient — 401 clears the private cache', () => {
         updateCurrentUserMock({ data: variables }),
     });
     await expect(observer.mutate({ name: 'Admin' })).rejects.toThrow('boom');
+
+    expect(client.getQueryCache().getAll()).toHaveLength(2);
+    expect(client.getQueryData(['users', 'current'])).toEqual({
+      name: 'Admin',
+    });
+  });
+});
+
+/**
+ * Whole-chain gate: the payload is the backend's LITERAL 401 body, the
+ * error the cache sees is whatever `envelopeToApiError` produces from it,
+ * and the cache must come out empty. Hand-building `{ _tag: 'LoginError' }`
+ * here would pass even while the classifier rejected the real body.
+ */
+function backendBody(code: string, message: string): unknown {
+  return JSON.parse(JSON.stringify({ code, message }));
+}
+
+describe('makeQueryClient — the real backend 401 body wipes the private cache', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('classifies the auth middleware body as LoginError', () => {
+    expect(envelopeToApiError(backendBody('ERR0002', 'Unauthorized'))).toEqual({
+      _tag: 'LoginError',
+      message: 'Unauthorized',
+    });
+  });
+
+  it('empties the query cache for the classified auth middleware body', async () => {
+    const client = makeQueryClient();
+    seedPrivateQueries(client);
+
+    const apiError = envelopeToApiError(backendBody('ERR0002', 'Unauthorized'));
+    getCurrentUserMock.mockRejectedValue(
+      await apiErrorAcrossRpcBoundary(apiError),
+    );
+
+    await expect(
+      client.fetchQuery({
+        ...({
+          queryKey: ['users', 'current'],
+          queryFn: getCurrentUserMock,
+        } as const),
+        staleTime: 0,
+      }),
+    ).rejects.toEqual({ _tag: 'LoginError', message: 'Unauthorized' });
+
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+    expect(client.getQueryData(['users', 'current'])).toBeUndefined();
+    expect(client.getQueryData(['photos', 'list'])).toBeUndefined();
+  });
+
+  it('empties the mutation cache for the classified auth middleware body', async () => {
+    const client = makeQueryClient();
+    seedPrivateQueries(client);
+
+    const apiError = envelopeToApiError(backendBody('ERR0002', 'Unauthorized'));
+    updateCurrentUserMock.mockRejectedValue(
+      await apiErrorAcrossRpcBoundary(apiError),
+    );
+
+    const observer = new MutationObserver(client, {
+      mutationFn: (variables: unknown) =>
+        updateCurrentUserMock({ data: variables }),
+    });
+    await expect(observer.mutate({ name: 'Admin' })).rejects.toEqual({
+      _tag: 'LoginError',
+      message: 'Unauthorized',
+    });
+
+    expect(client.getMutationCache().getAll()).toHaveLength(0);
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+  });
+
+  it('keeps the private cache for a classified data-less 500', async () => {
+    const client = makeQueryClient();
+    seedPrivateQueries(client);
+
+    const apiError = envelopeToApiError(
+      backendBody('ERR0006', 'Internal Server Error'),
+    );
+    expect(apiError).toEqual({
+      _tag: 'UnknownError',
+      message: 'Internal Server Error',
+    });
+
+    getCurrentUserMock.mockRejectedValue(
+      await apiErrorAcrossRpcBoundary(apiError),
+    );
+
+    await expect(
+      client.fetchQuery({
+        ...({
+          queryKey: ['users', 'current'],
+          queryFn: getCurrentUserMock,
+        } as const),
+        staleTime: 0,
+      }),
+    ).rejects.toEqual({
+      _tag: 'UnknownError',
+      message: 'Internal Server Error',
+    });
 
     expect(client.getQueryCache().getAll()).toHaveLength(2);
     expect(client.getQueryData(['users', 'current'])).toEqual({

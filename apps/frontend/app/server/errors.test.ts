@@ -104,3 +104,61 @@ describe('envelopeToApiError', () => {
     expect(Object.keys(result as object).sort()).toEqual(['_tag', 'message']);
   });
 });
+
+/** The exact bytes the backend sends: JSON drops an absent `data`. */
+function wire(body: Record<string, unknown>): unknown {
+  return JSON.parse(JSON.stringify(body));
+}
+
+describe('envelopeToApiError — real backend bodies with no data key', () => {
+  it('maps the auth middleware 401 body to LoginError', () => {
+    // apps/backend/src/middleware/auth.ts:21,35,44
+    //   c.json({ code: 'ERR0002', message: 'Unauthorized' }, 401)
+    // The wire body is exactly these two keys — no `data`.
+    const result = envelopeToApiError(
+      wire({ code: 'ERR0002', message: 'Unauthorized' }),
+    );
+    expect(result).toEqual({ _tag: 'LoginError', message: 'Unauthorized' });
+  });
+
+  it('maps every other ResultCode the backend emits without data', () => {
+    // `createResult` (apps/backend/src/model/result-data.ts:46-56) always
+    // writes `data: params.data`; when that is `undefined` the key is gone.
+    const cases: Array<[string, string, ApiErrorTag]> = [
+      ['ERR0001', 'Username already exists', 'RegisterError'],
+      ['ERR0003', 'Database unavailable', 'DatabaseError'],
+      ['ERR0004', 'Upload rejected', 'UploadError'],
+      ['ERR0005', 'Request failed validation', 'ValidationError'],
+      ['ERR0006', 'Internal Server Error', 'UnknownError'],
+    ];
+    for (const [code, message, tag] of cases) {
+      expect(envelopeToApiError(wire({ code, message }))).toEqual({
+        _tag: tag,
+        message,
+      });
+    }
+  });
+
+  it('still returns null for a success envelope that happens to omit data', () => {
+    // A body with no `data` key and code `0000` is not an error. Callers
+    // reach `parseEnvelope` for the payload, which keeps `data` mandatory.
+    expect(
+      envelopeToApiError(wire({ code: '0000', message: 'success' })),
+    ).toBeNull();
+  });
+
+  it('still reports a body with no message as a malformed envelope', () => {
+    // The loosened schema must not accept an envelope missing `message`.
+    expect(envelopeToApiError(wire({ code: 'ERR0002' }))).toEqual({
+      _tag: 'UnknownError',
+      message: 'Malformed error envelope from backend',
+    });
+  });
+
+  it('still reports a non-object body as a malformed envelope', () => {
+    expect(envelopeToApiError('Unauthorized')).toEqual({
+      _tag: 'UnknownError',
+      message: 'Malformed error envelope from backend',
+    });
+  });
+});

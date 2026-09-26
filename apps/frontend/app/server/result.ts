@@ -20,11 +20,20 @@ export const successEnvelopeSchema = z.object({
   data: z.unknown(),
 });
 
-/** Loose envelope (success or error) for code that needs to inspect both. */
+/**
+ * Loose envelope (success or error) for code that needs to inspect both.
+ *
+ * `data` is OPTIONAL here, unlike in `successEnvelopeSchema`. The backend's
+ * auth middleware answers a rejected token with a literal
+ * `{ code, message }` pair and `createResult` drops an absent `data` when
+ * `JSON.stringify` runs, so a real error envelope has no `data` key at all.
+ * Requiring the key made every such envelope parse as malformed and turned
+ * an expired session into an `UnknownError`.
+ */
 export const envelopeSchema = z.object({
   code: z.string(),
   message: z.string(),
-  data: z.unknown(),
+  data: z.unknown().optional(),
 });
 
 export type Envelope<T> = {

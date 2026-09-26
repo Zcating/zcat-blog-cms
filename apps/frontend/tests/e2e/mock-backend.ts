@@ -13,6 +13,23 @@ function sendJson(response: ServerResponse, data: unknown, status = 200) {
   );
 }
 
+/**
+ * Mirrors the backend's error envelopes: the auth middleware's literal
+ * `c.json({ code, message }, 401)` and `createResult`, which always writes
+ * `data: params.data` and therefore omits the key entirely when the value
+ * is `undefined`.
+ */
+function sendError(
+  response: ServerResponse,
+  code: string,
+  message: string,
+  data?: unknown,
+  status = 401,
+) {
+  response.writeHead(status, { 'Content-Type': 'application/json' });
+  response.end(JSON.stringify({ code, message, data }));
+}
+
 // Default seed data
 function getDefaultPhotos() {
   return [
@@ -189,7 +206,7 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/auth/is-valid' && request.method === 'POST') {
     if (authInvalid) {
-      sendJson(response, { valid: false });
+      sendError(response, 'ERR0002', 'Unauthorized');
       return;
     }
     sendJson(response, {
