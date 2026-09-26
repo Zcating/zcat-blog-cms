@@ -15,6 +15,7 @@ import {
   Label,
 } from '@zcat/ui';
 import { useMemo, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 const MIME_TYPE_OPTIONS = [
   { label: 'image/png', value: 'image/png' },
   { label: 'image/jpeg', value: 'image/jpeg' },
@@ -23,17 +24,20 @@ const MIME_TYPE_OPTIONS = [
   { label: 'image/svg+xml', value: 'image/svg+xml' },
 ];
 
-export function meta() {
-  return [
-    { title: '图片和 Base64 互转' },
-    {
-      name: 'description',
-      content: '将图片转换为 Base64 编码，或将 Base64 编码转换为图片',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/base64-to-image')({
+  head: () => ({
+    meta: [
+      { title: '图片和 Base64 互转' },
+      {
+        name: 'description',
+        content: '将图片转换为 Base64 编码，或将 Base64 编码转换为图片',
+      },
+    ],
+  }),
+  component: Base64ToImagePage,
+});
 
-export default function Base64ToImagePage() {
+function Base64ToImagePage() {
   // 图片 -> Base64
   // const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>('');

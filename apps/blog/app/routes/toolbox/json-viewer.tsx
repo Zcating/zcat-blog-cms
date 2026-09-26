@@ -11,17 +11,21 @@ import {
   ZNotification,
 } from '@zcat/ui';
 import { ArrowRight, Braces, FileJson } from 'lucide-react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 
-export function meta() {
-  return [
-    { title: 'JSON 结构化工具' },
-    {
-      name: 'description',
-      content: '在线 JSON 解析与结构化查看工具',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/json-viewer')({
+  head: () => ({
+    meta: [
+      { title: 'JSON 结构化工具' },
+      {
+        name: 'description',
+        content: '在线 JSON 解析与结构化查看工具',
+      },
+    ],
+  }),
+  component: JsonViewerPage,
+});
 
 // 辅助函数：将任意 JSON 数据转换为 CascaderOption[]
 const jsonToTreeOptions = (data: any, path = 'root'): CascaderOption[] => {
@@ -97,7 +101,7 @@ const jsonToTreeOptions = (data: any, path = 'root'): CascaderOption[] => {
   return result;
 };
 
-export default function JsonViewerPage() {
+function JsonViewerPage() {
   const [inputJson, setInputJson] = useState('');
   const [treeData, setTreeData] = useState<CascaderOption[]>([]);
   const [error, setError] = useState<string | null>(null);

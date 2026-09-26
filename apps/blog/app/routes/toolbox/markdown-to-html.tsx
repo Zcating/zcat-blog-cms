@@ -10,6 +10,7 @@ import {
 } from '@zcat/ui';
 import { Eye, FileCode } from 'lucide-react';
 import React from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { MarkdownProcessor, MarkdownPdfPreview } from '@blog/features';
 
@@ -18,17 +19,20 @@ const VIEW_MODE_OPTIONS: CommonOption<string>[] = [
   { value: 'preview', label: <Eye className="size-5" /> },
 ];
 
-export function meta() {
-  return [
-    { title: 'Markdown 转 HTML' },
-    {
-      name: 'description',
-      content: '在线将 Markdown 转换为 HTML，支持 GFM 和数学公式',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/markdown-to-html')({
+  head: () => ({
+    meta: [
+      { title: 'Markdown 转 HTML' },
+      {
+        name: 'description',
+        content: '在线将 Markdown 转换为 HTML，支持 GFM 和数学公式',
+      },
+    ],
+  }),
+  component: MarkdownToHtmlPage,
+});
 
-export default function MarkdownToHtmlPage() {
+function MarkdownToHtmlPage() {
   const [inputMarkdown, setInputMarkdown] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [viewMode, setViewMode] = React.useState('html');

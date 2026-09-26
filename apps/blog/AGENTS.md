@@ -9,7 +9,7 @@
 
 ## 技术栈
 
-- React + React Router（framework mode）
+- React + TanStack Router / TanStack Start（file-based routing）
 - Tailwind CSS
 - 依赖 `@zcat/ui`
 

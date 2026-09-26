@@ -15,7 +15,7 @@ import {
   Image as ImageIcon,
   Key,
 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 const items = [
   {
@@ -56,17 +56,20 @@ const items = [
   },
 ] as const;
 
-export function meta() {
-  return [
-    { title: '工具箱' },
-    {
-      name: 'description',
-      content: '常用功能入口',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/')({
+  head: () => ({
+    meta: [
+      { title: '工具箱' },
+      {
+        name: 'description',
+        content: '常用功能入口',
+      },
+    ],
+  }),
+  component: ToolboxHomePage,
+});
 
-export default function ToolboxHomePage() {
+function ToolboxHomePage() {
   return (
     <ZView className="p-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (

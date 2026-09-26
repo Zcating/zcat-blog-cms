@@ -18,16 +18,9 @@ export default defineConfig(({ mode }) => {
               srcDirectory: 'app',
               router: {
                 routesDirectory: './routes',
-                // The index/, toolbox/ and ai-chat/ subtrees plus the two
-                // bracket-escaped xml routes are still React Router v7
-                // modules, migrated in later phases. They are matched by
-                // basename so the generator skips the whole subtree.
-                // index/ now holds only routes/index/about.tsx (the React
-                // Router module behind /about) and the unregistered
-                // routes/index/test-statistics.tsx; the migrated content
-                // routes live in routes/_blog/.
-                routeFileIgnorePattern:
-                  '^(?:index|toolbox|ai-chat|rss\\[\\.\\]xml\\.ts|sitemap\\[\\.\\]xml\\.ts)$|\\.(?:test|spec)\\.[jt]sx?$',
+                // Colocated *.test.ts(x) files live beside the routes they
+                // cover; the generator must skip them.
+                routeFileIgnorePattern: '\\.(?:test|spec)\\.[jt]sx?$',
               },
             }),
             viteReact(),

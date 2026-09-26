@@ -1,4 +1,6 @@
-import { ArticleApi } from '@blog/apis';
+import { createFileRoute } from '@tanstack/react-router';
+
+import { getArticleList } from '@blog/server/article';
 
 const SITE = 'https://blog.zcat.example';
 
@@ -11,24 +13,25 @@ function escapeXml(s: string): string {
     .replace(/'/g, '&apos;');
 }
 
-export async function loader() {
-  const { data } = await ArticleApi.getArticleList({
-    page: 1,
-    pageSize: 20,
-    order: 'latest',
-  });
-  const items = data
-    .map(
-      (a) => `<item>
+export const Route = createFileRoute('/rss.xml')({
+  server: {
+    handlers: {
+      GET: async () => {
+        const { data } = await getArticleList({
+          data: { page: 1, pageSize: 20, order: 'latest' },
+        });
+        const items = data
+          .map(
+            (a) => `<item>
         <title>${escapeXml(a.title)}</title>
         <link>${SITE}/post-board/${a.id}</link>
         <guid>${SITE}/post-board/${a.id}</guid>
         <pubDate>${new Date(a.publishAt).toUTCString()}</pubDate>
         <description>${escapeXml(a.excerpt)}</description>
       </item>`,
-    )
-    .join('');
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+          )
+          .join('');
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>ZCAT Blog</title>
@@ -38,5 +41,10 @@ export async function loader() {
     ${items}
   </channel>
 </rss>`;
-  return new Response(xml, { headers: { 'Content-Type': 'application/rss+xml' } });
-}
+        return new Response(xml, {
+          headers: { 'Content-Type': 'application/rss+xml' },
+        });
+      },
+    },
+  },
+});

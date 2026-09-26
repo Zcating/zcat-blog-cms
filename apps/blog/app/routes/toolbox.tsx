@@ -1,9 +1,9 @@
 import { Button, useSidebar, ZSidebar, type ZSidebarOption } from '@zcat/ui';
 import { SidebarIcon } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet, createFileRoute } from '@tanstack/react-router';
 
-import { LayoutFooter, LayoutHeader } from '../components';
-import { MENU_OPTIONS } from '../stores';
+import { LayoutFooter, LayoutHeader } from '@blog/features/layouts/components';
+import { MENU_OPTIONS } from '@blog/features/layouts/stores';
 
 const items: ZSidebarOption[] = [
   {
@@ -45,11 +45,15 @@ const items: ZSidebarOption[] = [
   },
 ];
 
-export default function ToolboxLayout() {
+export const Route = createFileRoute('/toolbox')({
+  component: ToolboxLayoutRoute,
+});
+
+function ToolboxLayoutRoute() {
   const renderItem = (item: ZSidebarOption) => {
     if (item.value) {
       return (
-        <Link to={item.value}>
+        <Link to={item.value as never}>
           <span>{item.label}</span>
         </Link>
       );

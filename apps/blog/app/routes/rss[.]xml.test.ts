@@ -1,0 +1,108 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { getArticleListMock } = vi.hoisted(() => ({
+  getArticleListMock: vi.fn(),
+}));
+
+vi.mock('@blog/server/article', async () => {
+  const actual = await vi.importActual<typeof import('@blog/server/article')>(
+    '@blog/server/article',
+  );
+  return {
+    ...actual,
+    getArticleList: (...args: unknown[]) => getArticleListMock(...args),
+  };
+});
+
+// --- import after mocks ---
+
+import { Route } from './rss[.]xml';
+
+const ARTICLES = [
+  {
+    id: 7,
+    title: '第一篇 & <草稿>',
+    excerpt: '摘要 "quoted"',
+    content: '# 正文',
+    createdAt: '2026-05-19T12:00:00.000Z',
+    updatedAt: '2026-05-19T12:00:00.000Z',
+    publishAt: '2026-05-19T12:00:00.000Z',
+    articleAndArticleTags: [],
+  },
+];
+
+type RssGetHandler = () => Promise<Response>;
+
+function getFeedHandler(): RssGetHandler | null {
+  const handlers: unknown = Route.options.server?.handlers;
+  if (typeof handlers !== 'object' || handlers === null) return null;
+  const get = (handlers as { GET?: unknown }).GET;
+  return typeof get === 'function' ? (get as RssGetHandler) : null;
+}
+
+const getHandler = getFeedHandler();
+
+describe('server route: /rss.xml', () => {
+  beforeEach(() => {
+    getArticleListMock.mockReset();
+    getArticleListMock.mockResolvedValue({
+      data: ARTICLES,
+      totalPages: 1,
+      page: 1,
+      pageSize: 20,
+    });
+  });
+
+  it('registers a GET handler on the route', () => {
+    expect(getHandler).toBeTypeOf('function');
+  });
+
+  it('answers with an RSS 2.0 document', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    const response = await getHandler();
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('application/rss+xml');
+    expect(body.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(
+      true,
+    );
+    expect(body).toContain('<rss version="2.0">');
+    expect(body).toContain('<channel>');
+    expect(body).toContain('<title>ZCAT Blog</title>');
+    expect(body).toContain('<link>https://blog.zcat.example</link>');
+    expect(body).toContain('<language>zh-CN</language>');
+    expect(body.trimEnd().endsWith('</rss>')).toBe(true);
+  });
+
+  it('emits one escaped item per article, linked at its absolute post URL', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    const body = await (await getHandler()).text();
+
+    expect(body).toContain('<title>第一篇 &amp; &lt;草稿&gt;</title>');
+    expect(body).toContain(
+      '<link>https://blog.zcat.example/post-board/7</link>',
+    );
+    expect(body).toContain(
+      '<guid>https://blog.zcat.example/post-board/7</guid>',
+    );
+    expect(body).toContain('<pubDate>Tue, 19 May 2026 12:00:00 GMT</pubDate>');
+    expect(body).toContain(
+      '<description>摘要 &quot;quoted&quot;</description>',
+    );
+    expect(body.match(/<item>/g)).toHaveLength(1);
+  });
+
+  it('requests the latest twenty articles', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    await getHandler();
+
+    expect(getArticleListMock).toHaveBeenCalledTimes(1);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 20, order: 'latest' },
+    });
+  });
+});

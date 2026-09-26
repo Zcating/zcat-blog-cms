@@ -13,6 +13,7 @@ import {
   createZForm,
 } from '@zcat/ui';
 import { ArrowDown, Copy, Key, Lock, Unlock } from 'lucide-react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 import { z } from 'zod';
 
@@ -43,15 +44,18 @@ const base64ToUint8Array = (base64: string) => {
   return bytes;
 };
 
-export function meta() {
-  return [
-    { title: 'RSA 加解密' },
-    {
-      name: 'description',
-      content: '在线生成 RSA 密钥对，进行公钥加密和私钥解密',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/rsa-crypto')({
+  head: () => ({
+    meta: [
+      { title: 'RSA 加解密' },
+      {
+        name: 'description',
+        content: '在线生成 RSA 密钥对，进行公钥加密和私钥解密',
+      },
+    ],
+  }),
+  component: RsaCryptoPage,
+});
 
 const KEY_SIZE_OPTIONS = [
   { label: '1024 bit', value: '1024' },
@@ -83,7 +87,7 @@ const RsaSchema = z.object({
 const KeyGenForm = createZForm(KeyGenSchema);
 const RsaForm = createZForm(RsaSchema);
 
-export default function RsaCryptoPage() {
+function RsaCryptoPage() {
   const rsaForm = RsaForm.useForm({
     defaultValues: {
       mode: 'encrypt',

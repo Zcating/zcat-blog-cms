@@ -18,6 +18,7 @@ import {
 } from '@zcat/ui';
 import { Lock, Unlock, ArrowDown, Copy, Settings } from 'lucide-react';
 import React from 'react';
+import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import {
@@ -28,12 +29,15 @@ import {
   runAesCryptoLogic,
 } from '@blog/features';
 
-export function meta() {
-  return [
-    { title: 'AES 加解密' },
-    { name: 'description', content: '在线 AES 加密、解密工具' },
-  ];
-}
+export const Route = createFileRoute('/toolbox/aes-crypto')({
+  head: () => ({
+    meta: [
+      { title: 'AES 加解密' },
+      { name: 'description', content: '在线 AES 加密、解密工具' },
+    ],
+  }),
+  component: AesCryptoPage,
+});
 
 const AesFormSchema = z
   .object({
@@ -65,7 +69,7 @@ const AesFormSchema = z
 
 const AesForm = createZForm(AesFormSchema);
 
-export default function AesCryptoPage() {
+function AesCryptoPage() {
   const [result, setResult] = React.useState('');
   const isError = result.startsWith('执行出错:');
 

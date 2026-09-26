@@ -10,17 +10,8 @@ import {
   ZView,
 } from '@zcat/ui';
 import { Check, Copy, RefreshCw } from 'lucide-react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-
-export function meta() {
-  return [
-    { title: 'IP 查询' },
-    {
-      name: 'description',
-      content: '查询当前网络 IP 地址及归属地信息',
-    },
-  ];
-}
 
 interface IpInfo {
   ip: string;
@@ -33,7 +24,20 @@ interface IpInfo {
   [key: string]: any;
 }
 
-export default function IpLookupPage() {
+export const Route = createFileRoute('/toolbox/ip-lookup')({
+  head: () => ({
+    meta: [
+      { title: 'IP 查询' },
+      {
+        name: 'description',
+        content: '查询当前网络 IP 地址及归属地信息',
+      },
+    ],
+  }),
+  component: IpLookupPage,
+});
+
+function IpLookupPage() {
   const [info, setInfo] = useState<IpInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');

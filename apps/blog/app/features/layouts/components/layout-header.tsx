@@ -5,8 +5,8 @@ import {
   ZView,
   type LinkOption,
 } from '@zcat/ui';
+import { Link, useRouterState } from '@tanstack/react-router';
 import React from 'react';
-import { Link, useLocation } from 'react-router';
 
 export interface LayoutNavRenderLinkProps {
   to: string;
@@ -65,14 +65,16 @@ interface LayoutHeaderProps {
 }
 
 export function LayoutHeader(props: LayoutHeaderProps) {
-  const { pathname } = useLocation();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
   return (
     <LayoutNav
       {...props}
       pathname={pathname}
       renderLink={({ to, className, children }) => (
-        <Link to={to} className={className}>
+        <Link to={to as never} className={className}>
           {children}
         </Link>
       )}

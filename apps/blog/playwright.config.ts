@@ -16,4 +16,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: {
+    command: 'node .output/server/index.mjs',
+    url: 'http://localhost:1024/toolbox',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+    env: {
+      PORT: '1024',
+      BACKEND_API_URL: 'http://localhost:9090/api',
+    },
+  },
 });

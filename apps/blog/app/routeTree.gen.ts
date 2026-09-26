@@ -11,9 +11,23 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as BlogRouteImport } from './routes/_blog';
 import { Route as AboutRouteImport } from './routes/about';
+import { Route as AiChatRouteImport } from './routes/ai-chat';
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml';
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml';
+import { Route as ToolboxRouteImport } from './routes/toolbox';
 import { Route as BlogIndexRouteImport } from './routes/_blog/index';
 import { Route as BlogGalleryRouteImport } from './routes/_blog/gallery';
 import { Route as BlogPostBoardRouteImport } from './routes/_blog/post-board';
+import { Route as ToolboxIndexRouteImport } from './routes/toolbox/index';
+import { Route as ToolboxAesCryptoRouteImport } from './routes/toolbox/aes-crypto';
+import { Route as ToolboxBase64ToImageRouteImport } from './routes/toolbox/base64-to-image';
+import { Route as ToolboxHashRouteImport } from './routes/toolbox/hash';
+import { Route as ToolboxIdCardGeneratorRouteImport } from './routes/toolbox/id-card-generator';
+import { Route as ToolboxIpLookupRouteImport } from './routes/toolbox/ip-lookup';
+import { Route as ToolboxJsonViewerRouteImport } from './routes/toolbox/json-viewer';
+import { Route as ToolboxMarkdownToHtmlRouteImport } from './routes/toolbox/markdown-to-html';
+import { Route as ToolboxQrcodeGeneratorRouteImport } from './routes/toolbox/qrcode-generator';
+import { Route as ToolboxRsaCryptoRouteImport } from './routes/toolbox/rsa-crypto';
 import { Route as BlogGalleryIdRouteImport } from './routes/_blog/gallery_.$id';
 import { Route as BlogPostBoardIdRouteImport } from './routes/_blog/post-board_.$id';
 
@@ -24,6 +38,26 @@ const BlogRoute = BlogRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const AiChatRoute = AiChatRouteImport.update({
+  id: '/ai-chat',
+  path: '/ai-chat',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ToolboxRoute = ToolboxRouteImport.update({
+  id: '/toolbox',
+  path: '/toolbox',
   getParentRoute: () => rootRouteImport,
 } as any);
 const BlogIndexRoute = BlogIndexRouteImport.update({
@@ -41,6 +75,56 @@ const BlogPostBoardRoute = BlogPostBoardRouteImport.update({
   path: '/post-board',
   getParentRoute: () => BlogRoute,
 } as any);
+const ToolboxIndexRoute = ToolboxIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxAesCryptoRoute = ToolboxAesCryptoRouteImport.update({
+  id: '/aes-crypto',
+  path: '/aes-crypto',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxBase64ToImageRoute = ToolboxBase64ToImageRouteImport.update({
+  id: '/base64-to-image',
+  path: '/base64-to-image',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxHashRoute = ToolboxHashRouteImport.update({
+  id: '/hash',
+  path: '/hash',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxIdCardGeneratorRoute = ToolboxIdCardGeneratorRouteImport.update({
+  id: '/id-card-generator',
+  path: '/id-card-generator',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxIpLookupRoute = ToolboxIpLookupRouteImport.update({
+  id: '/ip-lookup',
+  path: '/ip-lookup',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxJsonViewerRoute = ToolboxJsonViewerRouteImport.update({
+  id: '/json-viewer',
+  path: '/json-viewer',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxMarkdownToHtmlRoute = ToolboxMarkdownToHtmlRouteImport.update({
+  id: '/markdown-to-html',
+  path: '/markdown-to-html',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxQrcodeGeneratorRoute = ToolboxQrcodeGeneratorRouteImport.update({
+  id: '/qrcode-generator',
+  path: '/qrcode-generator',
+  getParentRoute: () => ToolboxRoute,
+} as any);
+const ToolboxRsaCryptoRoute = ToolboxRsaCryptoRouteImport.update({
+  id: '/rsa-crypto',
+  path: '/rsa-crypto',
+  getParentRoute: () => ToolboxRoute,
+} as any);
 const BlogGalleryIdRoute = BlogGalleryIdRouteImport.update({
   id: '/gallery_/$id',
   path: '/gallery/$id',
@@ -55,16 +139,43 @@ const BlogPostBoardIdRoute = BlogPostBoardIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof BlogIndexRoute;
   '/about': typeof AboutRoute;
+  '/ai-chat': typeof AiChatRoute;
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
+  '/toolbox': typeof ToolboxRouteWithChildren;
   '/gallery': typeof BlogGalleryRoute;
   '/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
+  '/toolbox/': typeof ToolboxIndexRoute;
   '/gallery/$id': typeof BlogGalleryIdRoute;
   '/post-board/$id': typeof BlogPostBoardIdRoute;
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute;
+  '/ai-chat': typeof AiChatRoute;
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/gallery': typeof BlogGalleryRoute;
   '/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
   '/': typeof BlogIndexRoute;
+  '/toolbox': typeof ToolboxIndexRoute;
   '/gallery/$id': typeof BlogGalleryIdRoute;
   '/post-board/$id': typeof BlogPostBoardIdRoute;
 }
@@ -72,9 +183,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/_blog': typeof BlogRouteWithChildren;
   '/about': typeof AboutRoute;
+  '/ai-chat': typeof AiChatRoute;
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
+  '/toolbox': typeof ToolboxRouteWithChildren;
   '/_blog/gallery': typeof BlogGalleryRoute;
   '/_blog/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
   '/_blog/': typeof BlogIndexRoute;
+  '/toolbox/': typeof ToolboxIndexRoute;
   '/_blog/gallery_/$id': typeof BlogGalleryIdRoute;
   '/_blog/post-board_/$id': typeof BlogPostBoardIdRoute;
 }
@@ -83,25 +208,66 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/ai-chat'
+    | '/rss.xml'
+    | '/sitemap.xml'
+    | '/toolbox'
     | '/gallery'
     | '/post-board'
+    | '/toolbox/aes-crypto'
+    | '/toolbox/base64-to-image'
+    | '/toolbox/hash'
+    | '/toolbox/id-card-generator'
+    | '/toolbox/ip-lookup'
+    | '/toolbox/json-viewer'
+    | '/toolbox/markdown-to-html'
+    | '/toolbox/qrcode-generator'
+    | '/toolbox/rsa-crypto'
+    | '/toolbox/'
     | '/gallery/$id'
     | '/post-board/$id';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/about'
+    | '/ai-chat'
+    | '/rss.xml'
+    | '/sitemap.xml'
     | '/gallery'
     | '/post-board'
+    | '/toolbox/aes-crypto'
+    | '/toolbox/base64-to-image'
+    | '/toolbox/hash'
+    | '/toolbox/id-card-generator'
+    | '/toolbox/ip-lookup'
+    | '/toolbox/json-viewer'
+    | '/toolbox/markdown-to-html'
+    | '/toolbox/qrcode-generator'
+    | '/toolbox/rsa-crypto'
     | '/'
+    | '/toolbox'
     | '/gallery/$id'
     | '/post-board/$id';
   id:
     | '__root__'
     | '/_blog'
     | '/about'
+    | '/ai-chat'
+    | '/rss.xml'
+    | '/sitemap.xml'
+    | '/toolbox'
     | '/_blog/gallery'
     | '/_blog/post-board'
+    | '/toolbox/aes-crypto'
+    | '/toolbox/base64-to-image'
+    | '/toolbox/hash'
+    | '/toolbox/id-card-generator'
+    | '/toolbox/ip-lookup'
+    | '/toolbox/json-viewer'
+    | '/toolbox/markdown-to-html'
+    | '/toolbox/qrcode-generator'
+    | '/toolbox/rsa-crypto'
     | '/_blog/'
+    | '/toolbox/'
     | '/_blog/gallery_/$id'
     | '/_blog/post-board_/$id';
   fileRoutesById: FileRoutesById;
@@ -109,6 +275,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren;
   AboutRoute: typeof AboutRoute;
+  AiChatRoute: typeof AiChatRoute;
+  RssDotxmlRoute: typeof RssDotxmlRoute;
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
+  ToolboxRoute: typeof ToolboxRouteWithChildren;
 }
 
 declare module '@tanstack/react-router' {
@@ -125,6 +295,34 @@ declare module '@tanstack/react-router' {
       path: '/about';
       fullPath: '/about';
       preLoaderRoute: typeof AboutRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/ai-chat': {
+      id: '/ai-chat';
+      path: '/ai-chat';
+      fullPath: '/ai-chat';
+      preLoaderRoute: typeof AiChatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/rss.xml': {
+      id: '/rss.xml';
+      path: '/rss.xml';
+      fullPath: '/rss.xml';
+      preLoaderRoute: typeof RssDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/sitemap.xml': {
+      id: '/sitemap.xml';
+      path: '/sitemap.xml';
+      fullPath: '/sitemap.xml';
+      preLoaderRoute: typeof SitemapDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/toolbox': {
+      id: '/toolbox';
+      path: '/toolbox';
+      fullPath: '/toolbox';
+      preLoaderRoute: typeof ToolboxRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/_blog/': {
@@ -147,6 +345,76 @@ declare module '@tanstack/react-router' {
       fullPath: '/post-board';
       preLoaderRoute: typeof BlogPostBoardRouteImport;
       parentRoute: typeof BlogRoute;
+    };
+    '/toolbox/': {
+      id: '/toolbox/';
+      path: '/';
+      fullPath: '/toolbox/';
+      preLoaderRoute: typeof ToolboxIndexRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/aes-crypto': {
+      id: '/toolbox/aes-crypto';
+      path: '/aes-crypto';
+      fullPath: '/toolbox/aes-crypto';
+      preLoaderRoute: typeof ToolboxAesCryptoRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/base64-to-image': {
+      id: '/toolbox/base64-to-image';
+      path: '/base64-to-image';
+      fullPath: '/toolbox/base64-to-image';
+      preLoaderRoute: typeof ToolboxBase64ToImageRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/hash': {
+      id: '/toolbox/hash';
+      path: '/hash';
+      fullPath: '/toolbox/hash';
+      preLoaderRoute: typeof ToolboxHashRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/id-card-generator': {
+      id: '/toolbox/id-card-generator';
+      path: '/id-card-generator';
+      fullPath: '/toolbox/id-card-generator';
+      preLoaderRoute: typeof ToolboxIdCardGeneratorRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/ip-lookup': {
+      id: '/toolbox/ip-lookup';
+      path: '/ip-lookup';
+      fullPath: '/toolbox/ip-lookup';
+      preLoaderRoute: typeof ToolboxIpLookupRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/json-viewer': {
+      id: '/toolbox/json-viewer';
+      path: '/json-viewer';
+      fullPath: '/toolbox/json-viewer';
+      preLoaderRoute: typeof ToolboxJsonViewerRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/markdown-to-html': {
+      id: '/toolbox/markdown-to-html';
+      path: '/markdown-to-html';
+      fullPath: '/toolbox/markdown-to-html';
+      preLoaderRoute: typeof ToolboxMarkdownToHtmlRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/qrcode-generator': {
+      id: '/toolbox/qrcode-generator';
+      path: '/qrcode-generator';
+      fullPath: '/toolbox/qrcode-generator';
+      preLoaderRoute: typeof ToolboxQrcodeGeneratorRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
+    '/toolbox/rsa-crypto': {
+      id: '/toolbox/rsa-crypto';
+      path: '/rsa-crypto';
+      fullPath: '/toolbox/rsa-crypto';
+      preLoaderRoute: typeof ToolboxRsaCryptoRouteImport;
+      parentRoute: typeof ToolboxRoute;
     };
     '/_blog/gallery_/$id': {
       id: '/_blog/gallery_/$id';
@@ -183,9 +451,42 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren);
 
+interface ToolboxRouteChildren {
+  ToolboxAesCryptoRoute: typeof ToolboxAesCryptoRoute;
+  ToolboxBase64ToImageRoute: typeof ToolboxBase64ToImageRoute;
+  ToolboxHashRoute: typeof ToolboxHashRoute;
+  ToolboxIdCardGeneratorRoute: typeof ToolboxIdCardGeneratorRoute;
+  ToolboxIpLookupRoute: typeof ToolboxIpLookupRoute;
+  ToolboxJsonViewerRoute: typeof ToolboxJsonViewerRoute;
+  ToolboxMarkdownToHtmlRoute: typeof ToolboxMarkdownToHtmlRoute;
+  ToolboxQrcodeGeneratorRoute: typeof ToolboxQrcodeGeneratorRoute;
+  ToolboxRsaCryptoRoute: typeof ToolboxRsaCryptoRoute;
+  ToolboxIndexRoute: typeof ToolboxIndexRoute;
+}
+
+const ToolboxRouteChildren: ToolboxRouteChildren = {
+  ToolboxAesCryptoRoute: ToolboxAesCryptoRoute,
+  ToolboxBase64ToImageRoute: ToolboxBase64ToImageRoute,
+  ToolboxHashRoute: ToolboxHashRoute,
+  ToolboxIdCardGeneratorRoute: ToolboxIdCardGeneratorRoute,
+  ToolboxIpLookupRoute: ToolboxIpLookupRoute,
+  ToolboxJsonViewerRoute: ToolboxJsonViewerRoute,
+  ToolboxMarkdownToHtmlRoute: ToolboxMarkdownToHtmlRoute,
+  ToolboxQrcodeGeneratorRoute: ToolboxQrcodeGeneratorRoute,
+  ToolboxRsaCryptoRoute: ToolboxRsaCryptoRoute,
+  ToolboxIndexRoute: ToolboxIndexRoute,
+};
+
+const ToolboxRouteWithChildren =
+  ToolboxRoute._addFileChildren(ToolboxRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   AboutRoute: AboutRoute,
+  AiChatRoute: AiChatRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ToolboxRoute: ToolboxRouteWithChildren,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

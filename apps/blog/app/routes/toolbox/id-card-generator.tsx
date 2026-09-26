@@ -14,6 +14,7 @@ import {
   ZButton,
 } from '@zcat/ui';
 import dayjs from 'dayjs';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import z from 'zod';
 
@@ -29,18 +30,21 @@ const ZForm = createZForm({
   gender: z.enum(['male', 'female']),
 });
 
-export function meta() {
-  return [
-    { title: '身份证生成' },
-    {
-      name: 'description',
-      content:
-        '根据地区码、生日与性别生成合法的18位身份证号（含校验位）。示例地区码非完整库，仅供学习与测试使用。',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/id-card-generator')({
+  head: () => ({
+    meta: [
+      { title: '身份证生成' },
+      {
+        name: 'description',
+        content:
+          '根据地区码、生日与性别生成合法的18位身份证号（含校验位）。示例地区码非完整库，仅供学习与测试使用。',
+      },
+    ],
+  }),
+  component: IdCardGeneratorPage,
+});
 
-export default function IdCardGeneratorPage() {
+function IdCardGeneratorPage() {
   const form = ZForm.useForm({
     defaultValues: {
       areaCodes: [],

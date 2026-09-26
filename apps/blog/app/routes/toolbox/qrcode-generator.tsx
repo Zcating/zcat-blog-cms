@@ -13,19 +13,23 @@ import {
   ZNotification,
 } from '@zcat/ui';
 import { Download, QrCode } from 'lucide-react';
+import { createFileRoute } from '@tanstack/react-router';
 import { useRef, useState } from 'react';
 import { useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
-export function meta() {
-  return [
-    { title: '二维码生成器' },
-    {
-      name: 'description',
-      content: '在线二维码生成工具，支持自定义颜色、大小和纠错等级',
-    },
-  ];
-}
+export const Route = createFileRoute('/toolbox/qrcode-generator')({
+  head: () => ({
+    meta: [
+      { title: '二维码生成器' },
+      {
+        name: 'description',
+        content: '在线二维码生成工具，支持自定义颜色、大小和纠错等级',
+      },
+    ],
+  }),
+  component: QrCodeGeneratorPage,
+});
 
 const QRCodeSchema = z.object({
   value: z.string().min(1, '请输入内容').default('https://zcat.wiki'),
@@ -44,7 +48,7 @@ const QRCodeSchema = z.object({
 
 const QRCodeForm = createZForm(QRCodeSchema);
 
-export default function QrCodeGeneratorPage() {
+function QrCodeGeneratorPage() {
   const [qrData, setQrData] = useState<z.infer<typeof QRCodeSchema>>({
     value: 'https://zcat.wiki',
     size: 256,
