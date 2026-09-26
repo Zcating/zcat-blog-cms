@@ -9,9 +9,10 @@
  * Save flow:
  *   1. Run the markdown body through
  *      `extractBlobImageUrls` + `uploadArticleMarkdownImages` to
- *      resolve any `blob:` images to OSS keys. The keys are
- *      positionally aligned with the `blob:` URLs in the markdown
- *      so `rewriteArticleMarkdownImages` can splice them back in.
+ *      resolve any `blob:` images to the CDN URLs the backend
+ *      returns. Those URLs are positionally aligned with the
+ *      `blob:` URLs in the markdown so `rewriteArticleMarkdownImages`
+ *      can splice them back in.
  *   2. POST the rewritten body + metadata to either `createArticle`
  *      (id is undefined) or `updateArticle` (id is defined). The
  *      cache is invalidated on success so the list page re-reads
@@ -111,13 +112,13 @@ export function ArticleEditorPage({ id }: ArticleEditorPageProps) {
     onSubmit: async (values) => {
       let content = values.content ?? '';
 
-      // Step 1: extract and upload any blob: images. The keys are
-      // returned in the same positional order as the blob URLs in
-      // the markdown, so the rewrite step is positional.
+      // Step 1: extract and upload any blob: images. The resolved
+      // URLs are returned in the same positional order as the blob
+      // URLs in the markdown, so the rewrite step is positional.
       const blobUrls = extractBlobImageUrls(content);
       if (blobUrls.length > 0) {
-        const keys = await uploadArticleMarkdownImages(blobUrls);
-        content = rewriteArticleMarkdownImages(content, keys);
+        const resolvedUrls = await uploadArticleMarkdownImages(blobUrls);
+        content = rewriteArticleMarkdownImages(content, resolvedUrls);
       }
 
       const payload = {
@@ -141,9 +142,9 @@ export function ArticleEditorPage({ id }: ArticleEditorPageProps) {
       }
 
       // Invalidate the list cache so the next navigation lands on
-      // a fresh row. We don't have the public URL list here — the
-      // detail endpoint will re-fetch the full body when the
-      // editor lands on the next page.
+      // a fresh row. The saved body already carries the resolved
+      // CDN URLs, so the detail endpoint returns images the
+      // browser can load.
       queryClient.invalidateQueries({ queryKey: ['articles', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['articles', 'detail'] });
 

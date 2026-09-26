@@ -30,8 +30,6 @@ import {
 import { OssAction } from '@cms/core';
 import { photoListQueryOptions } from '@cms/server/photos';
 import type { PaginatedPhotos, Photo } from '@cms/server/photos/schemas';
-// `Photo` is intentionally retained as a type reference for the
-// mutation result signatures below.
 
 export interface UsePhotosListInput {
   page: number;

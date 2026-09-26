@@ -33,10 +33,13 @@ import { clearPrivateQueryCache } from './cache-helpers';
  * Always returns a new instance — never reuse the result across
  * requests. Automatic retries are disabled per ADR-0003.
  *
- * The `QueryCache` and `MutationCache` `onError` hooks are the single
- * 401 path: a private server function that rejects as unauthorized drops
- * the whole cache, so no entry added before the session died can survive
- * it.
+ * The `QueryCache` and `MutationCache` `onError` hooks are the reactive
+ * half of the auth-failure wipe: a private server function that rejects
+ * as unauthorized drops the whole cache, so no entry added before the
+ * session died can survive it. The proactive half lives at the two
+ * places a session changes without a failing query — the `_cms`
+ * invalid-session redirect and the post-login navigation, which both
+ * call `clearPrivateQueryCache` directly.
  */
 export function makeQueryClient(): QueryClient {
   const clearCacheOnUnauthorized = (error: unknown) => {

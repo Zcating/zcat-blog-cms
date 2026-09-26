@@ -5,8 +5,9 @@
  *   1. Markdown blob: URLs are extracted from the markdown payload.
  *   2. Each blob is fetched, compressed via `Compressor`, then PUT to
  *      the presigned URL exposed by `getSystemSettingUploadUrlServerFn`.
- *   3. After upload, the keys are POSTed to `uploadArticleImages` and
- *      returned (the editor rewrites the markdown with these keys).
+ *   3. After upload, the keys are POSTed to `uploadArticleImages`
+ *      and the backend-resolved CDN URLs are returned (the editor
+ *      rewrites the markdown with those URLs).
  *
  * The only mocked boundaries are `fetch` (for both `fetch(blob:)` and
  * `fetch(presignedUrl)`) plus the two server functions.
@@ -27,6 +28,7 @@ vi.mock('@cms/server/system-setting', () => ({
 }));
 
 import {
+  extractBlobImageUrls,
   rewriteArticleMarkdownImages,
   uploadArticleMarkdownImages,
 } from './use-article-image-upload';
@@ -81,6 +83,69 @@ describe('uploadArticleMarkdownImages', () => {
     });
     expect(mockGetUploadUrl).toHaveBeenCalledTimes(2);
     expect(mockUploadImages).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands the editor the CDN URLs resolved by the backend, so the saved markdown is loadable', async () => {
+    const fakeBlob = new Blob(['fake-image'], { type: 'image/png' });
+    const putCalls: { url: string; method?: string }[] = [];
+    global.fetch = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.startsWith('blob:')) {
+          return new Response(fakeBlob, { status: 200 });
+        }
+        if (url.startsWith('http://oss.local/upload')) {
+          putCalls.push({ url, method: init?.method });
+          return new Response(null, { status: 200 });
+        }
+        throw new Error(`Unexpected fetch: ${url}`);
+      },
+    ) as unknown as typeof fetch;
+
+    mockGetUploadUrl.mockImplementation(
+      async ({ data }: { data: { key: string } }) => ({
+        presignedUrl: `http://oss.local/upload/${encodeURIComponent(data.key)}?signed=1`,
+      }),
+    );
+
+    mockUploadImages.mockImplementation(
+      async ({ data }: { data: { images: string[] } }) =>
+        data.images.map((key) => `https://cdn.example.com/${key}`),
+    );
+
+    const markdown =
+      'Intro\n\n![alt one](blob:http://localhost/abc)\n\nMiddle\n\n![remote](https://cdn.example.com/existing.png)\n\n![alt two](blob:http://localhost/def)\n';
+
+    const blobUrls = extractBlobImageUrls(markdown);
+    const resolved = await uploadArticleMarkdownImages(blobUrls);
+    const content = rewriteArticleMarkdownImages(markdown, resolved);
+
+    // Bytes still go browser-direct to OSS; only keys reach the server.
+    expect(putCalls.map((call) => call.method)).toEqual(['PUT', 'PUT']);
+    expect(putCalls.every((call) => call.url.includes('/upload/'))).toBe(true);
+    expect(mockUploadImages).toHaveBeenCalledWith({
+      data: {
+        images: [
+          expect.stringMatching(/^articles\//),
+          expect.stringMatching(/^articles\//),
+        ],
+      },
+    });
+
+    // The persisted body must carry resolvable URLs, never raw keys.
+    expect(content).toMatch(
+      /!\[alt one\]\(https:\/\/cdn\.example\.com\/articles\//,
+    );
+    expect(content).toMatch(
+      /!\[alt two\]\(https:\/\/cdn\.example\.com\/articles\//,
+    );
+    expect(content).not.toMatch(/\]\(articles\//);
+    expect(content).not.toContain('blob:');
+
+    // Already-remote images are left alone.
+    expect(content).toContain(
+      '![remote](https://cdn.example.com/existing.png)',
+    );
   });
 });
 

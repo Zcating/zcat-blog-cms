@@ -39,7 +39,7 @@ import {
   createSchemaForm,
   PaginationWorkspace,
 } from '@cms/core';
-import type { Photo } from '@cms/server/photos/schemas';
+import type { GetPhotosInput, Photo } from '@cms/server/photos/schemas';
 
 import { PhotoCard, type PhotoCardData } from '../../album/components/album';
 
@@ -54,6 +54,10 @@ interface PhotoFormData {
   id: number;
   name: string;
   image: string;
+}
+
+interface PhotosListProps {
+  search: Record<string, unknown>;
 }
 
 const useSchemeForm = createSchemaForm({
@@ -81,23 +85,15 @@ function buildOptimisticPhoto(data: PhotoFormData): PhotoCardData {
   };
 }
 
-export default function Photos() {
-  const { data: pagination } = usePhotosList({ page: 1, pageSize: 20 });
+export default function Photos({ search }: PhotosListProps) {
+  const listInput = derivePhotosListQueryInput(search);
+  const { data: pagination } = usePhotosList(listInput);
 
-  const createMutation = useCreatePhoto({
-    page: pagination.page,
-    pageSize: pagination.pageSize,
-  });
+  const createMutation = useCreatePhoto(listInput);
 
-  const updateMutation = useUpdatePhoto({
-    page: pagination.page,
-    pageSize: pagination.pageSize,
-  });
+  const updateMutation = useUpdatePhoto(listInput);
 
-  const deleteMutation = useDeletePhoto({
-    page: pagination.page,
-    pageSize: pagination.pageSize,
-  });
+  const deleteMutation = useDeletePhoto(listInput);
 
   const [optimisticPhotos, setOptimisticPhotos] = React.useState<
     PhotoCardData[]
@@ -223,4 +219,28 @@ export default function Photos() {
       ) : null}
     </PaginationWorkspace>
   );
+}
+
+/**
+ * 从路由传入的 search 参数中派生照片列表 Query key，使页面 key 与
+ * 路由 loader 预热的 key 保持一致。loader 已经用同样的参数调用了
+ * `query({ ...options, staleTime: 'static' })`，因此 SSR 首次渲染命中缓存。
+ */
+function derivePhotosListQueryInput(
+  search: Record<string, unknown>,
+): GetPhotosInput {
+  const albumId = coerceQueryNumber(search.albumId, 0);
+  return {
+    albumId: albumId > 0 ? albumId : undefined,
+    page: coerceQueryNumber(search.page, 1),
+    pageSize: coerceQueryNumber(search.pageSize, 20),
+  };
+}
+
+function coerceQueryNumber(raw: unknown, defaultValue: number): number {
+  if (raw == null || raw === '') {
+    return defaultValue;
+  }
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }

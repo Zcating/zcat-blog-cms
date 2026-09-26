@@ -12,8 +12,10 @@ import {
 } from '@zcat/ui';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
+import { clearPrivateQueryCache } from '@cms/shared/query';
 import { login } from '@cms/server/auth';
 
 export function meta() {
@@ -30,6 +32,7 @@ const LoginForm = createZForm({
 
 export default function GuestHome() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   // Phase 3a remediation: wrap the server function with
   // `useServerFn` so it integrates with TanStack Start's start
   // handler the same way the official docs recommend. This is the
@@ -48,6 +51,14 @@ export default function GuestHome() {
           data: { username: data.username, password: data.password },
         });
         await ZNotification.success('登录成功');
+        // A new identity is a session change, and this navigation is
+        // an SPA transition: the browser QueryClient is not rebuilt.
+        // Every private loader uses `staleTime: 'static'`, so without
+        // this wipe the new account renders the previous account's
+        // `['statistics','*']`, `['articles','list']` and friends.
+        // Same helper the logout handler, the `_cms` guard and the
+        // cache `onError` hooks use.
+        clearPrivateQueryCache(queryClient);
         // Phase 3a registers the `/dashboard` route via the `_cms` layout
         // placeholder, so the navigation now resolves through the typed
         // route union — no cast needed.

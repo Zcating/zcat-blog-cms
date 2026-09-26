@@ -18,7 +18,7 @@
  *
  * The component deliberately keeps the existing `@zcat/ui` sidebar
  * primitives and the menu shape so the visual identity of the
- * shell is preserved. Phase 3a does not redesign UI.
+ * shell is preserved.
  */
 
 import {
@@ -26,6 +26,7 @@ import {
   SidebarTrigger,
   ZAvatar,
   ZDialog,
+  ZNotification,
   ZSidebar,
   ZStickyHeader,
   ZView,
@@ -90,12 +91,24 @@ function Layout({ cmsUser, children }: LayoutProps) {
     });
     if (!confirmed) return;
 
-    await logout();
+    let logoutError: unknown;
+    try {
+      await logout();
+    } catch (error) {
+      logoutError = error;
+    }
     // Wipe the entire private Query cache so no stale user/tenant
     // data lingers on the next session. The browser singleton is
-    // preserved — only the entries are dropped.
+    // preserved — only the entries are dropped. This must run even
+    // when `logout()` rejected, so it is never inside the try above.
     clearPrivateQueryCache(queryClient);
     await navigate({ to: '/login' });
+
+    if (logoutError !== undefined) {
+      await ZNotification.error(
+        logoutError instanceof Error ? logoutError.message : '退出失败，请重试',
+      );
+    }
   };
 
   const renderItem = (item: ZSidebarOption) => {
@@ -198,10 +211,8 @@ const menuItems: ZSidebarOption[] = [
   },
 ];
 
-// Re-export the legacy default so the legacy route entry still
-// compiles while feature-domain routes are migrated in Phase 3b.
-// Phase 3a does not mount this directly — `_cms.tsx` imports the
-// named `CMSLayoutShell` export above.
+// Unused default export kept for the bare-shell shape. Nothing mounts
+// it: `_cms.tsx` imports the named `CMSLayoutShell` export above.
 export default function CMSLayout() {
   return <Layout cmsUser={undefined}>{null}</Layout>;
 }

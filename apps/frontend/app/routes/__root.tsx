@@ -31,6 +31,9 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router';
 
+import { NotFoundPage } from '@cms/features/not-found/routes/not-found';
+import { RouteErrorPage } from '@cms/features/not-found/routes/route-error';
+
 export interface RootRouterContext {
   queryClient: QueryClient;
 }
@@ -40,9 +43,13 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'ZCAT-BLOG-CMS' },
+      { name: 'description', content: 'ZCAT-BLOG-CMS' },
     ],
   }),
   component: RootComponent,
+  notFoundComponent: NotFoundPage,
+  errorComponent: RouteErrorPage,
 });
 
 function RootComponent() {

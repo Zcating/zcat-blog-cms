@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,6 +22,8 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
+import { makeQueryClient } from '@cms/shared/query';
+
 import LoginPage from './login';
 
 describe('LoginPage', () => {
@@ -29,7 +32,11 @@ describe('LoginPage', () => {
   });
 
   it('submits username and password then navigates to dashboard', async () => {
-    render(<LoginPage />);
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <LoginPage />
+      </QueryClientProvider>,
+    );
 
     fireEvent.change(screen.getByLabelText('用户名'), {
       target: { value: 'admin' },

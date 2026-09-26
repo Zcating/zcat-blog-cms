@@ -8,9 +8,10 @@
  * The `beforeLoad` is a UX guard only:
  *   - It calls the public typed `isValid` server function to learn
  *     whether the current cookie represents a live session.
- *   - On invalid (or any error), it throws a redirect to `/login`
- *     so the user lands on the login screen before any private UI
- *     is rendered.
+ *   - On invalid (or any error), it empties the private Query cache and
+ *     then throws a redirect to `/login`, so the user lands on the
+ *     login screen before any private UI is rendered and the next
+ *     session starts from an empty cache.
  *   - On valid, it loads the current user via the protected
  *     `getCurrentUser` server function, seeds the FULL `UserInfo`
  *     into the per-request Query cache under the canonical
@@ -44,6 +45,7 @@ import { CMSLayoutShell } from '@cms/layouts/cms-layout';
 import { decideCmsAccess } from '@cms/shared/auth/cms-access';
 import { buildCmsCacheSeed } from '@cms/shared/auth/cms-seed';
 import type { CmsShellUser } from '@cms/shared/auth/cms-seed';
+import { clearPrivateQueryCache } from '@cms/shared/query';
 import { getCurrentUser, isValid } from '@cms/server/users';
 
 /**
@@ -58,6 +60,12 @@ export const Route = createFileRoute('/_cms')({
     });
 
     if (decision.kind === 'redirect') {
+      // A session change starts from an EMPTY private cache. The
+      // previous session's entries were written under `staleTime:
+      // 'static'`, so without this wipe the next account to sign in on
+      // this tab keeps reading them. Same helper the logout handler
+      // and the cache `onError` hooks use.
+      clearPrivateQueryCache(context.queryClient);
       throw redirect({
         to: decision.to,
         search: { redirect: location.href },

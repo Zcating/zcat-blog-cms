@@ -6,8 +6,10 @@
  * `context.queryClient.query({ ...options, staleTime: 'static' })`
  * 预热缓存，本组件不再读 `useLoaderData` / `HttpClient`。
  *
- * 乐观更新：保留旧页面通过 `useOptimisticArray` 维护的本地状态
- * 语义（创建 / 编辑 / 删除），失败时调用 `rollback` 还原。
+ * 乐观更新：创建 / 编辑 / 删除全部走 `../hooks/use-albums`，由 hook
+ * 写入 Query 缓存并在失败时回滚到快照。页面只保留表单接线与路由跳转，
+ * 不再维护数组状态——loader 以 `staleTime: 'static'` 预热，只写本地
+ * 状态的变更会在下次挂载时丢失。
  */
 
 import { ZButton, ZGrid } from '@zcat/ui';
@@ -16,7 +18,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import zod from 'zod';
 
-import { AlbumImageCard } from '@cms/features/album/components/album';
+import {
+  AlbumImageCard,
+  type PhotoAlbumData,
+} from '@cms/features/album/components/album';
 import {
   createCheckbox,
   createConstNumber,
@@ -24,29 +29,20 @@ import {
   createSchemaForm,
   createTextArea,
   PaginationWorkspace,
-  useOptimisticArray,
 } from '@cms/core';
-import {
-  createPhotoAlbum,
-  deletePhotoAlbum,
-  photoAlbumsListQueryOptions,
-  updatePhotoAlbum,
-} from '@cms/server/albums';
+import { photoAlbumsListQueryOptions } from '@cms/server/albums';
 import type {
-  CreatePhotoAlbumInput,
-  DeletePhotoAlbumInput,
   GetPhotoAlbumsInput,
   PaginatedPhotoAlbums,
   PhotoAlbum,
-  UpdatePhotoAlbumInput,
 } from '@cms/server/albums/schemas';
 
-interface AlbumFormValues {
-  id: number;
-  name: string;
-  available: boolean;
-  description: string;
-}
+import {
+  type AlbumFormValues,
+  useCreateAlbum,
+  useDeleteAlbum,
+  useUpdateAlbum,
+} from '../hooks/use-albums';
 
 interface AlbumsListProps {
   search: Record<string, unknown>;
@@ -67,52 +63,20 @@ export default function Albums({ search }: AlbumsListProps) {
   // through. The shape is fixed by the corresponding Zod schema
   // (`PaginatedPhotoAlbumsSchema`) so we narrow here.
   const paginated = pagination as unknown as PaginatedPhotoAlbums;
+  // 变更期间缓存里带 `loading: true` 的行就是乐观更新的行，
+  // 所以列表直接渲染缓存即可。
+  const albums = paginated.data as PhotoAlbumData[];
 
-  const [albums, setOptimisticAlbums, commitAlbums] = useOptimisticArray(
-    paginated.data,
-    (state, values: AlbumFormValues) => {
-      if (values.id !== 0) {
-        return state.map((album) =>
-          album.id === values.id
-            ? {
-                ...album,
-                name: values.name,
-                available: values.available,
-                description: values.description,
-                loading: true,
-              }
-            : album,
-        );
-      }
+  const createAlbum = useCreateAlbum({ page, pageSize });
+  const updateAlbum = useUpdateAlbum();
+  const deleteAlbum = useDeleteAlbum({ page, pageSize });
 
-      // crypto.randomUUID() 避免 Date.now() 冲突（连续点击新增会覆盖乐观更新）
-      return [
-        ...state,
-        {
-          id: -Number.parseInt(
-            crypto.randomUUID().replace(/-/g, '').slice(0, 13),
-            16,
-          ),
-          name: values.name,
-          available: values.available,
-          description: values.description,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          loading: true,
-        },
-      ];
-    },
-  );
-
-  const deleteAlbum = (item: AlbumFormValues) => {
+  const deleteItem = (item: PhotoAlbumData) => {
     React.startTransition(async () => {
-      commitAlbums('remove', item);
       try {
-        await deletePhotoAlbum({
-          data: { id: item.id } satisfies DeletePhotoAlbumInput,
-        });
+        await deleteAlbum.mutateAsync(item.id);
       } catch {
-        commitAlbums('rollback');
+        // 快照已由 hook 回滚
       }
     });
   };
@@ -121,22 +85,14 @@ export default function Albums({ search }: AlbumsListProps) {
     title: '新增相册',
     onSubmit: async (data: AlbumFormValues) => {
       React.startTransition(async () => {
-        setOptimisticAlbums(data);
         try {
-          const result = await createPhotoAlbum({
-            data: {
-              name: data.name,
-              description: data.description,
-              available: data.available,
-            } satisfies CreatePhotoAlbumInput,
+          await createAlbum.mutateAsync({
+            name: data.name,
+            description: data.description,
+            available: data.available,
           });
-          if (!result) {
-            commitAlbums('rollback');
-            return;
-          }
-          commitAlbums('update', result);
         } catch {
-          commitAlbums('rollback');
+          // 快照已由 hook 回滚
         }
       });
     },
@@ -147,23 +103,10 @@ export default function Albums({ search }: AlbumsListProps) {
     confirmText: '保存',
     onSubmit: async (data: AlbumFormValues) => {
       React.startTransition(async () => {
-        setOptimisticAlbums(data);
         try {
-          const result = await updatePhotoAlbum({
-            data: {
-              id: data.id,
-              name: data.name,
-              description: data.description,
-              available: data.available,
-            } satisfies UpdatePhotoAlbumInput,
-          });
-          if (!result) {
-            commitAlbums('rollback');
-            return;
-          }
-          commitAlbums('update', result);
+          await updateAlbum.mutateAsync(data);
         } catch {
-          commitAlbums('rollback');
+          // 快照已由 hook 回滚
         }
       });
     },
@@ -233,7 +176,7 @@ export default function Albums({ search }: AlbumsListProps) {
             }}
             onClickItem={handleClickAlbum}
             onEdit={edit}
-            onDelete={deleteAlbum}
+            onDelete={deleteItem}
           />
         )}
       />

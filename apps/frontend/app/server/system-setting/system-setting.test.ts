@@ -3,8 +3,7 @@
  *
  * The only seam these tests touch is the global `fetch` boundary — every
  * other collaborator (env resolver, cookie reader, envelope parser, Zod
- * schema) is exercised through the actual exported `queryFn` helper and
- * `queryOptions` factory.
+ * schema) is exercised through the actual exported `queryFn` helper.
  *
  * Goals:
  * 1. The upload-config op GETs /cms/system-setting/upload-config?key=<key>
@@ -13,16 +12,12 @@
  * 2. The envelope's `data` payload is unwrapped through the shared
  *    `parseEnvelope` helper, validated by the operation's Zod schema.
  * 3. Non-success envelopes throw a typed `ApiError`.
- * 4. The `queryOptions` factory exposes a stable queryKey + queryFn.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CookieIO } from '@cms/server/cookies';
-import {
-  systemSettingUploadUrlOptions,
-  systemSettingUploadUrlQueryFn,
-} from './index';
+import { systemSettingUploadUrlQueryFn } from './index';
 
 const testEnv = { resolveBaseUrl: () => 'http://backend.local/api' };
 
@@ -147,15 +142,5 @@ describe('system-setting upload config', () => {
     ).rejects.toMatchObject({
       name: 'ResponseValidationError',
     });
-  });
-
-  it('exposes a stable queryOptions shape (queryKey includes the key, queryFn)', () => {
-    const opts = systemSettingUploadUrlOptions('photos/test.jpg');
-    expect(opts.queryKey).toEqual([
-      'system-setting',
-      'upload-url',
-      'photos/test.jpg',
-    ]);
-    expect(typeof opts.queryFn).toBe('function');
   });
 });

@@ -25,9 +25,15 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { photoListQueryOptions } from '@cms/server/photos';
 import type {
@@ -38,8 +44,9 @@ import type {
 
 // --- mocks (boundaries only) ---
 
-const { getPhotosMock } = vi.hoisted(() => ({
+const { getPhotosMock, photoListQueryOptionsSpy } = vi.hoisted(() => ({
   getPhotosMock: vi.fn(),
+  photoListQueryOptionsSpy: vi.fn(),
 }));
 
 vi.mock('@cms/server/photos', async () => {
@@ -65,6 +72,7 @@ vi.mock('@cms/server/photos', async () => {
     ...actual,
     getPhotos: mockedGetPhotos,
     photoListQueryOptions: (input: Partial<GetPhotosInput> = {}) => {
+      photoListQueryOptionsSpy(input);
       const resolved = schemas.GetPhotosInputSchema.parse(input);
       return query.queryOptions({
         queryKey: ['photos', 'list', resolved] as const,
@@ -220,13 +228,21 @@ function buildPaginatedPhotos(
   };
 }
 
+interface CacheSlot {
+  input: Partial<GetPhotosInput>;
+  pagination: PaginatedPhotos;
+}
+
 interface RenderOverrides {
   pagination?: PaginatedPhotos;
   input?: Partial<GetPhotosInput>;
+  search?: Record<string, unknown>;
+  extraSlots?: CacheSlot[];
 }
 
 function renderPhotos(overrides: RenderOverrides = {}) {
   const input = overrides.input ?? { page: 1, pageSize: 20 };
+  const search = overrides.search ?? {};
   const pagination =
     overrides.pagination ??
     buildPaginatedPhotos([buildPhoto({ id: 1, name: '风景照' })]);
@@ -235,18 +251,61 @@ function renderPhotos(overrides: RenderOverrides = {}) {
     defaultOptions: { queries: { retry: false } },
   });
   queryClient.setQueryData(photoListQueryOptions(input).queryKey, pagination);
+  for (const slot of overrides.extraSlots ?? []) {
+    queryClient.setQueryData(
+      photoListQueryOptions(slot.input).queryKey,
+      slot.pagination,
+    );
+  }
+
+  // The seeding calls above are harness setup, not the page. Reset the
+  // spy so `mock.calls[0]` is the first Query input the page itself
+  // derived and read.
+  photoListQueryOptionsSpy.mockClear();
 
   return {
     queryClient,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <Photos />
+        <Photos search={search} />
       </QueryClientProvider>,
     ),
   };
 }
 
+const albumInput: GetPhotosInput = { albumId: 7, page: 1, pageSize: 20 };
+
+function unfilteredKey() {
+  return photoListQueryOptions({ page: 1, pageSize: 20 }).queryKey;
+}
+
+function readAlbumSlot(queryClient: QueryClient): PaginatedPhotos | undefined {
+  return queryClient.getQueryData<PaginatedPhotos>(
+    photoListQueryOptions(albumInput).queryKey,
+  );
+}
+
+function renderPhotosWithAlbumFilter(unfilteredSeed: PaginatedPhotos) {
+  return renderPhotos({
+    search: { albumId: 7 },
+    input: albumInput,
+    pagination: buildPaginatedPhotos(
+      [buildPhoto({ id: 7, name: '相册七照片', albumId: 7 })],
+      { page: 1, pageSize: 20, totalPages: 1, total: 1 },
+    ),
+    extraSlots: [
+      { input: { page: 1, pageSize: 20 }, pagination: unfilteredSeed },
+    ],
+  });
+}
+
 describe('Photos list page', () => {
+  beforeEach(() => {
+    createPhotoActionMock.mockReset();
+    updatePhotoActionMock.mockReset();
+    deletePhotoActionMock.mockReset();
+  });
+
   it('renders the page title and pagination metadata from Query cache', () => {
     renderPhotos();
 
@@ -362,5 +421,171 @@ describe('Photos list page', () => {
 
     const callArg = deletePhotoActionMock.mock.calls[0]?.[0] as number;
     expect(callArg).toBe(1);
+  });
+
+  it('reads the paginated slot that matches the route search params', () => {
+    // Both slots are warm on purpose: a page that ignored the
+    // router's search params would read the 1 / 20 default slot and
+    // render `默认页照片` instead of `第三页照片`.
+    renderPhotos({
+      search: { page: 3, pageSize: 5 },
+      input: { page: 3, pageSize: 5 },
+      pagination: buildPaginatedPhotos(
+        [buildPhoto({ id: 3, name: '第三页照片' })],
+        { page: 3, pageSize: 5, totalPages: 4, total: 16 },
+      ),
+      extraSlots: [
+        {
+          input: { page: 1, pageSize: 20 },
+          pagination: buildPaginatedPhotos([
+            buildPhoto({ id: 1, name: '默认页照片' }),
+          ]),
+        },
+      ],
+    });
+
+    expect(photoListQueryOptionsSpy.mock.calls[0]?.[0]).toEqual({
+      albumId: undefined,
+      page: 3,
+      pageSize: 5,
+    });
+    expect(screen.getByText('第三页照片')).toBeInTheDocument();
+    expect(screen.queryByText('默认页照片')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pagination-info')).toHaveTextContent('3/4');
+    expect(screen.getByTestId('pagination-info')).toHaveTextContent('每页5条');
+  });
+
+  it('forwards the albumId filter from the route search params into the photos query', () => {
+    // The unfiltered 1 / 20 slot stays warm, so a page that dropped
+    // the `albumId` filter would silently render the unfiltered list.
+    renderPhotos({
+      search: { albumId: 7 },
+      input: { albumId: 7, page: 1, pageSize: 20 },
+      pagination: buildPaginatedPhotos(
+        [buildPhoto({ id: 7, name: '相册七照片', albumId: 7 })],
+        { page: 1, pageSize: 20, totalPages: 1, total: 1 },
+      ),
+      extraSlots: [
+        {
+          input: { page: 1, pageSize: 20 },
+          pagination: buildPaginatedPhotos([
+            buildPhoto({ id: 1, name: '未过滤照片' }),
+          ]),
+        },
+      ],
+    });
+
+    expect(photoListQueryOptionsSpy.mock.calls[0]?.[0]).toEqual({
+      albumId: 7,
+      page: 1,
+      pageSize: 20,
+    });
+    expect(screen.getByText('相册七照片')).toBeInTheDocument();
+    expect(screen.queryByText('未过滤照片')).not.toBeInTheDocument();
+  });
+
+  it('drops a non-positive albumId from the route search params', () => {
+    renderPhotos({
+      search: { albumId: 0, page: 2 },
+      input: { page: 2, pageSize: 20 },
+      pagination: buildPaginatedPhotos(
+        [buildPhoto({ id: 2, name: '第二页照片' })],
+        { page: 2, pageSize: 20, totalPages: 3, total: 41 },
+      ),
+    });
+
+    expect(photoListQueryOptionsSpy.mock.calls[0]?.[0]).toEqual({
+      albumId: undefined,
+      page: 2,
+      pageSize: 20,
+    });
+    expect(screen.getByText('第二页照片')).toBeInTheDocument();
+    expect(screen.getByTestId('pagination-info')).toHaveTextContent('2/3');
+  });
+
+  it('creates into the albumId-scoped cache slot, leaving the unfiltered slot untouched', async () => {
+    createPhotoActionMock.mockResolvedValueOnce(
+      buildPhoto({ id: 99, name: '新建照片', albumId: 7 }),
+    );
+    const unfilteredSeed = buildPaginatedPhotos([
+      buildPhoto({ id: 1, name: '未过滤照片', albumId: null }),
+    ]);
+
+    const { queryClient } = renderPhotosWithAlbumFilter(unfilteredSeed);
+
+    fireEvent.click(screen.getByRole('button', { name: '新增' }));
+
+    await waitFor(() => {
+      expect(readAlbumSlot(queryClient)?.data.map((p) => p.id)).toEqual([
+        7, 99,
+      ]);
+    });
+    expect(queryClient.getQueryData<PaginatedPhotos>(unfilteredKey())).toEqual(
+      unfilteredSeed,
+    );
+  });
+
+  it('updates inside the albumId-scoped cache slot, leaving the unfiltered slot untouched', async () => {
+    updatePhotoActionMock.mockResolvedValueOnce(
+      buildPhoto({ id: 7, name: '改名', albumId: 7 }),
+    );
+    const unfilteredSeed = buildPaginatedPhotos([
+      buildPhoto({ id: 1, name: '未过滤照片', albumId: null }),
+    ]);
+
+    const { queryClient } = renderPhotosWithAlbumFilter(unfilteredSeed);
+
+    fireEvent.click(screen.getByTestId('edit-photo-btn'));
+
+    await waitFor(() => {
+      expect(readAlbumSlot(queryClient)?.data.map((p) => p.name)).toEqual([
+        '改名',
+      ]);
+    });
+    expect(queryClient.getQueryData<PaginatedPhotos>(unfilteredKey())).toEqual(
+      unfilteredSeed,
+    );
+  });
+
+  it('deletes from the albumId-scoped cache slot, leaving the unfiltered slot untouched', async () => {
+    deletePhotoActionMock.mockResolvedValueOnce(undefined);
+    const unfilteredSeed = buildPaginatedPhotos([
+      buildPhoto({ id: 1, name: '未过滤照片', albumId: null }),
+    ]);
+
+    const { queryClient } = renderPhotosWithAlbumFilter(unfilteredSeed);
+
+    fireEvent.click(screen.getByTestId('delete-photo-btn'));
+
+    await waitFor(() => {
+      expect(readAlbumSlot(queryClient)?.data).toEqual([]);
+    });
+    expect(queryClient.getQueryData<PaginatedPhotos>(unfilteredKey())).toEqual(
+      unfilteredSeed,
+    );
+  });
+
+  it('rolls the albumId-scoped slot back to its snapshot when a mutation rejects', async () => {
+    deletePhotoActionMock.mockRejectedValueOnce(new Error('delete boom'));
+    const unfilteredSeed = buildPaginatedPhotos([
+      buildPhoto({ id: 1, name: '未过滤照片', albumId: null }),
+    ]);
+
+    const { queryClient } = renderPhotosWithAlbumFilter(unfilteredSeed);
+
+    fireEvent.click(screen.getByTestId('delete-photo-btn'));
+
+    await waitFor(() => {
+      expect(deletePhotoActionMock).toHaveBeenCalledTimes(1);
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(readAlbumSlot(queryClient)?.data.map((p) => p.name)).toEqual([
+      '相册七照片',
+    ]);
+    expect(queryClient.getQueryData<PaginatedPhotos>(unfilteredKey())).toEqual(
+      unfilteredSeed,
+    );
   });
 });

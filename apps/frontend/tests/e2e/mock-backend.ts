@@ -21,7 +21,7 @@ function getDefaultPhotos() {
       name: '风景照',
       url: 'photos/1.jpg',
       thumbnailUrl: 'photos/thumb_1.jpg',
-      albumId: null,
+      albumId: null as number | null,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
     },
@@ -30,7 +30,7 @@ function getDefaultPhotos() {
       name: '人物照',
       url: 'photos/2.jpg',
       thumbnailUrl: 'photos/thumb_2.jpg',
-      albumId: null,
+      albumId: null as number | null,
       createdAt: '2025-01-02T00:00:00.000Z',
       updatedAt: '2025-01-02T00:00:00.000Z',
     },
@@ -44,6 +44,7 @@ function getDefaultAlbums() {
       name: '默认相册',
       description: '系统默认相册',
       available: true,
+      coverId: null as number | null,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
       cover: null,
@@ -53,6 +54,7 @@ function getDefaultAlbums() {
       name: '旅行相册',
       description: '记录旅行的美好瞬间',
       available: true,
+      coverId: null as number | null,
       createdAt: '2025-02-15T00:00:00.000Z',
       updatedAt: '2025-02-15T00:00:00.000Z',
       cover: null,
@@ -159,6 +161,11 @@ const server = createServer((request, response) => {
     nextArticleId = 3;
     authInvalid = false;
     sendJson(response, { ok: true });
+    return;
+  }
+
+  if (url.pathname === '/api/test/state' && request.method === 'GET') {
+    sendJson(response, { albums, photos });
     return;
   }
 
@@ -283,6 +290,7 @@ const server = createServer((request, response) => {
         name: parsed.name as string,
         description: (parsed.description as string) || '',
         available: (parsed.available as boolean) || false,
+        coverId: null as number | null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         cover: null,
@@ -327,6 +335,49 @@ const server = createServer((request, response) => {
       const parsed = JSON.parse(body) as { id: string };
       const idx = albums.findIndex((a) => a.id === Number(parsed.id));
       if (idx !== -1) albums.splice(idx, 1);
+      sendJson(response, null);
+    });
+    return;
+  }
+
+  if (
+    url.pathname === '/api/cms/photo-albums/cover' &&
+    request.method === 'POST'
+  ) {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      const parsed = JSON.parse(body) as { albumId: number; photoId: number };
+      const album = albums.find((a) => a.id === parsed.albumId);
+      if (album) {
+        album.coverId = parsed.photoId;
+      }
+      sendJson(response, null);
+    });
+    return;
+  }
+
+  if (
+    url.pathname === '/api/cms/photo-albums/add-photos' &&
+    request.method === 'POST'
+  ) {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      const parsed = JSON.parse(body) as {
+        albumId: number;
+        photoIds: number[];
+      };
+      for (const photoId of parsed.photoIds) {
+        const photo = photos.find((p) => p.id === photoId);
+        if (photo) {
+          photo.albumId = parsed.albumId;
+        }
+      }
       sendJson(response, null);
     });
     return;
@@ -384,6 +435,50 @@ const server = createServer((request, response) => {
       } as (typeof photos)[number];
       photos.push(newPhoto);
       sendJson(response, newPhoto);
+    });
+    return;
+  }
+
+  if (
+    url.pathname === '/api/cms/photos/create/with-album' &&
+    request.method === 'POST'
+  ) {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      const newPhoto = {
+        id: photos.length + 1,
+        name: parsed.name as string,
+        url: parsed.url as string,
+        thumbnailUrl: parsed.thumbnailUrl as string,
+        albumId: (parsed.albumId as number | null) || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as (typeof photos)[number];
+      photos.push(newPhoto);
+      sendJson(response, newPhoto);
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/cms/photos/update' && request.method === 'POST') {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      const parsed = JSON.parse(body) as { id: number } & Record<
+        string,
+        unknown
+      >;
+      const photo = photos.find((p) => p.id === parsed.id);
+      if (photo) {
+        Object.assign(photo, parsed, { updatedAt: new Date().toISOString() });
+      }
+      sendJson(response, photo ?? null);
     });
     return;
   }

@@ -21,7 +21,6 @@
  *   - `@cms/server/albums`     — server function surface
  *   - `@cms/server/photos`     — server function surface
  *   - `@cms/core`              — `OssAction` /
- *                                `useOptimisticArray` /
  *                                `PaginationWorkspace` /
  *                                `createSchemaForm` factory are
  *                                exercised as-is; the form factory
@@ -29,6 +28,12 @@
  *                                path.
  *   - `@zcat/ui`               — DOM components.
  *   - photo-selector modal     — UI-only.
+ *
+ * The read-after-write tests unmount and remount the page against
+ * the same Query client: the route loader prefetches these slots
+ * with `staleTime: 'static'`, so a mutation that never writes the
+ * cache is never refetched and the remount would re-serve the
+ * unmutated payload.
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -52,6 +57,7 @@ import type {
 
 const {
   getPhotoAlbumMock,
+  updatePhotoAlbumMock,
   setPhotoAlbumCoverMock,
   addPhotosMock,
   getPhotosMock,
@@ -62,6 +68,7 @@ const {
   schemaFormSubmitQueue,
 } = vi.hoisted(() => ({
   getPhotoAlbumMock: vi.fn(),
+  updatePhotoAlbumMock: vi.fn(),
   setPhotoAlbumCoverMock: vi.fn(),
   addPhotosMock: vi.fn(),
   getPhotosMock: vi.fn(),
@@ -86,6 +93,7 @@ vi.mock('@cms/server/albums', async () => {
   return {
     ...actual,
     getPhotoAlbum: (...args: unknown[]) => getPhotoAlbumMock(...args),
+    updatePhotoAlbum: (...args: unknown[]) => updatePhotoAlbumMock(...args),
     setPhotoAlbumCover: (...args: unknown[]) => setPhotoAlbumCoverMock(...args),
     addPhotos: (...args: unknown[]) => addPhotosMock(...args),
   };
@@ -228,19 +236,6 @@ vi.mock('@zcat/ui', () => ({
     const n = Number(v);
     return Number.isNaN(n) ? d : n;
   },
-  // The real `useOptimisticArray` calls `useWatch` to sync the
-  // internal `useState` with the `initialValue` prop. The test
-  // mock mirrors that: invoke the setter in `useEffect` so the
-  // initial value is committed to state on mount.
-  useWatch: (
-    deps: ReadonlyArray<unknown>,
-    callback: (...args: unknown[]) => void,
-  ) => {
-    React.useEffect(() => {
-      callback(...deps);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, deps);
-  },
   usePropsValue: <T,>(value: T) => value,
 }));
 
@@ -299,6 +294,18 @@ interface SeedOverrides {
   search?: Record<string, unknown>;
 }
 
+function renderAlbumsIdWithClient(
+  queryClient: QueryClient,
+  albumId: number,
+  search: Record<string, unknown> = {},
+) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AlbumsId albumId={albumId} search={search} />
+    </QueryClientProvider>,
+  );
+}
+
 function renderAlbumsId(overrides: SeedOverrides = {}) {
   const albumId = overrides.albumId ?? 1;
   const album = overrides.album ?? buildAlbumDetail({ id: albumId });
@@ -307,8 +314,12 @@ function renderAlbumsId(overrides: SeedOverrides = {}) {
   const reminder = overrides.reminder ?? [];
   const search = overrides.search ?? {};
 
+  // `staleTime: 'static'` mirrors the route loader, which prefetches
+  // these three slots exactly that way. A remount therefore re-serves
+  // the cache instead of refetching — which is the only way the
+  // read-after-write defect is observable.
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: { queries: { retry: false, staleTime: 'static' } },
   });
   queryClient.setQueryData(
     photoAlbumDetailQueryOptions({ id: albumId }).queryKey,
@@ -319,11 +330,8 @@ function renderAlbumsId(overrides: SeedOverrides = {}) {
 
   return {
     queryClient,
-    ...render(
-      <QueryClientProvider client={queryClient}>
-        <AlbumsId albumId={albumId} search={search} />
-      </QueryClientProvider>,
-    ),
+    albumId,
+    ...renderAlbumsIdWithClient(queryClient, albumId, search),
   };
 }
 
@@ -333,6 +341,7 @@ describe('AlbumsId detail page', () => {
     // invocation history so the previous test's `mockResolvedValueOnce`
     // / `mockRejectedValueOnce` does not leak.
     getPhotoAlbumMock.mockReset();
+    updatePhotoAlbumMock.mockReset();
     setPhotoAlbumCoverMock.mockReset();
     addPhotosMock.mockReset();
     getPhotosMock.mockReset();
@@ -523,5 +532,83 @@ describe('AlbumsId detail page', () => {
 
     const callArg = deletePhotoActionMock.mock.calls[0] as unknown[];
     expect(callArg?.[0]).toBe(50);
+  });
+
+  it('serves the created photo from the Query cache after unmount and remount', async () => {
+    createAlbumPhotoActionMock.mockResolvedValueOnce(
+      buildPhoto({ id: 200, name: '新建照片' }),
+    );
+
+    const { queryClient, albumId, unmount } = renderAlbumsId({
+      albumId: 1,
+      album: buildAlbumDetail({ id: 1 }),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '添加照片' }));
+    flushSchemaFormSubmit({
+      id: 0,
+      name: '新建照片',
+      image: 'photos/upload.jpg',
+      albumId: 1,
+    });
+
+    await waitFor(() => {
+      expect(createAlbumPhotoActionMock).toHaveBeenCalledTimes(1);
+    });
+
+    // The loader prefetched this slot with `staleTime: 'static'`, so
+    // the remount is served from the cache. A mutation that only
+    // touched React-local state loses the photo here.
+    unmount();
+    renderAlbumsIdWithClient(queryClient, albumId);
+
+    expect(screen.getByText('新建照片')).toBeInTheDocument();
+  });
+
+  it('serves the photo as deleted from the Query cache after unmount and remount', async () => {
+    deletePhotoActionMock.mockResolvedValueOnce(undefined);
+
+    const { queryClient, albumId, unmount } = renderAlbumsId({
+      albumId: 1,
+      album: buildAlbumDetail({ id: 1 }),
+      photos: buildPaginatedPhotos([
+        buildPhoto({ id: 50, name: '待删除照片' }),
+        buildPhoto({ id: 51, name: '保留照片' }),
+      ]),
+    });
+
+    fireEvent.click(screen.getAllByTestId('delete-photo-btn')[0]);
+
+    await waitFor(() => {
+      expect(deletePhotoActionMock).toHaveBeenCalledTimes(1);
+    });
+
+    unmount();
+    renderAlbumsIdWithClient(queryClient, albumId);
+
+    expect(screen.queryByText('待删除照片')).not.toBeInTheDocument();
+    expect(screen.getByText('保留照片')).toBeInTheDocument();
+  });
+
+  it('serves the renamed album from the Query cache after unmount and remount', async () => {
+    updatePhotoAlbumMock.mockResolvedValueOnce(
+      buildAlbumDetail({ id: 1, name: '旅行相册-改名' }),
+    );
+
+    const { queryClient, albumId, unmount } = renderAlbumsId({
+      albumId: 1,
+      album: buildAlbumDetail({ id: 1, name: '旅行相册' }),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑相册' }));
+
+    await waitFor(() => {
+      expect(updatePhotoAlbumMock).toHaveBeenCalledTimes(1);
+    });
+
+    unmount();
+    renderAlbumsIdWithClient(queryClient, albumId);
+
+    expect(screen.getByText('相册名称：旅行相册-改名')).toBeInTheDocument();
   });
 });

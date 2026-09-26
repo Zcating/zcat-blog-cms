@@ -12,8 +12,11 @@
  * `context.queryClient.query({ ...options, staleTime: 'static' })`
  * 并行预热上述三个缓存槽；本组件不再读 `useLoaderData` / `HttpClient`。
  *
- * 乐观更新：保留旧页面的 `useOptimisticArray` 语义（创建 / 编辑 /
- * 删除 / 添加到相册），失败时调用 `rollback` 还原。
+ * 乐观更新：相册编辑、照片的创建 / 编辑 / 删除 / 关联、设置封面全部走
+ * `../hooks/use-albums` 与 `../hooks/use-album-photos`，由 hook 写入
+ * Query 缓存并在失败时回滚到快照。页面只保留弹窗、表单接线与事件绑定，
+ * 不再维护数组状态——loader 以 `staleTime: 'static'` 预热，只写本地
+ * 状态的变更会在下次挂载时丢失。
  */
 
 import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
@@ -27,7 +30,6 @@ import {
   type PhotoCardData,
 } from '@cms/features/album/components/album';
 import {
-  OssAction,
   createCheckbox,
   createConstNumber,
   createImageUpload,
@@ -36,14 +38,8 @@ import {
   createTextArea,
   PaginationWorkspace,
   useLoadingFn,
-  useOptimisticArray,
 } from '@cms/core';
-import {
-  addPhotos,
-  photoAlbumDetailQueryOptions,
-  setPhotoAlbumCover,
-  updatePhotoAlbum,
-} from '@cms/server/albums';
+import { photoAlbumDetailQueryOptions } from '@cms/server/albums';
 import type { PhotoAlbumDetail } from '@cms/server/albums/schemas';
 import {
   emptyAlbumPhotosQueryOptions,
@@ -55,12 +51,15 @@ import type {
   Photo,
 } from '@cms/server/photos/schemas';
 
-interface AlbumPhotoFormData {
-  id: number;
-  name: string;
-  image: string;
-  albumId: number;
-}
+import { type AlbumFormValues, useUpdateAlbum } from '../hooks/use-albums';
+import {
+  type AlbumPhotoFormValues,
+  useAddPhotosToAlbum,
+  useCreateAlbumPhoto,
+  useDeleteAlbumPhoto,
+  useSetAlbumCover,
+  useUpdateAlbumPhoto,
+} from '../hooks/use-album-photos';
 
 interface AlbumsIdProps {
   albumId: number;
@@ -85,26 +84,15 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
   const album = albumRaw as unknown as PhotoAlbumDetail;
   const albumPhotoPagination = photosRaw as unknown as PaginatedPhotos;
   const reminderPhotos = reminderPhotosRaw as unknown as Photo[];
+  // 变更期间缓存里带 `loading: true` 的行就是乐观更新的行，
+  // 所以照片网格直接渲染缓存即可。
+  const photos = albumPhotoPagination.data as PhotoCardData[];
 
-  const [photos, addOptimisticPhoto, commitPhoto] = useOptimisticArray(
-    albumPhotoPagination.data,
-    (prev, data: AlbumPhotoFormData) => {
-      const tempPhoto: PhotoCardData = {
-        id: data.id || -Date.now(),
-        name: data.name,
-        url: data.image,
-        thumbnailUrl: data.image,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        loading: true,
-        albumId: data.albumId,
-      };
-      if (data.id) {
-        return prev.map((p) => (p.id === data.id ? tempPhoto : p));
-      }
-      return [...prev, tempPhoto];
-    },
-  );
+  const updateAlbum = useUpdateAlbum();
+  const createPhotoMutation = useCreateAlbumPhoto(photoQueryInput);
+  const updatePhotoMutation = useUpdateAlbumPhoto(photoQueryInput);
+  const deletePhotoMutation = useDeleteAlbumPhoto(photoQueryInput);
+  const addPhotosMutation = useAddPhotosToAlbum(photoQueryInput);
 
   // 编辑相册
   const editAlbum = useAlbumForm({
@@ -112,14 +100,7 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     confirmText: '保存',
     async onSubmit(data: AlbumFormValues) {
       try {
-        await updatePhotoAlbum({
-          data: {
-            id: data.id,
-            name: data.name,
-            description: data.description,
-            available: data.available,
-          },
-        });
+        await updateAlbum.mutateAsync(data);
       } catch (error) {
         console.error(error);
       }
@@ -129,22 +110,12 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
   // 新增相册照片
   const addPhoto = usePhotoForm({
     title: '新增照片',
-    async onSubmit(data: AlbumPhotoFormData) {
+    async onSubmit(data: AlbumPhotoFormValues) {
       React.startTransition(async () => {
-        addOptimisticPhoto(data);
         try {
-          const photo = await OssAction.createAlbumPhoto({
-            name: data.name,
-            image: data.image,
-            albumId: album.id,
-          });
-          if (!photo) {
-            commitPhoto('rollback');
-            return;
-          }
-          commitPhoto('update', photo);
+          await createPhotoMutation.mutateAsync(data);
         } catch (error) {
-          commitPhoto('rollback');
+          console.error(error);
         }
       });
     },
@@ -154,25 +125,12 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
   const editPhoto = usePhotoForm({
     title: '编辑照片',
     confirmText: '保存',
-    async onSubmit(data: AlbumPhotoFormData) {
+    async onSubmit(data: AlbumPhotoFormValues) {
       React.startTransition(async () => {
-        addOptimisticPhoto(data);
-
         try {
-          const photo = await OssAction.updatePhoto({
-            id: data.id,
-            name: data.name,
-            image: data.image,
-            albumId: album.id,
-          });
-          if (!photo) {
-            commitPhoto('rollback');
-            return;
-          }
-          commitPhoto('update', photo);
+          await updatePhotoMutation.mutateAsync(data);
         } catch (error) {
           console.error(error);
-          commitPhoto('rollback');
         }
       });
     },
@@ -205,15 +163,12 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
 
     React.startTransition(async () => {
       try {
-        await addPhotos({
-          data: {
-            albumId: album.id,
-            photoIds: selectedPhotos.map((photo) => photo.id),
-          },
+        await addPhotosMutation.mutateAsync({
+          albumId: album.id,
+          photos: selectedPhotos,
         });
-        commitPhoto('batchUpdate', selectedPhotos);
       } catch (error) {
-        commitPhoto('rollback');
+        console.error(error);
       }
     });
   };
@@ -234,10 +189,9 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
 
     React.startTransition(async () => {
       try {
-        await OssAction.deletePhoto(photo.id);
-        commitPhoto('remove', photo);
+        await deletePhotoMutation.mutateAsync(photo.id);
       } catch (error) {
-        commitPhoto('rollback');
+        console.error(error);
       }
     });
   };
@@ -294,13 +248,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
       />
     </PaginationWorkspace>
   );
-}
-
-interface AlbumFormValues {
-  id: number;
-  name: string;
-  description: string;
-  available: boolean;
 }
 
 /**
@@ -363,21 +310,18 @@ const useAlbumForm = createSchemaForm({
 
 /**
  * 相册封面设置
+ *
+ * `coverId` 直接读相册详情缓存，`useSetAlbumCover` 写入该槽，因此
+ * 重新挂载后按钮状态依然与服务端一致。
  * @param {PhotoAlbumDetail} album 相册详情
  * @returns 封面设置组件
  */
 function useCoverSetter(album: PhotoAlbumDetail) {
-  const [coverId, setCoverId] = React.useState<number>(album?.coverId || 0);
+  const setCoverMutation = useSetAlbumCover(album.id);
+  const coverId = album.coverId ?? 0;
   const setCover = useLoadingFn(async (photo: Photo) => {
-    // selectPhotoDialog.show();
     try {
-      await setPhotoAlbumCover({
-        data: {
-          photoId: photo.id,
-          albumId: album.id,
-        },
-      });
-      setCoverId(photo.id);
+      await setCoverMutation.mutateAsync(photo.id);
     } catch (error) {
       console.error(error);
     }

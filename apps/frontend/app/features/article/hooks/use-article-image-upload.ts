@@ -13,8 +13,8 @@
  *      directly from the browser to that presigned URL — never
  *      streaming the bytes through the CMS server.
  *   3. Hand the resolved OSS keys to `uploadArticleImages` so the
- *      backend can resolve them into public CDN URLs and return
- *      the URL list the editor uses to rewrite the markdown.
+ *      backend can resolve them into public CDN URLs, and use the
+ *      returned URL list to rewrite the markdown.
  *
  * The image-extraction regex, the markdown rewrite, and the
  * `blob:` -> OSS-key mapping all live in this lane so the editor
@@ -46,24 +46,26 @@ export function extractBlobImageUrls(markdown: string): string[] {
 
 /**
  * Rewrite the markdown body, replacing each `blob:` URL in order
- * with the corresponding resolved OSS key. Non-blob URLs are left
+ * with the corresponding resolved URL. Non-blob URLs are left
  * untouched so existing CDN images survive the round-trip.
  *
  * The arrays MUST be positionally aligned: the i-th blob URL in
- * the markdown is replaced by the i-th key in `keys`. The caller
- * is responsible for keeping them in sync (see
+ * the markdown is replaced by the i-th URL in `resolvedUrls`. The
+ * caller is responsible for keeping them in sync (see
  * `uploadArticleMarkdownImages`).
  */
 export function rewriteArticleMarkdownImages(
   markdown: string,
-  keys: string[],
+  resolvedUrls: string[],
 ): string {
-  if (!keys.length) return markdown;
+  if (!resolvedUrls.length) return markdown;
 
   const blobUrls = extractBlobImageUrls(markdown);
   const lookup = new Map<string, string>();
   blobUrls.forEach((url, index) => {
-    if (index < keys.length) lookup.set(url, keys[index] as string);
+    if (index < resolvedUrls.length) {
+      lookup.set(url, resolvedUrls[index] as string);
+    }
   });
 
   return markdown.replace(
@@ -88,8 +90,8 @@ async function uploadBlobToPresignedUrl(blobUrl: string): Promise<string> {
 
   // The image key is deterministic but unique: timestamp + a
   // short random suffix. The backend's `upload-images` endpoint
-  // expects the bare key (not the presigned URL), and that key is
-  // what the editor uses to rewrite the markdown.
+  // expects the bare key (not the presigned URL), and it maps that
+  // key to the public URL the editor splices into the markdown.
   const extension = blob.type.split('/').pop() || 'png';
   const filename = `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
   const key = `articles/${filename}.${extension}`;
@@ -113,14 +115,13 @@ async function uploadBlobToPresignedUrl(blobUrl: string): Promise<string> {
 /**
  * Public entry point. Walks the markdown body, uploads each
  * `blob:` image directly to OSS, then forwards the resolved keys
- * to `uploadArticleImages` so the backend can hand back the
- * canonical CDN URL list.
+ * to `uploadArticleImages` and returns the backend's CDN URL list.
  *
- * Returns the OSS keys (not the resolved CDN URLs) — the editor
- * rewrites the markdown using the keys first, then `createArticle` /
- * `updateArticle` accepts the rewritten markdown. The backend's
- * `uploadArticleImages` is the source of truth for what CDN URL
- * each key maps to.
+ * Returns the backend-resolved URLs (not the raw OSS keys) — the
+ * editor rewrites the markdown with them before `createArticle` /
+ * `updateArticle` accepts it, so the persisted body must contain
+ * URLs the browser can load. `uploadArticleImages` is the source of
+ * truth for what public URL each key maps to.
  */
 export async function uploadArticleMarkdownImages(
   blobUrls: string[],
@@ -130,12 +131,7 @@ export async function uploadArticleMarkdownImages(
     const key = await uploadBlobToPresignedUrl(url);
     keys.push(key);
   }
-  // Forward the keys to the backend so the public URL list is
-  // consistent with the backend's view. The editor does not
-  // currently use the public URL list, but we keep the symmetry
-  // with the legacy pipeline so a future caller can use it.
-  await uploadArticleImages({ data: { images: keys } });
-  return keys;
+  return uploadArticleImages({ data: { images: keys } });
 }
 
 // Type-only re-export so consumers don't have to import

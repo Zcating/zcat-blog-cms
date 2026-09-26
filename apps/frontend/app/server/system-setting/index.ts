@@ -1,9 +1,9 @@
 /**
  * TanStack Start server-function lane for the system-setting domain.
  *
- * Migrates the legacy `SystemSettingApi.getUploadUrl(key)` (which used to
- * ride the `/api/bff/cms/system-setting/upload-config` proxy) onto the
- * Phase-2a shared server boundary. The new operation:
+ * `SystemSettingApi.getUploadUrl(key)` (which used to ride the
+ * `/api/bff/cms/system-setting/upload-config` proxy) now rides the
+ * shared server boundary. The new operation:
  *
  *   - Reads `BACKEND_API_URL` per request via the shared
  *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
@@ -20,16 +20,13 @@
  *   - Has no automatic retries. The `fetch` boundary is called exactly
  *     once per operation.
  *
- * The export surface for Phase 3:
+ * The export surface:
  *   - `getSystemSettingUploadUrlServerFn` — `createServerFn({ method: 'GET' })`
- *     wrapper guarded by the protected-function middleware.
- *   - `systemSettingUploadUrlOptions` — stable `queryOptions` factory
- *     keyed off the operation + `key`, so consumers can subscribe to a
- *     presigned URL keyed by object key without knowing the wire
- *     details.
+ *     wrapper guarded by the protected-function middleware. This is the
+ *     only read path: every consumer calls it, so a query factory here
+ *     would reach `liveCookieIO` in the browser, where it throws.
  */
 
-import { queryOptions } from '@tanstack/react-query';
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
@@ -87,17 +84,6 @@ export function systemSettingUploadUrlQueryFn({
     env: deps.env ?? defaultEnv,
     cookie: deps.cookie,
     fetch: deps.fetch,
-  });
-}
-
-// ---------------------------------------------------------------------------
-// queryOptions factory
-// ---------------------------------------------------------------------------
-
-export function systemSettingUploadUrlOptions(key: string) {
-  return queryOptions({
-    queryKey: ['system-setting', 'upload-url', key] as const,
-    queryFn: () => systemSettingUploadUrlQueryFn({ key }),
   });
 }
 

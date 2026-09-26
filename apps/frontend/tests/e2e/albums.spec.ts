@@ -1,4 +1,25 @@
 ﻿import { expect, test } from '@playwright/test';
+import type { Page, APIRequestContext } from '@playwright/test';
+
+interface TestStateData {
+  albums: Array<{ id: number; name: string; coverId: number | null }>;
+  photos: Array<{ id: number; name: string; albumId: number | null }>;
+}
+
+async function readBackendState(
+  request: APIRequestContext,
+): Promise<TestStateData> {
+  const response = await request.get('http://127.0.0.1:9090/api/test/state');
+  return ((await response.json()) as { data: TestStateData }).data;
+}
+
+async function login(page: Page) {
+  await page.goto('/login');
+  await page.getByLabel('用户名').fill('admin');
+  await page.getByLabel('密码').fill('123456');
+  await page.getByRole('button', { name: '登录' }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+}
 
 test.describe('Albums', () => {
   // Reset shared mock backend state before each test
@@ -104,5 +125,96 @@ test.describe('Albums', () => {
     // loader has hydrated that slot, so the button is the
     // contract we can assert against.
     await expect(page.getByRole('button', { name: '选择照片' })).toBeVisible();
+  });
+
+  test('created album survives in-app navigation away and back', async ({
+    page,
+    request,
+  }) => {
+    await login(page);
+    await page.goto('/albums');
+    await expect(page.getByText('相册列表')).toBeVisible();
+
+    // Create a new album.
+    await page.getByRole('button', { name: '新增相册' }).click();
+    await page.getByLabel('相册名称').fill('跨页相册');
+    await page.getByRole('button', { name: '确定' }).click();
+    await expect(
+      page.getByText('跨页相册', { exact: true }).first(),
+    ).toBeVisible({ timeout: 10000 });
+
+    // The backend really holds it — a row on screen proves nothing
+    // on its own, because the create flow is optimistic.
+    await expect
+      .poll(
+        async () => (await readBackendState(request)).albums.map((a) => a.name),
+        {
+          timeout: 10000,
+        },
+      )
+      .toEqual(['默认相册', '旅行相册', '跨页相册']);
+
+    // Navigate away through the sidebar and back. These are
+    // client-side transitions inside the same SPA session, so the
+    // album list Query slot survives — the loader prefetches it
+    // with `staleTime: 'static'`, which means the remount is
+    // served straight from the cache. A mutation that only wrote
+    // React-local state loses the album here.
+    await page.getByRole('link', { name: '照片管理' }).click();
+    await expect(page).toHaveURL(/\/photos$/);
+    await page.getByRole('link', { name: '相册管理' }).click();
+    await expect(page).toHaveURL(/\/albums$/);
+
+    await expect(
+      page.getByText('跨页相册', { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText('默认相册', { exact: true }).first(),
+    ).toBeVisible();
+  });
+
+  test('deleted album stays deleted after in-app navigation away and back', async ({
+    page,
+    request,
+  }) => {
+    await login(page);
+    await page.goto('/albums');
+    await expect(page.getByText('相册列表')).toBeVisible();
+
+    // Delete the '旅行相册' album.
+    const travelAlbumCard = page
+      .locator('[data-slot="card"]')
+      .filter({ hasText: '旅行相册' });
+    await expect(travelAlbumCard).toHaveCount(1);
+    await travelAlbumCard.getByRole('button', { name: '删除' }).click();
+    await expect(page.getByText('确定删除相册 旅行相册 吗？')).toBeVisible();
+    await page.getByRole('button', { name: '确定' }).click();
+    await expect(
+      page.getByText('旅行相册', { exact: true }).first(),
+    ).not.toBeVisible();
+
+    await expect
+      .poll(
+        async () => (await readBackendState(request)).albums.map((a) => a.name),
+        {
+          timeout: 10000,
+        },
+      )
+      .toEqual(['默认相册']);
+
+    // Same in-SPA navigation as above. The delete is optimistic, so
+    // the row disappearing proves nothing; a stale cache slot would
+    // resurrect the album on the way back in.
+    await page.getByRole('link', { name: '照片管理' }).click();
+    await expect(page).toHaveURL(/\/photos$/);
+    await page.getByRole('link', { name: '相册管理' }).click();
+    await expect(page).toHaveURL(/\/albums$/);
+
+    await expect(
+      page.getByText('旅行相册', { exact: true }).first(),
+    ).not.toBeVisible();
+    await expect(
+      page.getByText('默认相册', { exact: true }).first(),
+    ).toBeVisible();
   });
 });

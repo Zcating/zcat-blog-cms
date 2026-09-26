@@ -7,17 +7,30 @@
  *
  *   1. The raw `UnauthorizedError` instance — the same-process path
  *      (SSR, and any future transport that keeps the class).
- *   2. The value that actually arrives in the browser. Measured, not
- *      assumed: `UnauthorizedError` carries `name`/`code`/`message`, but
- *      `@tanstack/start-server-core` serializes a rejected handler with
- *      `toCrossJSONAsync` using `@tanstack/router-core`'s
- *      `ShallowErrorPlugin`, whose `test` is `value instanceof Error` and
- *      whose `parse` keeps ONLY `message`. Deserializing yields
- *      `new Error(message)` — so on the client `name` is `'Error'` and
- *      `code` is gone. This test performs that exact round trip and
- *      fails loudly if the transport ever changes shape again.
- *   3. Negative shapes that must NOT be treated as unauthorized — a
- *      wiped cache on a server hiccup is a data-loss bug.
+ *   2. The COOKIE-ABSENT path, which is case 1 after the RPC round
+ *      trip. Measured, not assumed: `UnauthorizedError` carries
+ *      `name`/`code`/`message`, but `@tanstack/start-server-core`
+ *      serializes a rejected handler with `toCrossJSONAsync` using
+ *      `@tanstack/router-core`'s `ShallowErrorPlugin`, whose `test` is
+ *      `value instanceof Error` and whose `parse` keeps ONLY `message`.
+ *      Deserializing yields `new Error(message)` — so on the client
+ *      `name` is `'Error'` and `code` is gone. This test performs that
+ *      exact round trip and fails loudly if the transport ever changes
+ *      shape again.
+ *   3. The BACKEND-REJECTION path — the case an EXPIRED or REVOKED JWT
+ *      actually takes, and the common one. The cookie is still present,
+ *      so the presence-only middleware lets the call through and
+ *      `envelopeToApiError` throws a plain `ApiError` OBJECT
+ *      (`{ _tag, message }`), never an `Error`. Seroval therefore
+ *      serializes it as an ordinary object: `ShallowErrorPlugin.test`
+ *      never matches, so the value is NOT an `instanceof Error` and
+ *      BOTH `_tag` and `message` survive the round trip intact. The
+ *      backend answers an auth rejection with `{ code: 'ERR0002' }`
+ *      (see `apps/backend/src/middleware/auth.ts`), and
+ *      `mapResultCodeToTag('ERR0002')` is the tag `'LoginError'`.
+ *   4. Negative shapes that must NOT be treated as unauthorized — a
+ *      wiped cache on a server hiccup is a data-loss bug. An ordinary
+ *      backend 500 is `ERR0006` → `'UnknownError'`.
  */
 
 import { defaultSerovalDeserializerPlugins } from '@tanstack/router-core/ssr/server';
@@ -25,7 +38,11 @@ import { fromCrossJSON, toCrossJSONAsync } from 'seroval';
 import { describe, expect, it } from 'vitest';
 
 import { UnauthorizedError } from '../../server/auth-middleware';
-import { isUnauthorizedError, UNAUTHORIZED_ERROR_CODE } from './unauthorized';
+import {
+  isUnauthorizedError,
+  UNAUTHORIZED_ERROR_CODE,
+  UNAUTHORIZED_ERROR_TAG,
+} from './unauthorized';
 
 async function acrossRpcBoundary(error: Error): Promise<Error> {
   const payload = JSON.parse(
@@ -39,6 +56,22 @@ async function acrossRpcBoundary(error: Error): Promise<Error> {
   return fromCrossJSON(payload, {
     plugins: defaultSerovalDeserializerPlugins,
   }) as Error;
+}
+
+async function apiErrorAcrossRpcBoundary(apiError: unknown): Promise<unknown> {
+  const envelope = { result: undefined, error: apiError, context: {} };
+  const payload = JSON.parse(
+    JSON.stringify(
+      await toCrossJSONAsync(envelope, {
+        refs: new Map(),
+        plugins: defaultSerovalDeserializerPlugins,
+      }),
+    ),
+  );
+  const clientSide = fromCrossJSON(payload, {
+    plugins: defaultSerovalDeserializerPlugins,
+  }) as { error: unknown };
+  return clientSide.error;
 }
 
 describe('isUnauthorizedError', () => {
@@ -62,6 +95,45 @@ describe('isUnauthorizedError', () => {
 
   it('does not match an ordinary Error', () => {
     expect(isUnauthorizedError(new Error('boom'))).toBe(false);
+  });
+
+  it('recognises the backend auth-rejection ApiError by its _tag', () => {
+    expect(UNAUTHORIZED_ERROR_TAG).toBe('LoginError');
+    expect(
+      isUnauthorizedError({ _tag: 'LoginError', message: 'Unauthorized' }),
+    ).toBe(true);
+  });
+
+  it('recognises the backend auth-rejection ApiError that survives the RPC boundary', async () => {
+    const clientSide = await apiErrorAcrossRpcBoundary({
+      _tag: 'LoginError',
+      message: 'Unauthorized',
+    });
+
+    expect(clientSide).not.toBeInstanceOf(Error);
+    expect(clientSide).toEqual({ _tag: 'LoginError', message: 'Unauthorized' });
+    expect(isUnauthorizedError(clientSide)).toBe(true);
+  });
+
+  it('does not match the ApiError an ordinary backend 500 produces', async () => {
+    const clientSide = await apiErrorAcrossRpcBoundary({
+      _tag: 'UnknownError',
+      message: 'Malformed error envelope from backend',
+    });
+
+    expect(isUnauthorizedError(clientSide)).toBe(false);
+  });
+
+  it('does not match the non-auth ApiError tags', () => {
+    for (const tag of [
+      'DatabaseError',
+      'UploadError',
+      'ValidationError',
+      'RegisterError',
+      'UnknownError',
+    ]) {
+      expect(isUnauthorizedError({ _tag: tag, message: 'boom' })).toBe(false);
+    }
   });
 
   it('does not match a non-auth ApiError payload', () => {

@@ -7,8 +7,9 @@
  *
  * Seam: the real shell component rendered inside a real (memory-history)
  * router and the public `QueryClient` from `makeQueryClient()`. The only
- * stubbed modules are the `logout` server function and the confirm dialog
- * the shell opens before it calls it.
+ * stubbed modules are the `logout` server function, the confirm dialog
+ * the shell opens before it calls it, and the error notification it can
+ * raise when that call rejects.
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -22,16 +23,21 @@ import {
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { logoutMock, confirmMock } = vi.hoisted(() => ({
+const { logoutMock, confirmMock, notificationErrorMock } = vi.hoisted(() => ({
   logoutMock: vi.fn().mockResolvedValue({ code: '0000', message: '已登出' }),
   confirmMock: vi.fn().mockResolvedValue(true),
+  notificationErrorMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@cms/server/auth', () => ({ logout: logoutMock }));
 
 vi.mock('@zcat/ui', async () => {
   const actual = await vi.importActual<typeof import('@zcat/ui')>('@zcat/ui');
-  return { ...actual, ZDialog: { confirm: confirmMock } };
+  return {
+    ...actual,
+    ZDialog: { confirm: confirmMock },
+    ZNotification: { ...actual.ZNotification, error: notificationErrorMock },
+  };
 });
 
 import { makeQueryClient } from '@cms/shared/query';
@@ -113,5 +119,25 @@ describe('CMSLayoutShell logout', () => {
     expect(logoutMock).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe('/dashboard');
     expect(client.getQueryCache().getAll()).toHaveLength(1);
+  });
+
+  it('clears the private Query cache and still redirects when the logout call rejects', async () => {
+    logoutMock.mockRejectedValueOnce(new Error('logout boom'));
+    const { client, router } = await renderShell();
+    client.setQueryData(['users', 'current'], { name: 'Admin' });
+    client.setQueryData(['photos', 'list'], [{ id: 1 }]);
+
+    clickLogout();
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/login');
+    });
+    expect(logoutMock).toHaveBeenCalledTimes(1);
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+    expect(client.getQueryData(['users', 'current'])).toBeUndefined();
+    expect(client.getQueryData(['photos', 'list'])).toBeUndefined();
+    await waitFor(() => {
+      expect(notificationErrorMock).toHaveBeenCalledWith('logout boom');
+    });
   });
 });

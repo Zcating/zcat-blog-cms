@@ -1,9 +1,9 @@
 /**
  * TanStack Start server-function lane for the statistics domain.
  *
- * Migrates the legacy `StatisticsApi` (`cms/statistics/summary`,
- * `cms/statistics/chart-data`, `cms/statistics/detail`) onto the
- * Phase-2a shared server boundary. Every operation:
+ * The `StatisticsApi` operations (`cms/statistics/summary`,
+ * `cms/statistics/chart-data`, `cms/statistics/detail`) all ride the
+ * shared server boundary. Every operation:
  *
  *   - Reads `BACKEND_API_URL` per request via the shared
  *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
@@ -16,7 +16,7 @@
  *   - Has no automatic retries. The `fetch` boundary is called exactly
  *     once per operation.
  *
- * The export surface for Phase 3:
+ * The export surface:
  *   - `getStatisticsSummaryServerFn` / `getStatisticsChartDataServerFn`
  *     / `getStatisticsDetailServerFn` — `createServerFn({ method: 'GET' })`
  *     wrappers guarded by the protected-function middleware.
@@ -30,10 +30,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
-import {
-  createProtectedFunctionMiddleware,
-  UnauthorizedError,
-} from '@cms/server/auth-middleware';
+import { createProtectedFunctionMiddleware } from '@cms/server/auth-middleware';
 import type { CookieIO } from '@cms/server/cookies';
 import { resolveBackendApiUrl } from '@cms/server/env';
 import {
@@ -79,7 +76,7 @@ const StatisticsDetailRowSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// QueryFn factories (the unit-under-test seam used by Phase 3 + tests).
+// QueryFn factories (the wire-boundary seam used by the server functions below).
 // ---------------------------------------------------------------------------
 
 interface QueryFnDeps {
@@ -91,9 +88,9 @@ interface QueryFnDeps {
 const defaultEnv: BackendEnv = { resolveBaseUrl: resolveBackendApiUrl };
 
 /**
- * `queryFn` for the statistics-summary read. Exposed so tests and
- * Phase 3 consumers can drive the wire boundary directly without
- * re-implementing the schema / envelope logic.
+ * `queryFn` for the statistics-summary read. Exposed so tests can drive
+ * the wire boundary directly without re-implementing the schema /
+ * envelope logic.
  */
 export function statisticsSummaryQueryFn(
   deps: QueryFnDeps = {},
@@ -173,17 +170,7 @@ export const getStatisticsSummaryServerFn = createServerFn({
 })
   .middleware([protectedMiddleware])
   .handler(async () => {
-    try {
-      return await statisticsSummaryQueryFn();
-    } catch (error) {
-      // Surface an UnauthorizedError cleanly if the protected gate ever
-      // lets one slip through (defense in depth — the middleware
-      // already throws before the handler runs).
-      if (error instanceof UnauthorizedError) {
-        throw error;
-      }
-      throw error;
-    }
+    return statisticsSummaryQueryFn();
   });
 
 export const getStatisticsChartDataServerFn = createServerFn({
@@ -203,7 +190,7 @@ export const getStatisticsDetailServerFn = createServerFn({
   });
 
 // ---------------------------------------------------------------------------
-// Re-exports for Phase 3 (type-only)
+// Type-only re-exports
 // ---------------------------------------------------------------------------
 
 export type StatisticsSummary = z.infer<typeof StatisticsSummarySchema>;

@@ -81,5 +81,10 @@ export const Route = createFileRoute('/_cms/photos')({
   validateSearch: paginationSearchSchema,
   loader: ({ context, location }) =>
     loader({ search: location.search, context }),
-  component: Photos,
+  component: PhotosListRoute,
 });
+
+function PhotosListRoute() {
+  const search = Route.useSearch();
+  return <Photos search={search} />;
+}
