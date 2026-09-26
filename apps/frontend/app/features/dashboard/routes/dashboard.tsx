@@ -1,9 +1,4 @@
-import {
-  LineChartOutlined,
-  SmileOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { LineChart, Smile, User, Users } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -12,12 +7,17 @@ import {
   ZButton,
   useClient,
 } from '@zcat/ui';
+import {
+  useIsFetching,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
-import { useRevalidator } from 'react-router';
 
-import { StatisticsApi } from '@cms/api';
-
-import type { Route } from './+types/dashboard';
+import {
+  statisticsChartDataOptions,
+  statisticsSummaryOptions,
+} from '@cms/server/statistics';
 
 const VisitTrend = lazy(() =>
   import('../components/charts').then((m) => ({ default: m.VisitTrend })),
@@ -27,71 +27,49 @@ const TopPages = lazy(() =>
   import('../components/charts').then((m) => ({ default: m.TopPages })),
 );
 
-export async function loader() {
-  const [summary, chartData] = await Promise.all([
-    StatisticsApi.getSummary(),
-    StatisticsApi.getChartData(),
-  ]);
-
-  return {
-    summary,
-    chartData,
-  };
-}
-
-export default function DashboardPage(props: Route.ComponentProps) {
-  const { summary, chartData } = props.loaderData;
+export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const isClient = useClient();
-  const revalidator = useRevalidator();
+  const isRefreshing = useIsFetching({ queryKey: ['statistics'] }) > 0;
+  const { data: summary } = useSuspenseQuery(statisticsSummaryOptions());
+  const { data: chartData } = useSuspenseQuery(statisticsChartDataOptions());
 
   const statsCards = [
     {
       title: '总访问量',
       value: summary.totalVisits.toLocaleString(),
-      icon: (
-        <TeamOutlined
-          style={{ color: 'var(--chart-1)' }}
-          className="text-3xl"
-        />
-      ),
+      icon: <Users style={{ color: 'var(--chart-1)' }} className="text-3xl" />,
     },
     {
       title: '独立访客',
       value: summary.totalUniqueVisitors.toLocaleString(),
-      icon: (
-        <UserOutlined
-          style={{ color: 'var(--chart-2)' }}
-          className="text-3xl"
-        />
-      ),
+      icon: <User style={{ color: 'var(--chart-2)' }} className="text-3xl" />,
     },
     {
       title: '今日访问',
       value: summary.todayVisits.toLocaleString(),
       icon: (
-        <LineChartOutlined
-          style={{ color: 'var(--chart-3)' }}
-          className="text-3xl"
-        />
+        <LineChart style={{ color: 'var(--chart-3)' }} className="text-3xl" />
       ),
     },
     {
       title: '今日访客',
       value: summary.todayUniqueVisitors.toLocaleString(),
-      icon: (
-        <SmileOutlined
-          style={{ color: 'var(--chart-4)' }}
-          className="text-3xl"
-        />
-      ),
+      icon: <Smile style={{ color: 'var(--chart-4)' }} className="text-3xl" />,
     },
   ];
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['statistics'] });
+  };
 
   return (
     <div className="space-y-6 w-full p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">仪表盘</h1>
-        <ZButton onClick={() => revalidator.revalidate()} loading={revalidator.state === 'loading'}>刷新数据</ZButton>
+        <ZButton onClick={refresh} loading={isRefreshing}>
+          刷新数据
+        </ZButton>
       </div>
 
       <div className="flex gap-5">

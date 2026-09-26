@@ -62,7 +62,7 @@ export const login = createServerFn({ method: 'POST' })
         env: { resolveBaseUrl: resolveBackendApiUrl },
         dataSchema: LoginDataSchema,
       });
-      setSessionCookie(`Bearer ${result.accessToken}`);
+      setSessionCookie(`Bearer ${result.accessToken}`, await liveCookieIO());
       return { code: '0000', message: '登录成功' };
     } catch (error) {
       // Convert any envelope-level ResponseValidationError to a typed
@@ -87,7 +87,7 @@ export const logout = createServerFn({ method: 'POST' }).handler(async () => {
   // Best-effort backend logout — failures must not block Cookie clearing.
   // We deliberately swallow errors here to preserve the Phase 1 contract:
   // the local Cookie is always cleared, even if the backend is down.
-  const cookie = liveCookieIO();
+  const cookie = await liveCookieIO();
   const token = parseSessionCookie(cookie);
 
   if (token) {
@@ -98,6 +98,6 @@ export const logout = createServerFn({ method: 'POST' }).handler(async () => {
     }).catch(() => undefined);
   }
 
-  clearSessionCookie();
+  clearSessionCookie(cookie);
   return { code: '0000', message: '已登出' };
 });

@@ -16,7 +16,7 @@
  * `./albums-helpers.ts`. Each protected function composes the shared
  * `createProtectedFunctionMiddleware`. Endpoint paths, payload shapes,
  * and the ResultCode -> ApiErrorTag mapping are preserved from the
- * legacy `app/api/interfaces/albums-api.ts`.
+ * legacy `AlbumsApi` client interface.
  *
  * Stable `queryOptions` factories are exported for Phase 3 consumers
  * (loaders, route components). They reference the server functions by

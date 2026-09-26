@@ -144,24 +144,21 @@ export function statisticsDetailQueryFn(
 export function statisticsSummaryOptions() {
   return queryOptions({
     queryKey: ['statistics', 'summary'] as const,
-    queryFn: ({ signal: _signal }: { signal?: AbortSignal } = {}) =>
-      statisticsSummaryQueryFn(),
+    queryFn: () => getStatisticsSummaryServerFn(),
   });
 }
 
 export function statisticsChartDataOptions() {
   return queryOptions({
     queryKey: ['statistics', 'chart-data'] as const,
-    queryFn: ({ signal: _signal }: { signal?: AbortSignal } = {}) =>
-      statisticsChartDataQueryFn(),
+    queryFn: () => getStatisticsChartDataServerFn(),
   });
 }
 
 export function statisticsDetailOptions() {
   return queryOptions({
     queryKey: ['statistics', 'detail'] as const,
-    queryFn: ({ signal: _signal }: { signal?: AbortSignal } = {}) =>
-      statisticsDetailQueryFn(),
+    queryFn: () => getStatisticsDetailServerFn(),
   });
 }
 

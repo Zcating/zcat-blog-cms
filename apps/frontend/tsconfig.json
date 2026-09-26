@@ -16,8 +16,6 @@
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
       "@cms/*": ["./app/*"],
-      "@cms/api": ["./app/api"],
-      "@cms/api/*": ["./app/api/*"],
       "@cms/core": ["./app/shared"],
       "@cms/core/*": ["./app/shared/*"]
     },

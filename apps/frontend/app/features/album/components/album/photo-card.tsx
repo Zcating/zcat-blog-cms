@@ -1,4 +1,4 @@
-import { FullscreenOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Loader, Maximize } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -9,16 +9,16 @@ import {
 } from '@zcat/ui';
 import React from 'react';
 
-import type { PhotosApi } from '@cms/api';
+import type { Photo } from '@cms/server/photos/schemas';
 
-export interface PhotoCardData extends PhotosApi.Photo {
+export interface PhotoCardData extends Photo {
   loading?: boolean;
 }
 
 interface PhotoCardProps {
   data: PhotoCardData;
-  onEdit: (data: PhotosApi.Photo) => void;
-  onDelete: (data: PhotosApi.Photo) => void;
+  onEdit: (data: Photo) => void;
+  onDelete: (data: Photo) => void;
   hoverComponent?: React.ReactNode;
 }
 
@@ -33,7 +33,7 @@ export function PhotoCard(props: PhotoCardProps) {
     setVisible(false);
   };
 
-  const fullscreen = (photo: PhotosApi.Photo) => {
+  const fullscreen = (photo: Photo) => {
     const resolvers = Promise.withResolvers<void>();
     ZDialog.show({
       title: photo.name,
@@ -85,7 +85,7 @@ export function PhotoCard(props: PhotoCardProps) {
               size="icon-sm"
               onClick={() => fullscreen(props.data)}
             >
-              <FullscreenOutlined className="text-xl" />
+              <Maximize className="text-xl" />
             </ZButton>
             {props.hoverComponent}
           </div>
@@ -93,7 +93,7 @@ export function PhotoCard(props: PhotoCardProps) {
       )}
       {props.data.loading && (
         <div className="absolute top-0 right-0 left-0 bottom-0 flex items-center justify-center bg-white/50 cursor-wait">
-          <LoadingOutlined className="text-2xl" />
+          <Loader className="text-2xl animate-spin" />
         </div>
       )}
     </Card>

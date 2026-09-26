@@ -1,9 +1,12 @@
 import { safeDateString, ZButton, ZMarkdown } from '@zcat/ui';
 
-import type { ArticlesApi } from '@cms/api';
+import type { Article } from '@cms/server/articles/schemas';
 
 interface ArticleViewerProps {
-  article: ArticlesApi.Article;
+  // `content` is not projected by the article list / detail schemas
+  // (`@cms/server/articles/schemas.ts`), so the viewer accepts it as
+  // an extra optional field supplied by the caller that holds the body.
+  article: Article & { content?: string };
   onEdit: () => void;
 }
 

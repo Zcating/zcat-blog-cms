@@ -18,20 +18,6 @@ export default defineConfig(({ mode }) => {
               srcDirectory: 'app',
               router: {
                 routesDirectory: './routes',
-                // Phase 3a: ignore the legacy React-Router-only route
-                // files. The phase keeps them on disk for the BFF
-                // lanes (Phase 2b) but prevents the file-based
-                // routing generator from emitting warnings about
-                // unknown filenames. Phase 3b/c will delete them.
-                //
-                // Patterns (matched against the file basename):
-                //   - `api-bff.*.ts`        — old `api/bff/*` proxy
-                //   - `auth-bff.*.ts`       — old `auth/bff/*` proxy
-                //   - `home.tsx`            — React-Router-only home
-                //   - `article-categories.tsx` — RR-only legacy
-                //   - `$.tsx`               — old splat catch-all
-                routeFileIgnorePattern:
-                  '^(api-bff\\..+|auth-bff\\..+|home\\.tsx|article-categories\\.tsx|\\$\\.tsx)$',
               },
             }),
             viteReact(),

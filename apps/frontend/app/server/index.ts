@@ -51,5 +51,4 @@ export type { ProtectedFunctionContext } from './auth-middleware';
 // `auth-middleware.server.ts` and is NOT re-exported through the
 // public barrel — domain code MUST use `createProtectedFunctionMiddleware`
 // instead. Tests reach for the file directly.
-export { runProtectedFunctionGate } from './auth-middleware.server';
 export type { MiddlewareServerInput } from './auth-middleware.server';

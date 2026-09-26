@@ -18,7 +18,7 @@
  */
 
 import { envelopeToApiError } from './errors';
-import { authorizeFromCookie, type CookieIO, liveCookieIO } from './cookies';
+import { authorizeFromCookie, liveCookieIO, type CookieIO } from './cookies';
 import {
   parseEnvelope,
   responseValidationError,
@@ -172,7 +172,7 @@ export async function postJson<T = unknown>(
   options: PostJsonOptions & { dataSchema?: DataSchema<T> },
 ): Promise<T> {
   const fetchImpl = options.fetch ?? defaultFetch;
-  const cookie = options.cookie ?? liveCookieIO();
+  const cookie = options.cookie ?? (await liveCookieIO());
   const url = resolveUrl(options.env, options.path);
   const headers = buildHeaders(
     { 'Content-Type': 'application/json' },
@@ -195,7 +195,7 @@ export async function postAuthorizedJson<T = unknown>(
   options: PostJsonOptions & { dataSchema?: DataSchema<T> },
 ): Promise<T> {
   const fetchImpl = options.fetch ?? defaultFetch;
-  const cookie = options.cookie ?? liveCookieIO();
+  const cookie = options.cookie ?? (await liveCookieIO());
   const url = resolveUrl(options.env, options.path);
   const headers = buildHeaders(
     { 'Content-Type': 'application/json' },
@@ -218,7 +218,7 @@ export async function deleteAuthorized<T = unknown>(
   options: DeleteAuthorizedOptions & { dataSchema?: DataSchema<T> },
 ): Promise<T> {
   const fetchImpl = options.fetch ?? defaultFetch;
-  const cookie = options.cookie ?? liveCookieIO();
+  const cookie = options.cookie ?? (await liveCookieIO());
   const url = resolveUrl(options.env, options.path);
   const headers = buildHeaders(undefined, cookie, true);
   const init: RequestInit = {
@@ -245,7 +245,7 @@ export async function getAuthorizedJson<T = unknown>(
   options: GetAuthorizedOptions<T>,
 ): Promise<T> {
   const fetchImpl = options.fetch ?? defaultFetch;
-  const cookie = options.cookie ?? liveCookieIO();
+  const cookie = options.cookie ?? (await liveCookieIO());
   const base = options.env.resolveBaseUrl();
   const normalizedPath = options.path.startsWith('/')
     ? options.path

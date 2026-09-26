@@ -1,11 +1,55 @@
-import { createZForm, ZButton, ZDatePicker, ZInput, ZTextarea } from '@zcat/ui';
+/**
+ * Article create / edit page (feature component).
+ *
+ * Phase 3b contract: the editor reads the existing article (if any)
+ * from the TanStack Query cache, never from `useLoaderData`. The
+ * thin route file at `app/routes/_cms/articles.edit.tsx` ensures
+ * the cache slot is hot before the page renders.
+ *
+ * Save flow:
+ *   1. Run the markdown body through
+ *      `extractBlobImageUrls` + `uploadArticleMarkdownImages` to
+ *      resolve any `blob:` images to OSS keys. The keys are
+ *      positionally aligned with the `blob:` URLs in the markdown
+ *      so `rewriteArticleMarkdownImages` can splice them back in.
+ *   2. POST the rewritten body + metadata to either `createArticle`
+ *      (id is undefined) or `updateArticle` (id is defined). The
+ *      cache is invalidated on success so the list page re-reads
+ *      with the new row.
+ *   3. Navigate to `/articles/:articleId` on success.
+ */
+
+import {
+  createZForm,
+  ZButton,
+  ZDatePicker,
+  ZInput,
+  ZNotification,
+  ZTextarea,
+} from '@zcat/ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import dayjs from 'dayjs';
+import React from 'react';
 import { z } from 'zod';
 
-import { ArticlesApi } from '@cms/api';
+import {
+  articleDetailQueryOptions,
+  articlesListQueryOptions,
+  createArticle,
+  updateArticle,
+} from '@cms/server/articles';
+import type { Article } from '@cms/server/articles/schemas';
+import { articleTagsListQueryOptions } from '@cms/server/article-tags';
 import { MarkdownEditor } from '@cms/core/ui/markdown-editor';
 
-const ArticleSchema = z.object({
+import {
+  extractBlobImageUrls,
+  rewriteArticleMarkdownImages,
+  uploadArticleMarkdownImages,
+} from '../../hooks/use-article-image-upload';
+
+const ArticleFormSchema = z.object({
   title: z
     .string()
     .min(1, '文章标题不能为空')
@@ -13,46 +57,109 @@ const ArticleSchema = z.object({
   excerpt: z.string().optional(),
   content: z.string().optional(),
   publishAt: z
-    .custom<dayjs.Dayjs>(dayjs.isDayjs, {
+    .custom<dayjs.Dayjs>((v) => dayjs.isDayjs(v), {
       message: '发布时间格式不正确',
     })
     .default(dayjs()),
 });
 
-const ArticleForm = createZForm(ArticleSchema);
+const ArticleForm = createZForm(ArticleFormSchema);
 
-interface ArticleEditorProps {
-  article: ArticlesApi.Article;
-  onSave: (article: ArticlesApi.Article) => Promise<void>;
-  onCancel: () => void;
+interface ArticleEditorPageProps {
+  id?: number;
 }
 
-export function ArticleEditor({
-  article: initialArticle,
-  onSave,
-  onCancel,
-}: ArticleEditorProps) {
+export function ArticleEditorPage({ id }: ArticleEditorPageProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const detailQuery = useQuery({
+    ...articleDetailQueryOptions({ id: id ?? 0 }),
+    enabled: typeof id === 'number',
+  });
+  const tagsQuery = useQuery(articleTagsListQueryOptions());
+
+  const existing: Article | undefined = id ? detailQuery.data : undefined;
+
+  const createMutation = useMutation({
+    mutationFn: (input: {
+      title: string;
+      excerpt: string;
+      content: string;
+      publishAt?: string;
+      tagIds?: number[];
+    }) => createArticle({ data: input }),
+  });
+  const updateMutation = useMutation({
+    mutationFn: (input: {
+      id: number;
+      title?: string;
+      excerpt?: string;
+      content?: string;
+      publishAt?: string;
+      tagIds?: number[];
+    }) => updateArticle({ data: input }),
+  });
+
   const form = ArticleForm.useForm({
     defaultValues: {
-      title: initialArticle.title,
-      excerpt: initialArticle.excerpt,
-      content: initialArticle.content,
-      publishAt: initialArticle.publishAt
-        ? dayjs(initialArticle.publishAt)
-        : dayjs(),
+      title: existing?.title ?? '',
+      excerpt: existing?.excerpt ?? '',
+      content: '',
+      publishAt: existing?.publishAt ? dayjs(existing.publishAt) : dayjs(),
     },
     onSubmit: async (values) => {
-      await onSave({
-        ...initialArticle,
-        ...values,
+      let content = values.content ?? '';
+
+      // Step 1: extract and upload any blob: images. The keys are
+      // returned in the same positional order as the blob URLs in
+      // the markdown, so the rewrite step is positional.
+      const blobUrls = extractBlobImageUrls(content);
+      if (blobUrls.length > 0) {
+        const keys = await uploadArticleMarkdownImages(blobUrls);
+        content = rewriteArticleMarkdownImages(content, keys);
+      }
+
+      const payload = {
+        title: values.title,
+        excerpt: values.excerpt ?? '',
+        content,
         publishAt: values.publishAt?.toISOString(),
+        tagIds: [],
+      };
+
+      let saved: Article | undefined;
+      try {
+        saved = id
+          ? await updateMutation.mutateAsync({ id, ...payload })
+          : await createMutation.mutateAsync(payload);
+      } catch (error) {
+        await ZNotification.error(
+          error instanceof Error ? error.message : '保存失败',
+        );
+        return;
+      }
+
+      // Invalidate the list cache so the next navigation lands on
+      // a fresh row. We don't have the public URL list here — the
+      // detail endpoint will re-fetch the full body when the
+      // editor lands on the next page.
+      queryClient.invalidateQueries({ queryKey: ['articles', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['articles', 'detail'] });
+
+      await navigate({
+        to: '/articles/$articleId',
+        params: { articleId: String(saved.id) },
       });
     },
   });
 
+  const handleCancel = React.useCallback(() => {
+    void navigate({ to: '/articles' });
+  }, [navigate]);
+
   return (
     <ArticleForm form={form} className="w-full h-screen">
-      {/* 文章标题和操作按钮 */}
       <div className="p-3 h-full flex flex-col gap-2">
         <div className="flex justify-between items-start gap-5">
           <ArticleForm.Item name="title" className="flex-1">
@@ -68,23 +175,21 @@ export function ArticleEditor({
               </ArticleForm.Item>
               <ZButton
                 type="submit"
-                loading={form.instance.formState.isSubmitting}
+                loading={createMutation.isPending || updateMutation.isPending}
               >
                 保存
               </ZButton>
-              <ZButton onClick={onCancel} variant="outline" type="button">
+              <ZButton onClick={handleCancel} variant="outline" type="button">
                 取消
               </ZButton>
             </div>
           </div>
         </div>
 
-        {/* 文章摘要 */}
         <ArticleForm.Item name="excerpt">
           <ZTextarea placeholder="请输入文章摘要" />
         </ArticleForm.Item>
 
-        {/* Markdown 编辑器 */}
         <ArticleForm.Item name="content" className="flex-1 h-full">
           <MarkdownEditor />
         </ArticleForm.Item>

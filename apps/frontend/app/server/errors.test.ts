@@ -7,8 +7,8 @@
  * 2. Wrap the conversion in `envelopeToApiError` so server functions can
  *    throw a structured `ApiError` from any non-success envelope without
  *    leaking the envelope's `data` field.
- * 3. Re-export the legacy `mapResultCodeToTag` so existing imports keep
- *    compiling until the Phase 4 teardown.
+ * 3. Pin the structural contract of the `ApiError` / `ApiErrorTag`
+ *    types this module owns.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ import {
   type ApiErrorTag,
 } from './errors';
 
-describe('mapResultCodeToTag (compat re-export)', () => {
+describe('mapResultCodeToTag', () => {
   it('returns null for the success code 0000', () => {
     expect(mapResultCodeToTag('0000')).toBeNull();
   });
@@ -41,6 +41,21 @@ describe('mapResultCodeToTag (compat re-export)', () => {
 
   it('returns null for unknown codes (does not invent a tag)', () => {
     expect(mapResultCodeToTag('NOPE')).toBeNull();
+  });
+});
+
+describe('ApiErrorTag', () => {
+  it('should be a union of ResultCode error tags', () => {
+    const tag: ApiErrorTag = 'LoginError';
+    expect(tag).toBe('LoginError');
+  });
+});
+
+describe('ApiError', () => {
+  it('should have _tag and message properties', () => {
+    const error: ApiError = { _tag: 'LoginError', message: 'test' };
+    expect(error._tag).toBe('LoginError');
+    expect(error.message).toBe('test');
   });
 });
 

@@ -1,28 +1,59 @@
-import { safeNumber, ZButton, ZDialog, ZGrid } from '@zcat/ui';
+/**
+ * 相册详情页（Phase 3b）。
+ *
+ * 数据来源：TanStack Query，通过三个并行的 `useSuspenseQuery`
+ * 分别读取：
+ *   1. `photoAlbumDetailQueryOptions({ id })`  — 当前相册元数据
+ *   2. `photoListQueryOptions({ albumId, ... })` — 该相册下的照片分页
+ *   3. `emptyAlbumPhotosQueryOptions()`        — 用于「选择照片」
+ *                                                弹窗的未关联照片列表
+ *
+ * 路由 loader 已通过
+ * `context.queryClient.query({ ...options, staleTime: 'static' })`
+ * 并行预热上述三个缓存槽；本组件不再读 `useLoaderData` / `HttpClient`。
+ *
+ * 乐观更新：保留旧页面的 `useOptimisticArray` 语义（创建 / 编辑 /
+ * 删除 / 添加到相册），失败时调用 `rollback` 还原。
+ */
+
+import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
 import React from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import zod from 'zod';
 
-import { AlbumsApi, PhotosApi } from '@cms/api';
 import {
+  PhotoCard,
+  showPhotoSelector,
+  type PhotoCardData,
+} from '@cms/features/album/components/album';
+import {
+  OssAction,
   createCheckbox,
   createConstNumber,
   createImageUpload,
   createInput,
   createSchemaForm,
   createTextArea,
-  OssAction,
   PaginationWorkspace,
   useLoadingFn,
   useOptimisticArray,
 } from '@cms/core';
-
 import {
-  PhotoCard,
-  showPhotoSelector,
-  type PhotoCardData,
-} from '../components/album';
-
-import type { Route } from './+types/albums.id';
+  addPhotos,
+  photoAlbumDetailQueryOptions,
+  setPhotoAlbumCover,
+  updatePhotoAlbum,
+} from '@cms/server/albums';
+import type { PhotoAlbumDetail } from '@cms/server/albums/schemas';
+import {
+  emptyAlbumPhotosQueryOptions,
+  photoListQueryOptions,
+} from '@cms/server/photos';
+import type {
+  GetPhotosInput,
+  PaginatedPhotos,
+  Photo,
+} from '@cms/server/photos/schemas';
 
 interface AlbumPhotoFormData {
   id: number;
@@ -31,37 +62,30 @@ interface AlbumPhotoFormData {
   albumId: number;
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const page = safeNumber(url.searchParams.get('page'), 1);
-  const pageSize = safeNumber(url.searchParams.get('pageSize'), 20);
-  const id = safeNumber(params.id);
-  if (isNaN(id)) {
-    throw new Error('Not Found');
-  }
-
-  const album = await AlbumsApi.getPhotoAlbum(id);
-  if (!album) {
-    throw new Error('Not Found');
-  }
-
-  const albumPhotoPagination = await PhotosApi.getPhotos({
-    albumId: id,
-    page,
-    pageSize,
-  });
-
-  const reminderPhotos = await PhotosApi.getEmptyAlbumPhotos();
-
-  return {
-    album,
-    albumPhotoPagination,
-    reminderPhotos,
-  };
+interface AlbumsIdProps {
+  albumId: number;
+  search: Record<string, unknown>;
 }
 
-export default function AlbumsId(props: Route.ComponentProps) {
-  const { album, albumPhotoPagination, reminderPhotos } = props.loaderData;
+export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
+  const photoQueryInput = derivePhotoQueryInput(albumId, search);
+  const { data: albumRaw } = useSuspenseQuery(
+    photoAlbumDetailQueryOptions({ id: albumId }),
+  );
+  const { data: photosRaw } = useSuspenseQuery(
+    photoListQueryOptions(photoQueryInput),
+  );
+  const { data: reminderPhotosRaw } = useSuspenseQuery(
+    emptyAlbumPhotosQueryOptions(),
+  );
+  // The `queryFn` in each `*QueryOptions` factory is a closure
+  // over a TanStack Start server function, which TypeScript cannot
+  // infer through. The shapes are pinned by the corresponding
+  // Zod schemas, so we narrow here.
+  const album = albumRaw as unknown as PhotoAlbumDetail;
+  const albumPhotoPagination = photosRaw as unknown as PaginatedPhotos;
+  const reminderPhotos = reminderPhotosRaw as unknown as Photo[];
+
   const [photos, addOptimisticPhoto, commitPhoto] = useOptimisticArray(
     albumPhotoPagination.data,
     (prev, data: AlbumPhotoFormData) => {
@@ -86,22 +110,27 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const editAlbum = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
-    async onSubmit(data) {
-      await AlbumsApi.updatePhotoAlbum({
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        available: data.available,
-      });
+    async onSubmit(data: AlbumFormValues) {
+      try {
+        await updatePhotoAlbum({
+          data: {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            available: data.available,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 
   // 新增相册照片
   const addPhoto = usePhotoForm({
     title: '新增照片',
-    async onSubmit(data) {
+    async onSubmit(data: AlbumPhotoFormData) {
       React.startTransition(async () => {
-        // 先添加到 optimisticState 中，等待服务器返回结果
         addOptimisticPhoto(data);
         try {
           const photo = await OssAction.createAlbumPhoto({
@@ -125,9 +154,8 @@ export default function AlbumsId(props: Route.ComponentProps) {
   const editPhoto = usePhotoForm({
     title: '编辑照片',
     confirmText: '保存',
-    async onSubmit(data) {
+    async onSubmit(data: AlbumPhotoFormData) {
       React.startTransition(async () => {
-        // 先添加到 optimisticState 中，等待服务器返回结果
         addOptimisticPhoto(data);
 
         try {
@@ -152,25 +180,46 @@ export default function AlbumsId(props: Route.ComponentProps) {
 
   // 选择照片
   const selectPhoto = async () => {
+    // `showPhotoSelector` was built against the legacy
+    // `PhotosApi.Photo` shape (albumId: number | undefined). The
+    // server surface now returns albumId: number | null | undefined
+    // — narrow here so the two interfaces stay aligned.
+    const candidates = reminderPhotos
+      .filter((photo) => photo.albumId !== album.id)
+      .map((photo) => ({
+        id: photo.id,
+        name: photo.name,
+        url: photo.url,
+        thumbnailUrl: photo.thumbnailUrl,
+        albumId: photo.albumId ?? undefined,
+        isCover: photo.isCover,
+        createdAt: photo.createdAt,
+        updatedAt: photo.updatedAt,
+      }));
     const selectedPhotos = await showPhotoSelector({
-      photos: reminderPhotos.filter((photo) => photo.albumId !== album.id),
+      photos: candidates,
     });
     if (!selectedPhotos) {
       return;
     }
 
     React.startTransition(async () => {
-      await AlbumsApi.addPhotos({
-        albumId: album.id,
-        photoIds: selectedPhotos.map((photo) => photo.id),
-      });
-
-      commitPhoto('batchUpdate', selectedPhotos);
+      try {
+        await addPhotos({
+          data: {
+            albumId: album.id,
+            photoIds: selectedPhotos.map((photo) => photo.id),
+          },
+        });
+        commitPhoto('batchUpdate', selectedPhotos);
+      } catch (error) {
+        commitPhoto('rollback');
+      }
     });
   };
 
   // 删除照片
-  const deletePhoto = async (photo: PhotosApi.Photo) => {
+  const deletePhoto = async (photo: Photo) => {
     const confirm = await ZDialog.confirm({
       title: '删除照片',
       content: (
@@ -184,8 +233,12 @@ export default function AlbumsId(props: Route.ComponentProps) {
     }
 
     React.startTransition(async () => {
-      await OssAction.deletePhoto(photo.id);
-      commitPhoto('remove', photo);
+      try {
+        await OssAction.deletePhoto(photo.id);
+        commitPhoto('remove', photo);
+      } catch (error) {
+        commitPhoto('rollback');
+      }
     });
   };
 
@@ -195,7 +248,7 @@ export default function AlbumsId(props: Route.ComponentProps) {
   return (
     <PaginationWorkspace
       title={`相册名称：${album.name}`}
-      description={`相册描述：${album.description}`}
+      description={`相册描述：${album.description ?? ''}`}
       operation={
         <div className="flex flex-wrap gap-2">
           <ZButton onClick={() => editAlbum(album)}>编辑相册</ZButton>
@@ -217,7 +270,15 @@ export default function AlbumsId(props: Route.ComponentProps) {
         columnClassName="px-0"
         renderItem={(item) => (
           <PhotoCard
-            data={item}
+            // `PhotoCard` was built against the legacy
+            // `PhotosApi.Photo` shape (albumId: number | undefined).
+            // The server surface returns `albumId: number | null |
+            // undefined`; narrow `null` to `undefined` so the
+            // legacy component contract stays intact.
+            data={{
+              ...item,
+              albumId: item.albumId ?? undefined,
+            }}
             onEdit={(data) =>
               editPhoto({
                 id: data.id,
@@ -233,6 +294,37 @@ export default function AlbumsId(props: Route.ComponentProps) {
       />
     </PaginationWorkspace>
   );
+}
+
+interface AlbumFormValues {
+  id: number;
+  name: string;
+  description: string;
+  available: boolean;
+}
+
+/**
+ * 从路由传入的 search 参数中派生照片分页 Query key，使页面 key 与
+ * 路由 loader 预热的 key 保持一致。loader 已经用同样的参数调用了
+ * `query({ ...options, staleTime: 'static' })`，因此 SSR 首次渲染命中缓存。
+ */
+function derivePhotoQueryInput(
+  albumId: number,
+  search: Record<string, unknown>,
+): GetPhotosInput {
+  return {
+    albumId,
+    page: coerceQueryNumber(search.page, 1),
+    pageSize: coerceQueryNumber(search.pageSize, 20),
+  };
+}
+
+function coerceQueryNumber(raw: unknown, defaultValue: number): number {
+  if (raw == null || raw === '') {
+    return defaultValue;
+  }
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 /**
@@ -271,22 +363,27 @@ const useAlbumForm = createSchemaForm({
 
 /**
  * 相册封面设置
- * @param {AlbumsApi.PhotoAlbumDetail} album 相册详情
+ * @param {PhotoAlbumDetail} album 相册详情
  * @returns 封面设置组件
  */
-function useCoverSetter(album: AlbumsApi.PhotoAlbumDetail) {
+function useCoverSetter(album: PhotoAlbumDetail) {
   const [coverId, setCoverId] = React.useState<number>(album?.coverId || 0);
-  const setCover = useLoadingFn(async (photo: PhotosApi.Photo) => {
+  const setCover = useLoadingFn(async (photo: Photo) => {
     // selectPhotoDialog.show();
-    await AlbumsApi.setPhotoAlbumCover({
-      photoId: photo.id,
-      albumId: album.id,
-    });
-
-    setCoverId(photo.id);
+    try {
+      await setPhotoAlbumCover({
+        data: {
+          photoId: photo.id,
+          albumId: album.id,
+        },
+      });
+      setCoverId(photo.id);
+    } catch (error) {
+      console.error(error);
+    }
   });
 
-  const RenderCoverButton = (photo: PhotosApi.Photo) => {
+  const RenderCoverButton = (photo: Photo) => {
     const isCover = coverId === photo.id;
     return isCover ? (
       <ZButton variant="destructive" loading={setCover.loading}>

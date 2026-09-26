@@ -1,6 +1,9 @@
 import { Line, Column } from '@ant-design/plots';
 
-import type { StatisticsChartData, StatisticsSummary } from '@cms/api';
+import type {
+  StatisticsChartData,
+  StatisticsSummary,
+} from '@cms/server/statistics';
 
 interface VisitTrendProps {
   data: StatisticsChartData[];

@@ -1,22 +1,45 @@
-import { ZButton, ZGrid, safeNumber } from '@zcat/ui';
+/**
+ * 相册列表页（Phase 3b）。
+ *
+ * 数据来源：TanStack Query，通过 `useSuspenseQuery` 从
+ * `photoAlbumsListQueryOptions(...)` 读取。路由 loader 已通过
+ * `context.queryClient.query({ ...options, staleTime: 'static' })`
+ * 预热缓存，本组件不再读 `useLoaderData` / `HttpClient`。
+ *
+ * 乐观更新：保留旧页面通过 `useOptimisticArray` 维护的本地状态
+ * 语义（创建 / 编辑 / 删除），失败时调用 `rollback` 还原。
+ */
+
+import { ZButton, ZGrid } from '@zcat/ui';
 import React from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from '@tanstack/react-router';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import zod from 'zod';
 
-import { AlbumsApi } from '@cms/api';
+import { AlbumImageCard } from '@cms/features/album/components/album';
 import {
   createCheckbox,
   createConstNumber,
   createInput,
   createSchemaForm,
   createTextArea,
-  useOptimisticArray,
   PaginationWorkspace,
+  useOptimisticArray,
 } from '@cms/core';
-
-import { AlbumImageCard } from '../components/album';
-
-import type { Route } from './+types/albums';
+import {
+  createPhotoAlbum,
+  deletePhotoAlbum,
+  photoAlbumsListQueryOptions,
+  updatePhotoAlbum,
+} from '@cms/server/albums';
+import type {
+  CreatePhotoAlbumInput,
+  DeletePhotoAlbumInput,
+  GetPhotoAlbumsInput,
+  PaginatedPhotoAlbums,
+  PhotoAlbum,
+  UpdatePhotoAlbumInput,
+} from '@cms/server/albums/schemas';
 
 interface AlbumFormValues {
   id: number;
@@ -25,51 +48,51 @@ interface AlbumFormValues {
   description: string;
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const page = safeNumber(url.searchParams.get('page'), 1);
-  const pageSize = safeNumber(url.searchParams.get('pageSize'), 10);
-
-  const pagination = await AlbumsApi.getPhotoAlbums({
-    page,
-    pageSize,
-  });
-
-  return {
-    pagination,
-  };
+interface AlbumsListProps {
+  search: Record<string, unknown>;
 }
 
 /**
  * 相册页面
- * @param {Route.ComponentProps} props
  * @returns
  */
-export default function Albums(props: Route.ComponentProps) {
-  const { pagination } = props.loaderData;
+export default function Albums({ search }: AlbumsListProps) {
+  const navigate = useNavigate();
+  const { page, pageSize } = deriveAlbumListQueryArgs(search);
+  const { data: pagination } = useSuspenseQuery(
+    photoAlbumsListQueryOptions({ page, pageSize }),
+  );
+  // The `queryFn` in `photoAlbumsListQueryOptions` is a closure over
+  // a TanStack Start server function, which TypeScript cannot infer
+  // through. The shape is fixed by the corresponding Zod schema
+  // (`PaginatedPhotoAlbumsSchema`) so we narrow here.
+  const paginated = pagination as unknown as PaginatedPhotoAlbums;
+
   const [albums, setOptimisticAlbums, commitAlbums] = useOptimisticArray(
-    pagination.data,
+    paginated.data,
     (state, values: AlbumFormValues) => {
       if (values.id !== 0) {
-        return state.map((album) => {
-          if (album.id === values.id) {
-            return {
-              ...album,
-              name: values.name,
-              available: values.available,
-              description: values.description,
-              loading: true,
-            };
-          }
-          return album;
-        });
+        return state.map((album) =>
+          album.id === values.id
+            ? {
+                ...album,
+                name: values.name,
+                available: values.available,
+                description: values.description,
+                loading: true,
+              }
+            : album,
+        );
       }
 
+      // crypto.randomUUID() 避免 Date.now() 冲突（连续点击新增会覆盖乐观更新）
       return [
         ...state,
         {
-          // crypto.randomUUID() 避免 Date.now() 冲突（连续点击新增会覆盖乐观更新）
-          id: -Number.parseInt(crypto.randomUUID().replace(/-/g, '').slice(0, 13), 16),
+          id: -Number.parseInt(
+            crypto.randomUUID().replace(/-/g, '').slice(0, 13),
+            16,
+          ),
           name: values.name,
           available: values.available,
           description: values.description,
@@ -81,22 +104,32 @@ export default function Albums(props: Route.ComponentProps) {
     },
   );
 
-  const navigate = useNavigate();
-
-  const deleteAlbum = async (item: AlbumFormValues) => {
+  const deleteAlbum = (item: AlbumFormValues) => {
     React.startTransition(async () => {
       commitAlbums('remove', item);
-      await AlbumsApi.deletePhotoAlbum(item.id);
+      try {
+        await deletePhotoAlbum({
+          data: { id: item.id } satisfies DeletePhotoAlbumInput,
+        });
+      } catch {
+        commitAlbums('rollback');
+      }
     });
   };
 
   const create = useAlbumForm({
     title: '新增相册',
-    onSubmit: async (data) => {
+    onSubmit: async (data: AlbumFormValues) => {
       React.startTransition(async () => {
         setOptimisticAlbums(data);
         try {
-          const result = await AlbumsApi.createPhotoAlbum(data);
+          const result = await createPhotoAlbum({
+            data: {
+              name: data.name,
+              description: data.description,
+              available: data.available,
+            } satisfies CreatePhotoAlbumInput,
+          });
           if (!result) {
             commitAlbums('rollback');
             return;
@@ -112,11 +145,18 @@ export default function Albums(props: Route.ComponentProps) {
   const edit = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
-    onSubmit: async (data) => {
+    onSubmit: async (data: AlbumFormValues) => {
       React.startTransition(async () => {
         setOptimisticAlbums(data);
         try {
-          const result = await AlbumsApi.updatePhotoAlbum(data);
+          const result = await updatePhotoAlbum({
+            data: {
+              id: data.id,
+              name: data.name,
+              description: data.description,
+              available: data.available,
+            } satisfies UpdatePhotoAlbumInput,
+          });
           if (!result) {
             commitAlbums('rollback');
             return;
@@ -130,8 +170,16 @@ export default function Albums(props: Route.ComponentProps) {
   });
 
   const handleClickAlbum = React.useCallback(
-    (item: AlbumsApi.PhotoAlbum) => {
-      navigate(`/albums/${item.id}`);
+    (item: PhotoAlbum) => {
+      // The detail route is mounted at `/_cms/albums/$albumId`;
+      // route id is `/albums/$albumId` under the pathless `_cms`
+      // layout. The route tree is regenerated by the Vite plugin
+      // at dev/build time; we cast loosely so this file compiles
+      // even when the tree is stale.
+      navigate({
+        to: '/albums/$albumId' as never,
+        params: { albumId: String(item.id) } as never,
+      });
     },
     [navigate],
   );
@@ -153,9 +201,9 @@ export default function Albums(props: Route.ComponentProps) {
           新增相册
         </ZButton>
       }
-      pageSize={pagination.pageSize}
-      totalPages={pagination.totalPages}
-      page={pagination.page}
+      pageSize={paginated.pageSize}
+      totalPages={paginated.totalPages}
+      page={paginated.page}
     >
       <ZGrid
         items={albums}
@@ -163,7 +211,26 @@ export default function Albums(props: Route.ComponentProps) {
         columnClassName="px-0"
         renderItem={(item) => (
           <AlbumImageCard
-            data={item}
+            // `AlbumImageCard` was built against the legacy
+            // `AlbumsApi.PhotoAlbum` shape (`cover?: Photo`). The
+            // server surface now returns `cover?: Photo | null`; we
+            // narrow `null` to `undefined` so the legacy component
+            // contract stays intact.
+            data={{
+              ...item,
+              cover: item.cover
+                ? {
+                    id: item.cover.id,
+                    name: item.cover.name,
+                    url: item.cover.url,
+                    thumbnailUrl: item.cover.thumbnailUrl,
+                    albumId: item.cover.albumId ?? undefined,
+                    isCover: item.cover.isCover,
+                    createdAt: item.cover.createdAt,
+                    updatedAt: item.cover.updatedAt,
+                  }
+                : undefined,
+            }}
             onClickItem={handleClickAlbum}
             onEdit={edit}
             onDelete={deleteAlbum}
@@ -172,6 +239,28 @@ export default function Albums(props: Route.ComponentProps) {
       />
     </PaginationWorkspace>
   );
+}
+
+/**
+ * 从路由传入的 search 参数中派生 Query key，使页面 key 与路由
+ * loader 预热的 key 保持一致。loader 已经用同样的参数调用了
+ * `query({ ...options, staleTime: 'static' })`，因此 SSR 首次渲染命中缓存。
+ */
+function deriveAlbumListQueryArgs(
+  search: Record<string, unknown>,
+): Pick<GetPhotoAlbumsInput, 'page' | 'pageSize'> {
+  return {
+    page: coerceQueryNumber(search.page, 1),
+    pageSize: coerceQueryNumber(search.pageSize, 10),
+  };
+}
+
+function coerceQueryNumber(raw: unknown, defaultValue: number): number {
+  if (raw == null || raw === '') {
+    return defaultValue;
+  }
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 // 相册创建表单

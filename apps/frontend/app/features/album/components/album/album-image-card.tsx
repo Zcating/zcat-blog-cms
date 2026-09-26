@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons';
+import { Loader } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -8,9 +8,9 @@ import {
   ZImagePreload,
 } from '@zcat/ui';
 
-import type { AlbumsApi } from '@cms/api';
+import type { PhotoAlbum } from '@cms/server/albums/schemas';
 
-export interface PhotoAlbumData extends AlbumsApi.PhotoAlbum {
+export interface PhotoAlbumData extends PhotoAlbum {
   loading?: boolean;
 }
 
@@ -69,7 +69,7 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
       </CardContent>
       {props.data.loading && (
         <div className="absolute top-0 right-0 left-0 bottom-0 flex items-center justify-center bg-white/50 cursor-wait">
-          <LoadingOutlined className="text-2xl" />
+          <Loader className="text-2xl animate-spin" />
         </div>
       )}
     </Card>

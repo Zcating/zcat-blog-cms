@@ -13,11 +13,11 @@ import {
 import { Maximize2 } from 'lucide-react';
 import React from 'react';
 
-import type { PhotosApi } from '@cms/api';
+import type { Photo } from '@cms/server/photos/schemas';
 
 interface PhotoSelectorProps {
   /** 照片列表 */
-  photos: PhotosApi.Photo[];
+  photos: Photo[];
   /** 选择模式 */
   mode?: 'single' | 'multiple';
   /** 已选择的照片ID列表 */
@@ -25,7 +25,7 @@ interface PhotoSelectorProps {
   /** 选择变化回调 */
   onSelectionChange?: (selectedIds: number[]) => void;
   /** 确认选择回调 */
-  onConfirm?: (selectedPhotos: PhotosApi.Photo[]) => void;
+  onConfirm?: (selectedPhotos: Photo[]) => void;
   /** 取消回调 */
   onCancel?: () => void;
   /** 是否显示操作按钮 */
@@ -92,7 +92,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
   };
 
   // 全屏预览
-  const handleFullscreen = (photo: PhotosApi.Photo) => {
+  const handleFullscreen = (photo: Photo) => {
     ZDialog.show({
       contentContainerClassName:
         'p-2 w-full max-w-3xl sm:max-w-3xl min-h-[50vh] max-h-[80vh] overflow-hidden',
@@ -178,7 +178,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
 
 // 照片选择卡片组件
 interface PhotoSelectorCardProps {
-  photo: PhotosApi.Photo;
+  photo: Photo;
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onFullscreen: () => void;
@@ -248,9 +248,9 @@ interface PhotoSelectorModalProps extends Omit<
  * @returns
  */
 export async function showPhotoSelector(props: PhotoSelectorModalProps) {
-  const resolvers = Promise.withResolvers<PhotosApi.Photo[]>();
+  const resolvers = Promise.withResolvers<Photo[]>();
   let settled = false;
-  const safeResolve = (value: PhotosApi.Photo[]) => {
+  const safeResolve = (value: Photo[]) => {
     if (settled) return;
     settled = true;
     resolvers.resolve(value);

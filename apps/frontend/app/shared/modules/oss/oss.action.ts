@@ -1,6 +1,24 @@
 import Compressor from 'compressorjs';
 
-import { ArticlesApi, PhotosApi, SystemSettingApi, UserApi } from '@cms/api';
+import {
+  createArticle,
+  updateArticle,
+  uploadArticleImages,
+} from '@cms/server/articles';
+import type {
+  CreateArticleInput,
+  UpdateArticleInput,
+} from '@cms/server/articles/schemas';
+import {
+  createAlbumPhoto,
+  createPhoto,
+  deletePhoto,
+  updatePhoto,
+} from '@cms/server/photos';
+import type { Photo } from '@cms/server/photos/schemas';
+import { getSystemSettingUploadUrlServerFn } from '@cms/server/system-setting';
+import { updateCurrentUser } from '@cms/server/users';
+import type { UpdateUserInfoBody } from '@cms/server/users/users-helpers';
 
 import { CommonRegex, isString } from '../../utils';
 
@@ -15,6 +33,20 @@ async function uploadToOss(presignedUrl: string, file: Blob): Promise<void> {
   if (!response.ok) {
     throw new Error(`Upload failed: ${response.status}`);
   }
+}
+
+/**
+ * 向服务端换取对象的预签名上传地址
+ *
+ * 走服务端函数而非直连后端：预签名地址的签发需要携带会话 Cookie，
+ * 而浏览器侧无法读取 HttpOnly Cookie。大文件本体仍由浏览器直接
+ * `PUT` 到对象存储，不会经过服务端转发。
+ */
+async function getPresignedUploadUrl(key: string): Promise<string> {
+  const result = await getSystemSettingUploadUrlServerFn({
+    data: { key },
+  });
+  return result.presignedUrl;
 }
 
 /**
@@ -89,11 +121,10 @@ async function uploadPhotoFile(
 
   const compressedBlob = await compressImage(imageFile, 500, 500, 0.6);
 
-  const [{ presignedUrl }, { presignedUrl: thumbnailPresignedUrl }] =
-    await Promise.all([
-      SystemSettingApi.getUploadUrl(key),
-      SystemSettingApi.getUploadUrl(thumbnailKey),
-    ]);
+  const [presignedUrl, thumbnailPresignedUrl] = await Promise.all([
+    getPresignedUploadUrl(key),
+    getPresignedUploadUrl(thumbnailKey),
+  ]);
 
   await Promise.all([
     uploadToOss(presignedUrl, imageFile),
@@ -118,7 +149,7 @@ async function uploadAvatar(image?: string): Promise<string | undefined> {
 
   const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
 
-  const { presignedUrl } = await SystemSettingApi.getUploadUrl(key);
+  const presignedUrl = await getPresignedUploadUrl(key);
   await uploadToOss(presignedUrl, compressedBlob);
 
   return key;
@@ -145,7 +176,7 @@ async function uploadArticleImagesContent(content: string): Promise<string> {
 
     const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
 
-    const { presignedUrl } = await SystemSettingApi.getUploadUrl(key);
+    const presignedUrl = await getPresignedUploadUrl(key);
     await uploadToOss(presignedUrl, compressedBlob);
     return key;
   });
@@ -155,7 +186,7 @@ async function uploadArticleImagesContent(content: string): Promise<string> {
     .map((item) => item.value)
     .filter(isString);
 
-  const imageurls = await ArticlesApi.uploadArticleImages(keys);
+  const imageurls = await uploadArticleImages({ data: { images: keys } });
 
   return content.replace(
     CommonRegex.MARKDOWN_IMAGE_REGEX,
@@ -176,18 +207,18 @@ export const OssAction = {
   /**
    * 创建照片
    */
-  async createPhoto(
-    values: UploadPhotoParams,
-  ): Promise<PhotosApi.Photo | void> {
+  async createPhoto(values: UploadPhotoParams): Promise<Photo | void> {
     const result = await uploadPhotoFile(values.image);
     if (!result) {
       return;
     }
 
-    return PhotosApi.createPhoto({
-      name: values.name,
-      url: result.url,
-      thumbnailUrl: result.thumbnailUrl,
+    return createPhoto({
+      data: {
+        name: values.name,
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+      },
     });
   },
 
@@ -196,25 +227,33 @@ export const OssAction = {
    */
   async createAlbumPhoto(
     params: UploadPhotoParams & { albumId: number },
-  ): Promise<PhotosApi.Photo | void> {
+  ): Promise<Photo | void> {
     const result = await uploadPhotoFile(params.image);
     if (!result) {
       return;
     }
 
-    return PhotosApi.createAlbumPhoto({
-      name: params.name,
-      url: result.url,
-      thumbnailUrl: result.thumbnailUrl,
-      albumId: params.albumId,
+    return createAlbumPhoto({
+      data: {
+        name: params.name,
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        albumId: params.albumId,
+      },
     });
   },
 
   /**
    * 更新照片
    */
-  async updatePhoto(values: UpdatePhotoParams): Promise<PhotosApi.Photo> {
-    const params: PhotosApi.UpdatePhotoParams = {
+  async updatePhoto(values: UpdatePhotoParams): Promise<Photo> {
+    const data: {
+      id: number;
+      name?: string;
+      albumId?: number;
+      url?: string;
+      thumbnailUrl?: string;
+    } = {
       id: values.id,
       name: values.name,
       albumId: values.albumId,
@@ -222,50 +261,59 @@ export const OssAction = {
 
     const result = await uploadPhotoFile(values.image);
     if (result) {
-      params.url = result.url;
-      params.thumbnailUrl = result.thumbnailUrl;
+      data.url = result.url;
+      data.thumbnailUrl = result.thumbnailUrl;
     }
 
-    return await PhotosApi.updatePhoto(params);
+    return await updatePhoto({ data });
   },
 
   /**
    * 删除照片
    */
   async deletePhoto(id: number) {
-    await PhotosApi.deletePhoto(id);
+    await deletePhoto({ data: { id } });
   },
 
   /**
    * 更新用户信息
    */
-  async updateUserInfo(values: UserApi.UpdateUserInfoParams) {
+  async updateUserInfo(values: UpdateUserInfoBody) {
     const result = await uploadAvatar(values.avatar);
-    return await UserApi.updateUserInfo({
-      ...values,
-      avatar: result,
+    return updateCurrentUser({
+      data: {
+        ...values,
+        avatar: result,
+      },
     });
   },
 
   /**
    * 创建文章
    */
-  async createArticle(values: ArticlesApi.Article) {
+  async createArticle(values: CreateArticleInput) {
     const content = await uploadArticleImagesContent(values.content);
-    return ArticlesApi.createArticle({
-      ...values,
-      content,
+    return createArticle({
+      data: {
+        ...values,
+        content,
+      },
     });
   },
 
   /**
    * 更新文章
    */
-  async updateArticle(values: ArticlesApi.Article) {
-    const content = await uploadArticleImagesContent(values.content);
-    return ArticlesApi.updateArticle({
-      ...values,
-      content,
+  async updateArticle(values: UpdateArticleInput) {
+    const content =
+      values.content === undefined
+        ? undefined
+        : await uploadArticleImagesContent(values.content);
+    return updateArticle({
+      data: {
+        ...values,
+        content,
+      },
     });
   },
 };

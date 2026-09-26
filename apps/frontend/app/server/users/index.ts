@@ -17,7 +17,7 @@
  * identity so the cache key stays in sync with the RPC.
  *
  * Endpoint paths, payload shapes, and ResultCode -> ApiErrorTag
- * mapping are preserved from the legacy `app/api/interfaces/user-api.ts`.
+ * mapping are preserved from the legacy `UserApi` client interface.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -56,7 +56,7 @@ export const getCurrentUser = createServerFn({ method: 'GET' })
   .handler(async () =>
     callFetchCurrentUser({
       env: { resolveBaseUrl: resolveBackendApiUrl },
-      cookie: liveCookieIO(),
+      cookie: await liveCookieIO(),
     }),
   );
 
@@ -68,7 +68,7 @@ export const updateCurrentUser = createServerFn({ method: 'POST' })
   .handler(async ({ data }) =>
     callUpdateCurrentUser({
       env: { resolveBaseUrl: resolveBackendApiUrl },
-      cookie: liveCookieIO(),
+      cookie: await liveCookieIO(),
       body: data,
     }),
   );
@@ -83,7 +83,7 @@ export const updateCurrentUser = createServerFn({ method: 'POST' })
 export const isValid = createServerFn({ method: 'POST' }).handler(async () =>
   callFetchSessionValidity({
     env: { resolveBaseUrl: resolveBackendApiUrl },
-    cookie: liveCookieIO(),
+    cookie: await liveCookieIO(),
   }),
 );
 

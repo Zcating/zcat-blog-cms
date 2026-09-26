@@ -5,7 +5,7 @@ test.describe('Photos', () => {
     await request.post('http://127.0.0.1:9090/api/test/reset');
   });
 
-  test('list, create, and delete photos', async ({ page }) => {
+  test('list, create, and delete photos', async ({ page, request }) => {
     // Login
     await page.goto('/login');
     await page.getByLabel('用户名').fill('admin');
@@ -48,5 +48,26 @@ test.describe('Photos', () => {
     await expect(
       page.getByText('风景照', { exact: true }).first(),
     ).toBeVisible();
+
+    // The row disappearing from the grid is NOT proof the delete
+    // reached the backend: the card is removed optimistically, so the
+    // UI looks correct even when the request never lands. Read the
+    // backend's own state and assert the photo is really gone — this
+    // is the assertion that fails when the delete silently no-ops.
+    await expect
+      .poll(
+        async () => {
+          const response = await request.get(
+            'http://127.0.0.1:9090/api/cms/photos',
+          );
+          const body = (await response.json()) as {
+            code: string;
+            data: { data: Array<{ id: number; name: string }> };
+          };
+          return body.data.data.map((photo) => photo.name);
+        },
+        { timeout: 10000 },
+      )
+      .toEqual(['风景照']);
   });
 });

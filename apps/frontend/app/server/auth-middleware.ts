@@ -18,9 +18,8 @@
  * via the factory exposed below.
  *
  * The runtime test seam `runProtectedFunctionGate` lives in the
- * sibling `auth-middleware.server.ts` file because it touches
- * `liveCookieIO()` — keeping it out of the client graph lets the
- * bundler tree-shake the server-only Cookie import.
+ * sibling `auth-middleware.server.ts` file so the seam itself stays out
+ * of the production module graph.
  */
 
 import { createMiddleware } from '@tanstack/react-start';
@@ -68,16 +67,16 @@ export interface ProtectedFunctionContext {
  *
  * The factory takes an optional `cookie` so tests can inject a fake
  * `CookieIO`. Production callers leave it empty and pick up
- * `liveCookieIO()` automatically — the `liveCookieIO()` call is
- * intentionally inside the `.server()` closure so the TanStack Start
- * compiler strips it (and the `cookies.ts` import it triggers) from
- * the client bundle.
+ * `liveCookieIO()` automatically — that call is intentionally inside
+ * the `.server()` closure so the TanStack Start compiler strips it
+ * (and the server-only Cookie import it reaches) from the client
+ * bundle.
  */
 export function createProtectedFunctionMiddleware(
   options: { cookie?: CookieIO } = {},
 ) {
   return createMiddleware({ type: 'function' }).server(async ({ next }) => {
-    const cookie = options.cookie ?? liveCookieIO();
+    const cookie = options.cookie ?? (await liveCookieIO());
     const auth = authorizeFromCookie(cookie);
     if (!auth) {
       throw new UnauthorizedError();

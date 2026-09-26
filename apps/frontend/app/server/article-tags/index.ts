@@ -14,7 +14,7 @@
  * `./article-tags-helpers.ts`. Each protected function composes the
  * shared `createProtectedFunctionMiddleware`. Endpoint paths, payload
  * shapes, and the ResultCode -> ApiErrorTag mapping are preserved
- * from the legacy `app/api/interfaces/article-tags-api.ts`.
+ * from the legacy `ArticleTagsApi` client interface.
  *
  * Stable `queryOptions` factories are exported for Phase 3 consumers
  * (loaders, route components). They reference the server functions by

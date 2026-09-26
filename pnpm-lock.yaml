@@ -302,21 +302,12 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@ant-design/icons':
-        specifier: ~5.6.1
-        version: 5.6.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@ant-design/plots':
         specifier: ^2.6.4
         version: 2.6.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@hookform/resolvers':
         specifier: ^5.2.1
         version: 5.4.0(react-hook-form@7.77.0(react@19.2.3))
-      '@react-router/node':
-        specifier: ^7.9.1
-        version: 7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
-      '@react-router/serve':
-        specifier: ^7.9.1
-        version: 7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@4.1.18)
@@ -353,9 +344,6 @@ importers:
       react-dom:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
-      react-router:
-        specifier: ^7.9.1
-        version: 7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       zod:
         specifier: ^4.0.17
         version: 4.4.3
@@ -363,9 +351,6 @@ importers:
       '@playwright/test':
         specifier: ^1.52.0
         version: 1.58.0
-      '@react-router/dev':
-        specifier: ^7.9.1
-        version: 7.17.0(@react-router/serve@7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3))(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(terser@5.43.1)(tsx@4.22.4)(typescript@5.9.3)(vite@7.3.1(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))(yaml@2.8.2)
       '@tailwindcss/vite':
         specifier: ^4.1.4
         version: 4.1.18(vite@7.3.1(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))
@@ -689,23 +674,6 @@ packages:
     peerDependencies:
       react: '>=16.8.4'
       react-dom: '>=16.8.4'
-
-  '@ant-design/colors@7.2.1':
-    resolution: {integrity: sha512-lCHDcEzieu4GA3n8ELeZ5VQ8pKQAWcGGLRTQ50aQM2iqPpq2evTxER84jfdPvsPAtEcZ7m44NI45edFMo8oOYQ==}
-
-  '@ant-design/fast-color@2.0.6':
-    resolution: {integrity: sha512-y2217gk4NqL35giHl72o6Zzqji9O7vHh9YmhUVkPtAOpoTCH4uWxo/pr4VE8t0+ChEPs0qo4eJRC5Q1eXWo3vA==}
-    engines: {node: '>=8.x'}
-
-  '@ant-design/icons-svg@4.4.2':
-    resolution: {integrity: sha512-vHbT+zJEVzllwP+CM+ul7reTEfBR0vgxFe7+lREAsAA7YGsYpboiq2sQNeQeRvh09GfQgs/GyFEvZpJ9cLXpXA==}
-
-  '@ant-design/icons@5.6.1':
-    resolution: {integrity: sha512-0/xS39c91WjPAZOWsvi1//zjx6kAp4kxWwctR6kuU6p133w8RU0D2dSCvZC19uQyharg/sAvYxGYWl01BbZZfg==}
-    engines: {node: '>=8'}
-    peerDependencies:
-      react: '>=16.0.0'
-      react-dom: '>=16.0.0'
 
   '@ant-design/plots@2.6.8':
     resolution: {integrity: sha512-QsunUs2d5rbq/1BwVhga/siA5H50OaG23YopMYwPD4sPsza6NQzPQ8FM3elNIsD/BIk298tihqX1cJ/MmvVJbQ==}
@@ -4371,9 +4339,6 @@ packages:
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
-  classnames@2.5.1:
-    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
-
   cli-cursor@5.0.0:
     resolution: {integrity: sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw==}
     engines: {node: '>=18'}
@@ -6685,12 +6650,6 @@ packages:
   rbush@3.0.1:
     resolution: {integrity: sha512-XRaVO0YecOpEuIvbhbpTrZgoiI6xBlz6hnlr6EHhd+0x9ase6EmeN+hdwwUaJvLcsFFQ8iWVF1GAK1yB0BWi0w==}
 
-  rc-util@5.44.4:
-    resolution: {integrity: sha512-resueRJzmHG9Q6rI/DfK6Kdv9/Lfls05vzMs1Sk3M2P+3cJa+MakaZyWY8IPfehVuhPJFKrIY1IK4GqbiaiY5w==}
-    peerDependencies:
-      react: '>=16.9.0'
-      react-dom: '>=16.9.0'
-
   rc9@2.1.2:
     resolution: {integrity: sha512-btXCnMmRIBINM2LDZoEmOogIZU7Qe7zn4BpomSKZ/ykbLObuBdvG+mFq11DL6fjH1DRwHhrlgtYWG96bJiC7Cg==}
 
@@ -7973,26 +7932,6 @@ snapshots:
   '@ant-design/charts-util@0.0.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       lodash: 4.18.1
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  '@ant-design/colors@7.2.1':
-    dependencies:
-      '@ant-design/fast-color': 2.0.6
-
-  '@ant-design/fast-color@2.0.6':
-    dependencies:
-      '@babel/runtime': 7.28.6
-
-  '@ant-design/icons-svg@4.4.2': {}
-
-  '@ant-design/icons@5.6.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@ant-design/colors': 7.2.1
-      '@ant-design/icons-svg': 4.4.2
-      '@babel/runtime': 7.27.6
-      classnames: 2.5.1
-      rc-util: 5.44.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
@@ -10264,56 +10203,6 @@ snapshots:
       - tsx
       - yaml
 
-  '@react-router/dev@7.17.0(@react-router/serve@7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3))(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(terser@5.43.1)(tsx@4.22.4)(typescript@5.9.3)(vite@7.3.1(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))(yaml@2.8.2)':
-    dependencies:
-      '@babel/core': 7.28.5
-      '@babel/generator': 7.28.5
-      '@babel/parser': 7.28.5
-      '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.5)
-      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.5)
-      '@babel/traverse': 7.28.5
-      '@babel/types': 7.28.5
-      '@react-router/node': 7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
-      '@remix-run/node-fetch-server': 0.13.3
-      arg: 5.0.2
-      babel-dead-code-elimination: 1.0.10
-      chokidar: 4.0.3
-      dedent: 1.6.0
-      es-module-lexer: 1.7.0
-      exit-hook: 2.2.1
-      isbot: 5.1.41
-      jsesc: 3.0.2
-      lodash: 4.17.21
-      p-map: 7.0.4
-      pathe: 1.1.2
-      picocolors: 1.1.1
-      pkg-types: 2.3.0
-      prettier: 3.7.4
-      react-refresh: 0.14.2
-      react-router: 7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      semver: 7.7.3
-      tinyglobby: 0.2.15
-      valibot: 1.2.0(typescript@5.9.3)
-      vite: 7.3.1(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2)
-      vite-node: 3.2.4(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2)
-    optionalDependencies:
-      '@react-router/serve': 7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - '@types/node'
-      - babel-plugin-macros
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
   '@react-router/dev@7.17.0(@react-router/serve@7.17.0(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3))(@types/node@25.0.5)(jiti@2.7.0)(lightningcss@1.33.0)(react-router@7.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(terser@5.43.1)(tsx@4.22.4)(typescript@5.9.3)(vite@7.3.1(@types/node@25.0.5)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))(yaml@2.8.2)':
     dependencies:
       '@babel/core': 7.28.5
@@ -11995,8 +11884,6 @@ snapshots:
   class-variance-authority@0.7.1:
     dependencies:
       clsx: 2.1.1
-
-  classnames@2.5.1: {}
 
   cli-cursor@5.0.0:
     dependencies:
@@ -14669,13 +14556,6 @@ snapshots:
     dependencies:
       quickselect: 2.0.0
 
-  rc-util@5.44.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      '@babel/runtime': 7.28.6
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      react-is: 18.3.1
-
   rc9@2.1.2:
     dependencies:
       defu: 6.1.4
@@ -15675,27 +15555,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
-
-  vite-node@3.2.4(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.4.3
-      es-module-lexer: 1.7.0
-      pathe: 2.0.3
-      vite: 7.3.1(@types/node@20.19.42)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - '@types/node'
-      - jiti
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
 
   vite-node@3.2.4(@types/node@22.19.20)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2):
     dependencies:

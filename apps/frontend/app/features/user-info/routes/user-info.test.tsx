@@ -1,24 +1,55 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import type {
-  ComponentProps,
-  FormHTMLAttributes,
-  HTMLAttributes,
-  ReactNode,
-} from 'react';
+/**
+ * Tests for the Phase 3b user-info page.
+ *
+ * Public behavior seam (what the page is responsible for):
+ *   - Reads the current user from the canonical
+ *     `userInfoQueryOptions()` cache key (`['users', 'current']`).
+ *   - Renders display + edit modes with the same fields and
+ *     validation behaviour as the legacy implementation.
+ *   - On save, calls the protected `updateCurrentUser` server
+ *     function and invalidates the user-info query on success.
+ *   - Shows a pending indicator while the mutation is in flight
+ *     and surfaces an error message on failure (no silent retry).
+ *
+ * The page MUST NOT call any of the legacy `UserApi` / `OssAction`
+ * surfaces; those are being retired. Only the `@cms/server/users`
+ * server function is mocked here so the test pins the migration
+ * contract.
+ */
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { FormHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const mockUpdateUserInfo = vi.fn();
+import { userInfoQueryOptions, updateCurrentUser } from '@cms/server/users';
 
-let optimisticState: Record<string, unknown> = {};
-const setOptimisticMock = vi.fn();
-const commitOptimisticMock = vi.fn();
+import UserInfo from './user-info';
+import type { UserInfo as UserInfoType } from '@cms/server/users/users-helpers';
+
+// ---------------------------------------------------------------------------
+// Mocks
+// ---------------------------------------------------------------------------
+
+const mockUpdateCurrentUser = vi.fn();
+
+vi.mock('@cms/server/users', async () => {
+  const actual =
+    await vi.importActual<typeof import('@cms/server/users')>(
+      '@cms/server/users',
+    );
+  return {
+    ...actual,
+    updateCurrentUser: (input: unknown) => mockUpdateCurrentUser(input),
+  };
+});
 
 interface MockFormApi {
   instance: {
     reset: (values?: unknown) => void;
-    handleSubmit: (fn: () => void) => () => void;
+    handleSubmit: (fn: (values: unknown) => void) => () => void;
   };
-  submit: () => void;
+  submit: (values?: unknown) => void;
 }
 
 type MockFormProps = FormHTMLAttributes<HTMLFormElement> & {
@@ -37,32 +68,6 @@ interface MockFormComponent {
   useForm: () => MockFormApi;
   Item: (props: MockFormItemProps) => React.JSX.Element;
 }
-
-vi.mock('@cms/core', () => ({
-  useOptimisticObject: () => [
-    optimisticState,
-    setOptimisticMock,
-    commitOptimisticMock,
-  ],
-  Workspace: ({
-    title,
-    operation,
-    children,
-  }: {
-    title: string;
-    operation?: React.ReactNode;
-    children: React.ReactNode;
-  }) => (
-    <div data-testid="workspace">
-      <h1>{title}</h1>
-      {operation && <div data-testid="workspace-operation">{operation}</div>}
-      {children}
-    </div>
-  ),
-  OssAction: {
-    updateUserInfo: (...args: unknown[]) => mockUpdateUserInfo(...args),
-  },
-}));
 
 vi.mock('@zcat/ui', () => ({
   ZAvatar: ({ src, alt }: { src?: string; alt?: string }) => (
@@ -88,28 +93,47 @@ vi.mock('@zcat/ui', () => ({
     children,
     onClick,
     variant,
+    disabled,
   }: {
     children: React.ReactNode;
     onClick?: () => void;
     variant?: string;
+    disabled?: boolean;
   }) => (
-    <button data-variant={variant} onClick={onClick}>
+    <button data-variant={variant} disabled={disabled} onClick={onClick}>
       {children}
     </button>
   ),
   createZForm: () => {
+    const STUB_VALUES = {
+      name: 'UpdatedAdmin',
+      contact: { email: 'admin@test.com', github: 'admin' },
+      occupation: 'Developer',
+      avatar: '',
+      aboutMe: 'About me',
+      abstract: 'Abstract',
+    };
     const FormComponent = Object.assign(
       ({ children, ...props }: MockFormProps) => (
         <form {...props}>{children}</form>
       ),
       {
-        useForm: (): MockFormApi => ({
-          instance: {
-            reset: vi.fn(),
-            handleSubmit: (fn: () => void) => () => fn(),
-          },
-          submit: vi.fn(),
-        }),
+        useForm: ({
+          onSubmit,
+        }: {
+          onSubmit: (values: unknown) => void;
+        }): MockFormApi => {
+          return {
+            instance: {
+              reset: vi.fn(),
+              handleSubmit: (fn: (values: unknown) => void) => () =>
+                fn(STUB_VALUES),
+            },
+            // Mirror real behaviour: `form.submit` IS the
+            // caller-supplied `onSubmit` (see create-z-form.tsx).
+            submit: (values: unknown) => onSubmit(values),
+          };
+        },
         Item: ({ name, label, children, ...props }: MockFormItemProps) => (
           <div data-testid={`form-item-${name}`} {...props}>
             {label && <label>{label}</label>}
@@ -128,111 +152,155 @@ vi.mock('lucide-react', () => ({
   Loader2: () => <div data-testid="loading-spinner">loading</div>,
 }));
 
-import UserInfo from './user-info';
-import type { Route } from './+types/user-info';
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-type UserInfoProps = Route.ComponentProps;
-type UserInfoData = UserInfoProps['loaderData']['userInfo'];
-const mockMatches = [] as unknown as UserInfoProps['matches'];
+const SEED_USER: UserInfoType = {
+  name: 'Admin',
+  contact: { email: 'admin@test.com', github: 'admin' },
+  occupation: 'Developer',
+  avatar: '',
+  aboutMe: 'About me',
+  abstract: 'Abstract',
+};
 
-const createMockProps = (
-  overrides: Partial<UserInfoData> = {},
-): UserInfoProps => ({
-  loaderData: {
-    userInfo: {
-      name: 'Admin',
-      contact: { email: 'admin@test.com', github: 'admin' },
-      occupation: 'Developer',
-      avatar: '',
-      aboutMe: 'About me',
-      abstract: 'Abstract',
-    },
+function renderPage(overrides: Partial<UserInfoType> = {}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  queryClient.setQueryData(userInfoQueryOptions().queryKey, {
+    ...SEED_USER,
     ...overrides,
-  },
-  params: {},
-  matches: mockMatches,
-  actionData: undefined,
-});
+  });
 
-describe('UserInfo Page', () => {
+  const utils = render(
+    <QueryClientProvider client={queryClient}>
+      <UserInfo />
+    </QueryClientProvider>,
+  );
+
+  return { ...utils, queryClient };
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe('UserInfo page (Phase 3b)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    optimisticState = {
-      name: 'Admin',
-      contact: { email: 'admin@test.com', github: 'admin' },
-      occupation: 'Developer',
-      avatar: '',
-      aboutMe: 'About me',
-      abstract: 'Abstract',
+  });
+
+  it('reads user data from the userInfoQueryOptions cache', () => {
+    renderPage();
+
+    expect(screen.getByText('个人资料')).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('admin@test.com')).toBeInTheDocument();
+    expect(screen.getByText('admin')).toBeInTheDocument();
+    expect(screen.getByText('Developer')).toBeInTheDocument();
+    expect(screen.getByText('About me')).toBeInTheDocument();
+    expect(screen.getByText('Abstract')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '编辑' })).toBeInTheDocument();
+  });
+
+  it('renders an empty/loading state when the query has no data', () => {
+    // No seeded data; render inside a fresh QueryClient so the
+    // page starts with a pending query.
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    // Provide a suspended-like state: keep the query pending by
+    // not seeding it. The page should render the title and edit
+    // affordance but no row values until data arrives.
+    render(
+      <QueryClientProvider client={queryClient}>
+        <UserInfo />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText('个人资料')).toBeInTheDocument();
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+  });
+
+  it('switches to edit mode and shows the edit form', () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+
+    expect(screen.getByRole('button', { name: '保存' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '取消' })).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-name')).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-contact.email')).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-contact.github')).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-occupation')).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-aboutMe')).toBeInTheDocument();
+    expect(screen.getByTestId('form-item-abstract')).toBeInTheDocument();
+  });
+
+  it('returns to display mode on cancel', () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '取消' }));
+
+    expect(screen.getByRole('button', { name: '编辑' })).toBeInTheDocument();
+    expect(screen.queryByTestId('form-item-name')).not.toBeInTheDocument();
+  });
+
+  it('calls updateCurrentUser and updates the user query cache on save', async () => {
+    const updated: UserInfoType = {
+      ...SEED_USER,
+      name: 'UpdatedAdmin',
     };
+    mockUpdateCurrentUser.mockResolvedValueOnce(updated);
+
+    const { queryClient } = renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => {
+      expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(queryClient.getQueryData(userInfoQueryOptions().queryKey)).toEqual(
+        updated,
+      );
+    });
   });
 
-  it('renders user info in display mode', () => {
-    const props = createMockProps();
-    render(<UserInfo {...props} />);
+  it('does not retry the mutation on failure and surfaces an error message', async () => {
+    mockUpdateCurrentUser.mockRejectedValueOnce(new Error('boom'));
 
-    expect(screen.getByText('个人资料')).toBeDefined();
-    expect(screen.getByText('Admin')).toBeDefined();
-    expect(screen.getByText('admin@test.com')).toBeDefined();
-    expect(screen.getByText('admin')).toBeDefined();
-    expect(screen.getByText('Developer')).toBeDefined();
-    expect(screen.getByText('About me')).toBeDefined();
-    expect(screen.getByText('Abstract')).toBeDefined();
-    expect(screen.getByText('编辑')).toBeDefined();
-  });
+    renderPage();
 
-  it('switches to edit mode on edit button click', () => {
-    const props = createMockProps();
-    render(<UserInfo {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
 
-    fireEvent.click(screen.getByText('编辑'));
-
-    expect(screen.getByText('保存')).toBeDefined();
-    expect(screen.getByText('取消')).toBeDefined();
-    expect(screen.getByTestId('form-item-name')).toBeDefined();
-    expect(screen.getByTestId('form-item-contact.email')).toBeDefined();
-    expect(screen.getByTestId('form-item-contact.github')).toBeDefined();
-    expect(screen.getByTestId('form-item-occupation')).toBeDefined();
-    expect(screen.getByTestId('form-item-aboutMe')).toBeDefined();
-    expect(screen.getByTestId('form-item-abstract')).toBeDefined();
-  });
-
-  it('renders save button click', async () => {
-    mockUpdateUserInfo.mockResolvedValueOnce({
-      name: 'UpdatedName',
-      contact: { email: 'admin@test.com', github: 'admin' },
-      occupation: 'Developer',
-      avatar: '',
-      aboutMe: 'About me',
-      abstract: 'Abstract',
+    await waitFor(() => {
+      expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
     });
 
-    const props = createMockProps();
-    render(<UserInfo {...props} />);
-
-    expect(screen.getByText('编辑')).toBeDefined();
-    fireEvent.click(screen.getByText('编辑'));
-    expect(screen.getByText('保存')).toBeDefined();
-    fireEvent.click(screen.getByText('保存'));
+    // Mutation must NOT auto-retry.
+    await waitFor(() => {
+      expect(screen.getByText(/保存失败|更新失败|boom/)).toBeInTheDocument();
+    });
   });
 
-  it('shows loading spinner while saving', () => {
-    optimisticState = { ...optimisticState, loading: true };
-
-    const props = createMockProps();
-    render(<UserInfo {...props} />);
-
-    expect(screen.getByTestId('loading-spinner')).toBeDefined();
-  });
-
-  it('switches back to display mode on cancel', () => {
-    const props = createMockProps();
-    render(<UserInfo {...props} />);
-
-    fireEvent.click(screen.getByText('编辑'));
-    fireEvent.click(screen.getByText('取消'));
-
-    expect(screen.getByText('编辑')).toBeDefined();
-    expect(screen.queryByTestId('form-item-name')).toBeNull();
+  it('exposes the canonical query key so consumers can subscribe', () => {
+    // The page must NOT alter the cache key used by
+    // `userInfoQueryOptions()`; the loader / `_cms` beforeLoad
+    // also writes to this key. This guards against an accidental
+    // rename in the future.
+    const { queryClient } = renderPage();
+    const cached = queryClient.getQueryCache().find({
+      queryKey: ['users', 'current'],
+    });
+    expect(cached).toBeDefined();
   });
 });

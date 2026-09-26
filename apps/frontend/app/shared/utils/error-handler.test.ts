@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('react-router', () => ({
-  redirect: (path: string) => ({ __redirect: path }),
+vi.mock('@tanstack/react-router', () => ({
+  redirect: (options: { to: string }) => ({ __redirect: options.to }),
 }));
 
 import { errorHandler } from './error-handler';

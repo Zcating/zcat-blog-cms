@@ -4,6 +4,13 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
+  // Every spec file owns one shared, mutable mock backend
+  // (tests/e2e/mock-backend.ts) and resets it from `beforeEach`.
+  // `fullyParallel: false` only serialises tests *within* a file, so
+  // running files in parallel lets one file's `/api/test/reset` wipe
+  // the fixture state another file is mid-assertion on. Serialising
+  // the files is what makes the suite deterministic.
+  workers: 1,
   // Phase 3a: the e2e login suite is timing-sensitive because the
   // Nitro server runs RPC traffic back-to-back across tests. A single
   // retry absorbs the transient browser-navigation race that

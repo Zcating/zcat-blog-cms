@@ -1,25 +1,61 @@
 /**
  * Typed API error vocabulary and ResultCode -> ApiError conversion.
  *
- * Re-exports the legacy `ApiError` / `ApiErrorTag` types and
- * `mapResultCodeToTag` mapping verbatim so existing imports keep
- * compiling until the Phase 4 teardown. New server-side code should use
- * `envelopeToApiError` instead so the envelope's `data` payload is never
- * carried into the thrown error.
+ * This module is the single home of the `ApiError` / `ApiErrorTag`
+ * types and the `mapResultCodeToTag` mapping. Server functions and
+ * domain helpers convert a backend envelope with `envelopeToApiError`
+ * so the envelope's `data` payload is never carried into the thrown
+ * error.
  *
- * @see apps/frontend/app/api/errors.ts (legacy home)
  * @see docs/adr/0002-effect-api-error-handling.md
  */
 
-export {
-  type ApiError,
-  type ApiErrorTag,
-  mapResultCodeToTag,
-} from '@cms/api/errors';
-
-import { type ApiError, mapResultCodeToTag } from '@cms/api/errors';
-
 import { envelopeSchema } from './result';
+
+/**
+ * API error tag union, corresponding to backend ResultCode.
+ * @see docs/adr/0002-effect-api-error-handling.md
+ */
+export type ApiErrorTag =
+  | 'LoginError'
+  | 'RegisterError'
+  | 'DatabaseError'
+  | 'UploadError'
+  | 'ValidationError'
+  | 'UnknownError';
+
+/**
+ * API error structure used as the failure channel of every server
+ * function. All non-0000 responses from the backend are mapped to one
+ * of these tags.
+ */
+export interface ApiError {
+  readonly _tag: ApiErrorTag;
+  readonly message: string;
+}
+
+/**
+ * Maps backend ResultCode string to ApiErrorTag.
+ * Returns null if code is '0000' (success).
+ */
+export function mapResultCodeToTag(code: string): ApiErrorTag | null {
+  switch (code) {
+    case 'ERR0001':
+      return 'RegisterError';
+    case 'ERR0002':
+      return 'LoginError';
+    case 'ERR0003':
+      return 'DatabaseError';
+    case 'ERR0004':
+      return 'UploadError';
+    case 'ERR0005':
+      return 'ValidationError';
+    case 'ERR0006':
+      return 'UnknownError';
+    default:
+      return null;
+  }
+}
 
 /**
  * Convert a backend envelope to a typed `ApiError`.

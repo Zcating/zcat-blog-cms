@@ -17,31 +17,36 @@ vi.mock('compressorjs', () => ({
 }));
 
 const mockCreatePhoto = vi.hoisted(() => vi.fn());
+const mockCreateAlbumPhoto = vi.hoisted(() => vi.fn());
 const mockUpdatePhoto = vi.hoisted(() => vi.fn());
 const mockDeletePhoto = vi.hoisted(() => vi.fn());
 const mockUploadArticleImages = vi.hoisted(() => vi.fn());
 const mockCreateArticle = vi.hoisted(() => vi.fn());
 const mockUpdateArticle = vi.hoisted(() => vi.fn());
-const mockUpdateUserInfo = vi.hoisted(() => vi.fn());
-const mockGetUploadUrl = vi.hoisted(() => vi.fn());
+const mockUpdateCurrentUser = vi.hoisted(() => vi.fn());
+const mockGetSystemSettingUploadUrlServerFn = vi.hoisted(() => vi.fn());
 
-vi.mock('@cms/api', () => ({
-  PhotosApi: {
-    createPhoto: mockCreatePhoto,
-    updatePhoto: mockUpdatePhoto,
-    deletePhoto: mockDeletePhoto,
-  },
-  ArticlesApi: {
-    uploadArticleImages: mockUploadArticleImages,
-    createArticle: mockCreateArticle,
-    updateArticle: mockUpdateArticle,
-  },
-  UserApi: {
-    updateUserInfo: mockUpdateUserInfo,
-  },
-  SystemSettingApi: {
-    getUploadUrl: mockGetUploadUrl,
-  },
+// The only mocked boundary is `@cms/server/*`: every backend call
+// OssAction makes is a typed server function from that layer.
+vi.mock('@cms/server/photos', () => ({
+  createPhoto: mockCreatePhoto,
+  createAlbumPhoto: mockCreateAlbumPhoto,
+  updatePhoto: mockUpdatePhoto,
+  deletePhoto: mockDeletePhoto,
+}));
+
+vi.mock('@cms/server/articles', () => ({
+  createArticle: mockCreateArticle,
+  updateArticle: mockUpdateArticle,
+  uploadArticleImages: mockUploadArticleImages,
+}));
+
+vi.mock('@cms/server/users', () => ({
+  updateCurrentUser: mockUpdateCurrentUser,
+}));
+
+vi.mock('@cms/server/system-setting', () => ({
+  getSystemSettingUploadUrlServerFn: mockGetSystemSettingUploadUrlServerFn,
 }));
 
 import { OssAction } from './oss.action';
@@ -71,7 +76,7 @@ describe('OssAction', () => {
         blob: () => Promise.resolve(mockBlob),
       } as Response);
 
-      mockGetUploadUrl
+      mockGetSystemSettingUploadUrlServerFn
         .mockResolvedValueOnce({
           presignedUrl:
             'http://localhost:9000/photos-bucket/photos/123.jpg?presigned=abc',
@@ -102,15 +107,34 @@ describe('OssAction', () => {
         id: 1,
         name: 'test photo',
       });
-      expect(mockGetUploadUrl).toHaveBeenCalledTimes(2);
+      expect(mockGetSystemSettingUploadUrlServerFn).toHaveBeenCalledTimes(2);
       expect(fetchMock).toHaveBeenCalledTimes(3); // 1 blob fetch + 2 PUT
       expect(mockCreatePhoto).toHaveBeenCalledWith({
-        name: 'test photo',
-        url: expect.stringMatching(/^photos\/.*\.(jpg|jpeg)$/),
-        thumbnailUrl: expect.stringMatching(
-          /^photos\/.*\.thumbnail\.(jpg|jpeg)$/,
-        ),
+        data: {
+          name: 'test photo',
+          url: expect.stringMatching(/^photos\/.*\.(jpg|jpeg)$/),
+          thumbnailUrl: expect.stringMatching(
+            /^photos\/.*\.thumbnail\.(jpg|jpeg)$/,
+          ),
+        },
       });
+    });
+  });
+
+  describe('deletePhoto', () => {
+    it('invokes the server delete function so the row is removed server-side', async () => {
+      mockDeletePhoto.mockResolvedValueOnce(undefined);
+
+      await OssAction.deletePhoto(7);
+
+      expect(mockDeletePhoto).toHaveBeenCalledTimes(1);
+      expect(mockDeletePhoto).toHaveBeenCalledWith({ data: { id: 7 } });
+    });
+
+    it('rejects when the server delete fails so callers can roll back', async () => {
+      mockDeletePhoto.mockRejectedValueOnce(new Error('delete failed'));
+
+      await expect(OssAction.deletePhoto(7)).rejects.toThrow('delete failed');
     });
   });
 
@@ -135,11 +159,11 @@ describe('OssAction', () => {
         } as Response)
         .mockResolvedValueOnce({ ok: true } as Response);
 
-      mockGetUploadUrl.mockResolvedValueOnce({
+      mockGetSystemSettingUploadUrlServerFn.mockResolvedValueOnce({
         presignedUrl: 'http://localhost:9000/user/abc.jpg?signed=123',
       });
 
-      mockUpdateUserInfo.mockResolvedValueOnce({
+      mockUpdateCurrentUser.mockResolvedValueOnce({
         name: 'Updated',
         contact: { email: 'a@b.com', github: 'u' },
         occupation: '',
@@ -156,16 +180,17 @@ describe('OssAction', () => {
 
       expect(result).toBeDefined();
       expect(result.avatar).toBe('user/abc.jpg');
-      expect(mockGetUploadUrl).toHaveBeenCalledTimes(1);
-      expect(mockUpdateUserInfo).toHaveBeenCalledWith({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        avatar: expect.stringMatching(/^user\/.*\.(jpg|jpeg)$/),
+      expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
+        data: {
+          name: 'Updated',
+          contact: { email: 'a@b.com', github: 'u' },
+          avatar: expect.stringMatching(/^user\/.*\.(jpg|jpeg)$/),
+        },
       });
     });
 
     it('skips upload and calls api directly when avatar is not a blob URL', async () => {
-      mockUpdateUserInfo.mockResolvedValueOnce({
+      mockUpdateCurrentUser.mockResolvedValueOnce({
         name: 'Updated',
         contact: { email: 'a@b.com', github: 'u' },
         occupation: '',
@@ -181,11 +206,13 @@ describe('OssAction', () => {
       });
 
       expect(result).toBeDefined();
-      expect(mockGetUploadUrl).not.toHaveBeenCalled();
-      expect(mockUpdateUserInfo).toHaveBeenCalledWith({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        avatar: undefined,
+      expect(mockGetSystemSettingUploadUrlServerFn).not.toHaveBeenCalled();
+      expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
+        data: {
+          name: 'Updated',
+          contact: { email: 'a@b.com', github: 'u' },
+          avatar: undefined,
+        },
       });
     });
 
@@ -209,7 +236,7 @@ describe('OssAction', () => {
         } as Response)
         .mockResolvedValueOnce({ ok: false, status: 500 } as Response);
 
-      mockGetUploadUrl.mockResolvedValueOnce({
+      mockGetSystemSettingUploadUrlServerFn.mockResolvedValueOnce({
         presignedUrl: 'http://localhost:9000/user/abc.jpg?signed=123',
       });
 

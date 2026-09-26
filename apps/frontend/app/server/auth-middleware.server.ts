@@ -5,12 +5,9 @@
  * is exported as `runProtectedFunctionGate` so unit tests can drive
  * the gate without spinning up a live TanStack Start request context.
  *
- * The function lives in a `.server.ts` file because it touches
- * `liveCookieIO()`, which in turn pulls in the server-only Cookie
- * primitives from `@tanstack/react-start/server`. Keeping the seam
- * isolated ensures the import-protection plugin does not flag the
- * `auth-middleware.ts` module when it is referenced from the client
- * graph (e.g. by a route's `beforeLoad`).
+ * The file keeps its `.server.ts` name so import protection can never
+ * place it in a client graph; it is a test-only seam and nothing in
+ * `app/server` imports it.
  */
 
 import { authorizeFromCookie, liveCookieIO, type CookieIO } from './cookies';
@@ -39,7 +36,7 @@ export async function runProtectedFunctionGate(
   input: MiddlewareServerInput,
   options: { cookie?: CookieIO } = {},
 ): Promise<unknown> {
-  const cookie = options.cookie ?? liveCookieIO();
+  const cookie = options.cookie ?? (await liveCookieIO());
   const auth = authorizeFromCookie(cookie);
   if (!auth) {
     throw new UnauthorizedError();
