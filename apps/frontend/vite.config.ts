@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
               srcDirectory: 'app',
               router: {
                 routesDirectory: './routes',
+                routeFileIgnorePattern: '\\.test\\.[jt]sx?$',
               },
             }),
             viteReact(),

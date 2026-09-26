@@ -52,16 +52,26 @@ vi.mock('@cms/server/albums', async () => {
 
 // --- import after mocks ---
 
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import type { PaginationSearch } from '@cms/shared/hooks/use-pagination-action';
 import { photoAlbumsListQueryOptions } from '@cms/server/albums';
 
-import { loader } from './albums';
+import { loader, Route } from './albums';
 
-function buildSearch(searchStr: string): Record<string, unknown> {
-  return Object.fromEntries(new URLSearchParams(searchStr));
+describe('route search schema: /_cms/albums', () => {
+  it('registers the shared pagination search schema', () => {
+    expect(Route.options.validateSearch).toBe(paginationSearchSchema);
+  });
+});
+
+function buildSearch(searchStr: string): PaginationSearch {
+  return paginationSearchSchema.parse(
+    Object.fromEntries(new URLSearchParams(searchStr)),
+  );
 }
 
 function buildLoaderArgs(
-  search: Record<string, unknown>,
+  search: PaginationSearch,
   queryClient: QueryClient,
 ): Parameters<typeof loader>[0] {
   return {

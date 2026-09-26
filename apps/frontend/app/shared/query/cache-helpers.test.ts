@@ -4,9 +4,9 @@
  * Contract:
  *   - `clearPrivateQueryCache(queryClient)` removes every entry from
  *     the query cache AND the mutation cache.
- *   - This is the same operation the layout invokes on logout and on
- *     the 401 / invalid-session path: after it runs, a private key
- *     lookup MUST return undefined.
+ *   - The two call sites are the shell's logout handler and the
+ *     `onError` hooks `makeQueryClient` installs on its caches: after
+ *     it runs, a private key lookup MUST return undefined.
  *
  * We exercise the helper against a real QueryClient. No internal
  * TanStack modules are mocked.

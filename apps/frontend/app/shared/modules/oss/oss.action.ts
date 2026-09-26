@@ -1,15 +1,6 @@
 import Compressor from 'compressorjs';
 
 import {
-  createArticle,
-  updateArticle,
-  uploadArticleImages,
-} from '@cms/server/articles';
-import type {
-  CreateArticleInput,
-  UpdateArticleInput,
-} from '@cms/server/articles/schemas';
-import {
   createAlbumPhoto,
   createPhoto,
   deletePhoto,
@@ -17,10 +8,6 @@ import {
 } from '@cms/server/photos';
 import type { Photo } from '@cms/server/photos/schemas';
 import { getSystemSettingUploadUrlServerFn } from '@cms/server/system-setting';
-import { updateCurrentUser } from '@cms/server/users';
-import type { UpdateUserInfoBody } from '@cms/server/users/users-helpers';
-
-import { CommonRegex, isString } from '../../utils';
 
 /**
  * 上传文件到 MinIO（通过预签名 URL）
@@ -135,72 +122,6 @@ async function uploadPhotoFile(
 }
 
 /**
- * 上传头像
- */
-async function uploadAvatar(image?: string): Promise<string | undefined> {
-  const imageFile = await fetchImageFile(image);
-  if (!imageFile) {
-    return undefined;
-  }
-
-  const extension = imageFile.type.split('/').pop() || 'jpg';
-  const filename = `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
-  const key = `user/${filename}.${extension}`;
-
-  const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
-
-  const presignedUrl = await getPresignedUploadUrl(key);
-  await uploadToOss(presignedUrl, compressedBlob);
-
-  return key;
-}
-
-/**
- * 上传文章图片，替换 markdown 中的 blob URL
- */
-async function uploadArticleImagesContent(content: string): Promise<string> {
-  const rawStrings = content.matchAll(CommonRegex.MARKDOWN_IMAGE_REGEX);
-  const blobStrings = Array.from(rawStrings)
-    .map((item) => item[2] ?? '')
-    .filter((item) => item.startsWith('blob:'));
-
-  const promises = blobStrings.map(async (item) => {
-    const imageFile = await fetchImageFile(item);
-    if (!imageFile) {
-      return undefined;
-    }
-
-    const extension = imageFile.type.split('/').pop() || 'jpg';
-    const filename = `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
-    const key = `articles/${filename}.${extension}`;
-
-    const compressedBlob = await compressImage(imageFile, 1000, 1000, 0.6);
-
-    const presignedUrl = await getPresignedUploadUrl(key);
-    await uploadToOss(presignedUrl, compressedBlob);
-    return key;
-  });
-
-  const keys = (await Promise.allSettled(promises))
-    .filter((item) => item.status === 'fulfilled')
-    .map((item) => item.value)
-    .filter(isString);
-
-  const imageurls = await uploadArticleImages({ data: { images: keys } });
-
-  return content.replace(
-    CommonRegex.MARKDOWN_IMAGE_REGEX,
-    (match: string, p1: string, p2: string) => {
-      const index = blobStrings.indexOf(p2);
-      if (index === -1) {
-        return match;
-      }
-      return `![${p1}](${imageurls[index]})`;
-    },
-  );
-}
-
-/**
  * OSS操作
  */
 export const OssAction = {
@@ -273,47 +194,5 @@ export const OssAction = {
    */
   async deletePhoto(id: number) {
     await deletePhoto({ data: { id } });
-  },
-
-  /**
-   * 更新用户信息
-   */
-  async updateUserInfo(values: UpdateUserInfoBody) {
-    const result = await uploadAvatar(values.avatar);
-    return updateCurrentUser({
-      data: {
-        ...values,
-        avatar: result,
-      },
-    });
-  },
-
-  /**
-   * 创建文章
-   */
-  async createArticle(values: CreateArticleInput) {
-    const content = await uploadArticleImagesContent(values.content);
-    return createArticle({
-      data: {
-        ...values,
-        content,
-      },
-    });
-  },
-
-  /**
-   * 更新文章
-   */
-  async updateArticle(values: UpdateArticleInput) {
-    const content =
-      values.content === undefined
-        ? undefined
-        : await uploadArticleImagesContent(values.content);
-    return updateArticle({
-      data: {
-        ...values,
-        content,
-      },
-    });
   },
 };

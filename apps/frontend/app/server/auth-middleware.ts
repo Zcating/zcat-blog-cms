@@ -24,18 +24,24 @@
 
 import { createMiddleware } from '@tanstack/react-start';
 
+import { UNAUTHORIZED_ERROR_CODE } from '@cms/shared/auth/unauthorized';
+
 import { authorizeFromCookie, liveCookieIO, type CookieIO } from './cookies';
 
 /**
  * Thrown when a protected server function is called without a valid
  * session. The thrown value is an `Error` (not a redirect) so the RPC
  * caller sees a structured failure rather than an HTML redirect target.
+ *
+ * The default message is the machine code, not prose: the RPC boundary
+ * keeps only `message`, so it is the one field the client can match on
+ * to recognise the rejection. See `@cms/shared/auth/unauthorized`.
  */
 export class UnauthorizedError extends Error {
-  readonly code = 'UnauthorizedError';
-  readonly name = 'UnauthorizedError';
+  readonly code = UNAUTHORIZED_ERROR_CODE;
+  readonly name = UNAUTHORIZED_ERROR_CODE;
 
-  constructor(message = 'Missing or invalid session') {
+  constructor(message = UNAUTHORIZED_ERROR_CODE) {
     super(message);
   }
 }

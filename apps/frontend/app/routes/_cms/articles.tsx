@@ -19,10 +19,11 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 
-import { safeNumber } from '@zcat/ui';
 import type { QueryClient } from '@tanstack/react-query';
 
 import { ArticleListPage } from '@cms/features/article/components/article/article-list';
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import type { PaginationSearch } from '@cms/shared/hooks/use-pagination-action';
 import { articlesListQueryOptions } from '@cms/server/articles';
 import { articleTagsListQueryOptions } from '@cms/server/article-tags';
 
@@ -30,21 +31,21 @@ import { articleTagsListQueryOptions } from '@cms/server/article-tags';
  * Pure loader logic — extracted so it can be unit-tested without
  * booting the TanStack Start runtime (the `createServerFn`
  * boundary requires the AsyncLocalStorage Start context).
+ *
+ * `search` is already validated by `paginationSearchSchema`, so
+ * `page` / `pageSize` arrive as positive integers or `undefined`
+ * and the documented 1 / 10 defaults are applied here.
  */
 export async function ensureArticleListQueries({
   search,
   context,
 }: {
-  search: Record<string, unknown>;
+  search: PaginationSearch;
   context: { queryClient: QueryClient };
 }): Promise<unknown[]> {
   const { queryClient } = context;
-  // `safeNumber` returns `NaN` for a missing key (the well-known
-  // `parseFloat(undefined) === NaN` footgun); we coerce to a sane
-  // integer before forwarding to the schema-parsing
-  // `articlesListQueryOptions` factory.
-  const page = safeNumber(search.page, 1) || 1;
-  const pageSize = safeNumber(search.pageSize, 10) || 10;
+  const page = search.page ?? 1;
+  const pageSize = search.pageSize ?? 10;
 
   return Promise.all([
     queryClient.query({
@@ -59,13 +60,14 @@ export async function ensureArticleListQueries({
 }
 
 export const Route = createFileRoute('/_cms/articles')({
+  validateSearch: paginationSearchSchema,
   loader: ({ context, location }) =>
     ensureArticleListQueries({ search: location.search, context }),
   component: ArticleListRoute,
 });
 
 function ArticleListRoute() {
-  const search = Route.useSearch() as { page?: number; pageSize?: number };
+  const search = Route.useSearch();
   const page = search.page ?? 1;
   const pageSize = search.pageSize ?? 10;
 

@@ -48,7 +48,7 @@ describe('runProtectedFunctionGate', () => {
 
     await expect(
       runProtectedFunctionGate({ next }, { cookie }),
-    ).rejects.toThrow(/session/i);
+    ).rejects.toThrow('UnauthorizedError');
 
     expect(next).not.toHaveBeenCalled();
   });
@@ -59,7 +59,7 @@ describe('runProtectedFunctionGate', () => {
 
     await expect(
       runProtectedFunctionGate({ next }, { cookie }),
-    ).rejects.toThrow(/session/i);
+    ).rejects.toThrow('UnauthorizedError');
 
     expect(next).not.toHaveBeenCalled();
   });

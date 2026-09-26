@@ -60,7 +60,14 @@ vi.mock('@cms/server/photos', async () => {
 
 // --- import after mocks ---
 
-import { loader } from './photos';
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import { loader, Route } from './photos';
+
+describe('route search schema: /_cms/photos', () => {
+  it('registers the shared pagination search schema', () => {
+    expect(Route.options.validateSearch).toBe(paginationSearchSchema);
+  });
+});
 
 describe('route loader: /_cms/photos', () => {
   beforeEach(() => {
@@ -121,7 +128,7 @@ describe('route loader: /_cms/photos', () => {
     });
 
     await loader({
-      search: { page: '2', pageSize: '25' },
+      search: paginationSearchSchema.parse({ page: '2', pageSize: '25' }),
       context: { queryClient },
     });
 
@@ -154,7 +161,7 @@ describe('route loader: /_cms/photos', () => {
     });
 
     await loader({
-      search: { albumId: '7' },
+      search: paginationSearchSchema.parse({ albumId: '7' }),
       context: { queryClient },
     });
 
@@ -185,7 +192,7 @@ describe('route loader: /_cms/photos', () => {
     });
 
     await loader({
-      search: { albumId: '0', page: '3' },
+      search: paginationSearchSchema.parse({ albumId: '0', page: '3' }),
       context: { queryClient },
     });
 

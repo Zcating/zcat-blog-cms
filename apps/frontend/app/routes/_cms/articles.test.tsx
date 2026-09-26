@@ -53,7 +53,14 @@ vi.mock('@cms/server/article-tags', async () => {
 
 // --- import after mocks ---
 
-import { ensureArticleListQueries } from './articles';
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import { ensureArticleListQueries, Route } from './articles';
+
+describe('route search schema: /_cms/articles', () => {
+  it('registers the shared pagination search schema', () => {
+    expect(Route.options.validateSearch).toBe(paginationSearchSchema);
+  });
+});
 
 function makeQueryClient() {
   const queryClient = new QueryClient({
@@ -98,7 +105,7 @@ describe('route loader: /_cms/articles', () => {
     const queryClient = makeQueryClient();
 
     await ensureArticleListQueries({
-      search: { page: '2', pageSize: '25' },
+      search: paginationSearchSchema.parse({ page: '2', pageSize: '25' }),
       context: { queryClient },
     });
 

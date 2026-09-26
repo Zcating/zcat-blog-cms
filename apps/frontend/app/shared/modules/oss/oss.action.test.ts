@@ -20,10 +20,6 @@ const mockCreatePhoto = vi.hoisted(() => vi.fn());
 const mockCreateAlbumPhoto = vi.hoisted(() => vi.fn());
 const mockUpdatePhoto = vi.hoisted(() => vi.fn());
 const mockDeletePhoto = vi.hoisted(() => vi.fn());
-const mockUploadArticleImages = vi.hoisted(() => vi.fn());
-const mockCreateArticle = vi.hoisted(() => vi.fn());
-const mockUpdateArticle = vi.hoisted(() => vi.fn());
-const mockUpdateCurrentUser = vi.hoisted(() => vi.fn());
 const mockGetSystemSettingUploadUrlServerFn = vi.hoisted(() => vi.fn());
 
 // The only mocked boundary is `@cms/server/*`: every backend call
@@ -33,16 +29,6 @@ vi.mock('@cms/server/photos', () => ({
   createAlbumPhoto: mockCreateAlbumPhoto,
   updatePhoto: mockUpdatePhoto,
   deletePhoto: mockDeletePhoto,
-}));
-
-vi.mock('@cms/server/articles', () => ({
-  createArticle: mockCreateArticle,
-  updateArticle: mockUpdateArticle,
-  uploadArticleImages: mockUploadArticleImages,
-}));
-
-vi.mock('@cms/server/users', () => ({
-  updateCurrentUser: mockUpdateCurrentUser,
 }));
 
 vi.mock('@cms/server/system-setting', () => ({
@@ -135,118 +121,6 @@ describe('OssAction', () => {
       mockDeletePhoto.mockRejectedValueOnce(new Error('delete failed'));
 
       await expect(OssAction.deletePhoto(7)).rejects.toThrow('delete failed');
-    });
-  });
-
-  describe('updateUserInfo', () => {
-    it('uploads avatar and updates user info when avatar is a blob URL', async () => {
-      const mockBlob = new Blob(['fake-avatar'], { type: 'image/jpeg' });
-      const mockCompressedBlob = new Blob(['compressed'], {
-        type: 'image/jpeg',
-      });
-
-      mockCompressorInit.mockImplementation(function (
-        _file: Blob,
-        options: { success: (result: Blob) => void },
-      ) {
-        setTimeout(() => options.success(mockCompressedBlob), 0);
-      });
-
-      const fetchMock = vi.mocked(globalThis.fetch);
-      fetchMock
-        .mockResolvedValueOnce({
-          blob: () => Promise.resolve(mockBlob),
-        } as Response)
-        .mockResolvedValueOnce({ ok: true } as Response);
-
-      mockGetSystemSettingUploadUrlServerFn.mockResolvedValueOnce({
-        presignedUrl: 'http://localhost:9000/user/abc.jpg?signed=123',
-      });
-
-      mockUpdateCurrentUser.mockResolvedValueOnce({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        occupation: '',
-        avatar: 'user/abc.jpg',
-        aboutMe: '',
-        abstract: '',
-      });
-
-      const result = await OssAction.updateUserInfo({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        avatar: 'blob:http://localhost/test-avatar',
-      });
-
-      expect(result).toBeDefined();
-      expect(result.avatar).toBe('user/abc.jpg');
-      expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
-        data: {
-          name: 'Updated',
-          contact: { email: 'a@b.com', github: 'u' },
-          avatar: expect.stringMatching(/^user\/.*\.(jpg|jpeg)$/),
-        },
-      });
-    });
-
-    it('skips upload and calls api directly when avatar is not a blob URL', async () => {
-      mockUpdateCurrentUser.mockResolvedValueOnce({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        occupation: '',
-        avatar: '',
-        aboutMe: '',
-        abstract: '',
-      });
-
-      const result = await OssAction.updateUserInfo({
-        name: 'Updated',
-        contact: { email: 'a@b.com', github: 'u' },
-        avatar: 'existing-key.jpg',
-      });
-
-      expect(result).toBeDefined();
-      expect(mockGetSystemSettingUploadUrlServerFn).not.toHaveBeenCalled();
-      expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
-        data: {
-          name: 'Updated',
-          contact: { email: 'a@b.com', github: 'u' },
-          avatar: undefined,
-        },
-      });
-    });
-
-    it('throws when upload fails', async () => {
-      const mockBlob = new Blob(['fake-avatar'], { type: 'image/jpeg' });
-      const mockCompressedBlob = new Blob(['compressed'], {
-        type: 'image/jpeg',
-      });
-
-      mockCompressorInit.mockImplementation(function (
-        _file: Blob,
-        options: { success: (result: Blob) => void },
-      ) {
-        setTimeout(() => options.success(mockCompressedBlob), 0);
-      });
-
-      const fetchMock = vi.mocked(globalThis.fetch);
-      fetchMock
-        .mockResolvedValueOnce({
-          blob: () => Promise.resolve(mockBlob),
-        } as Response)
-        .mockResolvedValueOnce({ ok: false, status: 500 } as Response);
-
-      mockGetSystemSettingUploadUrlServerFn.mockResolvedValueOnce({
-        presignedUrl: 'http://localhost:9000/user/abc.jpg?signed=123',
-      });
-
-      await expect(
-        OssAction.updateUserInfo({
-          name: 'Test',
-          contact: { email: 'a@b.com', github: 'u' },
-          avatar: 'blob:http://localhost/test-avatar',
-        }),
-      ).rejects.toThrow('Upload failed: 500');
     });
   });
 });

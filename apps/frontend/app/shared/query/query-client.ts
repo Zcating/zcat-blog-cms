@@ -20,7 +20,11 @@
  * Phase 3a scope contract: no automatic retries.
  */
 
-import { QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
+
+import { isUnauthorizedError } from '@cms/shared/auth/unauthorized';
+
+import { clearPrivateQueryCache } from './cache-helpers';
 
 /**
  * Create a fresh QueryClient suitable for a single SSR request or
@@ -28,9 +32,22 @@ import { QueryClient } from '@tanstack/react-query';
  *
  * Always returns a new instance — never reuse the result across
  * requests. Automatic retries are disabled per ADR-0003.
+ *
+ * The `QueryCache` and `MutationCache` `onError` hooks are the single
+ * 401 path: a private server function that rejects as unauthorized drops
+ * the whole cache, so no entry added before the session died can survive
+ * it.
  */
 export function makeQueryClient(): QueryClient {
-  return new QueryClient({
+  const clearCacheOnUnauthorized = (error: unknown) => {
+    if (isUnauthorizedError(error)) {
+      clearPrivateQueryCache(client);
+    }
+  };
+
+  const client = new QueryClient({
+    queryCache: new QueryCache({ onError: clearCacheOnUnauthorized }),
+    mutationCache: new MutationCache({ onError: clearCacheOnUnauthorized }),
     defaultOptions: {
       queries: {
         retry: false,
@@ -41,4 +58,6 @@ export function makeQueryClient(): QueryClient {
       },
     },
   });
+
+  return client;
 }

@@ -20,6 +20,8 @@
  * Phase 1.
  */
 
+import '../app.css';
+
 import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import {

@@ -1,14 +1,17 @@
 /**
  * Cache-management helpers used by the CMS shell.
  *
- * The shell calls `clearPrivateQueryCache` on:
- *   - successful logout (after the cookie has been cleared server-side)
- *   - any 401 / invalid-session path that forces a redirect to /login
+ * `clearPrivateQueryCache` is called on:
+ *   - successful logout (after the cookie has been cleared server-side),
+ *     from the shell's logout handler
+ *   - any query or mutation that rejects as unauthorized, from the
+ *     `QueryCache` / `MutationCache` `onError` hooks installed by
+ *     `makeQueryClient`
  *
  * Clearing BOTH the query and mutation caches ensures no stale
  * private data lingers after the user is logged out. We intentionally
  * do NOT call `queryClient.removeQueries({ exact: true })` per key —
- * the shell does not (and should not) know every private key.
+ * neither the shell nor the cache hooks know every private key.
  */
 
 import type { QueryClient } from '@tanstack/react-query';

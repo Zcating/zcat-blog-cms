@@ -39,44 +39,26 @@ import { createFileRoute } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 
 import Photos from '@cms/features/photo/routes/photos';
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import type { PaginationSearch } from '@cms/shared/hooks/use-pagination-action';
 import { photoListQueryOptions } from '@cms/server/photos';
 
 interface PhotosLoaderArgs {
-  search: Record<string, unknown>;
+  search: PaginationSearch;
   context: { queryClient: QueryClient };
 }
 
 /**
- * Coerce a raw query-string value to a positive integer, or
- * `defaultValue` when the value is missing / non-numeric. We do
- * NOT use `safeNumber` directly because it returns `NaN` for
- * `null` input (and `typeof NaN === 'number'`), which then trips
- * the `photoListQueryOptions` Zod schema. Passing `undefined`
- * lets the schema's `.default(...)` and `.optional()` chain
- * resolve cleanly to the documented defaults.
+ * `search` is already validated by `paginationSearchSchema`, so
+ * `page` / `pageSize` / `albumId` arrive as positive integers or
+ * `undefined` — a missing or non-positive `albumId` is simply
+ * absent. The documented 1 / 20 defaults live here rather than in
+ * the shared schema, which `/albums` and `/articles` differ on.
  */
-function coerceQueryInt(
-  raw: unknown,
-  defaultValue: number,
-): number | undefined {
-  if (raw == null) {
-    return defaultValue;
-  }
-  const text = String(raw);
-  if (text.length === 0) {
-    return defaultValue;
-  }
-  const parsed = Number.parseInt(text, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return defaultValue;
-  }
-  return parsed;
-}
-
 export async function loader({ search, context }: PhotosLoaderArgs) {
-  const page = coerceQueryInt(search.page, 1) ?? 1;
-  const pageSize = coerceQueryInt(search.pageSize, 20) ?? 20;
-  const albumId = coerceQueryInt(search.albumId, 0);
+  const page = search.page ?? 1;
+  const pageSize = search.pageSize ?? 20;
+  const albumId = search.albumId;
 
   // Warm the cache slot with `QueryClient.query` +
   // `staleTime: 'static'` (the replacement for the deprecated
@@ -87,7 +69,7 @@ export async function loader({ search, context }: PhotosLoaderArgs) {
   // same semantics as the legacy `ensureQueryData` call.
   return context.queryClient.query({
     ...photoListQueryOptions({
-      albumId: albumId && albumId > 0 ? albumId : undefined,
+      albumId,
       page,
       pageSize,
     }),
@@ -96,7 +78,8 @@ export async function loader({ search, context }: PhotosLoaderArgs) {
 }
 
 export const Route = createFileRoute('/_cms/photos')({
+  validateSearch: paginationSearchSchema,
   loader: ({ context, location }) =>
-    loader({ search: location.search as Record<string, unknown>, context }),
+    loader({ search: location.search, context }),
   component: Photos,
 });

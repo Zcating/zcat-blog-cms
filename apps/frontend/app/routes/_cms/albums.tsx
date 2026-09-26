@@ -29,39 +29,24 @@ import { createFileRoute } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 
 import Albums from '@cms/features/album/routes/albums';
+import { paginationSearchSchema } from '@cms/shared/hooks/use-pagination-action';
+import type { PaginationSearch } from '@cms/shared/hooks/use-pagination-action';
 import { photoAlbumsListQueryOptions } from '@cms/server/albums';
 
 interface AlbumsListLoaderArgs {
-  search: Record<string, unknown>;
+  search: PaginationSearch;
   context: { queryClient: QueryClient };
 }
 
 /**
- * Coerce a raw search-param value to a positive integer, or
- * `defaultValue` when the value is missing / non-numeric. We do
- * NOT use `safeNumber` directly because it returns `NaN` for
- * `null` input (and `typeof NaN === 'number'`), which then trips
- * the `photoAlbumsListQueryOptions` Zod schema. Passing
- * `undefined` lets the schema's `.default(...)` and `.optional()`
- * chain resolve cleanly to the documented defaults.
+ * `search` is already validated by `paginationSearchSchema`, so
+ * `page` / `pageSize` arrive as positive integers or `undefined`.
+ * The documented 1 / 10 defaults therefore live here rather than in
+ * the shared schema, which `/photos` needs to differ on.
  */
-function coerceQueryInt(
-  raw: unknown,
-  defaultValue: number,
-): number | undefined {
-  if (raw == null) {
-    return defaultValue;
-  }
-  const parsed = Number.parseInt(String(raw), 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return defaultValue;
-  }
-  return parsed;
-}
-
 export async function loader({ search, context }: AlbumsListLoaderArgs) {
-  const page = coerceQueryInt(search.page, 1) ?? 1;
-  const pageSize = coerceQueryInt(search.pageSize, 10) ?? 10;
+  const page = search.page ?? 1;
+  const pageSize = search.pageSize ?? 10;
 
   return context.queryClient.query({
     ...photoAlbumsListQueryOptions({ page, pageSize }),
@@ -70,12 +55,13 @@ export async function loader({ search, context }: AlbumsListLoaderArgs) {
 }
 
 export const Route = createFileRoute('/_cms/albums')({
+  validateSearch: paginationSearchSchema,
   loader: ({ context, location }) =>
     loader({ search: location.search, context }),
   component: AlbumsListRoute,
 });
 
 function AlbumsListRoute() {
-  const search = Route.useSearch() as Record<string, unknown>;
+  const search = Route.useSearch();
   return <Albums search={search} />;
 }
