@@ -42,7 +42,7 @@ export const Route = createFileRoute('/rss.xml')({
   </channel>
 </rss>`;
         return new Response(xml, {
-          headers: { 'Content-Type': 'application/rss+xml' },
+          headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' },
         });
       },
     },

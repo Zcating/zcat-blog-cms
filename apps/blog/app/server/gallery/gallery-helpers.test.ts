@@ -191,7 +191,7 @@ describe('fetchGalleryDetail', () => {
 
     const result = await fetchGalleryDetail({ id: '1' }, { fetch: fetchImpl });
 
-    expect(result.photos).toHaveLength(2);
+    expect(result?.photos).toHaveLength(2);
     expect(capturedUrl).toBe('http://backend.local/api/blog/gallery/1');
   });
 
@@ -214,6 +214,30 @@ describe('fetchGalleryDetail', () => {
         code: '0000',
         message: 'success',
         data: { ...GALLERY, photos: [{ id: 'oops' }] },
+      }),
+    );
+
+    await expect(
+      fetchGalleryDetail({ id: '1' }, { fetch: fetchImpl }),
+    ).rejects.toBeInstanceOf(ResponseValidationError);
+  });
+
+  it('resolves to null when the backend answers a missing album with 200 and data: null', async () => {
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({ code: '0000', message: 'success', data: null }),
+    );
+
+    await expect(
+      fetchGalleryDetail({ id: '999' }, { fetch: fetchImpl }),
+    ).resolves.toBeNull();
+  });
+
+  it('still throws ResponseValidationError for a malformed album, so nullability stays narrow', async () => {
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({
+        code: '0000',
+        message: 'success',
+        data: { id: '1', name: 'Album 1' },
       }),
     );
 

@@ -23,6 +23,10 @@ export async function loader({ params }: GalleryDetailLoaderArgs) {
 
   const gallery = await getGalleryDetail({ data: { id } });
 
+  if (!gallery) {
+    throw notFound();
+  }
+
   return { gallery };
 }
 

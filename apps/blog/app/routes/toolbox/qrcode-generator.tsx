@@ -48,6 +48,47 @@ const QRCodeSchema = z.object({
 
 const QRCodeForm = createZForm(QRCodeSchema);
 
+interface ColorFieldProps {
+  id?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  placeholder: string;
+}
+
+function ColorField({
+  id,
+  value,
+  onValueChange,
+  placeholder,
+}: ColorFieldProps) {
+  return (
+    <div className="flex gap-2">
+      <ZInput type="color" className="w-12 p-1 h-9" />
+      <ZInput
+        id={id}
+        placeholder={placeholder}
+        value={value}
+        onValueChange={onValueChange}
+      />
+    </div>
+  );
+}
+
+interface MarginFieldProps {
+  id?: string;
+  value?: boolean;
+  onValueChange?: (checked: boolean) => void;
+}
+
+function MarginField({ id, value, onValueChange }: MarginFieldProps) {
+  return (
+    <div className="flex items-center h-9">
+      <ZCheckbox id={id} value={value} onValueChange={onValueChange} />
+      <span className="ml-2 text-sm text-muted-foreground">包含白色边距</span>
+    </div>
+  );
+}
+
 function QrCodeGeneratorPage() {
   const [qrData, setQrData] = useState<z.infer<typeof QRCodeSchema>>({
     value: 'https://zcat.wiki',
@@ -167,27 +208,16 @@ function QrCodeGeneratorPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <QRCodeForm.Item name="fgColor" label="前景色">
-                  <div className="flex gap-2">
-                    <ZInput type="color" className="w-12 p-1 h-9" />
-                    <ZInput placeholder="#000000" />
-                  </div>
+                  <ColorField placeholder="#000000" />
                 </QRCodeForm.Item>
 
                 <QRCodeForm.Item name="bgColor" label="背景色">
-                  <div className="flex gap-2">
-                    <ZInput type="color" className="w-12 p-1 h-9" />
-                    <ZInput placeholder="#ffffff" />
-                  </div>
+                  <ColorField placeholder="#ffffff" />
                 </QRCodeForm.Item>
               </div>
 
               <QRCodeForm.Item name="includeMargin" label="边距">
-                <div className="flex items-center h-9">
-                  <ZCheckbox />
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    包含白色边距
-                  </span>
-                </div>
+                <MarginField />
               </QRCodeForm.Item>
 
               <ZButton type="submit" className="w-full">

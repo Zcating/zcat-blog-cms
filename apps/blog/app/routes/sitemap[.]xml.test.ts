@@ -64,7 +64,9 @@ describe('server route: /sitemap.xml', () => {
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Type')).toBe('application/xml');
+    expect(response.headers.get('Content-Type')).toBe(
+      'application/xml; charset=utf-8',
+    );
     expect(body.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(
       true,
     );
@@ -100,5 +102,20 @@ describe('server route: /sitemap.xml', () => {
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
       data: { page: 1, pageSize: 1000, order: 'latest' },
     });
+  });
+
+  it('declares charset=utf-8, even though every current URL is ASCII', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    const response = await getHandler();
+    const contentType = response.headers.get('Content-Type') ?? '';
+    const bytes = new Uint8Array(await response.arrayBuffer());
+
+    expect(contentType).toMatch(/^application\/xml\s*;/);
+    expect(contentType).toMatch(/charset\s*=\s*utf-8/i);
+
+    const utf8 = new TextDecoder('utf-8').decode(bytes);
+    expect(utf8).toContain('<loc>https://blog.zcat.example/gallery</loc>');
+    expect(bytes.every((byte) => byte < 0x80)).toBe(true);
   });
 });

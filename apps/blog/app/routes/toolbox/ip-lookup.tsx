@@ -70,7 +70,7 @@ function IpLookupPage() {
         setError('无法连接到 IP 查询服务');
       }
     } finally {
-      await Promise.tick(2000);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setLoading(false);
     }
   };

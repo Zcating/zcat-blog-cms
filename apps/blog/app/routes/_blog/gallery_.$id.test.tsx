@@ -1,3 +1,4 @@
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getGalleryDetailMock } = vi.hoisted(() => ({
@@ -15,6 +16,8 @@ vi.mock('@blog/server/gallery', async () => {
 });
 
 // --- import after mocks ---
+
+import { ResponseValidationError } from '@blog/server/result';
 
 import { Route, loader } from './gallery_.$id';
 
@@ -88,5 +91,43 @@ describe('route loader: /_blog/gallery/$id', () => {
   it('wires both boundaries, so a backend failure cannot fall through to the root error screen', () => {
     expect(Route.options.notFoundComponent).toBeTypeOf('function');
     expect(Route.options.errorComponent).toBeTypeOf('function');
+  });
+
+  it('renders the 相册不存在 copy from the not-found boundary', () => {
+    const NotFound = Route.options.notFoundComponent;
+    if (!NotFound) throw new Error('route has no notFoundComponent');
+
+    render(<NotFound isNotFound={true} routeId={Route.id} />);
+
+    expect(screen.getByText('相册不存在')).toBeInTheDocument();
+  });
+
+  it('turns a null album payload into a not-found, so the friendly screen is served with 404', async () => {
+    getGalleryDetailMock.mockResolvedValue(null);
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toMatchObject({ isNotFound: true });
+    expect(error).not.toBeInstanceOf(ResponseValidationError);
+    expect(getGalleryDetailMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a malformed album payload as an error, so a transport fault is not masked as a 404', async () => {
+    getGalleryDetailMock.mockRejectedValue(
+      new ResponseValidationError(
+        'Response envelope failed schema validation',
+        { code: '0000', message: 'success', data: { id: '999' } },
+        [{ path: 'data.description', message: 'Invalid input' }],
+      ),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ResponseValidationError);
+    expect(error).not.toMatchObject({ isNotFound: true });
   });
 });

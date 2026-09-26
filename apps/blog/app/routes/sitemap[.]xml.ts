@@ -33,7 +33,7 @@ export const Route = createFileRoute('/sitemap.xml')({
             .join('') +
           '</urlset>';
         return new Response(xml, {
-          headers: { 'Content-Type': 'application/xml' },
+          headers: { 'Content-Type': 'application/xml; charset=utf-8' },
         });
       },
     },

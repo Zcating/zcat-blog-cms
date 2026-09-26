@@ -64,7 +64,9 @@ describe('server route: /rss.xml', () => {
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Type')).toBe('application/rss+xml');
+    expect(response.headers.get('Content-Type')).toBe(
+      'application/rss+xml; charset=utf-8',
+    );
     expect(body.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(
       true,
     );
@@ -104,5 +106,28 @@ describe('server route: /rss.xml', () => {
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
       data: { page: 1, pageSize: 20, order: 'latest' },
     });
+  });
+
+  it('declares charset=utf-8, so an ISO-8859-1 defaulting client does not mojibake the Chinese', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    const response = await getHandler();
+    const contentType = response.headers.get('Content-Type') ?? '';
+    const bytes = new Uint8Array(await response.arrayBuffer());
+
+    expect(contentType).toMatch(/^application\/rss\+xml\s*;/);
+    expect(contentType).toMatch(/charset\s*=\s*utf-8/i);
+
+    const utf8 = new TextDecoder('utf-8').decode(bytes);
+    expect(utf8).toContain('<title>第一篇 &amp; &lt;草稿&gt;</title>');
+    expect(utf8).toContain('<description>个人技术博客</description>');
+
+    const mojibake = Array.from(
+      new TextEncoder().encode('个人技术博客'),
+      (byte) => String.fromCharCode(byte),
+    ).join('');
+    const latin1 = new TextDecoder('iso-8859-1').decode(bytes);
+    expect(latin1).not.toContain('个人技术博客');
+    expect(latin1).toContain(mojibake);
   });
 });
