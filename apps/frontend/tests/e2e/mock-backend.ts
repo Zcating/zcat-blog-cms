@@ -83,6 +83,7 @@ function getDefaultAlbums() {
 let albums = getDefaultAlbums();
 let photos = getDefaultPhotos();
 let authInvalid = false;
+let tokenRejected = false;
 let articleTags: Array<{
   id: number;
   name: string;
@@ -177,6 +178,7 @@ const server = createServer((request, response) => {
     ];
     nextArticleId = 3;
     authInvalid = false;
+    tokenRejected = false;
     sendJson(response, { ok: true });
     return;
   }
@@ -188,6 +190,12 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/test/invalidate-auth') {
     authInvalid = url.searchParams.get('value') !== 'false';
+    sendJson(response, { ok: true });
+    return;
+  }
+
+  if (url.pathname === '/api/test/reject-token') {
+    tokenRejected = url.searchParams.get('value') !== 'false';
     sendJson(response, { ok: true });
     return;
   }
@@ -212,6 +220,11 @@ const server = createServer((request, response) => {
     sendJson(response, {
       valid: request.headers.authorization === 'Bearer frontend-e2e-token',
     });
+    return;
+  }
+
+  if (tokenRejected && url.pathname.startsWith('/api/cms/')) {
+    sendError(response, 'ERR0002', 'Unauthorized');
     return;
   }
 
