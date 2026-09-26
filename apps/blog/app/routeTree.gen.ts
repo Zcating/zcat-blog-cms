@@ -9,38 +9,117 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root';
+import { Route as BlogRouteImport } from './routes/_blog';
 import { Route as AboutRouteImport } from './routes/about';
+import { Route as BlogIndexRouteImport } from './routes/_blog/index';
+import { Route as BlogGalleryRouteImport } from './routes/_blog/gallery';
+import { Route as BlogPostBoardRouteImport } from './routes/_blog/post-board';
+import { Route as BlogGalleryIdRouteImport } from './routes/_blog/gallery_.$id';
+import { Route as BlogPostBoardIdRouteImport } from './routes/_blog/post-board_.$id';
 
+const BlogRoute = BlogRouteImport.update({
+  id: '/_blog',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any);
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
+} as any);
+const BlogGalleryRoute = BlogGalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => BlogRoute,
+} as any);
+const BlogPostBoardRoute = BlogPostBoardRouteImport.update({
+  id: '/post-board',
+  path: '/post-board',
+  getParentRoute: () => BlogRoute,
+} as any);
+const BlogGalleryIdRoute = BlogGalleryIdRouteImport.update({
+  id: '/gallery_/$id',
+  path: '/gallery/$id',
+  getParentRoute: () => BlogRoute,
+} as any);
+const BlogPostBoardIdRoute = BlogPostBoardIdRouteImport.update({
+  id: '/post-board_/$id',
+  path: '/post-board/$id',
+  getParentRoute: () => BlogRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
+  '/': typeof BlogIndexRoute;
   '/about': typeof AboutRoute;
+  '/gallery': typeof BlogGalleryRoute;
+  '/post-board': typeof BlogPostBoardRoute;
+  '/gallery/$id': typeof BlogGalleryIdRoute;
+  '/post-board/$id': typeof BlogPostBoardIdRoute;
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute;
+  '/gallery': typeof BlogGalleryRoute;
+  '/post-board': typeof BlogPostBoardRoute;
+  '/': typeof BlogIndexRoute;
+  '/gallery/$id': typeof BlogGalleryIdRoute;
+  '/post-board/$id': typeof BlogPostBoardIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
+  '/_blog': typeof BlogRouteWithChildren;
   '/about': typeof AboutRoute;
+  '/_blog/gallery': typeof BlogGalleryRoute;
+  '/_blog/post-board': typeof BlogPostBoardRoute;
+  '/_blog/': typeof BlogIndexRoute;
+  '/_blog/gallery_/$id': typeof BlogGalleryIdRoute;
+  '/_blog/post-board_/$id': typeof BlogPostBoardIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/about';
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/gallery'
+    | '/post-board'
+    | '/gallery/$id'
+    | '/post-board/$id';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/about';
-  id: '__root__' | '/about';
+  to:
+    | '/about'
+    | '/gallery'
+    | '/post-board'
+    | '/'
+    | '/gallery/$id'
+    | '/post-board/$id';
+  id:
+    | '__root__'
+    | '/_blog'
+    | '/about'
+    | '/_blog/gallery'
+    | '/_blog/post-board'
+    | '/_blog/'
+    | '/_blog/gallery_/$id'
+    | '/_blog/post-board_/$id';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
+  BlogRoute: typeof BlogRouteWithChildren;
   AboutRoute: typeof AboutRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_blog': {
+      id: '/_blog';
+      path: '';
+      fullPath: '/';
+      preLoaderRoute: typeof BlogRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/about': {
       id: '/about';
       path: '/about';
@@ -48,10 +127,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_blog/': {
+      id: '/_blog/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof BlogIndexRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
+    '/_blog/gallery': {
+      id: '/_blog/gallery';
+      path: '/gallery';
+      fullPath: '/gallery';
+      preLoaderRoute: typeof BlogGalleryRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
+    '/_blog/post-board': {
+      id: '/_blog/post-board';
+      path: '/post-board';
+      fullPath: '/post-board';
+      preLoaderRoute: typeof BlogPostBoardRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
+    '/_blog/gallery_/$id': {
+      id: '/_blog/gallery_/$id';
+      path: '/gallery/$id';
+      fullPath: '/gallery/$id';
+      preLoaderRoute: typeof BlogGalleryIdRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
+    '/_blog/post-board_/$id': {
+      id: '/_blog/post-board_/$id';
+      path: '/post-board/$id';
+      fullPath: '/post-board/$id';
+      preLoaderRoute: typeof BlogPostBoardIdRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
   }
 }
 
+interface BlogRouteChildren {
+  BlogGalleryRoute: typeof BlogGalleryRoute;
+  BlogPostBoardRoute: typeof BlogPostBoardRoute;
+  BlogIndexRoute: typeof BlogIndexRoute;
+  BlogGalleryIdRoute: typeof BlogGalleryIdRoute;
+  BlogPostBoardIdRoute: typeof BlogPostBoardIdRoute;
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogGalleryRoute: BlogGalleryRoute,
+  BlogPostBoardRoute: BlogPostBoardRoute,
+  BlogIndexRoute: BlogIndexRoute,
+  BlogGalleryIdRoute: BlogGalleryIdRoute,
+  BlogPostBoardIdRoute: BlogPostBoardIdRoute,
+};
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
+  BlogRoute: BlogRouteWithChildren,
   AboutRoute: AboutRoute,
 };
 export const routeTree = rootRouteImport

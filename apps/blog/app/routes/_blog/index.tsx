@@ -1,95 +1,93 @@
 import {
+  Calendar,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  ZView,
+  RainbowBorder,
+  StaggerReveal,
   ZAvatar,
   ZPagination,
   ZSelect,
-  StaggerReveal,
-  Calendar,
-  RainbowBorder,
+  ZView,
 } from '@zcat/ui';
-import { createSearchParams, Link, useNavigate } from 'react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { z } from 'zod';
 
-import { ArticleApi, UserApi } from '@blog/apis';
 import { safePositiveNumber } from '@blog/common';
 import { PostExcerptCard } from '@blog/features';
+import { getArticleList } from '@blog/server/article';
+import { getUserInfo } from '@blog/server/user';
 
-import type { Route } from '../index/+types/home.page';
+import type { GetArticleListInput } from '@blog/server/article/schemas';
 
-/**
- * 排序选项
- */
+const SITE = 'https://blog.zcat.example';
+
+type Order = GetArticleListInput['order'];
+
 const SORT_OPTIONS = [
   { value: 'latest', label: '最新' },
   { value: 'oldest', label: '最早' },
-] as CommonOption<ArticleApi.OrderEnum>[];
+] as CommonOption<Order>[];
 
-/**
- * 首页文章列表加载器
- * @param {Route.LoaderArgs} params
- * @returns
- */
-export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const page = safePositiveNumber(url.searchParams.get('page'), 1);
-  const order = (url.searchParams.get('order') ??
-    'latest') as ArticleApi.OrderEnum;
+const homeSearchSchema = z.looseObject({
+  page: z.string().optional(),
+  order: z.enum(['latest', 'oldest']).optional(),
+});
 
-  return {
-    userInfo: await UserApi.getUserInfo(),
-    pagination: await ArticleApi.getArticleList({
-      page: Number.isFinite(page) && page > 0 ? page : 1,
-      pageSize: 10,
-      order: order,
-    }),
-    page: Number.isFinite(page) && page > 0 ? page : 1,
-    order,
-  };
+type HomeSearch = z.infer<typeof homeSearchSchema>;
+
+interface HomeLoaderArgs {
+  search: HomeSearch;
 }
 
-export function meta() {
-  const SITE = 'https://blog.zcat.example';
-  return [
-    { title: 'ZCAT - 我知道你在看' },
-    { name: 'description', content: '个人技术博客' },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:title', content: 'ZCAT - 我知道你在看' },
-    { property: 'og:description', content: '个人技术博客' },
-    { property: 'og:url', content: SITE },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'ZCAT - 我知道你在看' },
-    { name: 'twitter:description', content: '个人技术博客' },
-    { tagName: 'link', rel: 'canonical', href: SITE },
-  ];
+export async function loader({ search }: HomeLoaderArgs) {
+  const page = safePositiveNumber(search.page, 1);
+  const order: Order = search.order ?? 'latest';
+
+  const [userInfo, pagination] = await Promise.all([
+    getUserInfo(),
+    getArticleList({ data: { page, pageSize: 10, order } }),
+  ]);
+
+  return { userInfo, pagination, page, order };
 }
 
-/**
- * 首页文章列表实现
- *
- */
-export default function HomePage(props: Route.ComponentProps) {
-  const loaderData = props.loaderData;
-  const userInfo = loaderData.userInfo;
-  const pagination = loaderData.pagination;
-  const currentPage = loaderData.page;
-  const order = loaderData.order;
+export const Route = createFileRoute('/_blog/')({
+  validateSearch: homeSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'ZCAT - 我知道你在看' },
+      { name: 'description', content: '个人技术博客' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:title', content: 'ZCAT - 我知道你在看' },
+      { property: 'og:description', content: '个人技术博客' },
+      { property: 'og:url', content: SITE },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'ZCAT - 我知道你在看' },
+      { name: 'twitter:description', content: '个人技术博客' },
+    ],
+    links: [{ rel: 'canonical', href: SITE }],
+  }),
+  loader: ({ location }) => loader({ search: location.search }),
+  component: HomePage,
+});
+
+function HomePage() {
+  const { userInfo, pagination, page, order } = Route.useLoaderData();
   const navigate = useNavigate();
 
-  const toSearch = (nextPage: number, nextOrder: ArticleApi.OrderEnum) =>
-    `?${createSearchParams({
-      page: String(nextPage),
-      order: nextOrder,
-    })}`;
+  const toSearch = (nextPage: number, nextOrder: Order) => ({
+    page: String(nextPage),
+    order: nextOrder,
+  });
 
-  const goToPage = (page: number) => {
-    navigate(toSearch(page, order));
+  const goToPage = (nextPage: number) => {
+    navigate({ to: '/', search: toSearch(nextPage, order) });
   };
 
-  const handleOrderChange = (value: ArticleApi.OrderEnum) => {
-    navigate(toSearch(1, value));
+  const handleOrderChange = (value: Order) => {
+    navigate({ to: '/', search: toSearch(1, value) });
   };
 
   return (
@@ -149,8 +147,9 @@ export default function HomePage(props: Route.ComponentProps) {
           {pagination.data.map((article, index) => (
             <Link
               data-home-article-card="true"
-              to={`/post-board/${article.id}`}
-              prefetch="intent"
+              to="/post-board/$id"
+              params={{ id: String(article.id) }}
+              preload="intent"
               className="block"
               key={index}
             >
@@ -160,7 +159,7 @@ export default function HomePage(props: Route.ComponentProps) {
         </StaggerReveal>
       </ZView>
       <ZPagination
-        page={currentPage}
+        page={page}
         totalPages={pagination.totalPages}
         onPageChange={goToPage}
       />

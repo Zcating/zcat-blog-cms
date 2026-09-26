@@ -1,17 +1,7 @@
-import {
-  type RouteConfig,
-  index,
-  layout,
-  route,
-} from '@react-router/dev/routes';
+import { type RouteConfig, layout, route } from '@react-router/dev/routes';
 export default [
   layout('features/layouts/views/blog.layout.tsx', [
-    index('routes/index/home.page.tsx'),
-    route('post-board', 'routes/index/post-board.tsx'),
-    route('post-board/:id', 'routes/index/post-board.id.tsx'),
     route('about', 'routes/index/about.tsx'),
-    route('gallery', 'routes/index/gallery.tsx'),
-    route('gallery/:id', 'routes/index/gallery.id.tsx'),
   ]),
   layout('features/layouts/views/ai-chat.layout.tsx', [
     route('ai-chat', 'routes/ai-chat/ai-chat.page.tsx'),

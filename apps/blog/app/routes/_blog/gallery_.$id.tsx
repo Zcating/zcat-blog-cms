@@ -1,33 +1,44 @@
 import { Button, IconClose, ZDialog, ZImage, ZView } from '@zcat/ui';
+import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 
-import { GalleryApi } from '@blog/apis';
 import {
   GallerySidebarNav,
   GalleryThumbnailList,
   ImageZoomViewer,
 } from '@blog/features';
+import { getGalleryDetail } from '@blog/server/gallery';
+import { GetGalleryDetailInputSchema } from '@blog/server/gallery/schemas';
 
-import type { Route } from '../index/+types/gallery.id';
-
-export function meta() {
-  return [{ title: '相册' }, { name: 'description', content: '个人技术博客' }];
+interface GalleryDetailLoaderArgs {
+  params: { id?: string };
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
-  const gallery = await GalleryApi.getGalleryDetail(params.id);
-  return {
-    gallery,
-  };
+export async function loader({ params }: GalleryDetailLoaderArgs) {
+  const id = params.id ?? '';
+
+  if (!GetGalleryDetailInputSchema.safeParse({ id }).success) {
+    throw notFound();
+  }
+
+  const gallery = await getGalleryDetail({ data: { id } });
+
+  return { gallery };
 }
 
-export default function GalleryDetailPage(props: Route.ComponentProps) {
-  const { gallery } = props.loaderData;
+export const Route = createFileRoute('/_blog/gallery_/$id')({
+  head: () => ({
+    meta: [{ title: '相册' }, { name: 'description', content: '个人技术博客' }],
+  }),
+  loader: ({ params }) => loader({ params }),
+  component: GalleryDetailPage,
+});
+
+function GalleryDetailPage() {
+  const { gallery } = Route.useLoaderData();
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // 构造统一的展示列表
   const items = useMemo(() => {
     const list: Array<{
       id: string;
@@ -35,7 +46,7 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
       name?: string;
       description?: string;
       isCover?: boolean;
-      original?: any;
+      original?: unknown;
     }> = [];
 
     if (gallery.cover) {
@@ -54,10 +65,10 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
         return;
       }
       list.push({
-        id: photo.id,
+        id: String(photo.id),
         url: photo.url,
         name: photo.name,
-        description: '', // 照片描述暂时为空，如果有字段可以加上
+        description: '',
         isCover: false,
         original: photo,
       });
@@ -68,7 +79,6 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
 
   const currentItem = items[selectedIndex];
 
-  // 键盘导航
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -83,11 +93,11 @@ export default function GalleryDetailPage(props: Route.ComponentProps) {
   }, [items.length]);
 
   const back = () => {
-    navigate(`/gallery`);
+    navigate({ to: '/gallery' });
   };
 
   if (!currentItem) {
-    return null; // 或者显示 Loading
+    return null;
   }
 
   const handleZoom = () => {

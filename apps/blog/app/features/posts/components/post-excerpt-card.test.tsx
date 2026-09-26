@@ -8,12 +8,14 @@ describe('PostExcerptCard', () => {
     render(
       <PostExcerptCard
         value={{
-          id: '1',
+          id: 1,
           title: '第一篇文章',
           excerpt: '这里是摘要',
+          content: '# 正文',
           createdAt: '2026-05-19T12:00:00.000Z',
           updatedAt: '2026-05-19T12:00:00.000Z',
           publishAt: '2026-05-19T12:00:00.000Z',
+          articleAndArticleTags: [],
         }}
       />,
     );

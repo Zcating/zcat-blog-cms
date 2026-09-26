@@ -1,39 +1,36 @@
 import {
-  Button,
   Card,
-  ZGrid,
-  ZImagePreload,
-  Skeleton,
   StaggerReveal,
+  ZImagePreload,
   ZView,
   ZWaterfall,
 } from '@zcat/ui';
-import { useNavigate } from 'react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
-import { GalleryApi } from '@blog/apis';
+import { getGalleryList } from '@blog/server/gallery';
 
-import type { Route } from '../index/+types/gallery';
-
-export function meta() {
-  return [{ title: '相册' }, { name: 'description', content: '个人技术博客' }];
-}
+import type { Gallery } from '@blog/server/gallery/schemas';
 
 export async function loader() {
-  const pagination = await GalleryApi.getGalleries({ page: 1 });
-  return {
-    pagination,
-  };
+  const pagination = await getGalleryList({ data: { page: 1 } });
+
+  return { pagination };
 }
 
-export default function GalleryPage(props: Route.ComponentProps) {
-  // const [open, setOpen] = React.useState(false);
-  // const [selectedPhoto, setSelectedPhoto] = React.useState<GalleryApi.Photo>();
+export const Route = createFileRoute('/_blog/gallery')({
+  head: () => ({
+    meta: [{ title: '相册' }, { name: 'description', content: '个人技术博客' }],
+  }),
+  loader: () => loader(),
+  component: GalleryPage,
+});
+
+function GalleryPage() {
   const navigate = useNavigate();
-  const pagination = props.loaderData.pagination;
-  const handleClick = (value: GalleryApi.Gallery) => {
-    navigate(`/gallery/${value.id}`);
-    // setSelectedPhoto(value);
-    // setOpen(true);
+  const { pagination } = Route.useLoaderData();
+
+  const handleClick = (value: Gallery) => {
+    navigate({ to: '/gallery/$id', params: { id: String(value.id) } });
   };
 
   return (
@@ -65,21 +62,11 @@ export default function GalleryPage(props: Route.ComponentProps) {
   );
 }
 
-export function HydrateFallback() {
-  return (
-    <ZGrid
-      cols={3}
-      columnClassName="px-40"
-      items={Array.from({ length: 9 }, (_, i) => i)}
-      renderItem={() => <Skeleton className="w-full aspect-3/2 rounded-md" />}
-    />
-  );
+interface PhotoItemProps {
+  value: Gallery;
+  onClick: (value: Gallery) => void;
 }
 
-interface PhotoItemProps {
-  value: GalleryApi.Gallery;
-  onClick: (value: GalleryApi.Gallery) => void;
-}
 function PhotoItem({ value, onClick }: PhotoItemProps) {
   const url = value.cover?.url;
   const click = () => onClick(value);
