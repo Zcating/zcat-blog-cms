@@ -2,6 +2,7 @@
 
 import { recordVisitor as recordStatisticVisitor } from '../../../common/statistic-service';
 import { OssService, PrismaService, tryPromise } from '../../../common/effect';
+import { createPaginateResult } from '@backend/model';
 import { createPaginate, safeNumber, safeParse } from '@backend/utils';
 
 const ORDER_MAP = {
@@ -53,12 +54,7 @@ export function getArticleList(
 
     const total = yield* tryPromise(() => prisma.article.count());
 
-    return {
-      data: articles,
-      totalPages: Math.ceil(total / pageSize),
-      page,
-      pageSize,
-    };
+    return createPaginateResult(articles, total, page, pageSize);
   });
 }
 
@@ -108,6 +104,10 @@ export function getGalleryList(page: number, pageSize: number) {
       }),
     );
 
+    const total = yield* tryPromise(() =>
+      prisma.photoAlbum.count({ where: { available: true } }),
+    );
+
     let photos: ReturnType<typeof transformPhoto>[] = [];
     if (albumModels.length > 0) {
       const rawPhotos = yield* tryPromise(() =>
@@ -131,12 +131,7 @@ export function getGalleryList(page: number, pageSize: number) {
       updatedAt: item.updatedAt,
     }));
 
-    return {
-      data: galleries,
-      total: galleries.length,
-      page,
-      pageSize,
-    };
+    return createPaginateResult(galleries, total, page, pageSize);
   });
 }
 

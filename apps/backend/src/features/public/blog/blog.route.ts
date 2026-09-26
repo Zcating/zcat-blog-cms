@@ -56,7 +56,7 @@ blogRoutes.get('/article/:id', async (c) => {
     if (!article) {
       return c.json(
         createResult({
-          code: ResultCode.DatabaseError,
+          code: ResultCode.ResourceNotFound,
           message: '文章不存在',
         }),
       );
@@ -113,6 +113,15 @@ blogRoutes.get('/gallery/:id', async (c) => {
     const result = await appRuntime.runPromise(
       blogService.getGalleryDetail(id),
     );
+
+    if (!result) {
+      return c.json(
+        createResult({
+          code: ResultCode.ResourceNotFound,
+          message: '相册不存在',
+        }),
+      );
+    }
 
     return c.json(
       createResult({

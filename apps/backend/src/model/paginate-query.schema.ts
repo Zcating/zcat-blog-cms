@@ -25,3 +25,18 @@ export interface PaginateResult<T> {
   pageSize: number;
   total: number;
 }
+
+export function createPaginateResult<T>(
+  data: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+): PaginateResult<T> {
+  return {
+    data,
+    total,
+    totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    page,
+    pageSize,
+  };
+}

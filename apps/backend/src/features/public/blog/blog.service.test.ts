@@ -11,6 +11,7 @@ const mockPrisma = vi.hoisted(() => ({
   },
   photoAlbum: {
     findMany: vi.fn(),
+    count: vi.fn(),
     findUnique: vi.fn(),
   },
   photo: {
@@ -117,19 +118,25 @@ describe('blogService', () => {
       const article = { id: 1, title: 'Detail' };
       mockPrisma.article.findUnique.mockResolvedValue(article);
 
-      const result = await appRuntime.runPromise(blogService.getArticleDetail('1'));
+      const result = await appRuntime.runPromise(
+        blogService.getArticleDetail('1'),
+      );
 
       expect(result).toEqual(article);
     });
 
     it('returns null when id is invalid (0)', async () => {
-      const result = await appRuntime.runPromise(blogService.getArticleDetail('0'));
+      const result = await appRuntime.runPromise(
+        blogService.getArticleDetail('0'),
+      );
 
       expect(result).toBeNull();
     });
 
     it('returns null when id is non-numeric', async () => {
-      const result = await appRuntime.runPromise(blogService.getArticleDetail('abc'));
+      const result = await appRuntime.runPromise(
+        blogService.getArticleDetail('abc'),
+      );
 
       expect(result).toBeNull();
     });
@@ -137,7 +144,9 @@ describe('blogService', () => {
     it('returns null when not found', async () => {
       mockPrisma.article.findUnique.mockResolvedValue(null);
 
-      const result = await appRuntime.runPromise(blogService.getArticleDetail('1'));
+      const result = await appRuntime.runPromise(
+        blogService.getArticleDetail('1'),
+      );
 
       expect(result).toBeNull();
     });
@@ -158,9 +167,12 @@ describe('blogService', () => {
       const photos = [{ id: 10, url: 'u', thumbnailUrl: 't' }];
 
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
+      mockPrisma.photoAlbum.count.mockResolvedValue(1);
       mockPrisma.photo.findMany.mockResolvedValue(photos);
 
-      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(1, 10),
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].cover).toBeDefined();
@@ -178,21 +190,43 @@ describe('blogService', () => {
         },
       ];
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
+      mockPrisma.photoAlbum.count.mockResolvedValue(1);
       mockPrisma.photo.findMany.mockResolvedValue([]);
 
-      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(1, 10),
+      );
 
       expect(result.data[0].cover).toBeNull();
     });
 
     it('returns empty photos when no albums', async () => {
       mockPrisma.photoAlbum.findMany.mockResolvedValue([]);
+      mockPrisma.photoAlbum.count.mockResolvedValue(0);
       mockPrisma.photo.findMany.mockResolvedValue([]);
 
-      const result = await appRuntime.runPromise(blogService.getGalleryList(1, 10));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(1, 10),
+      );
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
+    });
+
+    it('counts only available albums when deriving the grand total', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([]);
+      mockPrisma.photoAlbum.count.mockResolvedValue(7);
+      mockPrisma.photo.findMany.mockResolvedValue([]);
+
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(2, 2),
+      );
+
+      expect(mockPrisma.photoAlbum.count).toHaveBeenCalledWith({
+        where: { available: true },
+      });
+      expect(result.total).toBe(7);
+      expect(result.totalPages).toBe(4);
     });
   });
 
@@ -214,7 +248,9 @@ describe('blogService', () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(album);
       mockPrisma.photo.findMany.mockResolvedValue(photos);
 
-      const result = await appRuntime.runPromise(blogService.getGalleryDetail('1'));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryDetail('1'),
+      );
 
       expect(result).toBeDefined();
       expect(result!.photos).toHaveLength(2);
@@ -225,7 +261,9 @@ describe('blogService', () => {
     it('returns null when album not found', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
 
-      const result = await appRuntime.runPromise(blogService.getGalleryDetail('999'));
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryDetail('999'),
+      );
 
       expect(result).toBeNull();
     });
