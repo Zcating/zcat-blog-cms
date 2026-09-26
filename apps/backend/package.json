@@ -10,7 +10,7 @@
     "dev:fresh": "node ../../scripts/kill-port.mjs 9090 && pnpm run dev",
     "build": "pnpm run db:generate:prod && tsc -p tsconfig.build.json",
     "build:dev": "pnpm run db:generate:dev && tsc -p tsconfig.build.json",
-    "lint": "oxlint \"src/**/*.ts\" --fix",
+    "lint": "oxlint src --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",

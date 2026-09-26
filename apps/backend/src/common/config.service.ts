@@ -32,7 +32,7 @@ function parseAllowRegister(defaultValue: boolean): boolean {
 const nodeEnv = optional('NODE_ENV', 'development');
 const isProduction = nodeEnv === 'production';
 
-const devCorsOrigins = ['http://localhost:5000', 'http://localhost:1024'];
+const devCorsOrigins = ['http://localhost:3000', 'http://localhost:1024'];
 
 export const config = Object.freeze({
   // App
