@@ -1,4 +1,4 @@
-import { Button, IconClose, ZDialog, ZImage, ZView } from '@zcat/ui';
+import { Button, IconClose, ZButton, ZDialog, ZImage, ZView } from '@zcat/ui';
 import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -32,7 +32,23 @@ export const Route = createFileRoute('/_blog/gallery_/$id')({
   }),
   loader: ({ params }) => loader({ params }),
   component: GalleryDetailPage,
+  notFoundComponent: () => <GalleryDetailNotFound />,
+  errorComponent: () => <GalleryDetailNotFound />,
 });
+
+function GalleryDetailNotFound() {
+  return (
+    <ZView className="container mx-auto py-12 text-center space-y-4">
+      <h1 className="text-3xl font-bold">相册不存在</h1>
+      <p className="text-muted-foreground">
+        您访问的相册可能已被删除或暂时不可用。
+      </p>
+      <ZButton onClick={() => (window.location.href = '/gallery')}>
+        返回相册列表
+      </ZButton>
+    </ZView>
+  );
+}
 
 function GalleryDetailPage() {
   const { gallery } = Route.useLoaderData();

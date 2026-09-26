@@ -1,6 +1,8 @@
 import {
   Card,
+  Skeleton,
   StaggerReveal,
+  ZGrid,
   ZImagePreload,
   ZView,
   ZWaterfall,
@@ -23,7 +25,19 @@ export const Route = createFileRoute('/_blog/gallery')({
   }),
   loader: () => loader(),
   component: GalleryPage,
+  pendingComponent: GalleryPendingFallback,
 });
+
+function GalleryPendingFallback() {
+  return (
+    <ZGrid
+      cols={3}
+      columnClassName="px-40"
+      items={Array.from({ length: 9 }, (_, index) => index)}
+      renderItem={() => <Skeleton className="w-full aspect-3/2 rounded-md" />}
+    />
+  );
+}
 
 function GalleryPage() {
   const navigate = useNavigate();

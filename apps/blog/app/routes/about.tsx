@@ -12,14 +12,14 @@ import {
 import { Mail } from 'lucide-react';
 import { createFileRoute } from '@tanstack/react-router';
 
-import { UserApi } from '@blog/apis';
+import { getUserInfo } from '@blog/server/user';
 
 export const Route = createFileRoute('/about')({
   head: () => ({
     meta: [{ title: '关于' }, { name: 'description', content: '个人技术博客' }],
   }),
   loader: async () => {
-    const userInfo = await UserApi.getUserInfo();
+    const userInfo = await getUserInfo();
     return {
       userInfo: userInfo,
     };

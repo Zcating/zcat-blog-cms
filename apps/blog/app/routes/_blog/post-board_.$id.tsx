@@ -3,12 +3,24 @@ import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { PostContentView } from '@blog/features';
 import { getArticleDetail } from '@blog/server/article';
-import { GetArticleDetailInputSchema } from '@blog/server/article/schemas';
+import {
+  GetArticleDetailInputSchema,
+  type ArticleDetail,
+} from '@blog/server/article/schemas';
+import { ApiErrorException } from '@blog/server/errors';
 
 const SITE = 'https://blog.zcat.example';
 
 interface PostBoardDetailLoaderArgs {
   params: { id?: string };
+}
+
+function isMissingArticleError(error: unknown): boolean {
+  return (
+    error instanceof ApiErrorException &&
+    error.apiError._tag === 'DatabaseError' &&
+    error.apiError.message === '文章不存在'
+  );
 }
 
 export async function loader({ params }: PostBoardDetailLoaderArgs) {
@@ -18,7 +30,16 @@ export async function loader({ params }: PostBoardDetailLoaderArgs) {
     throw notFound();
   }
 
-  const article = await getArticleDetail({ data: { id } });
+  let article: ArticleDetail;
+
+  try {
+    article = await getArticleDetail({ data: { id } });
+  } catch (error) {
+    if (isMissingArticleError(error)) {
+      throw notFound();
+    }
+    throw error;
+  }
 
   const jsonLd = {
     '@context': 'https://schema.org',

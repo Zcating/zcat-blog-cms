@@ -23,6 +23,14 @@ export const Route = createRootRoute({
       { name: 'theme-color', content: '#0a0a0a' },
       { name: 'color-scheme', content: 'light dark' },
     ],
+    links: [
+      {
+        rel: 'alternate',
+        type: 'application/rss+xml',
+        title: 'ZCAT Blog',
+        href: '/rss.xml',
+      },
+    ],
   }),
   component: RootComponent,
   notFoundComponent: RootNotFound,

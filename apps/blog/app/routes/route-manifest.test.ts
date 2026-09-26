@@ -128,6 +128,21 @@ describe('detail URLs still reach their detail route, not the parent list', () =
   });
 });
 
+describe('the root document advertises the live feeds', () => {
+  it('links the RSS feed for autodiscovery', () => {
+    const head = routeTree.options.head?.({} as never) as
+      | { links?: Array<Record<string, string>> }
+      | undefined;
+
+    expect(head?.links).toContainEqual({
+      rel: 'alternate',
+      type: 'application/rss+xml',
+      title: 'ZCAT Blog',
+      href: '/rss.xml',
+    });
+  });
+});
+
 describe('unknown URLs fall through to the root not-found screen', () => {
   it.each([
     '/toolbox/not-a-tool',

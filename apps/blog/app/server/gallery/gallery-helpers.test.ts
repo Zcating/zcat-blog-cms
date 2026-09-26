@@ -143,6 +143,30 @@ describe('fetchGalleryList', () => {
     ).rejects.toBeInstanceOf(ResponseValidationError);
   });
 
+  it('pins total as the item count of this page, never a grand total', async () => {
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({
+        code: '0000',
+        message: 'success',
+        data: {
+          data: [GALLERY, { ...GALLERY, id: 2 }, { ...GALLERY, id: 3 }],
+          total: 3,
+          page: 2,
+          pageSize: 3,
+        },
+      }),
+    );
+
+    const result = await fetchGalleryList(
+      { page: 2, pageSize: 3 },
+      { fetch: fetchImpl },
+    );
+
+    expect(result.data).toHaveLength(3);
+    expect(result.total).toBe(result.data.length);
+    expect(result).not.toHaveProperty('totalPages');
+  });
+
   it('throws BackendUrlMissingError when BACKEND_API_URL is absent', async () => {
     delete process.env.BACKEND_API_URL;
     const fetchImpl = makeFetch(() => jsonResponse({}));

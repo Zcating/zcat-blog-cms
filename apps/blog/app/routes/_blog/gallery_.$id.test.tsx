@@ -16,7 +16,7 @@ vi.mock('@blog/server/gallery', async () => {
 
 // --- import after mocks ---
 
-import { loader } from './gallery_.$id';
+import { Route, loader } from './gallery_.$id';
 
 const GALLERY_DETAIL = {
   id: 3,
@@ -83,5 +83,10 @@ describe('route loader: /_blog/gallery/$id', () => {
       isNotFound: true,
     });
     expect(getGalleryDetailMock).not.toHaveBeenCalled();
+  });
+
+  it('wires both boundaries, so a backend failure cannot fall through to the root error screen', () => {
+    expect(Route.options.notFoundComponent).toBeTypeOf('function');
+    expect(Route.options.errorComponent).toBeTypeOf('function');
   });
 });

@@ -67,6 +67,7 @@ describe('route loader: /_blog/gallery', () => {
     const result = await loader();
 
     expect(result.pagination.total).toBe(2);
+    expect(result.pagination.total).toBe(result.pagination.data.length);
     expect(result.pagination).not.toHaveProperty('totalPages');
   });
 

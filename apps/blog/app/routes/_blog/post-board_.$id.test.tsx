@@ -79,17 +79,36 @@ describe('route loader: /_blog/post-board/$id', () => {
     expect(getArticleDetailMock).not.toHaveBeenCalled();
   });
 
-  it('lets the backend error envelope for a missing article reach the route error boundary', async () => {
+  it('turns the backend missing-article envelope into a not-found, not a generic error', async () => {
     getArticleDetailMock.mockRejectedValue(
       new ApiErrorException({
         _tag: 'DatabaseError',
-        message: '文章不存在-未找到',
+        message: '文章不存在',
       }),
     );
 
-    await expect(loader({ params: { id: '999' } })).rejects.toMatchObject({
-      name: 'ApiErrorException',
-    });
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toMatchObject({ isNotFound: true });
+    expect(error).not.toBeInstanceOf(ApiErrorException);
     expect(getArticleDetailMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves other backend failures as errors, so a real database fault is not masked as a 404', async () => {
+    getArticleDetailMock.mockRejectedValue(
+      new ApiErrorException({
+        _tag: 'DatabaseError',
+        message: '数据库异常',
+      }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiErrorException);
+    expect(error).not.toMatchObject({ isNotFound: true });
   });
 });
