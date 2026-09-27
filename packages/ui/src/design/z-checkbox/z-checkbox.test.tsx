@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -34,7 +34,11 @@ describe('ZCheckbox', () => {
 
 const TermsForm = createZForm({ agreed: zod.boolean() });
 
-function TermsFormHarness() {
+function TermsFormHarness({
+  injected,
+}: {
+  injected?: Record<string, unknown>;
+}) {
   const form = TermsForm.useForm({
     onSubmit: () => {},
     defaultValues: { agreed: false },
@@ -43,7 +47,10 @@ function TermsFormHarness() {
   return (
     <TermsForm form={form}>
       <TermsForm.Item label="同意条款" name="agreed">
-        <ZCheckbox data-testid="agreed" />
+        <ZCheckbox
+          data-testid="agreed"
+          {...(injected as unknown as React.ComponentProps<typeof ZCheckbox>)}
+        />
       </TermsForm.Item>
       <output data-testid="value">
         {String(form.instance.watch('agreed'))}
@@ -62,6 +69,71 @@ describe('ZCheckbox 表单字段容器内的值级变更通道', () => {
 
     expect(screen.getByTestId('value')).toHaveTextContent('true');
   });
+
+  it('注入的 DOM 事件级 onInput 不会被转发，值级通道仍然收到值', async () => {
+    const domChannel = vi.fn();
+    render(<TermsFormHarness injected={{ onInput: domChannel }} />);
+
+    await userEvent.click(screen.getByTestId('agreed'));
+    expect(screen.getByTestId('value')).toHaveTextContent('true');
+
+    fireEvent.input(screen.getByTestId('agreed'));
+    expect(domChannel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ZCheckbox 通道归属', () => {
+  it('调用方传入的 checked 不能覆盖组件自己的受控值', () => {
+    const injected = {
+      checked: true,
+    } as unknown as React.ComponentProps<typeof ZCheckbox>;
+    render(<ZCheckbox data-testid="cb" value={false} {...injected} />);
+
+    const cb = screen.getByTestId('cb');
+    expect(cb.getAttribute('data-state')).toBe('unchecked');
+  });
+
+  it('调用方传入的 onCheckedChange 不能覆盖组件自己的值级通道', async () => {
+    const onValueChange = vi.fn();
+    const domChannel = vi.fn();
+    const injected = {
+      onCheckedChange: domChannel,
+    } as unknown as React.ComponentProps<typeof ZCheckbox>;
+    render(
+      <ZCheckbox
+        data-testid="cb"
+        onValueChange={onValueChange}
+        {...injected}
+      />,
+    );
+
+    await userEvent.click(screen.getByTestId('cb'));
+
+    expect(onValueChange).toHaveBeenCalledWith(true);
+    expect(domChannel).not.toHaveBeenCalled();
+  });
+
+  it('焦点通道 onBlur 仍然透传到 DOM', async () => {
+    const onBlur = vi.fn();
+    render(<ZCheckbox data-testid="cb" onBlur={onBlur} />);
+
+    await userEvent.click(screen.getByTestId('cb'));
+    await userEvent.tab();
+
+    expect(onBlur).toHaveBeenCalled();
+  });
+
+  it('运行时传入的 onInput 被剔除，不会落到 DOM 上', () => {
+    const domChannel = vi.fn();
+    const injected = {
+      onInput: domChannel,
+    } as unknown as React.ComponentProps<typeof ZCheckbox>;
+    render(<ZCheckbox data-testid="cb" {...injected} />);
+
+    fireEvent.input(screen.getByTestId('cb'));
+
+    expect(domChannel).not.toHaveBeenCalled();
+  });
 });
 
 describe('ZCheckbox 公共 props', () => {
@@ -69,8 +141,17 @@ describe('ZCheckbox 公共 props', () => {
     expectTypeOf<React.ComponentProps<typeof ZCheckbox>>().not.toHaveProperty(
       'onChange',
     );
+    expectTypeOf<React.ComponentProps<typeof ZCheckbox>>().not.toHaveProperty(
+      'onInput',
+    );
     expectTypeOf<React.ComponentProps<typeof ZCheckbox>>().toHaveProperty(
       'onValueChange',
+    );
+  });
+
+  it('保留焦点通道 onBlur', () => {
+    expectTypeOf<React.ComponentProps<typeof ZCheckbox>>().toHaveProperty(
+      'onBlur',
     );
   });
 });
