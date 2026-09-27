@@ -151,4 +151,38 @@ describe('route search validation: /_blog/post-board', () => {
       data: { page: 2, pageSize: 10, order: 'latest' },
     });
   });
+
+  it('accepts a mistyped ?page= from a real URL and falls back to page 1 instead of throwing a search param error', async () => {
+    const search = parseRealUrl('?page=not-a-page');
+    expect(typeof search.page).toBe('string');
+
+    expect(() => validateSearch(search)).not.toThrow();
+    const validated = validateSearch(search);
+    expect(validated.page).toBeUndefined();
+
+    const result = await loader({ search: { page: validated.page } });
+
+    expect(result.page).toBe(1);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 10, order: 'latest' },
+    });
+  });
+
+  it('admits a zero or negative ?page= and lets the loader sanitiser clamp it to page 1', async () => {
+    const zero = parseRealUrl('?page=0');
+    const negative = parseRealUrl('?page=-3');
+    expect(zero.page).toBe(0);
+    expect(negative.page).toBe(-3);
+
+    expect(() => validateSearch(zero)).not.toThrow();
+    expect(() => validateSearch(negative)).not.toThrow();
+    expect(validateSearch(zero).page).toBe(0);
+    expect(validateSearch(negative).page).toBe(-3);
+
+    expect((await loader({ search: { page: 0 } })).page).toBe(1);
+    expect((await loader({ search: { page: -3 } })).page).toBe(1);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 10, order: 'latest' },
+    });
+  });
 });

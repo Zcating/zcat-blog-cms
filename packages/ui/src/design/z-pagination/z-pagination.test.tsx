@@ -66,4 +66,30 @@ describe('ZPagination', () => {
 
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
+
+  it('renders the control as soon as a second page exists, so the single page case below is the exception', () => {
+    render(<ZPagination page={1} totalPages={2} />);
+
+    expect(screen.getByLabelText('Go to next page')).toBeInTheDocument();
+    expect(screen.getByLabelText('Go to previous page')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('renders no paging control at all when every result fits on a single page', () => {
+    const { container } = render(<ZPagination page={1} totalPages={1} />);
+
+    expect(screen.queryByLabelText('Go to next page')).toBeNull();
+    expect(screen.queryByLabelText('Go to previous page')).toBeNull();
+    expect(screen.queryByText('1')).toBeNull();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders no paging control when there is nothing to page through', () => {
+    const { container } = render(<ZPagination page={1} totalPages={0} />);
+
+    expect(screen.queryByLabelText('Go to next page')).toBeNull();
+    expect(screen.queryByLabelText('Go to previous page')).toBeNull();
+    expect(container).toBeEmptyDOMElement();
+  });
 });

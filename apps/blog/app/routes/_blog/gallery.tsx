@@ -17,10 +17,8 @@ import { getGalleryList } from '@blog/server/gallery';
 import type { Gallery } from '@blog/server/gallery/schemas';
 
 const gallerySearchSchema = z.looseObject({
-  page: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().optional().catch(undefined),
 });
-
-type GallerySearch = z.infer<typeof gallerySearchSchema>;
 
 interface GalleryLoaderArgs {
   search: { page?: string | number };
@@ -90,13 +88,11 @@ function GalleryPage() {
             )}
           />
         </StaggerReveal>
-        {pagination.totalPages > 1 && (
-          <ZPagination
-            page={page}
-            totalPages={pagination.totalPages}
-            onPageChange={goToPage}
-          />
-        )}
+        <ZPagination
+          page={page}
+          totalPages={pagination.totalPages}
+          onPageChange={goToPage}
+        />
       </ZView>
     </ZView>
   );

@@ -9,7 +9,7 @@ import { getArticleList } from '@blog/server/article';
 const SITE = 'https://blog.zcat.example';
 
 const postBoardSearchSchema = z.looseObject({
-  page: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().optional().catch(undefined),
 });
 
 interface PostBoardLoaderArgs {

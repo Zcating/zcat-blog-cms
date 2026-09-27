@@ -16,7 +16,25 @@ vi.mock('@blog/server/gallery', async () => {
 
 // --- import after mocks ---
 
-import { loader } from './gallery';
+import { defaultParseSearch } from '@tanstack/react-router';
+
+import { Route, loader } from './gallery';
+
+interface GallerySearchParams {
+  page?: number;
+}
+
+function parseRealUrl(search: string): Record<string, string | number> {
+  return defaultParseSearch(search) as Record<string, string | number>;
+}
+
+function validateSearch(search: Record<string, unknown>): GallerySearchParams {
+  const schema = Route.options.validateSearch;
+  if (schema === undefined || !('parse' in schema)) {
+    throw new Error('/_blog/gallery must declare an object validateSearch');
+  }
+  return schema.parse(search) as GallerySearchParams;
+}
 
 const GALLERY_LIST = {
   data: [
@@ -135,5 +153,61 @@ describe('route loader: /_blog/gallery', () => {
       data: { page: 9 },
     });
     expect(result.page).toBe(4);
+  });
+});
+
+describe('route search validation: /_blog/gallery', () => {
+  beforeEach(() => {
+    getGalleryListMock.mockReset();
+    getGalleryListMock.mockResolvedValue(GALLERY_LIST);
+  });
+
+  it('accepts a mistyped ?page= from a real URL and falls back to page 1 instead of throwing a search param error', async () => {
+    const search = parseRealUrl('?page=not-a-page');
+    expect(typeof search.page).toBe('string');
+
+    expect(() => validateSearch(search)).not.toThrow();
+    const validated = validateSearch(search);
+    expect(validated.page).toBeUndefined();
+
+    const result = await loader({ search: { page: validated.page } });
+
+    expect(result.page).toBe(1);
+    expect(getGalleryListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1 },
+    });
+  });
+
+  it('admits a zero or negative ?page= and lets the loader sanitiser clamp it to page 1', async () => {
+    const zero = parseRealUrl('?page=0');
+    const negative = parseRealUrl('?page=-3');
+    expect(zero.page).toBe(0);
+    expect(negative.page).toBe(-3);
+
+    expect(() => validateSearch(zero)).not.toThrow();
+    expect(() => validateSearch(negative)).not.toThrow();
+    expect(validateSearch(zero).page).toBe(0);
+    expect(validateSearch(negative).page).toBe(-3);
+
+    expect((await loader({ search: { page: 0 } })).page).toBe(1);
+    expect((await loader({ search: { page: -3 } })).page).toBe(1);
+    expect(getGalleryListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1 },
+    });
+  });
+
+  it('still serves the requested page for a numeric ?page= the router parses out of a real URL', async () => {
+    const search = parseRealUrl('?page=3');
+    expect(search.page).toBe(3);
+
+    const validated = validateSearch(search);
+    expect(validated.page).toBe(3);
+
+    const result = await loader({ search: { page: validated.page } });
+
+    expect(result.page).toBe(3);
+    expect(getGalleryListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 3 },
+    });
   });
 });

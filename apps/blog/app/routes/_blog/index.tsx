@@ -31,7 +31,7 @@ const SORT_OPTIONS = [
 ] as CommonOption<Order>[];
 
 const homeSearchSchema = z.looseObject({
-  page: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().optional().catch(undefined),
   order: z.enum(['latest', 'oldest']).optional(),
 });
 
