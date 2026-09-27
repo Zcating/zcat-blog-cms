@@ -41,6 +41,22 @@ const sidebarOptions: ZSidebarOption[] = [
         label: '侧边栏',
         value: DOCUMENT_CONFIGURES['z-sidebar'].to,
       },
+      {
+        label: '折叠面板',
+        value: DOCUMENT_CONFIGURES['z-collapsible'].to,
+      },
+      {
+        label: '抽屉',
+        value: DOCUMENT_CONFIGURES['z-drawer'].to,
+      },
+      {
+        label: '栅格',
+        value: DOCUMENT_CONFIGURES['z-grid'].to,
+      },
+      {
+        label: '树形视图',
+        value: DOCUMENT_CONFIGURES['z-tree'].to,
+      },
     ],
   },
   {
@@ -48,8 +64,20 @@ const sidebarOptions: ZSidebarOption[] = [
     icon: FormInputIcon,
     children: [
       {
+        label: '输入框',
+        value: DOCUMENT_CONFIGURES['z-input'].to,
+      },
+      {
         label: '文本域',
         value: DOCUMENT_CONFIGURES['z-textarea'].to,
+      },
+      {
+        label: '复选框',
+        value: DOCUMENT_CONFIGURES['z-checkbox'].to,
+      },
+      {
+        label: '切换组',
+        value: DOCUMENT_CONFIGURES['z-toggle-group'].to,
       },
       {
         label: '选择器',
@@ -62,6 +90,14 @@ const sidebarOptions: ZSidebarOption[] = [
       {
         label: '日期选择器',
         value: DOCUMENT_CONFIGURES['z-date-picker'].to,
+      },
+      {
+        label: '表单',
+        value: DOCUMENT_CONFIGURES['z-form'].to,
+      },
+      {
+        label: '图片上传',
+        value: DOCUMENT_CONFIGURES['z-image-upload'].to,
       },
     ],
   },
@@ -80,6 +116,10 @@ const sidebarOptions: ZSidebarOption[] = [
       {
         label: '瀑布流',
         value: DOCUMENT_CONFIGURES['z-waterfall'].to,
+      },
+      {
+        label: '二维码',
+        value: DOCUMENT_CONFIGURES['z-qrcode'].to,
       },
       {
         label: 'Markdown',
