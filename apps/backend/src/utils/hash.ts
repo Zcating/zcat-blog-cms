@@ -1,5 +1,10 @@
 import * as crypto from 'crypto';
 
+// This list *is* the checksum contract: exactly these fields, in this order, and
+// nothing else. Adding a field here changes what the client must hash, so it is a
+// breaking change to the wire format, not a local refactor. It is a plain md5
+// digest with no secret, so it detects transport corruption and field drift only —
+// it is not authentication and proves nothing about who sent the request.
 const CHECKSUMMED_PAYLOAD_FIELDS = [
   'browser',
   'device',

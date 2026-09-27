@@ -36,20 +36,25 @@ function toError(err: unknown): Error {
  * allow — while still delegating to pino for structured output and colors.
  */
 export const logger = {
-  info(msg: string, ...args: unknown[]): void {
-    (pinoLogger.info as (...args: unknown[]) => void)(msg, ...args);
+  info(...args: unknown[]): void {
+    (pinoLogger.info as (...args: unknown[]) => void)(...args);
   },
   warn(...args: unknown[]): void {
     (pinoLogger.warn as (...args: unknown[]) => void)(...args);
   },
-  debug(msg: string, ...args: unknown[]): void {
-    (pinoLogger.debug as (...args: unknown[]) => void)(msg, ...args);
+  debug(...args: unknown[]): void {
+    (pinoLogger.debug as (...args: unknown[]) => void)(...args);
   },
-  error(msg: string, err?: unknown): void {
-    if (err !== undefined) {
-      pinoLogger.error(toError(err), msg);
-    } else {
-      pinoLogger.error(msg);
+  error(...args: unknown[]): void {
+    const [first, second] = args;
+    if (typeof first !== 'string') {
+      (pinoLogger.error as (...args: unknown[]) => void)(...args);
+      return;
     }
+    if (second === undefined) {
+      pinoLogger.error(first);
+      return;
+    }
+    pinoLogger.error(toError(second), first);
   },
 };

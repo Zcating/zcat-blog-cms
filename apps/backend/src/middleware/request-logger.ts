@@ -9,7 +9,6 @@ const SENSITIVE_KEYS = new Set([
   'accessToken',
   'secret',
   'authorization',
-  'hmac',
 ]);
 
 function maskSensitiveFields(value: unknown): unknown {
@@ -120,9 +119,9 @@ export const requestLogger = createMiddleware(async (c, next) => {
       user,
     });
     if (status >= 500) {
-      logger.error(`${method} ${path}`, logData);
+      logger.error(logData, `${method} ${path}`);
     } else {
-      logger.warn(`${method} ${path}`, logData);
+      logger.warn(logData, `${method} ${path}`);
     }
     throw err;
   }
@@ -150,10 +149,10 @@ export const requestLogger = createMiddleware(async (c, next) => {
   });
 
   if (status >= 500) {
-    logger.error(`${method} ${path}`, logData);
+    logger.error(logData, `${method} ${path}`);
   } else if (status >= 400) {
-    logger.warn(`${method} ${path}`, logData);
+    logger.warn(logData, `${method} ${path}`);
   } else {
-    logger.info(`${method} ${path}`, logData);
+    logger.info(logData, `${method} ${path}`);
   }
 });

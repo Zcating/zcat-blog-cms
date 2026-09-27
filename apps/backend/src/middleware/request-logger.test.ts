@@ -58,13 +58,16 @@ describe('requestLogger', () => {
 
     expect(res.status).toBe(200);
     expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info).toHaveBeenCalledWith('GET /success', {
-      method: 'GET',
-      path: '/success',
-      status: 200,
-      duration: expect.any(Number),
-      response: { ok: true },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/success',
+        status: 200,
+        duration: expect.any(Number),
+        response: { ok: true },
+      },
+      'GET /success',
+    );
   });
 
   it('logs info for POST requests', async () => {
@@ -73,13 +76,16 @@ describe('requestLogger', () => {
     const res = await app.request('/success', { method: 'POST' });
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('POST /success', {
-      method: 'POST',
-      path: '/success',
-      status: 200,
-      duration: expect.any(Number),
-      response: { ok: true },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'POST',
+        path: '/success',
+        status: 200,
+        duration: expect.any(Number),
+        response: { ok: true },
+      },
+      'POST /success',
+    );
   });
 
   it('logs warn for 4xx responses', async () => {
@@ -89,13 +95,16 @@ describe('requestLogger', () => {
 
     expect(res.status).toBe(404);
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-    expect(mockLogger.warn).toHaveBeenCalledWith('GET /not-found', {
-      method: 'GET',
-      path: '/not-found',
-      status: 404,
-      duration: expect.any(Number),
-      response: { error: 'not found' },
-    });
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/not-found',
+        status: 404,
+        duration: expect.any(Number),
+        response: { error: 'not found' },
+      },
+      'GET /not-found',
+    );
   });
 
   it('logs error for 5xx responses', async () => {
@@ -105,12 +114,15 @@ describe('requestLogger', () => {
 
     expect(res.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    expect(mockLogger.error).toHaveBeenCalledWith('GET /server-error', {
-      method: 'GET',
-      path: '/server-error',
-      status: 500,
-      duration: expect.any(Number),
-    });
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/server-error',
+        status: 500,
+        duration: expect.any(Number),
+      },
+      'GET /server-error',
+    );
   });
 
   it('includes user info in log data when available', async () => {
@@ -119,15 +131,18 @@ describe('requestLogger', () => {
     const res = await app.request('/auth-success');
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('GET /auth-success', {
-      method: 'GET',
-      path: '/auth-success',
-      status: 200,
-      duration: expect.any(Number),
-      userId: 1,
-      username: 'admin',
-      response: { ok: true },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/auth-success',
+        status: 200,
+        duration: expect.any(Number),
+        userId: 1,
+        username: 'admin',
+        response: { ok: true },
+      },
+      'GET /auth-success',
+    );
   });
 
   it('logs path params', async () => {
@@ -136,14 +151,17 @@ describe('requestLogger', () => {
     const res = await app.request('/users/42');
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('GET /users/42', {
-      method: 'GET',
-      path: '/users/42',
-      status: 200,
-      duration: expect.any(Number),
-      params: { id: '42' },
-      response: { id: '42', name: 'test' },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/users/42',
+        status: 200,
+        duration: expect.any(Number),
+        params: { id: '42' },
+        response: { id: '42', name: 'test' },
+      },
+      'GET /users/42',
+    );
   });
 
   it('logs query params', async () => {
@@ -152,14 +170,17 @@ describe('requestLogger', () => {
     const res = await app.request('/search?q=hello');
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('GET /search', {
-      method: 'GET',
-      path: '/search',
-      status: 200,
-      duration: expect.any(Number),
-      query: { q: 'hello' },
-      response: { q: 'hello', results: [] },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'GET',
+        path: '/search',
+        status: 200,
+        duration: expect.any(Number),
+        query: { q: 'hello' },
+        response: { q: 'hello', results: [] },
+      },
+      'GET /search',
+    );
   });
 
   it('logs JSON request body', async () => {
@@ -172,14 +193,17 @@ describe('requestLogger', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('POST /data', {
-      method: 'POST',
-      path: '/data',
-      status: 200,
-      duration: expect.any(Number),
-      body: { title: 'foo', content: 'bar' },
-      response: { received: { title: 'foo', content: 'bar' } },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'POST',
+        path: '/data',
+        status: 200,
+        duration: expect.any(Number),
+        body: { title: 'foo', content: 'bar' },
+        response: { received: { title: 'foo', content: 'bar' } },
+      },
+      'POST /data',
+    );
   });
 
   it('masks sensitive fields in body and response', async () => {
@@ -192,35 +216,53 @@ describe('requestLogger', () => {
         username: 'admin',
         password: 'my-secret',
         token: 'jwt-token',
-        hmac: 'some-hmac',
         nested: { password: 'nested-pwd' },
       }),
     });
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('POST /sensitive', {
-      method: 'POST',
-      path: '/sensitive',
-      status: 200,
-      duration: expect.any(Number),
-      body: {
-        username: 'admin',
-        password: '***',
-        token: '***',
-        hmac: '***',
-        nested: { password: '***' },
-      },
-      response: {
-        ok: true,
-        data: {
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'POST',
+        path: '/sensitive',
+        status: 200,
+        duration: expect.any(Number),
+        body: {
           username: 'admin',
           password: '***',
           token: '***',
-          hmac: '***',
           nested: { password: '***' },
         },
+        response: {
+          ok: true,
+          data: {
+            username: 'admin',
+            password: '***',
+            token: '***',
+            nested: { password: '***' },
+          },
+        },
       },
+      'POST /sensitive',
+    );
+  });
+
+  it('logs a body key named hmac verbatim, because a payload checksum is not a secret', async () => {
+    const app = createApp();
+
+    const res = await app.request('/sensitive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pagePath: '/posts/x', hmac: 'f2db8c88cc7b567' }),
     });
+
+    expect(res.status).toBe(200);
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: { pagePath: '/posts/x', hmac: 'f2db8c88cc7b567' },
+      }),
+      'POST /sensitive',
+    );
   });
 
   it('handles non-JSON body gracefully', async () => {
@@ -233,12 +275,15 @@ describe('requestLogger', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(mockLogger.info).toHaveBeenCalledWith('POST /success', {
-      method: 'POST',
-      path: '/success',
-      status: 200,
-      duration: expect.any(Number),
-      response: { ok: true },
-    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      {
+        method: 'POST',
+        path: '/success',
+        status: 200,
+        duration: expect.any(Number),
+        response: { ok: true },
+      },
+      'POST /success',
+    );
   });
 });

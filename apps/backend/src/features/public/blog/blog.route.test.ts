@@ -27,8 +27,11 @@ vi.mock('../../../common/statistic-service', () => ({
   recordVisitor: mockRecordVisitor,
 }));
 
+import { logger } from '@backend/utils';
 import blogRoutes from './blog.route';
 import { errorHandler } from '../../../middleware/error-handler';
+
+const capturedInfoArgs: unknown[][] = [];
 
 const createApp = () => {
   const app = new Hono();
@@ -508,6 +511,28 @@ describe('blogRoutes', () => {
       const body = await res.json();
 
       expect(body.code).toBe('0000');
+    });
+
+    it('logs the visited page path in the emitted log line', async () => {
+      mockRecordVisitor.mockReturnValue(Effect.succeed(undefined));
+      const infoSpy = vi
+        .spyOn(logger, 'info')
+        .mockImplementation((...args: unknown[]) => {
+          capturedInfoArgs.push(args);
+        });
+
+      const res = await createApp().request('/visitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pagePath: '/posts/logged' }),
+      });
+
+      expect((await res.json()).code).toBe('0000');
+      expect(capturedInfoArgs).toEqual([
+        [{ pagePath: '/posts/logged' }, '记录博客访客:'],
+      ]);
+
+      infoSpy.mockRestore();
     });
   });
 

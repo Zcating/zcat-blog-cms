@@ -19,7 +19,7 @@ blogRoutes.get(
     try {
       const query = c.req.valid('query');
 
-      logger.info('获取文章列表, query:', query);
+      logger.info({ query }, '获取文章列表, query:');
 
       const result = await appRuntime.runPromise(
         blogService.getArticleList(
@@ -29,7 +29,7 @@ blogRoutes.get(
         ),
       );
 
-      logger.info('获取文章列表成功, data:', result);
+      logger.info({ result }, '获取文章列表成功, data:');
 
       return c.json(
         createResult({
@@ -83,7 +83,7 @@ blogRoutes.get(
     try {
       const query = c.req.valid('query');
 
-      logger.info('获取相册列表, query:', query);
+      logger.info({ query }, '获取相册列表, query:');
 
       const result = await appRuntime.runPromise(
         blogService.getGalleryList(query.page, query.pageSize),
@@ -108,7 +108,7 @@ blogRoutes.get('/gallery/:id', async (c) => {
   try {
     const id = c.req.param('id');
 
-    logger.info('获取相册详情, id:', id);
+    logger.info({ id }, '获取相册详情, id:');
 
     const result = await appRuntime.runPromise(
       blogService.getGalleryDetail(id),
@@ -155,7 +155,7 @@ blogRoutes.post(
     try {
       const visitorDto = c.req.valid('json');
 
-      logger.info('记录博客访客:', visitorDto.pagePath);
+      logger.info({ pagePath: visitorDto.pagePath }, '记录博客访客:');
 
       const ip =
         c.req.header('x-forwarded-for') ||
