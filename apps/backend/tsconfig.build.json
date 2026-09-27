@@ -6,6 +6,7 @@
     "test",
     "dist",
     "scripts",
+    "src/deploy",
     "**/*.spec.ts",
     "**/*.test.ts"
   ]

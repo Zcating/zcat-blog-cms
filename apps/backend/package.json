@@ -5,10 +5,12 @@
   "description": "",
   "license": "UNLICENSED",
   "author": "",
+  "type": "module",
   "scripts": {
     "dev": "npx dotenv -e .env -- tsx watch src/main.ts",
     "dev:fresh": "node ../../scripts/kill-port.mjs 9090 && pnpm run dev",
-    "build": "pnpm run db:generate:prod && tsc -p tsconfig.build.json",
+    "start": "node dist/src/main.js",
+    "build": "pnpm run db:generate:prod && tsc -p tsconfig.build.json && node scripts/resolve-dist-specifiers.mjs",
     "build:dev": "pnpm run db:generate:dev && tsc -p tsconfig.build.json",
     "lint": "oxlint src --fix",
     "test": "vitest run",

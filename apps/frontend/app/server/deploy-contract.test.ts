@@ -1,148 +1,98 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
+import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  HOST_PROVIDED_ENV,
+  TEMPLATE_ONLY_KEYS,
+  readTemplateVariables,
+  scanEnvInventory,
+} from '../../../backend/src/deploy/env-inventory';
+
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
-const TEMPLATE = join(REPO_ROOT, '.env.deploy.example');
-const REAL_DEPLOY_FILES = [
-  join(REPO_ROOT, '.env.deploy'),
-  join(REPO_ROOT, '.env.deploy.dev'),
-];
-
-const SKIPPED_DIRECTORIES = new Set([
-  'node_modules',
-  'dist',
-  'build',
-  'coverage',
-  '.nyc_output',
-  '.output',
-  '.tanstack',
-  '.nitro',
-  '.vite',
-  '.git',
-  '.worktrees',
-  'worktrees',
-  'playwright-report',
-  'test-results',
-]);
-
-const SCANNED_EXTENSIONS = new Set([
-  '.ts',
-  '.tsx',
-  '.mts',
-  '.cts',
-  '.js',
-  '.jsx',
-  '.mjs',
-  '.cjs',
-]);
-
-const NOT_DEPLOYED_RUNTIME = /\.(?:test|spec|config)\.[^.]+$|\.d\.ts$/;
+const TEMPLATE = '.env.deploy.example';
 
 const SECRET_KEY_PATTERN = /PASSWORD|SECRET|KEY|TOKEN|CREDENTIAL/;
+const PLACEHOLDERS = new Set(['', 'change-me']);
 
-const RUNTIME_READ_PATTERNS = [
-  /\bprocess\.env\.([A-Za-z_][A-Za-z0-9_]*)/g,
-  /\bimport\.meta\.env\.(VITE_[A-Za-z0-9_]+)/g,
-];
+const inventory = scanEnvInventory(REPO_ROOT);
+const declared = readTemplateVariables(REPO_ROOT, TEMPLATE);
+const contractNames = inventory.reads
+  .map((read) => read.name)
+  .filter((name) => !HOST_PROVIDED_ENV.has(name));
 
-function collectSourceFiles(directory: string): string[] {
-  const files: string[] = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (!SKIPPED_DIRECTORIES.has(entry.name)) {
-        files.push(...collectSourceFiles(join(directory, entry.name)));
-      }
-      continue;
-    }
-    if (!SCANNED_EXTENSIONS.has(extname(entry.name))) continue;
-    if (NOT_DEPLOYED_RUNTIME.test(entry.name)) continue;
-    files.push(join(directory, entry.name));
-  }
-  return files;
-}
-
-function deriveRuntimeVariables(): Set<string> {
-  const variables = new Set<string>();
-  for (const file of collectSourceFiles(REPO_ROOT)) {
-    const source = readFileSync(file, 'utf8');
-    for (const pattern of RUNTIME_READ_PATTERNS) {
-      for (const match of source.matchAll(pattern)) {
-        const name = match[1];
-        if (name !== undefined) variables.add(name);
-      }
-    }
-  }
-  return variables;
-}
-
-function readAssignments(file: string): Array<[string, string]> {
-  return readFileSync(file, 'utf8')
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'))
-    .map((line) => {
-      const separator = line.indexOf('=');
-      return [
-        line.slice(0, separator).trim(),
-        line.slice(separator + 1).trim(),
-      ] as [string, string];
-    })
-    .filter(([key]) => key.length > 0);
-}
-
-function declaredVariables(): Set<string> {
-  if (!existsSync(TEMPLATE)) return new Set();
-  return new Set(readAssignments(TEMPLATE).map(([key]) => key));
-}
-
-function secretValuesInRealDeployFiles(): Array<{
-  file: string;
-  key: string;
-  value: string;
-}> {
-  const found: Array<{ file: string; key: string; value: string }> = [];
-  for (const file of REAL_DEPLOY_FILES) {
-    if (!existsSync(file)) continue;
-    for (const [key, value] of readAssignments(file)) {
-      if (!SECRET_KEY_PATTERN.test(key)) continue;
-      if (value.length === 0) continue;
-      found.push({ file, key, value });
-    }
-  }
-  return found;
+function describeUnresolved(): string {
+  return inventory.unresolved
+    .map(
+      (entry) =>
+        `${entry.file}:${entry.line} ${entry.reason} -> ${entry.manualStep}`,
+    )
+    .join('\n');
 }
 
 describe('workspace deployment contract', () => {
-  it('derives a non-empty set of runtime variables from the code', () => {
-    const derived = [...deriveRuntimeVariables()].sort();
+  it('derives a non-empty set of runtime variables spanning every app and the packages', () => {
+    const owners = new Set(
+      inventory.reads.flatMap((read) =>
+        read.sites.map((site) => site.file.split('/').slice(0, 2).join('/')),
+      ),
+    );
 
-    expect(derived.length).toBeGreaterThan(0);
-    expect(derived).toContain('BACKEND_API_URL');
-    expect(derived).toContain('VITE_API_URL');
+    expect(inventory.reads.length).toBeGreaterThan(0);
+    for (const owner of [
+      'apps/backend',
+      'apps/blog',
+      'apps/frontend',
+      'packages/ui',
+    ]) {
+      expect([...owners]).toContain(owner);
+    }
   });
 
-  it('declares in .env.deploy.example every runtime variable the code reads', () => {
-    const derived = [...deriveRuntimeVariables()].sort();
-    const declared = declaredVariables();
-    const undeclared = derived.filter((name) => !declared.has(name));
-
+  it('resolves every environment read the workspace performs, naming the manual step for any it cannot', () => {
     expect(
-      undeclared,
-      `runtime variables missing from .env.deploy.example: ${undeclared.join(', ')}`,
+      inventory.unresolved.map((entry) => `${entry.file}:${entry.line}`),
+      `environment reads this scan cannot derive:\n${describeUnresolved()}`,
     ).toEqual([]);
   });
 
-  it('leaks no real secret value from the deploy env files into .env.deploy.example', () => {
-    const template = readFileSync(TEMPLATE, 'utf8');
-    const leaked = secretValuesInRealDeployFiles()
-      .filter((entry) => template.includes(entry.value))
-      .map((entry) => `${entry.key} (from ${relative(REPO_ROOT, entry.file)})`);
+  it('declares in .env.deploy.example every runtime variable the code reads', () => {
+    const undeclared = contractNames.filter((name) => !declared.has(name));
+
+    expect(
+      undeclared,
+      `runtime variables missing from ${TEMPLATE}: ${undeclared.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('declares in .env.deploy.example no variable that nothing reads', () => {
+    const orphans = [...declared.keys()].filter(
+      (key) => !contractNames.includes(key) && !TEMPLATE_ONLY_KEYS.has(key),
+    );
+
+    expect(
+      orphans,
+      `variables in ${TEMPLATE} that no code reads: ${orphans.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('redacts every secret-shaped value in .env.deploy.example, whether or not the real env files exist', () => {
+    const keys = [...declared.keys()].filter((key) =>
+      SECRET_KEY_PATTERN.test(key),
+    );
+
+    expect(
+      keys.length,
+      'no secret-shaped key is declared, so this assertion would be vacuous',
+    ).toBeGreaterThan(0);
+
+    const leaked = keys.filter(
+      (key) => !PLACEHOLDERS.has(declared.get(key) ?? ''),
+    );
 
     expect(
       leaked,
-      `real secret values present in .env.deploy.example: ${leaked.join(', ')}`,
+      `non-placeholder secret values in ${TEMPLATE}: ${leaked.join(', ')}`,
     ).toEqual([]);
   });
 });
