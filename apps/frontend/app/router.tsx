@@ -18,7 +18,13 @@ export function getRouter() {
   // `getRouter()` once per request; the browser calls it once per
   // page load. A module-scope client would leak state across
   // requests.
-  const queryClient = makeQueryClient();
+  //
+  // A 401 from any server function wipes the private cache and sends
+  // the user to the login page, exactly like the `_cms` guard does
+  // for an invalid session. The callback closes over `router`, which
+  // only exists once `createRouter` returns, so it is resolved lazily
+  // at the moment a 401 arrives — never at construction time.
+  const queryClient = makeQueryClient(() => router.navigate({ to: '/login' }));
 
   const router = createRouter({
     routeTree,

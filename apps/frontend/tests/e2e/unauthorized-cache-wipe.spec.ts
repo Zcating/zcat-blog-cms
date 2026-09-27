@@ -6,7 +6,7 @@ test.beforeEach(async ({ request }) => {
   await request.post(`${BACKEND}/api/test/reset`);
 });
 
-test('a server-side 401 on a private fetch empties the private cache before any navigation', async ({
+test('a server-side 401 on a private fetch empties the private cache and returns the user to the login page', async ({
   page,
   request,
 }) => {
@@ -35,9 +35,17 @@ test('a server-side 401 on a private fetch empties the private cache before any 
 
   await page.getByRole('button', { name: '编辑' }).click();
   await page.getByRole('button', { name: '保存' }).click();
-  await expect(page.getByTestId('user-info-error')).toHaveText('Unauthorized');
+
+  await expect(page).toHaveURL(/\/login(\?|$)/);
+  await expect(page.getByLabel('用户名')).toBeVisible();
+  await expect(page.getByText('个人资料')).toHaveCount(0);
 
   await request.post(`${BACKEND}/api/test/reject-token?value=false`);
+
+  await page.getByLabel('用户名').fill('user-b');
+  await page.getByLabel('密码').fill('secret-b');
+  await page.getByRole('button', { name: '登录' }).click();
+  await expect(page).toHaveURL(/\/dashboard(\?|$)/);
 
   await page.getByRole('link', { name: '文章管理' }).click();
   await expect(page).toHaveURL(/\/articles(\?|$)/);
@@ -49,13 +57,4 @@ test('a server-side 401 on a private fetch empties the private cache before any 
   await expect(page).toHaveURL(/\/login(\?|$)/);
 
   await request.post(`${BACKEND}/api/test/invalidate-auth?value=false`);
-  await page.getByLabel('用户名').fill('user-b');
-  await page.getByLabel('密码').fill('secret-b');
-  await page.getByRole('button', { name: '登录' }).click();
-  await expect(page).toHaveURL(/\/dashboard(\?|$)/);
-
-  await page.getByRole('link', { name: '文章管理' }).click();
-  await expect(page).toHaveURL(/\/articles(\?|$)/);
-  await expect(page.getByTestId('article-row-3')).toBeVisible();
-  await expect(page.getByText('Session B Only')).toBeVisible();
 });

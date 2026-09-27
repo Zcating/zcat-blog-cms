@@ -1,7 +1,8 @@
 /**
  * Locked requirement: an auth rejection from any private server
  * function must empty the private Query cache, for BOTH queries and
- * mutations, on BOTH death modes.
+ * mutations, on BOTH death modes, and must leave the user on the login
+ * route.
  *
  * Seam: the public `QueryClient` produced by `makeQueryClient()` and the
  * public Query / Mutation caches. The only thing mocked is the
@@ -47,6 +48,12 @@ vi.mock('@cms/server/users', () => ({
   updateCurrentUser: updateCurrentUserMock,
 }));
 
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { MutationObserver, type QueryClient } from '@tanstack/react-query';
 
 import { UnauthorizedError } from '../../server/auth-middleware';
@@ -383,6 +390,104 @@ describe('makeQueryClient — the real backend 401 body wipes the private cache'
     expect(client.getQueryCache().getAll()).toHaveLength(2);
     expect(client.getQueryData(['users', 'current'])).toEqual({
       name: 'Admin',
+    });
+  });
+});
+
+async function mountPrivatePage() {
+  const rootRoute = createRootRoute({});
+  const privateRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/private',
+  });
+  const loginRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/login',
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([privateRoute, loginRoute]),
+    history: createMemoryHistory({ initialEntries: ['/private'] }),
+  });
+  const client = makeQueryClient(() => router.navigate({ to: '/login' }));
+  await router.load();
+  return { client, router };
+}
+
+describe('makeQueryClient — a 401 lands the user on the login route', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('empties the cache and navigates to /login for the literal backend 401 body', async () => {
+    const { client, router } = await mountPrivatePage();
+    seedPrivateQueries(client);
+    expect(router.state.location.pathname).toBe('/private');
+
+    const apiError = envelopeToApiError(backendBody('ERR0002', 'Unauthorized'));
+    getCurrentUserMock.mockRejectedValue(
+      await apiErrorAcrossRpcBoundary(apiError),
+    );
+
+    await expect(
+      client.fetchQuery({
+        ...({
+          queryKey: ['users', 'current'],
+          queryFn: getCurrentUserMock,
+        } as const),
+        staleTime: 0,
+      }),
+    ).rejects.toEqual({ _tag: 'LoginError', message: 'Unauthorized' });
+
+    expect(client.getQueryCache().getAll()).toHaveLength(0);
+    await vi.waitFor(() => {
+      expect(router.state.location.pathname).toBe('/login');
+    });
+  });
+
+  it('keeps the cache and the current route for the literal backend 500 body', async () => {
+    const { client, router } = await mountPrivatePage();
+    seedPrivateQueries(client);
+
+    const apiError = envelopeToApiError(
+      backendBody('ERR0006', 'Internal Server Error'),
+    );
+    getCurrentUserMock.mockRejectedValue(
+      await apiErrorAcrossRpcBoundary(apiError),
+    );
+
+    await expect(
+      client.fetchQuery({
+        ...({
+          queryKey: ['users', 'current'],
+          queryFn: getCurrentUserMock,
+        } as const),
+        staleTime: 0,
+      }),
+    ).rejects.toEqual({
+      _tag: 'UnknownError',
+      message: 'Internal Server Error',
+    });
+
+    expect(client.getQueryCache().getAll()).toHaveLength(2);
+    await vi.waitFor(() => {
+      expect(router.state.location.pathname).toBe('/private');
+    });
+  });
+
+  it('keeps the cache and the current route when a private mutation fails for a non-auth reason', async () => {
+    const { client, router } = await mountPrivatePage();
+    seedPrivateQueries(client);
+    updateCurrentUserMock.mockRejectedValue(new Error('boom'));
+
+    const observer = new MutationObserver(client, {
+      mutationFn: (variables: unknown) =>
+        updateCurrentUserMock({ data: variables }),
+    });
+    await expect(observer.mutate({ name: 'Admin' })).rejects.toThrow('boom');
+
+    expect(client.getQueryCache().getAll()).toHaveLength(2);
+    await vi.waitFor(() => {
+      expect(router.state.location.pathname).toBe('/private');
     });
   });
 });

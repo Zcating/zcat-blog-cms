@@ -18,15 +18,18 @@ import { clearPrivateQueryCache } from './cache-helpers';
  * The `QueryCache` and `MutationCache` `onError` hooks are the reactive
  * half of the auth-failure wipe: a private server function that rejects
  * as unauthorized drops the whole cache, so no entry added before the
- * session died can survive it. The proactive half lives at the two
- * places a session changes without a failing query — the `_cms`
- * invalid-session redirect and the post-login navigation, which both
- * call `clearPrivateQueryCache` directly.
+ * session died can survive it, and then hands the user to `navigateToLogin`
+ * because a never-expiring JWT means a 401 is a dead session, not a
+ * transient one. The proactive half lives at the two places a session
+ * changes without a failing query — the `_cms` invalid-session redirect
+ * and the post-login navigation, which both call
+ * `clearPrivateQueryCache` directly and navigate themselves.
  */
-export function makeQueryClient(): QueryClient {
+export function makeQueryClient(navigateToLogin?: () => void): QueryClient {
   const clearCacheOnUnauthorized = (error: unknown) => {
     if (isUnauthorizedError(error)) {
       clearPrivateQueryCache(client);
+      navigateToLogin?.();
     }
   };
 
