@@ -12,25 +12,39 @@ slug: z-form
 ## 基础示例
 
 ```tsx
-import { z } from "zod";
-import { createZForm, ZInput } from "@zcat/ui";
+import { z } from 'zod';
+import { createZForm, ZInput, ZButton } from '@zcat/ui';
 
-const schema = z.object({ name: z.string().min(2) });
-const form = createZForm({ schema });
+const ProfileForm = createZForm({ name: z.string().min(2) });
 
-<form.Form>
-  <ZInput {...form.register("name")} />
-  <ZButton type="submit">提交</ZButton>
-</form.Form>
+function Profile() {
+  const form = ProfileForm.useForm({
+    defaultValues: { name: '' },
+    onSubmit: (values) => console.log(values),
+  });
+
+  return (
+    <ProfileForm form={form}>
+      <ProfileForm.Item name="name" label="名称">
+        <ZInput placeholder="请输入名称" />
+      </ProfileForm.Item>
+      <ZButton type="submit">提交</ZButton>
+    </ProfileForm>
+  );
+}
 ```
 
 ## 关键 Props
 
-| name | type | 说明 |
-| --- | --- | --- |
-| `schema` | `ZodSchema<T>` | 校验规则 |
-| `defaultValues` | `Partial<T>` | 初始值 |
-| `onSubmit` | `(v: T) => void \| Promise<void>` | 提交回调 |
+`ZForm` 自身只接收这三个 prop：
+
+| name        | type                | 说明                                    |
+| ----------- | ------------------- | --------------------------------------- |
+| `form`      | `UseZFormReturn<T>` | `ProfileForm.useForm()` 的返回值，必传  |
+| `className` | `string`            | 合并到最外层 `fieldset` 的类名          |
+| `children`  | `React.ReactNode`   | 表单内容，通常是一组 `ProfileForm.Item` |
+
+校验规则与初始值都不经过 `ZForm`：`createZForm` 接收字段 shape（或一个 `zod.ZodObject`），`defaultValues` 与 `onSubmit` 是 `ProfileForm.useForm()` 的选项而不是组件的 prop。
 
 ## 注意事项
 
