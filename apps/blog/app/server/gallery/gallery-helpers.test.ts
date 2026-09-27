@@ -65,7 +65,13 @@ describe('fetchGalleryList', () => {
       return jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [GALLERY], total: 1, page: 1, pageSize: 8 },
+        data: {
+          data: [GALLERY],
+          total: 23,
+          totalPages: 3,
+          page: 1,
+          pageSize: 8,
+        },
       });
     });
 
@@ -75,7 +81,8 @@ describe('fetchGalleryList', () => {
     );
 
     expect(result.data[0]?.cover?.url).toBe(PHOTO.url);
-    expect(result.total).toBe(1);
+    expect(result.total).toBe(23);
+    expect(result.totalPages).toBe(3);
     expect(capturedMethod).toBe('GET');
     expect(capturedUrl).toBe(
       'http://backend.local/api/blog/gallery?page=1&pageSize=8',
@@ -89,7 +96,7 @@ describe('fetchGalleryList', () => {
       return jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [], total: 0, page: 1, pageSize: 8 },
+        data: { data: [], total: 0, totalPages: 0, page: 1, pageSize: 8 },
       });
     });
 
@@ -108,6 +115,7 @@ describe('fetchGalleryList', () => {
         data: {
           data: [{ ...GALLERY, cover: null }],
           total: 1,
+          totalPages: 1,
           page: 1,
           pageSize: 8,
         },
@@ -129,42 +137,50 @@ describe('fetchGalleryList', () => {
     ).rejects.toBeInstanceOf(ApiErrorException);
   });
 
-  it('throws ResponseValidationError when totalPages is returned instead of total', async () => {
+  it('accepts the album list payload the backend now sends, which carries totalPages alongside total', async () => {
+    const payload = {
+      data: [GALLERY, { ...GALLERY, id: 2 }],
+      total: 7,
+      totalPages: 4,
+      page: 2,
+      pageSize: 2,
+    };
     const fetchImpl = makeFetch(() =>
-      jsonResponse({
-        code: '0000',
-        message: 'success',
-        data: { data: [], totalPages: 2, page: 1, pageSize: 8 },
-      }),
+      jsonResponse({ code: '0000', message: 'success', data: payload }),
     );
 
-    await expect(
-      fetchGalleryList(undefined, { fetch: fetchImpl }),
-    ).rejects.toBeInstanceOf(ResponseValidationError);
+    const result = await fetchGalleryList(
+      { page: 2, pageSize: 2 },
+      { fetch: fetchImpl },
+    );
+
+    expect(result).toEqual(payload);
   });
 
-  it('pins total as the item count of this page, never a grand total', async () => {
+  it('reports total as the grand total from the count query, not the length of this page', async () => {
     const fetchImpl = makeFetch(() =>
       jsonResponse({
         code: '0000',
         message: 'success',
         data: {
-          data: [GALLERY, { ...GALLERY, id: 2 }, { ...GALLERY, id: 3 }],
-          total: 3,
+          data: [GALLERY, { ...GALLERY, id: 2 }],
+          total: 7,
+          totalPages: 4,
           page: 2,
-          pageSize: 3,
+          pageSize: 2,
         },
       }),
     );
 
     const result = await fetchGalleryList(
-      { page: 2, pageSize: 3 },
+      { page: 2, pageSize: 2 },
       { fetch: fetchImpl },
     );
 
-    expect(result.data).toHaveLength(3);
-    expect(result.total).toBe(result.data.length);
-    expect(result).not.toHaveProperty('totalPages');
+    expect(result.data).toHaveLength(2);
+    expect(result.total).toBe(7);
+    expect(result.total).not.toBe(result.data.length);
+    expect(result.totalPages).toBe(4);
   });
 
   it('throws BackendUrlMissingError when BACKEND_API_URL is absent', async () => {
@@ -191,20 +207,33 @@ describe('fetchGalleryDetail', () => {
 
     const result = await fetchGalleryDetail({ id: '1' }, { fetch: fetchImpl });
 
-    expect(result?.photos).toHaveLength(2);
+    expect(result.photos).toHaveLength(2);
     expect(capturedUrl).toBe('http://backend.local/api/blog/gallery/1');
   });
 
-  it('throws ApiErrorException when the backend returns a failure code', async () => {
+  it('throws a database fault as an ApiErrorException', async () => {
     const fetchImpl = makeFetch(() =>
-      jsonResponse({ code: 'ERR0003', message: '相册不存在' }),
+      jsonResponse({ code: 'ERR0003', message: '数据库异常' }),
     );
 
     await expect(
       fetchGalleryDetail({ id: '999' }, { fetch: fetchImpl }),
     ).rejects.toMatchObject({
       name: 'ApiErrorException',
-      apiError: { _tag: 'DatabaseError', message: '相册不存在' },
+      apiError: { _tag: 'DatabaseError', message: '数据库异常' },
+    });
+  });
+
+  it('throws a not-found ApiError for the missing-album envelope the backend actually sends, which carries no data', async () => {
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({ code: 'ERR0007', message: '相册不存在' }),
+    );
+
+    await expect(
+      fetchGalleryDetail({ id: '999' }, { fetch: fetchImpl }),
+    ).rejects.toMatchObject({
+      name: 'ApiErrorException',
+      apiError: { _tag: 'NotFound', message: '相册不存在' },
     });
   });
 
@@ -222,17 +251,17 @@ describe('fetchGalleryDetail', () => {
     ).rejects.toBeInstanceOf(ResponseValidationError);
   });
 
-  it('resolves to null when the backend answers a missing album with 200 and data: null', async () => {
+  it('rejects a 200 success envelope whose data is null, because a missing album is no longer a null payload', async () => {
     const fetchImpl = makeFetch(() =>
       jsonResponse({ code: '0000', message: 'success', data: null }),
     );
 
     await expect(
       fetchGalleryDetail({ id: '999' }, { fetch: fetchImpl }),
-    ).resolves.toBeNull();
+    ).rejects.toBeInstanceOf(ResponseValidationError);
   });
 
-  it('still throws ResponseValidationError for a malformed album, so nullability stays narrow', async () => {
+  it('still throws ResponseValidationError for a malformed album', async () => {
     const fetchImpl = makeFetch(() =>
       jsonResponse({
         code: '0000',

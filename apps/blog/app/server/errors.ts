@@ -6,6 +6,7 @@ export type ApiErrorTag =
   | 'DatabaseError'
   | 'UploadError'
   | 'ValidationError'
+  | 'NotFound'
   | 'UnknownError';
 
 export interface ApiError {
@@ -38,9 +39,17 @@ export function mapResultCodeToTag(code: string): ApiErrorTag | null {
       return 'ValidationError';
     case 'ERR0006':
       return 'UnknownError';
+    case 'ERR0007':
+      return 'NotFound';
     default:
       return null;
   }
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return (
+    error instanceof ApiErrorException && error.apiError._tag === 'NotFound'
+  );
 }
 
 export function envelopeToApiError(payload: unknown): ApiError | null {

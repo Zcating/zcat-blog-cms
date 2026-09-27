@@ -16,7 +16,7 @@ vi.mock('@blog/server/article', async () => {
 
 // --- import after mocks ---
 
-import { ApiErrorException } from '@blog/server/errors';
+import { ApiErrorException, envelopeToApiError } from '@blog/server/errors';
 
 import { loader } from './post-board_.$id';
 
@@ -30,6 +30,12 @@ const ARTICLE_DETAIL = {
   publishAt: '2026-05-21T12:00:00.000Z',
   articleAndArticleTags: [],
 };
+
+function apiErrorFromEnvelope(body: unknown): ApiErrorException {
+  const apiError = envelopeToApiError(body);
+  if (!apiError) throw new Error('envelope carried no error');
+  return new ApiErrorException(apiError);
+}
 
 describe('route loader: /_blog/post-board/$id', () => {
   beforeEach(() => {
@@ -79,12 +85,9 @@ describe('route loader: /_blog/post-board/$id', () => {
     expect(getArticleDetailMock).not.toHaveBeenCalled();
   });
 
-  it('turns the backend missing-article envelope into a not-found, not a generic error', async () => {
+  it('turns the missing-article envelope the backend actually sends into a not-found, not a generic error', async () => {
     getArticleDetailMock.mockRejectedValue(
-      new ApiErrorException({
-        _tag: 'DatabaseError',
-        message: '文章不存在',
-      }),
+      apiErrorFromEnvelope({ code: 'ERR0007', message: '文章不存在' }),
     );
 
     const error = await loader({ params: { id: '999' } }).catch(
@@ -96,12 +99,47 @@ describe('route loader: /_blog/post-board/$id', () => {
     expect(getArticleDetailMock).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves other backend failures as errors, so a real database fault is not masked as a 404', async () => {
+  it('still serves a not-found after the backend rewords its message, because the code decides', async () => {
     getArticleDetailMock.mockRejectedValue(
-      new ApiErrorException({
-        _tag: 'DatabaseError',
-        message: '数据库异常',
-      }),
+      apiErrorFromEnvelope({ code: 'ERR0007', message: '该文章已被移除' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toMatchObject({ isNotFound: true });
+  });
+
+  it('keeps a denied token as an error, because not-allowed is not does-not-exist', async () => {
+    getArticleDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0002', message: '登录验证错误' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiErrorException);
+    expect(error).not.toMatchObject({ isNotFound: true });
+  });
+
+  it('leaves a database fault as an error, so a real fault is not masked as a 404', async () => {
+    getArticleDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0003', message: '数据库异常' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiErrorException);
+    expect(error).not.toMatchObject({ isNotFound: true });
+  });
+
+  it('leaves an uncaught backend fault as an error, even when its message reads like a not-found', async () => {
+    getArticleDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0006', message: '文章不存在' }),
     );
 
     const error = await loader({ params: { id: '999' } }).catch(

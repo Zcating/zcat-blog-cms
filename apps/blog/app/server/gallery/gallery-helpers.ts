@@ -6,11 +6,11 @@ import {
 } from '@blog/server/transport';
 
 import {
-  GalleryDetailPayloadSchema,
+  GalleryDetailSchema,
   GalleryListSchema,
   GetGalleryDetailInputSchema,
   GetGalleryListInputSchema,
-  type GalleryDetailPayload,
+  type GalleryDetail,
   type GalleryList,
   type GetGalleryDetailInput,
   type GetGalleryListInput,
@@ -40,11 +40,11 @@ export async function fetchGalleryList(
 export async function fetchGalleryDetail(
   input: GetGalleryDetailInput,
   options: FetchOptions = {},
-): Promise<GalleryDetailPayload> {
+): Promise<GalleryDetail> {
   const params = GetGalleryDetailInputSchema.parse(input);
-  return getJson<GalleryDetailPayload>({
+  return getJson<GalleryDetail>({
     path: `/blog/gallery/${params.id}`,
-    dataSchema: GalleryDetailPayloadSchema,
+    dataSchema: GalleryDetailSchema,
     env: options.env ?? defaultEnv,
     fetch: options.fetch,
   });

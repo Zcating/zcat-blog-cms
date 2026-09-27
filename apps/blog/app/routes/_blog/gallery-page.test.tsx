@@ -51,7 +51,8 @@ const GALLERY_LIST = {
       cover: null,
     },
   ],
-  total: 2,
+  total: 7,
+  totalPages: 4,
   page: 1,
   pageSize: 8,
 };

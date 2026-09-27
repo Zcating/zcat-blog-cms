@@ -43,7 +43,8 @@ const GALLERY_LIST = {
       cover: null,
     },
   ],
-  total: 2,
+  total: 7,
+  totalPages: 4,
   page: 1,
   pageSize: 8,
 };
@@ -63,12 +64,12 @@ describe('route loader: /_blog/gallery', () => {
     expect(result.pagination.data[1]?.cover).toBeNull();
   });
 
-  it('exposes total instead of totalPages, so no page count can be derived', async () => {
+  it('exposes both the grand total and the page count, so a page count is derivable', async () => {
     const result = await loader();
 
-    expect(result.pagination.total).toBe(2);
-    expect(result.pagination.total).toBe(result.pagination.data.length);
-    expect(result.pagination).not.toHaveProperty('totalPages');
+    expect(result.pagination.total).toBe(7);
+    expect(result.pagination.totalPages).toBe(4);
+    expect(result.pagination.total).not.toBe(result.pagination.data.length);
   });
 
   it('requests the first gallery page', async () => {

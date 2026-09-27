@@ -7,20 +7,12 @@ import {
   GetArticleDetailInputSchema,
   type ArticleDetail,
 } from '@blog/server/article/schemas';
-import { ApiErrorException } from '@blog/server/errors';
+import { isNotFoundError } from '@blog/server/errors';
 
 const SITE = 'https://blog.zcat.example';
 
 interface PostBoardDetailLoaderArgs {
   params: { id?: string };
-}
-
-function isMissingArticleError(error: unknown): boolean {
-  return (
-    error instanceof ApiErrorException &&
-    error.apiError._tag === 'DatabaseError' &&
-    error.apiError.message === '文章不存在'
-  );
 }
 
 export async function loader({ params }: PostBoardDetailLoaderArgs) {
@@ -35,7 +27,7 @@ export async function loader({ params }: PostBoardDetailLoaderArgs) {
   try {
     article = await getArticleDetail({ data: { id } });
   } catch (error) {
-    if (isMissingArticleError(error)) {
+    if (isNotFoundError(error)) {
       throw notFound();
     }
     throw error;

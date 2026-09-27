@@ -17,9 +17,16 @@ vi.mock('@blog/server/gallery', async () => {
 
 // --- import after mocks ---
 
+import { ApiErrorException, envelopeToApiError } from '@blog/server/errors';
 import { ResponseValidationError } from '@blog/server/result';
 
 import { Route, loader } from './gallery_.$id';
+
+function apiErrorFromEnvelope(body: unknown): ApiErrorException {
+  const apiError = envelopeToApiError(body);
+  if (!apiError) throw new Error('envelope carried no error');
+  return new ApiErrorException(apiError);
+}
 
 const GALLERY_DETAIL = {
   id: 3,
@@ -102,16 +109,56 @@ describe('route loader: /_blog/gallery/$id', () => {
     expect(screen.getByText('相册不存在')).toBeInTheDocument();
   });
 
-  it('turns a null album payload into a not-found, so the friendly screen is served with 404', async () => {
-    getGalleryDetailMock.mockResolvedValue(null);
+  it('turns the missing-album envelope the backend actually sends into a not-found, so the friendly screen is served with 404', async () => {
+    getGalleryDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0007', message: '相册不存在' }),
+    );
 
     const error = await loader({ params: { id: '999' } }).catch(
       (thrown: unknown) => thrown,
     );
 
     expect(error).toMatchObject({ isNotFound: true });
-    expect(error).not.toBeInstanceOf(ResponseValidationError);
+    expect(error).not.toBeInstanceOf(ApiErrorException);
     expect(getGalleryDetailMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('still serves a not-found after the backend rewords its message, because the code decides', async () => {
+    getGalleryDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0007', message: '该相册已被移除' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toMatchObject({ isNotFound: true });
+  });
+
+  it('keeps a denied token as an error, because not-allowed is not does-not-exist', async () => {
+    getGalleryDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0002', message: '登录验证错误' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiErrorException);
+    expect(error).not.toMatchObject({ isNotFound: true });
+  });
+
+  it('leaves a database fault as an error, so a transport fault is not masked as a 404', async () => {
+    getGalleryDetailMock.mockRejectedValue(
+      apiErrorFromEnvelope({ code: 'ERR0003', message: '数据库异常' }),
+    );
+
+    const error = await loader({ params: { id: '999' } }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiErrorException);
+    expect(error).not.toMatchObject({ isNotFound: true });
   });
 
   it('leaves a malformed album payload as an error, so a transport fault is not masked as a 404', async () => {

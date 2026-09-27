@@ -32,6 +32,7 @@ const ARTICLE_LIST = {
       articleAndArticleTags: [],
     },
   ],
+  total: 37,
   totalPages: 4,
   page: 2,
   pageSize: 10,
@@ -43,12 +44,13 @@ describe('route loader: /_blog/post-board', () => {
     getArticleListMock.mockResolvedValue(ARTICLE_LIST);
   });
 
-  it('resolves the paginated article list, which carries totalPages and no total', async () => {
+  it('resolves the paginated article list, which carries both total and totalPages', async () => {
     const result = await loader({ search: { page: '2' } });
 
     expect(result.pagination).toEqual(ARTICLE_LIST);
     expect(result.pagination.totalPages).toBe(4);
-    expect(result.pagination).not.toHaveProperty('total');
+    expect(result.pagination.total).toBe(37);
+    expect(result.pagination.total).not.toBe(result.pagination.data.length);
     expect(result.page).toBe(2);
   });
 

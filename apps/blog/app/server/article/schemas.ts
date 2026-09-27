@@ -58,6 +58,7 @@ export type ArticleDetail = z.infer<typeof ArticleDetailSchema>;
 
 export const ArticleListSchema = z.object({
   data: z.array(ArticleSchema),
+  total: z.number().int(),
   totalPages: z.number().int(),
   page: z.number().int(),
   pageSize: z.number().int(),

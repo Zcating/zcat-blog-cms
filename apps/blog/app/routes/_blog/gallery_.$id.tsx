@@ -8,7 +8,11 @@ import {
   ImageZoomViewer,
 } from '@blog/features';
 import { getGalleryDetail } from '@blog/server/gallery';
-import { GetGalleryDetailInputSchema } from '@blog/server/gallery/schemas';
+import {
+  GetGalleryDetailInputSchema,
+  type GalleryDetail,
+} from '@blog/server/gallery/schemas';
+import { isNotFoundError } from '@blog/server/errors';
 
 interface GalleryDetailLoaderArgs {
   params: { id?: string };
@@ -21,10 +25,15 @@ export async function loader({ params }: GalleryDetailLoaderArgs) {
     throw notFound();
   }
 
-  const gallery = await getGalleryDetail({ data: { id } });
+  let gallery: GalleryDetail;
 
-  if (!gallery) {
-    throw notFound();
+  try {
+    gallery = await getGalleryDetail({ data: { id } });
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      throw notFound();
+    }
+    throw error;
   }
 
   return { gallery };

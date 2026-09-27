@@ -47,6 +47,7 @@ describe('server route: /sitemap.xml', () => {
     getArticleListMock.mockReset();
     getArticleListMock.mockResolvedValue({
       data: ARTICLES,
+      total: 1,
       totalPages: 1,
       page: 1,
       pageSize: 1000,

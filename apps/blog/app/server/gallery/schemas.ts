@@ -44,13 +44,10 @@ export const GalleryDetailSchema = GallerySchema.extend({
 
 export type GalleryDetail = z.infer<typeof GalleryDetailSchema>;
 
-export const GalleryDetailPayloadSchema = GalleryDetailSchema.nullable();
-
-export type GalleryDetailPayload = z.infer<typeof GalleryDetailPayloadSchema>;
-
 export const GalleryListSchema = z.object({
   data: z.array(GallerySchema),
   total: z.number().int(),
+  totalPages: z.number().int(),
   page: z.number().int(),
   pageSize: z.number().int(),
 });

@@ -76,7 +76,13 @@ describe('fetchArticleList', () => {
       return jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [ARTICLE], totalPages: 3, page: 1, pageSize: 10 },
+        data: {
+          data: [ARTICLE],
+          total: 23,
+          totalPages: 3,
+          page: 1,
+          pageSize: 10,
+        },
       });
     });
 
@@ -86,11 +92,34 @@ describe('fetchArticleList', () => {
     );
 
     expect(result.data[0]?.title).toBe('Hello');
+    expect(result.total).toBe(23);
     expect(result.totalPages).toBe(3);
     expect(capturedMethod).toBe('GET');
     expect(capturedUrl).toBe(
       'http://backend.local/api/blog/article/list?page=1&pageSize=10&order=latest',
     );
+  });
+
+  it('reports total as the grand total from the count query, not the length of this page', async () => {
+    const payload = {
+      data: [ARTICLE],
+      total: 23,
+      totalPages: 3,
+      page: 2,
+      pageSize: 10,
+    };
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({ code: '0000', message: 'success', data: payload }),
+    );
+
+    const result = await fetchArticleList(
+      { page: 2, pageSize: 10, order: 'latest' },
+      { fetch: fetchImpl },
+    );
+
+    expect(result).toEqual(payload);
+    expect(result.total).toBe(23);
+    expect(result.total).not.toBe(result.data.length);
   });
 
   it('applies the input defaults when called with no arguments', async () => {
@@ -100,7 +129,7 @@ describe('fetchArticleList', () => {
       return jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [], totalPages: 0, page: 1, pageSize: 10 },
+        data: { data: [], total: 0, totalPages: 0, page: 1, pageSize: 10 },
       });
     });
 
@@ -118,7 +147,7 @@ describe('fetchArticleList', () => {
       return jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [], totalPages: 1, page: 2, pageSize: 5 },
+        data: { data: [], total: 5, totalPages: 1, page: 2, pageSize: 5 },
       });
     });
 
@@ -146,7 +175,13 @@ describe('fetchArticleList', () => {
       jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [{ id: 'oops' }], totalPages: 1, page: 1, pageSize: 10 },
+        data: {
+          data: [{ id: 'oops' }],
+          total: 1,
+          totalPages: 1,
+          page: 1,
+          pageSize: 10,
+        },
       }),
     );
 
@@ -181,7 +216,7 @@ describe('fetchArticleList', () => {
       jsonResponse({
         code: '0000',
         message: 'success',
-        data: { data: [], totalPages: 0, page: 1, pageSize: 10 },
+        data: { data: [], total: 0, totalPages: 0, page: 1, pageSize: 10 },
       }),
     );
 
@@ -212,9 +247,9 @@ describe('fetchArticleDetail', () => {
     expect(capturedUrl).toBe('http://backend.local/api/blog/article/1');
   });
 
-  it('throws ApiErrorException with the backend message when the article is missing', async () => {
+  it('throws a not-found ApiError for the missing-article envelope the backend actually sends, which carries no data', async () => {
     const fetchImpl = makeFetch(() =>
-      jsonResponse({ code: 'ERR0003', message: '文章不存在' }),
+      jsonResponse({ code: 'ERR0007', message: '文章不存在' }),
     );
 
     await expect(
@@ -222,7 +257,7 @@ describe('fetchArticleDetail', () => {
     ).rejects.toMatchObject({
       name: 'ApiErrorException',
       message: '文章不存在',
-      apiError: { _tag: 'DatabaseError', message: '文章不存在' },
+      apiError: { _tag: 'NotFound', message: '文章不存在' },
     });
   });
 

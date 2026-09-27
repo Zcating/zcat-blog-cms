@@ -53,6 +53,7 @@ const ARTICLE_LIST = {
       articleAndArticleTags: [],
     },
   ],
+  total: 23,
   totalPages: 3,
   page: 2,
   pageSize: 10,
