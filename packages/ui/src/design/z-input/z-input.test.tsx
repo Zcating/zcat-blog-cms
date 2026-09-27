@@ -86,6 +86,26 @@ describe('ZInput 表单字段容器内的值级变更通道', () => {
     expect(onValueChange).toHaveBeenCalledWith('a');
     expect(domChannel).not.toHaveBeenCalled();
   });
+
+  it('注入的 DOM 事件级 onInput 不会被转发，值级通道仍然收到值', async () => {
+    const onValueChange = vi.fn();
+    const domChannel = vi.fn();
+    const injected = {
+      onInput: domChannel,
+    } as unknown as React.ComponentProps<typeof ZInput>;
+    render(
+      <ZInput
+        data-testid="input"
+        onValueChange={onValueChange}
+        {...injected}
+      />,
+    );
+
+    await userEvent.type(screen.getByTestId('input'), 'a');
+
+    expect(onValueChange).toHaveBeenCalledWith('a');
+    expect(domChannel).not.toHaveBeenCalled();
+  });
 });
 
 describe('ZInput 公共 props', () => {
@@ -93,8 +113,17 @@ describe('ZInput 公共 props', () => {
     expectTypeOf<React.ComponentProps<typeof ZInput>>().not.toHaveProperty(
       'onChange',
     );
+    expectTypeOf<React.ComponentProps<typeof ZInput>>().not.toHaveProperty(
+      'onInput',
+    );
     expectTypeOf<React.ComponentProps<typeof ZInput>>().toHaveProperty(
       'onValueChange',
+    );
+  });
+
+  it('保留焦点通道 onBlur', () => {
+    expectTypeOf<React.ComponentProps<typeof ZInput>>().toHaveProperty(
+      'onBlur',
     );
   });
 });

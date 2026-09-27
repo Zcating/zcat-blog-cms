@@ -2,7 +2,10 @@ import { Input } from '@zcat/ui/shadcn/ui/input';
 
 import type React from 'react';
 
-interface ZInputProps extends Omit<React.ComponentProps<'input'>, 'onChange'> {
+interface ZInputProps extends Omit<
+  React.ComponentProps<'input'>,
+  'onChange' | 'onInput'
+> {
   className?: string;
   placeholder?: string;
   value?: string;
@@ -16,6 +19,8 @@ export function ZInput({
   onValueChange,
   ...rest
 }: ZInputProps) {
+  const { onInput: _onInput, ...forwarded } =
+    rest as React.ComponentProps<'input'>;
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onValueChange?.(event.target.value);
   };
@@ -25,7 +30,7 @@ export function ZInput({
       className={className}
       placeholder={placeholder}
       value={value}
-      {...rest}
+      {...forwarded}
       onChange={handleChange}
     />
   );
