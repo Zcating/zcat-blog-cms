@@ -75,6 +75,16 @@ export const DOCUMENT_CONFIGURES = {
     to: 'z-sidebar',
     contentImporter: () => import('./z-sidebar.md?raw'),
   },
+  'z-sticky-header': {
+    title: 'StickyHeader',
+    to: 'z-sticky-header',
+    contentImporter: () => import('./z-sticky-header.md?raw'),
+  },
+  'z-navigation-menu': {
+    title: 'NavigationMenu',
+    to: 'z-navigation-menu',
+    contentImporter: () => import('./z-navigation-menu.md?raw'),
+  },
   'z-input': {
     title: 'Input',
     to: 'z-input',

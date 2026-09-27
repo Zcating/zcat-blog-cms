@@ -57,6 +57,14 @@ const sidebarOptions: ZSidebarOption[] = [
         label: '树形视图',
         value: DOCUMENT_CONFIGURES['z-tree'].to,
       },
+      {
+        label: '吸顶页头',
+        value: DOCUMENT_CONFIGURES['z-sticky-header'].to,
+      },
+      {
+        label: '导航菜单',
+        value: DOCUMENT_CONFIGURES['z-navigation-menu'].to,
+      },
     ],
   },
   {
