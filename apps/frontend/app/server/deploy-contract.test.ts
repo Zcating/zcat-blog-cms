@@ -3,23 +3,36 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  CONTAINER_ENV_TEMPLATE,
+  CONTAINER_ONLY_KEYS,
   HOST_PROVIDED_ENV,
-  TEMPLATE_ONLY_KEYS,
+  PUSH_ENV_TEMPLATE,
+  deployScope,
   readTemplateVariables,
   scanEnvInventory,
 } from '../../../backend/src/deploy/env-inventory';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
-const TEMPLATE = '.env.deploy.example';
 
 const SECRET_KEY_PATTERN = /PASSWORD|SECRET|KEY|TOKEN|CREDENTIAL/;
 const PLACEHOLDERS = new Set(['', 'change-me']);
 
 const inventory = scanEnvInventory(REPO_ROOT);
-const declared = readTemplateVariables(REPO_ROOT, TEMPLATE);
-const contractNames = inventory.reads
-  .map((read) => read.name)
-  .filter((name) => !HOST_PROVIDED_ENV.has(name));
+const containerTemplate = readTemplateVariables(
+  REPO_ROOT,
+  CONTAINER_ENV_TEMPLATE,
+);
+const pushTemplate = readTemplateVariables(REPO_ROOT, PUSH_ENV_TEMPLATE);
+
+function namesIn(scope: 'container' | 'operator'): string[] {
+  return inventory.reads
+    .filter((read) => {
+      const derived = deployScope(read);
+      return derived === 'both' || derived === scope;
+    })
+    .map((read) => read.name)
+    .filter((name) => !HOST_PROVIDED_ENV.has(name));
+}
 
 function describeUnresolved(): string {
   return inventory.unresolved
@@ -56,43 +69,80 @@ describe('workspace deployment contract', () => {
     ).toEqual([]);
   });
 
-  it('declares in .env.deploy.example every runtime variable the code reads', () => {
-    const undeclared = contractNames.filter((name) => !declared.has(name));
+  it('declares every runtime variable the code reads in the file its own process loads', () => {
+    const undeclared = {
+      inContainer: namesIn('container').filter(
+        (name) => !containerTemplate.has(name),
+      ),
+      inPush: namesIn('operator').filter((name) => !pushTemplate.has(name)),
+    };
 
     expect(
       undeclared,
-      `runtime variables missing from ${TEMPLATE}: ${undeclared.join(', ')}`,
-    ).toEqual([]);
+      `runtime variables missing from the file that supplies them: ${[
+        ...undeclared.inContainer.map(
+          (name) => `${name} -> ${CONTAINER_ENV_TEMPLATE}`,
+        ),
+        ...undeclared.inPush.map((name) => `${name} -> ${PUSH_ENV_TEMPLATE}`),
+      ].join(', ')}`,
+    ).toEqual({ inContainer: [], inPush: [] });
   });
 
-  it('declares in .env.deploy.example no variable that nothing reads', () => {
-    const orphans = [...declared.keys()].filter(
-      (key) => !contractNames.includes(key) && !TEMPLATE_ONLY_KEYS.has(key),
+  it('declares no push credential in the file compose hands to every service', () => {
+    const leaked = namesIn('operator').filter((name) =>
+      containerTemplate.has(name),
     );
 
     expect(
-      orphans,
-      `variables in ${TEMPLATE} that no code reads: ${orphans.join(', ')}`,
+      leaked,
+      `push credentials reaching containers through ${CONTAINER_ENV_TEMPLATE}: ${leaked.join(', ')}`,
     ).toEqual([]);
   });
 
-  it('redacts every secret-shaped value in .env.deploy.example, whether or not the real env files exist', () => {
-    const keys = [...declared.keys()].filter((key) =>
-      SECRET_KEY_PATTERN.test(key),
-    );
+  it('declares no variable in either template that nothing reads', () => {
+    const read = new Set(inventory.reads.map((entry) => entry.name));
+    const allowed = new Set([
+      ...CONTAINER_ONLY_KEYS.keys(),
+      ...HOST_PROVIDED_ENV.keys(),
+    ]);
+    const orphans = {
+      inContainer: [...containerTemplate.keys()].filter(
+        (key) => !read.has(key) && !allowed.has(key),
+      ),
+      inPush: [...pushTemplate.keys()].filter(
+        (key) => !read.has(key) && !allowed.has(key),
+      ),
+    };
+
+    expect(
+      orphans,
+      `variables in the templates that no code reads: ${[
+        ...orphans.inContainer.map(
+          (key) => `${key} -> ${CONTAINER_ENV_TEMPLATE}`,
+        ),
+        ...orphans.inPush.map((key) => `${key} -> ${PUSH_ENV_TEMPLATE}`),
+      ].join(', ')}`,
+    ).toEqual({ inContainer: [], inPush: [] });
+  });
+
+  it('redacts every secret-shaped value in both templates, whether or not the real env files exist', () => {
+    const keys = [...containerTemplate, ...pushTemplate]
+      .map(([key]) => key)
+      .filter((key) => SECRET_KEY_PATTERN.test(key));
 
     expect(
       keys.length,
       'no secret-shaped key is declared, so this assertion would be vacuous',
     ).toBeGreaterThan(0);
 
-    const leaked = keys.filter(
-      (key) => !PLACEHOLDERS.has(declared.get(key) ?? ''),
-    );
+    const leaked = keys.filter((key) => {
+      const value = pushTemplate.get(key) ?? containerTemplate.get(key) ?? '';
+      return !PLACEHOLDERS.has(value);
+    });
 
     expect(
       leaked,
-      `non-placeholder secret values in ${TEMPLATE}: ${leaked.join(', ')}`,
+      `non-placeholder secret values in the templates: ${leaked.join(', ')}`,
     ).toEqual([]);
   });
 });

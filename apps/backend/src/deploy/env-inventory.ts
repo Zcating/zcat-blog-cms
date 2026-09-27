@@ -9,7 +9,8 @@ export type EnvAccessPath =
   | 'member'
   | 'destructured'
   | 'dynamic-wrapper'
-  | 'loader-wrapper';
+  | 'loader-wrapper'
+  | 'file-loader';
 
 export interface EnvReadSite {
   readonly file: string;
@@ -91,17 +92,15 @@ export const ENV_PROVIDER_MODULES: ReadonlyMap<string, string> = new Map([
 
 export const ENV_LOADER_FUNCTIONS: ReadonlySet<string> = new Set(['loadEnv']);
 
+export const FILE_ENV_LOADER_FUNCTIONS: ReadonlySet<string> = new Set([
+  'loadEnvConfig',
+]);
+
 export const HOST_PROVIDED_ENV: ReadonlyMap<string, string> = new Map([
   ['CI', 'set by the test runner, never by a deployment'],
 ]);
 
-export const TEMPLATE_ONLY_KEYS: ReadonlyMap<string, string> = new Map([
-  ['DOCKER_REGISTRY', 'interpolated by docker compose into image names'],
-  ['SSH_HOST', 'read from the env file by scripts/docker-push.ts'],
-  ['SSH_PORT', 'read from the env file by scripts/docker-push.ts'],
-  ['SSH_USER', 'read from the env file by scripts/docker-push.ts'],
-  ['SSH_PASSWORD', 'read from the env file by scripts/docker-push.ts'],
-  ['REMOTE_DIR', 'read from the env file by scripts/docker-push.ts'],
+export const CONTAINER_ONLY_KEYS: ReadonlyMap<string, string> = new Map([
   [
     'POSTGRES_DB',
     'consumed by the cms_pg container, not by the backend process',
@@ -111,7 +110,54 @@ export const TEMPLATE_ONLY_KEYS: ReadonlyMap<string, string> = new Map([
     'POSTGRES_PASSWORD',
     'consumed by the cms_pg container, never by the backend process',
   ],
+  [
+    'MINIO_ROOT_USER',
+    'read by the minio server process, never by the backend client, which reads MINIO_ACCESS_KEY',
+  ],
+  [
+    'MINIO_ROOT_PASSWORD',
+    'read by the minio server process, never by the backend client, which reads MINIO_SECRET_KEY',
+  ],
 ]);
+
+export const CONTAINER_ENV_TEMPLATE = '.env.deploy.example';
+
+export const PUSH_ENV_TEMPLATE = '.env.deploy.push.example';
+
+const APP_ROOTS = ['apps/', 'packages/'];
+
+export type DeployScope = 'container' | 'operator' | 'both';
+
+export function envFileNameFor(template: string): string {
+  return template.replace(/\.example$/, '');
+}
+
+export function deployScope(read: EnvRead): DeployScope {
+  const inApp = read.sites.filter((site) =>
+    APP_ROOTS.some((prefix) => site.file.startsWith(prefix)),
+  ).length;
+  if (inApp === 0) return 'operator';
+  return inApp === read.sites.length ? 'container' : 'both';
+}
+
+export function readComposeEnvFiles(root: string): Set<string> {
+  const text = readFileSync(join(root, 'docker-compose.yml'), 'utf8');
+  const files = new Set<string>();
+  let insideEnvFile = false;
+  for (const raw of text.split(/\r?\n/)) {
+    if (/^\s*env_file:/.test(raw)) {
+      insideEnvFile = true;
+      const inline = /^\s*env_file:\s*(\S+)\s*$/.exec(raw);
+      if (inline?.[1]) files.add(inline[1]);
+      continue;
+    }
+    if (!insideEnvFile) continue;
+    const item = /^\s+-\s+(\S+)\s*$/.exec(raw);
+    if (item?.[1]) files.add(item[1]);
+    else insideEnvFile = false;
+  }
+  return files;
+}
 
 export const MANUAL_DYNAMIC_STEP = [
   'rewrite the access into a derivable shape, or extend',
@@ -406,7 +452,7 @@ export function scanEnvInventory(root: string): EnvInventory {
   const dynamicParams = new Set(accessors.map((accessor) => accessor.param));
 
   for (const file of files) {
-    const loaderBindings = new Set<string>();
+    const loaderBindings = new Map<string, EnvAccessPath>();
 
     const visit = (node: ts.Node): void => {
       if (
@@ -415,12 +461,13 @@ export function scanEnvInventory(root: string): EnvInventory {
         node.initializer
       ) {
         const init = unwrapExpression(node.initializer);
-        if (
-          ts.isCallExpression(init) &&
-          ts.isIdentifier(init.expression) &&
-          ENV_LOADER_FUNCTIONS.has(init.expression.text)
-        ) {
-          loaderBindings.add(node.name.text);
+        if (ts.isCallExpression(init) && ts.isIdentifier(init.expression)) {
+          const loader = init.expression.text;
+          if (ENV_LOADER_FUNCTIONS.has(loader)) {
+            loaderBindings.set(node.name.text, 'loader-wrapper');
+          } else if (FILE_ENV_LOADER_FUNCTIONS.has(loader)) {
+            loaderBindings.set(node.name.text, 'file-loader');
+          }
         }
       }
       node.forEachChild(visit);
@@ -503,7 +550,12 @@ export function scanEnvInventory(root: string): EnvInventory {
         addRead(
           reads,
           node.name.text,
-          site(file, node, 'loader-wrapper', 'unknown'),
+          site(
+            file,
+            node,
+            loaderBindings.get(node.expression.text)!,
+            'unknown',
+          ),
         );
         return;
       }
@@ -520,7 +572,7 @@ export function scanEnvInventory(root: string): EnvInventory {
         const path: EnvAccessPath =
           isProcessEnv(node.initializer) || isImportMetaEnv(node.initializer)
             ? 'destructured'
-            : 'loader-wrapper';
+            : loaderBindings.get(node.initializer.getText())!;
         for (const element of node.name.elements) {
           const key = element.propertyName ?? element.name;
           const keyName =

@@ -432,6 +432,9 @@ importers:
 
   packages/doc:
     dependencies:
+      '@tanstack/react-router':
+        specifier: 1.170.39
+        version: 1.170.39(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@zcat/ui':
         specifier: workspace:*
         version: link:../ui

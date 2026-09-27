@@ -173,6 +173,56 @@ export default defineConfig(({ mode }) => {
   });
 });
 
+describe('env-inventory file loader resolution', () => {
+  it('derives a read hidden behind a binding an env file loader returns', () => {
+    const inventory = fixture({
+      'push.ts': `function loadEnvConfig(envFile: string): Record<string, string> {
+  return {};
+}
+
+const envConfig = loadEnvConfig('.env.deploy');
+export const host = envConfig.FIXTURE_PUSH_HOST;
+`,
+    });
+
+    const entry = read(inventory, 'FIXTURE_PUSH_HOST');
+    expect(entry).toBeDefined();
+    expect([...(entry?.paths ?? [])]).toContain('file-loader');
+  });
+
+  it('derives a read destructured out of a file loader binding', () => {
+    const inventory = fixture({
+      'push.ts': `const envConfig = loadEnvConfig('.env.deploy');
+const { FIXTURE_PUSH_USER, FIXTURE_PUSH_DIR: dir } = envConfig;
+export const both = [FIXTURE_PUSH_USER, dir];
+`,
+    });
+
+    expect(names(inventory).sort()).toEqual([
+      'FIXTURE_PUSH_DIR',
+      'FIXTURE_PUSH_USER',
+    ]);
+    for (const entry of inventory.reads) {
+      expect([...entry.paths]).toContain('file-loader');
+    }
+  });
+
+  it('keeps a file loader binding apart from the process environment', () => {
+    const inventory = fixture({
+      'push.ts': `const envConfig = loadEnvConfig('.env.deploy');
+export const port = process.env.FIXTURE_PUSH_PORT ?? envConfig.FIXTURE_PUSH_HOST;
+`,
+    });
+
+    expect([...(read(inventory, 'FIXTURE_PUSH_PORT')?.paths ?? [])]).toEqual([
+      'member',
+    ]);
+    expect([...(read(inventory, 'FIXTURE_PUSH_HOST')?.paths ?? [])]).toEqual([
+      'file-loader',
+    ]);
+  });
+});
+
 describe('env-inventory destructuring resolution', () => {
   it('derives reads destructured straight out of process.env', () => {
     const inventory = fixture({
