@@ -31,14 +31,12 @@ const SORT_OPTIONS = [
 ] as CommonOption<Order>[];
 
 const homeSearchSchema = z.looseObject({
-  page: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
   order: z.enum(['latest', 'oldest']).optional(),
 });
 
-type HomeSearch = z.infer<typeof homeSearchSchema>;
-
 interface HomeLoaderArgs {
-  search: HomeSearch;
+  search: { page?: string | number; order?: Order };
 }
 
 export async function loader({ search }: HomeLoaderArgs) {

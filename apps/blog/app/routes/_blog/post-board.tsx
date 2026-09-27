@@ -9,13 +9,11 @@ import { getArticleList } from '@blog/server/article';
 const SITE = 'https://blog.zcat.example';
 
 const postBoardSearchSchema = z.looseObject({
-  page: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
 });
 
-type PostBoardSearch = z.infer<typeof postBoardSearchSchema>;
-
 interface PostBoardLoaderArgs {
-  search: PostBoardSearch;
+  search: { page?: string | number };
 }
 
 export async function loader({ search }: PostBoardLoaderArgs) {

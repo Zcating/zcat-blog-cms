@@ -28,7 +28,26 @@ vi.mock('@blog/server/user', async () => {
 
 // --- import after mocks ---
 
-import { loader } from './index';
+import { defaultParseSearch } from '@tanstack/react-router';
+
+import { Route, loader } from './index';
+
+interface HomeSearch {
+  page?: number;
+  order?: 'latest' | 'oldest';
+}
+
+function parseRealUrl(search: string): Record<string, string | number> {
+  return defaultParseSearch(search) as Record<string, string | number>;
+}
+
+function validateSearch(search: Record<string, unknown>): HomeSearch {
+  const schema = Route.options.validateSearch;
+  if (schema === undefined || !('parse' in schema)) {
+    throw new Error('/_blog/ must declare an object validateSearch');
+  }
+  return schema.parse(search) as HomeSearch;
+}
 
 const USER_INFO = {
   name: 'Zcat',
@@ -105,5 +124,80 @@ describe('route loader: /_blog/', () => {
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
       data: { page: 1, pageSize: 10, order: 'latest' },
     });
+  });
+
+  it('falls back to the first page when the page search param is zero or negative', async () => {
+    const zero = parseRealUrl('?page=0');
+    expect(zero.page).toBe(0);
+    const negative = parseRealUrl('?page=-3');
+    expect(negative.page).toBe(-3);
+
+    expect((await loader({ search: { page: zero.page } })).page).toBe(1);
+    expect((await loader({ search: { page: negative.page } })).page).toBe(1);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 10, order: 'latest' },
+    });
+  });
+});
+
+describe('route search validation: /_blog/', () => {
+  beforeEach(() => {
+    getArticleListMock.mockReset();
+    getUserInfoMock.mockReset();
+    getUserInfoMock.mockResolvedValue(USER_INFO);
+    getArticleListMock.mockResolvedValue({ ...ARTICLE_LIST, page: 2 });
+  });
+
+  it('serves page 2 for the numeric page TanStack Router parses out of a real ?page=2 URL', async () => {
+    const search = parseRealUrl('?page=2');
+    expect(typeof search.page).toBe('number');
+
+    const validated = validateSearch(search);
+    expect(validated.page).toBe(2);
+
+    const result = await loader({ search: { page: validated.page } });
+
+    expect(result.page).toBe(2);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 2, pageSize: 10, order: 'latest' },
+    });
+  });
+
+  it('serves page 2 for the string page the pagination control itself navigates with', async () => {
+    const navigated = String(2);
+    expect(typeof navigated).toBe('string');
+
+    const validated = validateSearch({ page: navigated });
+    expect(validated.page).toBe(2);
+
+    const result = await loader({ search: { page: validated.page } });
+
+    expect(result.page).toBe(2);
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 2, pageSize: 10, order: 'latest' },
+    });
+  });
+
+  it('keeps the order param strict while coercing the page next to it', async () => {
+    const search = parseRealUrl('?page=2&order=oldest');
+
+    const validated = validateSearch(search);
+    expect(validated).toEqual({ page: 2, order: 'oldest' });
+
+    const result = await loader({
+      search: { page: validated.page, order: validated.order },
+    });
+
+    expect(result.page).toBe(2);
+    expect(result.order).toBe('oldest');
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 2, pageSize: 10, order: 'oldest' },
+    });
+  });
+
+  it('still rejects an order outside the enum', () => {
+    expect(() => validateSearch({ page: 2, order: 'newest' })).toThrow(
+      /Invalid option/,
+    );
   });
 });
