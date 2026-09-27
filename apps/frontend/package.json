@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "dev:fresh": "node ../../scripts/kill-port.mjs 5000 && pnpm run dev",
+    "dev:fresh": "node ../../scripts/kill-port.mjs 3000 && pnpm run dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
     "typecheck": "tsc",

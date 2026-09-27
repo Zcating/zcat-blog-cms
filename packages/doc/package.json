@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite dev",
-    "dev:fresh": "node ../../scripts/kill-port.mjs 5173 && pnpm run dev",
+    "dev": "vite dev --port 4321",
+    "dev:fresh": "node ../../scripts/kill-port.mjs 4321 && pnpm run dev",
     "start": "node .output/server/index.mjs",
     "typecheck": "tsc",
     "test": "vitest run",
