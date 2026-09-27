@@ -19,7 +19,7 @@ blogRoutes.get(
     try {
       const query = c.req.valid('query');
 
-      logger.info({ query }, '获取文章列表, query:');
+      logger.info({ query }, '获取文章列表');
 
       const result = await appRuntime.runPromise(
         blogService.getArticleList(
@@ -29,7 +29,7 @@ blogRoutes.get(
         ),
       );
 
-      logger.info({ result }, '获取文章列表成功, data:');
+      logger.info({ result }, '获取文章列表成功');
 
       return c.json(
         createResult({

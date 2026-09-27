@@ -40,7 +40,9 @@ describe('articleTagService', () => {
       const tag = { id: 1, name: 'tag1' };
       mockPrisma.articleTag.findUnique.mockResolvedValue(tag);
 
-      const result = await appRuntime.runPromise(articleTagService.findById('1'));
+      const result = await appRuntime.runPromise(
+        articleTagService.findById('1'),
+      );
 
       expect(result).toEqual(tag);
       expect(mockPrisma.articleTag.findUnique).toHaveBeenCalledWith({
@@ -68,6 +70,10 @@ describe('articleTagService', () => {
   describe('update', () => {
     it('updates a tag by id', async () => {
       const tag = { id: 1, name: 'updated' };
+      mockPrisma.articleTag.findUnique.mockResolvedValue({
+        id: 1,
+        name: 'tag1',
+      });
       mockPrisma.articleTag.update.mockResolvedValue(tag);
 
       const result = await appRuntime.runPromise(
@@ -79,6 +85,31 @@ describe('articleTagService', () => {
         where: { id: 1 },
         data: { name: 'updated' },
       });
+    });
+
+    it('returns null instead of throwing when the row does not exist', async () => {
+      mockPrisma.articleTag.findUnique.mockResolvedValue(null);
+
+      const result = await appRuntime.runPromise(
+        articleTagService.update('999', { name: 'updated' }),
+      );
+
+      expect(result).toBeNull();
+      expect(mockPrisma.articleTag.update).not.toHaveBeenCalled();
+    });
+
+    it('propagates a genuine database failure rather than reporting absence', async () => {
+      mockPrisma.articleTag.findUnique.mockResolvedValue({
+        id: 1,
+        name: 'tag1',
+      });
+      mockPrisma.articleTag.update.mockRejectedValue(new Error('db down'));
+
+      await expect(
+        appRuntime.runPromise(
+          articleTagService.update('1', { name: 'updated' }),
+        ),
+      ).rejects.toThrow('db down');
     });
   });
 

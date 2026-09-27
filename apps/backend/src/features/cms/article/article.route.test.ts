@@ -33,7 +33,9 @@ describe('articleRoutes', () => {
 
   describe('GET /articles', () => {
     it('returns paginated articles', async () => {
-      mockArticleService.findAll.mockReturnValue(Effect.succeed({ data: [], total: 0 }));
+      mockArticleService.findAll.mockReturnValue(
+        Effect.succeed({ data: [], total: 0 }),
+      );
       const app = createApp();
 
       const res = await app.request('/articles');
@@ -43,7 +45,9 @@ describe('articleRoutes', () => {
     });
 
     it('throws on service error', async () => {
-      mockArticleService.findAll.mockReturnValue(Effect.fail(new Error('fail')));
+      mockArticleService.findAll.mockReturnValue(
+        Effect.fail(new Error('fail')),
+      );
       const app = createApp();
 
       const res = await app.request('/articles');
@@ -53,7 +57,9 @@ describe('articleRoutes', () => {
 
   describe('GET /articles/detail', () => {
     it('returns article when found', async () => {
-      mockArticleService.findById.mockReturnValue(Effect.succeed({ id: 1, title: 'Test' }));
+      mockArticleService.findById.mockReturnValue(
+        Effect.succeed({ id: 1, title: 'Test' }),
+      );
       const app = createApp();
 
       const res = await app.request('/articles/detail?id=1');
@@ -62,14 +68,28 @@ describe('articleRoutes', () => {
       expect(body.code).toBe('0000');
     });
 
-    it('returns database error when article not found', async () => {
+    it('reports a missing article as ERR0007 rather than a database error', async () => {
       mockArticleService.findById.mockReturnValue(Effect.succeed(null));
       const app = createApp();
 
       const res = await app.request('/articles/detail?id=1');
       const body = await res.json();
 
-      expect(body.code).toBe('ERR0003');
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
+    });
+
+    it('keeps a service fault on the detail endpoint a fault, not a not-found', async () => {
+      mockArticleService.findById.mockReturnValue(
+        Effect.fail(new Error('db down')),
+      );
+      const app = createApp();
+
+      const res = await app.request('/articles/detail?id=1');
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
+      expect(body.code).not.toBe('ERR0007');
     });
   });
 
@@ -119,11 +139,28 @@ describe('articleRoutes', () => {
 
       expect(body.code).toBe('0000');
     });
+
+    it('reports a delete that removed nothing as ERR0007 rather than a database error', async () => {
+      mockArticleService.delete.mockReturnValue(Effect.succeed(false));
+      const app = createApp();
+
+      const res = await app.request('/articles/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: 'not-a-number' }),
+      });
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
+    });
   });
 
   describe('POST /articles/upload-images', () => {
     it('returns upload URLs', async () => {
-      mockArticleService.getUploadUrls.mockReturnValue(Effect.succeed(['url1', 'url2']));
+      mockArticleService.getUploadUrls.mockReturnValue(
+        Effect.succeed(['url1', 'url2']),
+      );
       const app = createApp();
 
       const res = await app.request('/articles/upload-images', {

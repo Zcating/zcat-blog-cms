@@ -44,9 +44,7 @@ photoRoutes.get('/', zValidator('query', GetPhotosDtoSchema), async (c) => {
 // GET /empty-album - 获取所有未所属相册的照片
 photoRoutes.get('/empty-album', async (c) => {
   try {
-    const result = await appRuntime.runPromise(
-      photoService.findEmptyAlbum(),
-    );
+    const result = await appRuntime.runPromise(photoService.findEmptyAlbum());
 
     return c.json(
       createResult({
@@ -73,9 +71,8 @@ photoRoutes.get(
       if (!photo) {
         return c.json(
           createResult({
-            code: ResultCode.Success,
-            message: '成功',
-            data: null,
+            code: ResultCode.ResourceNotFound,
+            message: '照片不存在',
           }),
         );
       }
@@ -202,8 +199,8 @@ photoRoutes.post(
       if (!deleted) {
         return c.json(
           createResult({
-            code: ResultCode.Success,
-            message: '成功',
+            code: ResultCode.ResourceNotFound,
+            message: '照片不存在',
           }),
         );
       }

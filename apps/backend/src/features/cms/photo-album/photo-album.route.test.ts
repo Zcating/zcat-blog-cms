@@ -55,14 +55,28 @@ describe('photoAlbumRoutes', () => {
       expect(body.code).toBe('0000');
     });
 
-    it('returns error when service fails', async () => {
-      mockAlbumService.findById.mockReturnValue(Effect.fail(new Error('not found')));
+    it('reports a missing album as ERR0007 rather than a null success payload', async () => {
+      mockAlbumService.findById.mockReturnValue(Effect.succeed(null));
+      const app = createApp();
+
+      const res = await app.request('/photo-albums/999');
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
+    });
+
+    it('keeps a service fault on the detail endpoint a fault, not a not-found', async () => {
+      mockAlbumService.findById.mockReturnValue(
+        Effect.fail(new Error('db down')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums/1');
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
+      expect(body.code).not.toBe('ERR0007');
     });
   });
 
@@ -82,7 +96,9 @@ describe('photoAlbumRoutes', () => {
     });
 
     it('returns error when create service fails', async () => {
-      mockAlbumService.create.mockReturnValue(Effect.fail(new Error('create failed')));
+      mockAlbumService.create.mockReturnValue(
+        Effect.fail(new Error('create failed')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums', {
@@ -125,7 +141,9 @@ describe('photoAlbumRoutes', () => {
     });
 
     it('returns error when update service fails', async () => {
-      mockAlbumService.update.mockReturnValue(Effect.fail(new Error('update failed')));
+      mockAlbumService.update.mockReturnValue(
+        Effect.fail(new Error('update failed')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums/update', {
@@ -155,7 +173,9 @@ describe('photoAlbumRoutes', () => {
     });
 
     it('returns error when delete service fails', async () => {
-      mockAlbumService.delete.mockReturnValue(Effect.fail(new Error('delete failed')));
+      mockAlbumService.delete.mockReturnValue(
+        Effect.fail(new Error('delete failed')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums/delete', {
@@ -185,7 +205,9 @@ describe('photoAlbumRoutes', () => {
     });
 
     it('returns error when setCover service fails', async () => {
-      mockAlbumService.setCover.mockReturnValue(Effect.fail(new Error('set cover failed')));
+      mockAlbumService.setCover.mockReturnValue(
+        Effect.fail(new Error('set cover failed')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums/cover', {
@@ -215,7 +237,7 @@ describe('photoAlbumRoutes', () => {
       expect(body.message).toBe('批量添加照片到相册成功');
     });
 
-    it('returns error when album not found', async () => {
+    it('reports a missing album as ERR0007 rather than a validation error', async () => {
       mockAlbumService.addPhotos.mockReturnValue(Effect.succeed(false));
       const app = createApp();
 
@@ -226,11 +248,14 @@ describe('photoAlbumRoutes', () => {
       });
       const body = await res.json();
 
-      expect(body.code).toBe('ERR0005');
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
     });
 
     it('returns error when addPhotos service fails', async () => {
-      mockAlbumService.addPhotos.mockReturnValue(Effect.fail(new Error('add photos failed')));
+      mockAlbumService.addPhotos.mockReturnValue(
+        Effect.fail(new Error('add photos failed')),
+      );
       const app = createApp();
 
       const res = await app.request('/photo-albums/add-photos', {

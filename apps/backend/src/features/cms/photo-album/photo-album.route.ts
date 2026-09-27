@@ -46,9 +46,16 @@ photoAlbumRoutes.get(
 photoAlbumRoutes.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const album = await appRuntime.runPromise(
-      photoAlbumService.findById(id),
-    );
+    const album = await appRuntime.runPromise(photoAlbumService.findById(id));
+
+    if (!album) {
+      return c.json(
+        createResult({
+          code: ResultCode.ResourceNotFound,
+          message: '相册不存在',
+        }),
+      );
+    }
 
     return c.json(
       createResult({
@@ -70,9 +77,7 @@ photoAlbumRoutes.post(
   async (c) => {
     try {
       const body = c.req.valid('json');
-      const album = await appRuntime.runPromise(
-        photoAlbumService.create(body),
-      );
+      const album = await appRuntime.runPromise(photoAlbumService.create(body));
 
       return c.json(
         createResult({
@@ -181,7 +186,7 @@ photoAlbumRoutes.post(
       if (!success) {
         return c.json(
           createResult({
-            code: ResultCode.ValidationError,
+            code: ResultCode.ResourceNotFound,
             message: '相册不存在',
           }),
         );

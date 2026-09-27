@@ -32,7 +32,9 @@ describe('articleTagRoutes', () => {
 
   describe('GET /article-tags', () => {
     it('returns all tags', async () => {
-      mockTagService.findAll.mockReturnValue(Effect.succeed([{ id: 1, name: 'tag1' }]));
+      mockTagService.findAll.mockReturnValue(
+        Effect.succeed([{ id: 1, name: 'tag1' }]),
+      );
       const app = createApp();
 
       const res = await app.request('/article-tags');
@@ -53,7 +55,9 @@ describe('articleTagRoutes', () => {
 
   describe('GET /article-tags/:id', () => {
     it('returns tag by id', async () => {
-      mockTagService.findById.mockReturnValue(Effect.succeed({ id: 1, name: 'tag' }));
+      mockTagService.findById.mockReturnValue(
+        Effect.succeed({ id: 1, name: 'tag' }),
+      );
       const app = createApp();
 
       const res = await app.request('/article-tags/1');
@@ -62,18 +66,47 @@ describe('articleTagRoutes', () => {
       expect(body.code).toBe('0000');
     });
 
-    it('throws on service error', async () => {
-      mockTagService.findById.mockReturnValue(Effect.fail(new Error('fail')));
+    it('reports a missing tag as ERR0007 rather than a null success payload', async () => {
+      mockTagService.findById.mockReturnValue(Effect.succeed(null));
+      const app = createApp();
+
+      const res = await app.request('/article-tags/999');
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
+    });
+
+    it('keeps a service fault on the detail endpoint a fault, not a not-found', async () => {
+      mockTagService.findById.mockReturnValue(
+        Effect.fail(new Error('db down')),
+      );
       const app = createApp();
 
       const res = await app.request('/article-tags/1');
-      expect(res.status).toBe(200);
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
+      expect(body.code).not.toBe('ERR0007');
+    });
+
+    it('keeps an empty tag list a success with an empty array', async () => {
+      mockTagService.findAll.mockReturnValue(Effect.succeed([]));
+      const app = createApp();
+
+      const res = await app.request('/article-tags');
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data).toEqual([]);
     });
   });
 
   describe('POST /article-tags', () => {
     it('creates a tag', async () => {
-      mockTagService.create.mockReturnValue(Effect.succeed({ id: 1, name: 'new' }));
+      mockTagService.create.mockReturnValue(
+        Effect.succeed({ id: 1, name: 'new' }),
+      );
       const app = createApp();
 
       const res = await app.request('/article-tags', {
@@ -103,7 +136,9 @@ describe('articleTagRoutes', () => {
 
   describe('PUT /article-tags/:id', () => {
     it('updates a tag', async () => {
-      mockTagService.update.mockReturnValue(Effect.succeed({ id: 1, name: 'updated' }));
+      mockTagService.update.mockReturnValue(
+        Effect.succeed({ id: 1, name: 'updated' }),
+      );
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {
@@ -116,8 +151,8 @@ describe('articleTagRoutes', () => {
       expect(body.code).toBe('0000');
     });
 
-    it('returns error on not found', async () => {
-      mockTagService.update.mockReturnValue(Effect.fail(new Error('not found')));
+    it('returns a genuine database fault as ERR0003, not as a not-found', async () => {
+      mockTagService.update.mockReturnValue(Effect.fail(new Error('db down')));
       const app = createApp();
 
       const res = await app.request('/article-tags/1', {
@@ -128,6 +163,22 @@ describe('articleTagRoutes', () => {
       const body = await res.json();
 
       expect(body.code).toBe('ERR0003');
+      expect(body.code).not.toBe('ERR0007');
+    });
+
+    it('reports a rename of a tag that does not exist as ERR0007', async () => {
+      mockTagService.update.mockReturnValue(Effect.succeed(null));
+      const app = createApp();
+
+      const res = await app.request('/article-tags/999', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'updated' }),
+      });
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0007');
+      expect(body).not.toHaveProperty('data');
     });
   });
 

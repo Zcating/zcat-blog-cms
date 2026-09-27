@@ -21,18 +21,25 @@ export function findById(id: string) {
 export function create(dto: { name: string }) {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
-    return yield* tryPromise(() =>
-      prisma.articleTag.create({ data: dto }),
-    );
+    return yield* tryPromise(() => prisma.articleTag.create({ data: dto }));
   });
 }
 
 export function update(id: string, dto: { name?: string }) {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
+    const tagId = parseInt(id, 10);
+    const existing = yield* tryPromise(() =>
+      prisma.articleTag.findUnique({ where: { id: tagId } }),
+    );
+
+    if (!existing) {
+      return null;
+    }
+
     return yield* tryPromise(() =>
       prisma.articleTag.update({
-        where: { id: parseInt(id, 10) },
+        where: { id: tagId },
         data: dto,
       }),
     );

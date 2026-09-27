@@ -37,6 +37,15 @@ articleTagRoutes.get('/:id', async (c) => {
   try {
     const tag = await appRuntime.runPromise(articleTagService.findById(id));
 
+    if (!tag) {
+      return c.json(
+        createResult({
+          code: ResultCode.ResourceNotFound,
+          message: '文章标签不存在',
+        }),
+      );
+    }
+
     return c.json(
       createResult({
         code: ResultCode.Success,
@@ -90,6 +99,15 @@ articleTagRoutes.put(
         articleTagService.update(id, dto),
       );
 
+      if (!result) {
+        return c.json(
+          createResult({
+            code: ResultCode.ResourceNotFound,
+            message: '文章标签不存在',
+          }),
+        );
+      }
+
       return c.json(
         createResult({
           code: ResultCode.Success,
@@ -98,7 +116,7 @@ articleTagRoutes.put(
         }),
       );
     } catch (error) {
-      logger.error(`更新ID为 ${id} 的文章标签失败：未找到记录`, error);
+      logger.error(`更新ID为 ${id} 的文章标签失败`, error);
       return c.json(
         createResult({
           code: ResultCode.DatabaseError,

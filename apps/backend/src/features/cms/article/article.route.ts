@@ -47,8 +47,8 @@ articleRoutes.get(
       if (!article) {
         return c.json(
           createResult({
-            code: ResultCode.DatabaseError,
-            message: '未找到文章',
+            code: ResultCode.ResourceNotFound,
+            message: '文章不存在',
           }),
         );
       }
@@ -135,8 +135,8 @@ articleRoutes.post(
       if (!deleted) {
         return c.json(
           createResult({
-            code: ResultCode.DatabaseError,
-            message: '删除失败',
+            code: ResultCode.ResourceNotFound,
+            message: '文章不存在',
           }),
         );
       }
