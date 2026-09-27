@@ -57,6 +57,21 @@ const GALLERY_LIST = {
   pageSize: 8,
 };
 
+function makeLargeGalleryPayload(count: number) {
+  return {
+    data: Array.from({ length: count }, (_, index) => ({
+      id: index + 1,
+      name: `相册${index + 1}`,
+      description: `描述${index + 1}`,
+      cover: null,
+    })),
+    total: 11,
+    totalPages: 2,
+    page: 1,
+    pageSize: 8,
+  };
+}
+
 describe('route component: /_blog/gallery', () => {
   beforeEach(() => {
     getGalleryListMock.mockReset();
@@ -66,7 +81,7 @@ describe('route component: /_blog/gallery', () => {
   it('renders one card per gallery, using the gallery id from the payload', () => {
     const spy = vi
       .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: GALLERY_LIST });
+      .mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
     const GalleryPage = Route.options.component;
     if (!GalleryPage) throw new Error('gallery route has no component');
 
@@ -81,7 +96,7 @@ describe('route component: /_blog/gallery', () => {
   it('navigates to the gallery detail route with the numeric id as a string param', () => {
     const spy = vi
       .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: GALLERY_LIST });
+      .mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
     const GalleryPage = Route.options.component;
     if (!GalleryPage) throw new Error('gallery route has no component');
 
@@ -96,6 +111,97 @@ describe('route component: /_blog/gallery', () => {
     expect(useNavigateMock).toHaveBeenCalledWith({
       to: '/gallery/$id',
       params: { id: '4' },
+    });
+    spy.mockRestore();
+  });
+
+  it('renders the pagination control only when there is more than one page, with a fixture larger than a single page', () => {
+    const payload = makeLargeGalleryPayload(8);
+    const spy = vi
+      .spyOn(Route, 'useLoaderData')
+      .mockReturnValue({ pagination: payload, page: 1 });
+    const GalleryPage = Route.options.component;
+    if (!GalleryPage) throw new Error('gallery route has no component');
+
+    render(<GalleryPage />);
+
+    expect(screen.getByLabelText('Go to next page')).toBeInTheDocument();
+    expect(screen.getByLabelText('Go to previous page')).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
+  it('does not render the pagination control when the album list fits on a single page', () => {
+    const singlePage = {
+      data: [
+        {
+          id: 1,
+          name: '火壶表演',
+          description: '唯一的相册',
+          cover: null,
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+      page: 1,
+      pageSize: 8,
+    };
+    const spy = vi
+      .spyOn(Route, 'useLoaderData')
+      .mockReturnValue({ pagination: singlePage, page: 1 });
+    const GalleryPage = Route.options.component;
+    if (!GalleryPage) throw new Error('gallery route has no component');
+
+    render(<GalleryPage />);
+
+    expect(screen.queryByLabelText('Go to next page')).toBeNull();
+    expect(screen.queryByLabelText('Go to previous page')).toBeNull();
+    spy.mockRestore();
+  });
+
+  it('does not render the pagination control when no albums are available', () => {
+    const empty = {
+      data: [],
+      total: 0,
+      totalPages: 0,
+      page: 1,
+      pageSize: 8,
+    };
+    const spy = vi
+      .spyOn(Route, 'useLoaderData')
+      .mockReturnValue({ pagination: empty, page: 1 });
+    const GalleryPage = Route.options.component;
+    if (!GalleryPage) throw new Error('gallery route has no component');
+
+    render(<GalleryPage />);
+
+    expect(screen.queryByLabelText('Go to next page')).toBeNull();
+    expect(screen.queryByLabelText('Go to previous page')).toBeNull();
+    spy.mockRestore();
+  });
+
+  it('navigates with the page search param wired through the same route', () => {
+    const payload = makeLargeGalleryPayload(8);
+    const spy = vi
+      .spyOn(Route, 'useLoaderData')
+      .mockReturnValue({ pagination: payload, page: 1 });
+    const GalleryPage = Route.options.component;
+    if (!GalleryPage) throw new Error('gallery route has no component');
+
+    render(<GalleryPage />);
+
+    expect(useNavigateMock).not.toHaveBeenCalled();
+
+    const next = screen.getByLabelText('Go to next page');
+    const link = next.closest('a');
+    expect(link).not.toBeNull();
+
+    link?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true }),
+    );
+
+    expect(useNavigateMock).toHaveBeenCalledWith({
+      to: '/gallery',
+      search: { page: '2' },
     });
     spy.mockRestore();
   });

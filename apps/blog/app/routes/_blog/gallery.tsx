@@ -4,26 +4,41 @@ import {
   StaggerReveal,
   ZGrid,
   ZImagePreload,
+  ZPagination,
   ZView,
   ZWaterfall,
 } from '@zcat/ui';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { z } from 'zod';
 
+import { safePositiveNumber } from '@blog/common';
 import { getGalleryList } from '@blog/server/gallery';
 
 import type { Gallery } from '@blog/server/gallery/schemas';
 
-export async function loader() {
-  const pagination = await getGalleryList({ data: { page: 1 } });
+const gallerySearchSchema = z.looseObject({
+  page: z.coerce.number().int().positive().optional(),
+});
 
-  return { pagination };
+type GallerySearch = z.infer<typeof gallerySearchSchema>;
+
+interface GalleryLoaderArgs {
+  search: { page?: string | number };
+}
+
+export async function loader({ search }: GalleryLoaderArgs) {
+  const requestedPage = safePositiveNumber(search.page, 1);
+  const pagination = await getGalleryList({ data: { page: requestedPage } });
+  const page = Math.min(requestedPage, Math.max(1, pagination.totalPages));
+  return { pagination, page };
 }
 
 export const Route = createFileRoute('/_blog/gallery')({
+  validateSearch: gallerySearchSchema,
   head: () => ({
     meta: [{ title: '相册' }, { name: 'description', content: '个人技术博客' }],
   }),
-  loader: () => loader(),
+  loader: ({ location }) => loader({ search: location.search }),
   component: GalleryPage,
   pendingComponent: GalleryPendingFallback,
 });
@@ -41,10 +56,14 @@ function GalleryPendingFallback() {
 
 function GalleryPage() {
   const navigate = useNavigate();
-  const { pagination } = Route.useLoaderData();
+  const { pagination, page } = Route.useLoaderData();
 
   const handleClick = (value: Gallery) => {
     navigate({ to: '/gallery/$id', params: { id: String(value.id) } });
+  };
+
+  const goToPage = (nextPage: number) => {
+    navigate({ to: '/gallery', search: { page: String(nextPage) } });
   };
 
   return (
@@ -71,6 +90,13 @@ function GalleryPage() {
             )}
           />
         </StaggerReveal>
+        {pagination.totalPages > 1 && (
+          <ZPagination
+            page={page}
+            totalPages={pagination.totalPages}
+            onPageChange={goToPage}
+          />
+        )}
       </ZView>
     </ZView>
   );
