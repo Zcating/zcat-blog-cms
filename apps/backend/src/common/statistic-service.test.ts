@@ -13,9 +13,9 @@ vi.mock('./prisma.service', () => ({
   prismaService: { statistic: mockStatistic },
 }));
 
-const mockHashTest = vi.hoisted(() => vi.fn());
+const mockVerifyPayloadChecksum = vi.hoisted(() => vi.fn());
 vi.mock('@backend/utils/hash', () => ({
-  hashTest: mockHashTest,
+  verifyPayloadChecksum: mockVerifyPayloadChecksum,
 }));
 
 import { logger } from '@backend/utils';
@@ -46,11 +46,10 @@ describe('statistic-service', () => {
       os: 'macOS',
       device: 'Desktop',
       deviceId: 'dev-123',
-      hmac: 'valid-hmac',
     };
 
     it('records visitor successfully with masked IPv4', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -72,8 +71,8 @@ describe('statistic-service', () => {
       });
     });
 
-    it('logs warn with event=hmac_failed when hash is invalid and skips create', async () => {
-      mockHashTest.mockReturnValue(false);
+    it('logs warn with event=payload_checksum_mismatch when the checksum is invalid and skips create', async () => {
+      mockVerifyPayloadChecksum.mockReturnValue(false);
       const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
 
       const request = {
@@ -85,61 +84,72 @@ describe('statistic-service', () => {
 
       expect(mockStatistic.create).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ event: 'hmac_failed', pagePath: '/test' }),
+        expect.objectContaining({
+          event: 'payload_checksum_mismatch',
+          pagePath: '/test',
+        }),
         expect.any(String),
       );
     });
 
     it('returns early when browser is missing', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
 
       const request = {
         ...baseRequest,
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, browser: '' }));
+      await appRuntime.runPromise(
+        recordVisitor(request, { ...validVisitorDto, browser: '' }),
+      );
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
     it('returns early when os is missing', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
 
       const request = {
         ...baseRequest,
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, os: '' }));
+      await appRuntime.runPromise(
+        recordVisitor(request, { ...validVisitorDto, os: '' }),
+      );
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
     it('returns early when device is missing', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
 
       const request = {
         ...baseRequest,
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, device: '' }));
+      await appRuntime.runPromise(
+        recordVisitor(request, { ...validVisitorDto, device: '' }),
+      );
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
     it('returns early when OS is not in allowed list', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
 
       const request = {
         ...baseRequest,
         headers: { 'data-hash': 'valid-hash' },
       };
 
-      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, os: 'FreeBSD' }));
+      await appRuntime.runPromise(
+        recordVisitor(request, { ...validVisitorDto, os: 'FreeBSD' }),
+      );
       expect(mockStatistic.create).not.toHaveBeenCalled();
     });
 
     it('uses x-forwarded-for when request.ip is not available and masks it', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -156,7 +166,7 @@ describe('statistic-service', () => {
     });
 
     it('uses "unknown" when no IP source is available', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -173,7 +183,7 @@ describe('statistic-service', () => {
     });
 
     it('uses referrer from request getter when visitorDto.referrer is empty', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -182,7 +192,9 @@ describe('statistic-service', () => {
         get: vi.fn().mockReturnValue('https://referrer.com'),
       };
 
-      await appRuntime.runPromise(recordVisitor(request, { ...validVisitorDto, referrer: '' }));
+      await appRuntime.runPromise(
+        recordVisitor(request, { ...validVisitorDto, referrer: '' }),
+      );
 
       expect(mockStatistic.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ referrer: 'https://referrer.com' }),
@@ -191,7 +203,7 @@ describe('statistic-service', () => {
 
     // P0 A.5 — IP truncation (GDPR)
     it('truncates IPv4 to /24: keeps first three octets, zeros last', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -208,7 +220,7 @@ describe('statistic-service', () => {
     });
 
     it('keeps already-zeroed IPv4 unchanged', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -225,7 +237,7 @@ describe('statistic-service', () => {
     });
 
     it('returns "unknown" for invalid IPv4 (wrong octet count)', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -242,7 +254,7 @@ describe('statistic-service', () => {
     });
 
     it('returns "unknown" for non-IP strings', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -259,7 +271,7 @@ describe('statistic-service', () => {
     });
 
     it('truncates IPv6 keeping first 48 bits', async () => {
-      mockHashTest.mockReturnValue(true);
+      mockVerifyPayloadChecksum.mockReturnValue(true);
       mockStatistic.create.mockResolvedValue({ id: 1 });
 
       const request = {
@@ -369,7 +381,9 @@ describe('statistic-service', () => {
 
     // P0 A.11 — 60s in-memory Cache
     it('caches the result: second call within 60s returns the same value without hitting DB', async () => {
-      const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000);
+      const dateSpy = vi
+        .spyOn(Date, 'now')
+        .mockReturnValue(Date.now() + 61_000);
 
       mockStatistic.count.mockResolvedValue(100);
       mockStatistic.groupBy.mockResolvedValue([]);

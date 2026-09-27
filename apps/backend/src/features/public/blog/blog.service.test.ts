@@ -283,7 +283,6 @@ describe('blogService', () => {
             os: 'macOS',
             device: 'Desktop',
             deviceId: 'abc',
-            hmac: 'hmac-value',
           },
           { 'data-hash': 'hash123', 'x-forwarded-for': '1.2.3.4' },
           '5.6.7.8',

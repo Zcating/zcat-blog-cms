@@ -1,7 +1,5 @@
-﻿
-
-import { Cache } from '@backend/utils/cache';
-import { hashTest } from '@backend/utils/hash';
+﻿import { Cache } from '@backend/utils/cache';
+import { verifyPayloadChecksum } from '@backend/utils/hash';
 import { logger } from '@backend/utils';
 
 import { Effect } from 'effect';
@@ -17,7 +15,6 @@ interface BlogVisitorDto {
   os: string;
   device: string;
   deviceId: string;
-  hmac: string;
 }
 
 // Minimal request-like shape compatible with the legacy express-based
@@ -98,12 +95,12 @@ export function recordVisitor(
     const prisma = yield* PrismaService;
 
     const hash = request.headers['data-hash'];
-    const hashStr = Array.isArray(hash) ? hash[0] : hash;
-    const result = hashTest(visitorDto, hashStr ?? '');
+    const checksum = Array.isArray(hash) ? hash[0] : hash;
+    const result = verifyPayloadChecksum(visitorDto, checksum ?? '');
     if (!result) {
       logger.warn(
-        { event: 'hmac_failed', pagePath: visitorDto.pagePath },
-        'HMAC validation failed',
+        { event: 'payload_checksum_mismatch', pagePath: visitorDto.pagePath },
+        'Payload checksum does not match the request payload',
       );
       return;
     }
@@ -119,9 +116,7 @@ export function recordVisitor(
     // 获取客户端IP
     const xff = request.headers['x-forwarded-for'];
     const clientIp =
-      request.ip ||
-      (Array.isArray(xff) ? xff[0] : xff) ||
-      'unknown';
+      request.ip || (Array.isArray(xff) ? xff[0] : xff) || 'unknown';
     const maskedIp = maskClientIp(clientIp);
 
     // 获取referrer信息
@@ -197,40 +192,45 @@ export function getSummary() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const [totalVisits, totalUniqueVisitors, todayVisits, todayUniqueVisitors, topPagesData] =
-      yield* Effect.all(
-        [
-          Effect.tryPromise(() => prisma.statistic.count()),
-          Effect.tryPromise(() =>
-            prisma.statistic.groupBy({
-              by: ['deviceId'],
-              _count: { deviceId: true },
-            }),
-          ),
-          Effect.tryPromise(() =>
-            prisma.statistic.count({
-              where: { time: { gte: today, lt: tomorrow } },
-            }),
-          ),
-          Effect.tryPromise(() =>
-            prisma.statistic.groupBy({
-              by: ['deviceId'],
-              where: { time: { gte: today, lt: tomorrow } },
-              _count: { ip: true },
-            }),
-          ),
-          Effect.tryPromise(() =>
-            prisma.statistic.groupBy({
-              by: ['pagePath', 'pageTitle'],
-              where: { time: { gte: sevenDaysAgo }, pagePath: { not: null } },
-              _count: { id: true },
-              orderBy: { _count: { id: 'desc' } },
-              take: 10,
-            }),
-          ),
-        ],
-        { concurrency: 'unbounded' },
-      );
+    const [
+      totalVisits,
+      totalUniqueVisitors,
+      todayVisits,
+      todayUniqueVisitors,
+      topPagesData,
+    ] = yield* Effect.all(
+      [
+        Effect.tryPromise(() => prisma.statistic.count()),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['deviceId'],
+            _count: { deviceId: true },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.count({
+            where: { time: { gte: today, lt: tomorrow } },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['deviceId'],
+            where: { time: { gte: today, lt: tomorrow } },
+            _count: { ip: true },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['pagePath', 'pageTitle'],
+            where: { time: { gte: sevenDaysAgo }, pagePath: { not: null } },
+            _count: { id: true },
+            orderBy: { _count: { id: 'desc' } },
+            take: 10,
+          }),
+        ),
+      ],
+      { concurrency: 'unbounded' },
+    );
 
     const topPages = topPagesData.map(
       (item: {
@@ -276,7 +276,10 @@ export function getChartData(days: number = 7) {
     );
 
     // 初始化空白日
-    const buckets = new Map<string, { visits: number; uniqueIps: Set<string> }>();
+    const buckets = new Map<
+      string,
+      { visits: number; uniqueIps: Set<string> }
+    >();
     for (let i = 0; i < days; i++) {
       const d = new Date(startDate);
       d.setDate(d.getDate() + i);

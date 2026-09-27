@@ -187,7 +187,6 @@ export function recordVisitor(
     os?: string;
     device?: string;
     deviceId?: string;
-    hmac?: string;
   },
   headers: Record<string, string | undefined>,
   ip: string,
@@ -212,7 +211,6 @@ export function recordVisitor(
       os: visitorDto.os || '',
       device: visitorDto.device || '',
       deviceId: visitorDto.deviceId || '',
-      hmac: visitorDto.hmac || '',
     });
   });
 }

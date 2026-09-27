@@ -149,7 +149,6 @@ blogRoutes.post(
       os: z.string().optional().default(''),
       device: z.string().optional().default(''),
       deviceId: z.string().optional().default(''),
-      hmac: z.string().optional().default(''),
     }),
   ),
   async (c) => {

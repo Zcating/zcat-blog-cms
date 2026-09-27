@@ -6,5 +6,4 @@ export interface BlogVisitorDto {
   os: string;
   device: string;
   deviceId: string;
-  hmac: string;
 }
