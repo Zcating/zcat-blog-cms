@@ -1,14 +1,5 @@
-/*
- * Loader behaviour:
- *   - `id` is read from the URL search params (optional). When
- *     present and parseable, the loader hydrates
- *     `articleDetailQueryOptions({ id })` so the editor form can
- *     prefill the existing row.
- *   - When `id` is absent or non-numeric, the loader is a no-op
- *     for the detail slot — the editor renders a blank form.
- *   - The tag list Query is always warmed up so the editor's tag
- *     selector renders without a second round-trip.
- */
+// `id` is optional: when it is absent or non-numeric the loader warms
+// only the tag list and the editor renders a blank form.
 
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -16,14 +7,10 @@ import { safeNumber } from '@zcat/ui';
 import type { QueryClient } from '@tanstack/react-query';
 
 import { ArticleEditorPage } from '@cms/features/article/components/article/article-editor';
+import { withNotFound } from '@cms/shared/routing/not-found';
 import { articleDetailQueryOptions } from '@cms/server/articles';
 import { articleTagsListQueryOptions } from '@cms/server/article-tags';
 
-/**
- * Pure loader logic — extracted so it can be unit-tested without
- * booting the TanStack Start runtime (the `createServerFn`
- * boundary requires the AsyncLocalStorage Start context).
- */
 export async function ensureArticleEditQueries({
   search,
   context,
@@ -44,10 +31,12 @@ export async function ensureArticleEditQueries({
   }
 
   return Promise.all([
-    queryClient.query({
-      ...articleDetailQueryOptions({ id }),
-      staleTime: 'static',
-    }),
+    withNotFound(() =>
+      queryClient.query({
+        ...articleDetailQueryOptions({ id }),
+        staleTime: 'static',
+      }),
+    ),
     tagPromise,
   ]);
 }

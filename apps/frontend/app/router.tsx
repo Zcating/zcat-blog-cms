@@ -14,26 +14,19 @@ import { makeQueryClient } from '@cms/shared/query';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter() {
-  // Build a fresh client per call. The SSR runtime calls
-  // `getRouter()` once per request; the browser calls it once per
-  // page load. A module-scope client would leak state across
-  // requests.
-  //
-  // A 401 from any server function wipes the private cache and sends
-  // the user to the login page, exactly like the `_cms` guard does
-  // for an invalid session. The callback closes over `router`, which
-  // only exists once `createRouter` returns, so it is resolved lazily
-  // at the moment a 401 arrives — never at construction time.
+  // A fresh client per call: the SSR runtime calls `getRouter()` once per
+  // request and the browser once per page load, so a module-scope client
+  // would leak state across requests. The 401 callback closes over
+  // `router`, which does not exist yet, so it resolves lazily.
   const queryClient = makeQueryClient(() => router.navigate({ to: '/login' }));
 
   const router = createRouter({
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    // Per the official TanStack Start + Query guide: let Query
-    // decide whether a preload needs data, and use a small
-    // `staleTime` so the browser does not immediately re-read a
-    // query right after SSR hydration.
+    // Per the official TanStack Start + Query guide: let Query decide
+    // whether a preload needs data, and use a small `staleTime` so the
+    // browser does not immediately re-read a query after SSR hydration.
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
   });

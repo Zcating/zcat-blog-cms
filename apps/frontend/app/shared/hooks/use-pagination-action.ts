@@ -26,6 +26,10 @@ function toPositiveInt(raw: unknown): number | undefined {
 
 const positiveIntFromQuery = z.preprocess(toPositiveInt, z.number().optional());
 
+export function coerceQueryInt(raw: unknown, fallback: number): number {
+  return toPositiveInt(raw) ?? fallback;
+}
+
 /**
  * The search contract shared by the paginated `_cms` list routes
  * (`/albums`, `/articles`, `/photos`) and by `usePaginationAction`.

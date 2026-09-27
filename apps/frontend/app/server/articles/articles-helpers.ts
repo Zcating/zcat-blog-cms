@@ -1,15 +1,3 @@
-/*
- * Tests inject `fetch` directly into the helpers — the ONLY mocked
- * boundary.
- *
- * Design rules:
- *   - Input objects mirror the backend
- *     Hono `zValidator('query' / 'json')` schemas; output schemas
- *     mirror the Prisma SELECT returned by the service.
- *   - Errors map through the shared `envelopeToApiError` so the
- *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- */
-
 import { z } from 'zod';
 
 import type { CookieIO } from '@cms/server/cookies';

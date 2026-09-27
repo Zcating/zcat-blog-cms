@@ -1,20 +1,6 @@
-/*
- * Every operation:
- *
- *   - Reads `BACKEND_API_URL` per request via the shared
- *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
- *   - Forwards the request's Cookie Bearer as `Authorization` from the
- *     shared `authorizeFromCookie` helper.
- *   - Parses the backend envelope through the shared `parseEnvelope`
- *     and validates the unwrapped `data` against a per-operation Zod
- *     schema. A schema mismatch throws a typed `ResponseValidationError`;
- *     a non-success envelope throws a typed `ApiError`.
- *   - Has no automatic retries. The `fetch` boundary is called exactly
- *     once per operation.
- *
- * The `queryOptions` factories key off the operation and re-use the
- * server-function body so consumers don't need to know the wire details.
- */
+// Every operation goes through the shared `transport` helpers, so the
+// base-URL, Authorization, envelope-parsing and no-retry rules in
+// `./transport.ts` apply here unchanged.
 
 import { queryOptions } from '@tanstack/react-query';
 import { createServerFn } from '@tanstack/react-start';

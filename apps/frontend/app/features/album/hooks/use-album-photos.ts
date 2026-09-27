@@ -7,6 +7,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { OssAction } from '@cms/core';
+import { useOptimisticCache } from '@cms/shared/query/use-optimistic-cache';
 import {
   addPhotos,
   photoAlbumDetailQueryOptions,
@@ -37,7 +38,7 @@ export interface AddAlbumPhotosValues {
 }
 
 interface PhotoListMutationContext {
-  previous: PaginatedPhotos | undefined;
+  restore: () => void;
   optimisticId?: number;
 }
 
@@ -68,6 +69,7 @@ function buildOptimisticPhoto(
  */
 export function useCreateAlbumPhoto(input: GetPhotosInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<
@@ -88,33 +90,28 @@ export function useCreateAlbumPhoto(input: GetPhotosInput) {
       return photo as Photo;
     },
     onMutate: async (values) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotos>(
-        options.queryKey,
-      );
       // A form carrying an id is an edit of an existing row; a form
       // without one is a new upload, which needs a temporary
       // negative id so it is distinguishable from persisted rows.
       const optimisticId = values.id || buildOptimisticPhotoId();
-      const optimistic = buildOptimisticPhoto(values, optimisticId);
-      queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) => {
-        if (!current) return current;
-        return values.id
-          ? {
-              ...current,
-              data: current.data.map((row) =>
-                row.id === values.id ? optimistic : row,
-              ),
-            }
-          : { ...current, data: [...current.data, optimistic] };
-      });
-      return { previous, optimisticId };
+      const row = buildOptimisticPhoto(values, optimisticId);
+      const restore = await optimistic.slot<PaginatedPhotos>(
+        options.queryKey,
+        (current) => {
+          if (!current) return current;
+          return values.id
+            ? {
+                ...current,
+                data: current.data.map((existing) =>
+                  existing.id === values.id ? row : existing,
+                ),
+              }
+            : { ...current, data: [...current.data, row] };
+        },
+      );
+      return { restore, optimisticId };
     },
-    onError: (_error, _values, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+    onError: (_error, _values, context) => context?.restore(),
     onSuccess: (photo, _values, context) => {
       queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
         current
@@ -136,6 +133,7 @@ export function useCreateAlbumPhoto(input: GetPhotosInput) {
  */
 export function useUpdateAlbumPhoto(input: GetPhotosInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<
@@ -157,30 +155,22 @@ export function useUpdateAlbumPhoto(input: GetPhotosInput) {
       return photo as Photo;
     },
     onMutate: async (values) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotos>(
+      const restore = await optimistic.slot<PaginatedPhotos>(
         options.queryKey,
+        (current) => {
+          if (!current || !values.id) return current;
+          const row = buildOptimisticPhoto(values, values.id);
+          return {
+            ...current,
+            data: current.data.map((existing) =>
+              existing.id === values.id ? row : existing,
+            ),
+          };
+        },
       );
-      if (values.id) {
-        const optimistic = buildOptimisticPhoto(values, values.id);
-        queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
-          current
-            ? {
-                ...current,
-                data: current.data.map((row) =>
-                  row.id === values.id ? optimistic : row,
-                ),
-              }
-            : current,
-        );
-      }
-      return { previous, optimisticId: values.id };
+      return { restore, optimisticId: values.id };
     },
-    onError: (_error, _values, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+    onError: (_error, _values, context) => context?.restore(),
     onSuccess: (photo) => {
       queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
         current
@@ -201,30 +191,22 @@ export function useUpdateAlbumPhoto(input: GetPhotosInput) {
  * （失败时回滚到快照）。
  */
 export function useDeleteAlbumPhoto(input: GetPhotosInput) {
-  const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<void, Error, number, PhotoListMutationContext>({
     mutationFn: async (id) => {
       await OssAction.deletePhoto(id);
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotos>(
-        options.queryKey,
-      );
-      queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
-        current
-          ? { ...current, data: current.data.filter((row) => row.id !== id) }
-          : current,
-      );
-      return { previous, optimisticId: id };
-    },
-    onError: (_error, _id, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+    onMutate: (id) =>
+      optimistic
+        .slot<PaginatedPhotos>(options.queryKey, (current) =>
+          current
+            ? { ...current, data: current.data.filter((row) => row.id !== id) }
+            : current,
+        )
+        .then((restore) => ({ restore })),
+    onError: (_error, _id, context) => context?.restore(),
   });
 }
 
@@ -234,6 +216,7 @@ export function useDeleteAlbumPhoto(input: GetPhotosInput) {
  */
 export function useAddPhotosToAlbum(input: GetPhotosInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<
@@ -251,10 +234,6 @@ export function useAddPhotosToAlbum(input: GetPhotosInput) {
       });
     },
     onMutate: async ({ albumId, photos }) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotos>(
-        options.queryKey,
-      );
       const addedIds = new Set(photos.map((photo) => photo.id));
       const added = photos.map(
         (photo) =>
@@ -264,24 +243,22 @@ export function useAddPhotosToAlbum(input: GetPhotosInput) {
             loading: true,
           }) as PhotoCardData,
       );
-      queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
-        current
-          ? {
-              ...current,
-              data: [
-                ...added,
-                ...current.data.filter((row) => !addedIds.has(row.id)),
-              ],
-            }
-          : current,
+      const restore = await optimistic.slot<PaginatedPhotos>(
+        options.queryKey,
+        (current) =>
+          current
+            ? {
+                ...current,
+                data: [
+                  ...added,
+                  ...current.data.filter((row) => !addedIds.has(row.id)),
+                ],
+              }
+            : current,
       );
-      return { previous };
+      return { restore };
     },
-    onError: (_error, _values, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+    onError: (_error, _values, context) => context?.restore(),
     onSuccess: (_void, values) => {
       const committed = new Map(
         values.photos.map((photo) => [

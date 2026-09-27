@@ -15,7 +15,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   authorizeFromCookie,
-  buildAuthorizationHeader,
   clearSessionCookie,
   parseSessionCookie,
   setSessionCookie,
@@ -125,22 +124,5 @@ describe('authorizeFromCookie', () => {
   it('returns null when the Cookie value is empty', () => {
     const { io } = makeIo({ getCookie: vi.fn(() => '') });
     expect(authorizeFromCookie(io)).toBeNull();
-  });
-});
-
-describe('buildAuthorizationHeader', () => {
-  it('returns null when there is no session Cookie', () => {
-    const { io } = makeIo();
-    expect(buildAuthorizationHeader(io)).toBeNull();
-  });
-
-  it('returns "Bearer <token>" for a raw-token Cookie', () => {
-    const { io } = makeIo({ getCookie: vi.fn(() => 'raw-token-only') });
-    expect(buildAuthorizationHeader(io)).toBe('Bearer raw-token-only');
-  });
-
-  it('returns the existing "Bearer <token>" verbatim for a prefixed Cookie', () => {
-    const { io } = makeIo({ getCookie: vi.fn(() => 'Bearer abc.def.ghi') });
-    expect(buildAuthorizationHeader(io)).toBe('Bearer abc.def.ghi');
   });
 });

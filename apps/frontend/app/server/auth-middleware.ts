@@ -1,23 +1,13 @@
 /*
- * The middleware is the security boundary for any `createServerFn` that
- * reads or writes private data. It rejects a missing or empty session
- * Cookie BEFORE calling `next()` so an attacker cannot reach the
- * downstream handler by hitting the RPC endpoint directly.
+ * The security boundary for any `createServerFn` that reads or writes
+ * private data: it rejects a missing session Cookie BEFORE `next()`, so
+ * the RPC endpoint cannot be hit directly. Route-level guards
+ * (`beforeLoad`, redirects) are not a substitute — they protect
+ * navigation, not the function.
  *
- * Per the TanStack Start execution model:
- *   - Route-level UX guards (`beforeLoad`, redirects) are NOT a
- *     substitute for this middleware. They protect navigation, not the
- *     server function itself.
- *   - The middleware MUST NOT consult any `redirectTo` / `to` field on
- *     the request context.
- *
- * The middleware is intentionally NOT a TanStack `createMiddleware()`
- * instance — domain code composes it into `createServerFn().middleware([...])`
- * via the factory exposed below.
- *
- * The runtime test seam `runProtectedFunctionGate` lives in the
- * sibling `auth-middleware.server.ts` file so the seam itself stays out
- * of the production module graph.
+ * The runtime test seam `runProtectedFunctionGate` lives in the sibling
+ * `auth-middleware.server.ts` so the seam stays out of the production
+ * module graph.
  */
 
 import { createMiddleware } from '@tanstack/react-start';
@@ -40,11 +30,6 @@ export class UnauthorizedError extends Error {
   }
 }
 
-/**
- * The middleware never reads any field on this shape — it only consults
- * the injected `cookie` — but documenting the expected shape keeps callers
- * from accidentally passing auth state through the context object.
- */
 export interface ProtectedFunctionContext {
   redirectTo?: string;
   userId?: string;
@@ -52,12 +37,11 @@ export interface ProtectedFunctionContext {
 }
 
 /**
- * The factory takes an optional `cookie` so tests can inject a fake
- * `CookieIO`. Production callers leave it empty and pick up
- * `liveCookieIO()` automatically — that call is intentionally inside
- * the `.server()` closure so the TanStack Start compiler strips it
- * (and the server-only Cookie import it reaches) from the client
- * bundle.
+ * The `cookie` option exists so tests can inject a fake `CookieIO`.
+ * Production callers leave it empty and pick up `liveCookieIO()`
+ * automatically — that call is intentionally inside the `.server()`
+ * closure so the TanStack Start compiler strips it (and the server-only
+ * Cookie import it reaches) from the client bundle.
  */
 export function createProtectedFunctionMiddleware(
   options: { cookie?: CookieIO } = {},

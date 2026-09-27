@@ -9,9 +9,6 @@ import {
 import type { Photo } from '@cms/server/photos/schemas';
 import { getSystemSettingUploadUrlServerFn } from '@cms/server/system-setting';
 
-/**
- * 上传文件到 MinIO（通过预签名 URL）
- */
 async function uploadToOss(presignedUrl: string, file: Blob): Promise<void> {
   const response = await fetch(presignedUrl, {
     method: 'PUT',
@@ -36,9 +33,6 @@ async function getPresignedUploadUrl(key: string): Promise<string> {
   return result.presignedUrl;
 }
 
-/**
- * 使用 compressorjs 压缩图片
- */
 function compressImage(
   file: Blob,
   maxWidth: number,
@@ -79,9 +73,6 @@ interface UpdatePhotoParams {
   image?: string;
 }
 
-/**
- * 从 blob URL 获取图片文件
- */
 async function fetchImageFile(url?: string): Promise<Blob | undefined> {
   if (!url || !url.startsWith('blob:')) {
     return undefined;
@@ -90,9 +81,6 @@ async function fetchImageFile(url?: string): Promise<Blob | undefined> {
   return response.blob();
 }
 
-/**
- * 上传照片文件（原图+缩略图）
- */
 async function uploadPhotoFile(
   image?: string,
 ): Promise<UploadPhotoResult | undefined> {
@@ -121,13 +109,7 @@ async function uploadPhotoFile(
   return { url: key, thumbnailUrl: thumbnailKey };
 }
 
-/**
- * OSS操作
- */
 export const OssAction = {
-  /**
-   * 创建照片
-   */
   async createPhoto(values: UploadPhotoParams): Promise<Photo | void> {
     const result = await uploadPhotoFile(values.image);
     if (!result) {
@@ -143,9 +125,6 @@ export const OssAction = {
     });
   },
 
-  /**
-   * 创建相册照片
-   */
   async createAlbumPhoto(
     params: UploadPhotoParams & { albumId: number },
   ): Promise<Photo | void> {
@@ -164,9 +143,6 @@ export const OssAction = {
     });
   },
 
-  /**
-   * 更新照片
-   */
   async updatePhoto(values: UpdatePhotoParams): Promise<Photo> {
     const data: {
       id: number;
@@ -189,9 +165,6 @@ export const OssAction = {
     return await updatePhoto({ data });
   },
 
-  /**
-   * 删除照片
-   */
   async deletePhoto(id: number) {
     await deletePhoto({ data: { id } });
   },

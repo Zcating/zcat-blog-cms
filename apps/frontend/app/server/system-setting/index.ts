@@ -1,25 +1,10 @@
-/*
- * Every operation:
- *
- *   - Reads `BACKEND_API_URL` per request via the shared
- *     `resolveBackendApiUrl` (no `VITE_*` fallback, no `/api/bff/*`).
- *   - Forwards the request's Cookie Bearer as `Authorization` from the
- *     shared `authorizeFromCookie` helper when a session is present.
- *     The upload-config endpoint is accessible to an authenticated
- *     user; we forward whatever the request Cookie carries and never
- *     leak it across requests.
- *   - Parses the backend envelope through the shared `parseEnvelope`
- *     and validates the unwrapped `data` against the per-operation
- *     Zod schema. A schema mismatch throws a typed
- *     `ResponseValidationError`; a non-success envelope throws a typed
- *     `ApiError`.
- *   - Has no automatic retries. The `fetch` boundary is called exactly
- *     once per operation.
- *
- * `getSystemSettingUploadUrlServerFn` is the only read path: every
- * consumer calls it, so a query factory here would reach `liveCookieIO`
- * in the browser, where it throws.
- */
+// Every operation goes through the shared `transport` helpers, so the
+// base-URL, Authorization, envelope-parsing and no-retry rules in
+// `./transport.ts` apply here unchanged.
+//
+// `getSystemSettingUploadUrlServerFn` is the only read path: every consumer
+// calls it, so a query factory here would reach `liveCookieIO` in the
+// browser, where it throws.
 
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';

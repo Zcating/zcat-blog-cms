@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 import { OssAction } from '@cms/core';
+import { useOptimisticCache } from '@cms/shared/query/use-optimistic-cache';
 import { photoListQueryOptions } from '@cms/server/photos';
 import type { PaginatedPhotos, Photo } from '@cms/server/photos/schemas';
 
@@ -29,7 +30,7 @@ export function usePhotosList(input: UsePhotosListInput) {
 }
 
 interface PhotoMutationContext {
-  previous: unknown;
+  restore: () => void;
 }
 
 export interface PhotoFormPayload {
@@ -40,6 +41,7 @@ export interface PhotoFormPayload {
 
 export function useCreatePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<Photo, Error, PhotoFormPayload, PhotoMutationContext>({
@@ -53,19 +55,9 @@ export function useCreatePhoto(input: UsePhotosListInput) {
       }
       return photo as Photo;
     },
-    onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData(options.queryKey);
-      return { previous };
-    },
-    onError: (_error, _payload, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          options.queryKey,
-          context.previous as PaginatedPhotos | undefined,
-        );
-      }
-    },
+    onMutate: (payload) =>
+      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
+    onError: (_error, _payload, context) => context?.restore(),
     onSuccess: (photo) => {
       queryClient.setQueryData<PaginatedPhotos | undefined>(
         options.queryKey,
@@ -80,6 +72,7 @@ export function useCreatePhoto(input: UsePhotosListInput) {
 
 export function useUpdatePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<Photo, Error, PhotoFormPayload, PhotoMutationContext>({
@@ -97,19 +90,9 @@ export function useUpdatePhoto(input: UsePhotosListInput) {
       }
       return photo as Photo;
     },
-    onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData(options.queryKey);
-      return { previous };
-    },
-    onError: (_error, _payload, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          options.queryKey,
-          context.previous as PaginatedPhotos | undefined,
-        );
-      }
-    },
+    onMutate: (payload) =>
+      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
+    onError: (_error, _payload, context) => context?.restore(),
     onSuccess: (photo) => {
       queryClient.setQueryData<PaginatedPhotos | undefined>(
         options.queryKey,
@@ -127,25 +110,16 @@ export function useUpdatePhoto(input: UsePhotosListInput) {
 
 export function useDeletePhoto(input: UsePhotosListInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
   return useMutation<void, Error, number, PhotoMutationContext>({
     mutationFn: async (id) => {
       await OssAction.deletePhoto(id);
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData(options.queryKey);
-      return { previous };
-    },
-    onError: (_error, _id, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData(
-          options.queryKey,
-          context.previous as PaginatedPhotos | undefined,
-        );
-      }
-    },
+    onMutate: (id) =>
+      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
+    onError: (_error, _id, context) => context?.restore(),
     onSuccess: (_void, id) => {
       queryClient.setQueryData<PaginatedPhotos | undefined>(
         options.queryKey,

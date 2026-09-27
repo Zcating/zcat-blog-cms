@@ -1,20 +1,14 @@
 /*
- * Cookie / session contract for the TanStack Start server boundary:
+ * Cookie / session contract: HttpOnly, SameSite=Strict (per `CONTEXT.md`),
+ * and a `Bearer <jwt>` value — the backend whitelist also accepts a raw token.
  *
- *   - HttpOnly (defeats XSS-based exfiltration).
- *   - SameSite=Strict (per `CONTEXT.md`).
- *   - `Bearer <jwt>` value format (the backend whitelist accepts either
- *     a raw token or a Bearer-prefixed one).
- *
- * The helpers are written as pure functions over a `CookieIO` interface
- * so they can be unit-tested without a live TanStack Start request
- * context. `liveCookieIO` resolves the real implementation per request
- * through `createIsomorphicFn` plus a dynamic import of
- * `@tanstack/react-start/server`, so this module keeps no static
- * server-only specifier for the client bundle to resolve. A
- * `.server.`-suffixed file cannot be used for the same purpose: TanStack
- * import protection evaluates at resolve time, so a statically
- * server-only module cannot be shared by a client-reachable module.
+ * The helpers are pure over a `CookieIO` interface so they are testable
+ * without a live request context. `liveCookieIO` reaches the real
+ * implementation through `createIsomorphicFn` plus a dynamic import, so this
+ * module keeps no static server-only specifier for the client bundle to
+ * resolve. A `.server.`-suffixed file cannot do the same job: TanStack import
+ * protection evaluates at resolve time, so a statically server-only module
+ * cannot be shared by a client-reachable one.
  */
 
 import { createIsomorphicFn } from '@tanstack/react-start';
@@ -95,7 +89,6 @@ export function clearSessionCookie(cookie: CookieIO): void {
 export function parseSessionCookie(cookie: CookieIO): string | null {
   const raw = cookie.getCookie(TOKEN_COOKIE_NAME);
   if (!raw) return null;
-  if (raw.length === 0) return null;
   return raw.startsWith('Bearer ') ? raw.slice('Bearer '.length) : raw;
 }
 
@@ -106,10 +99,6 @@ export function parseSessionCookie(cookie: CookieIO): string | null {
  */
 export function authorizeFromCookie(cookie: CookieIO): string | null {
   const raw = cookie.getCookie(TOKEN_COOKIE_NAME);
-  if (!raw || raw.length === 0) return null;
+  if (!raw) return null;
   return raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
-}
-
-export function buildAuthorizationHeader(cookie: CookieIO): string | null {
-  return authorizeFromCookie(cookie);
 }

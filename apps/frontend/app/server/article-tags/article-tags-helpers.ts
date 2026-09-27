@@ -1,17 +1,5 @@
-/*
- * Tests inject `fetch` directly into the helpers — the ONLY mocked
- * boundary.
- *
- * Design rules:
- *   - Input objects mirror the backend
- *     Hono `zValidator('json')` schemas; output schemas mirror the
- *     Prisma `findMany` / `findUnique` results.
- *   - Errors map through the shared `envelopeToApiError` so the
- *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- *   - The PUT update method is non-standard in the shared transport, so a
- *     single minimal PUT helper remains in this file.
- */
-
+// The shared transport has no PUT helper, so the tag update keeps a
+// minimal one here.
 import { z } from 'zod';
 
 import { authorizeFromCookie, type CookieIO } from '@cms/server/cookies';

@@ -15,11 +15,6 @@ import { uploadArticleImages } from '@cms/server/articles';
 
 import { CommonRegex } from '@cms/core/utils/common-regex';
 
-/**
- * Walk the markdown body and return every `![alt](url)` URL whose
- * scheme is `blob:` — i.e. every image the user just pasted and
- * that still lives in the browser.
- */
 export function extractBlobImageUrls(markdown: string): string[] {
   const matches = markdown.matchAll(CommonRegex.MARKDOWN_IMAGE_REGEX);
   const result: string[] = [];
@@ -31,14 +26,9 @@ export function extractBlobImageUrls(markdown: string): string[] {
 }
 
 /**
- * Rewrite the markdown body, replacing each `blob:` URL in order
- * with the corresponding resolved URL. Non-blob URLs are left
- * untouched so existing CDN images survive the round-trip.
- *
- * The arrays MUST be positionally aligned: the i-th blob URL in
- * the markdown is replaced by the i-th URL in `resolvedUrls`. The
- * caller is responsible for keeping them in sync (see
- * `uploadArticleMarkdownImages`).
+ * The arrays MUST be positionally aligned: the i-th blob URL in the markdown
+ * is replaced by the i-th URL in `resolvedUrls`. The caller is responsible
+ * for keeping them in sync (see `uploadArticleMarkdownImages`).
  */
 export function rewriteArticleMarkdownImages(
   markdown: string,
@@ -74,10 +64,9 @@ async function fetchBlobFromUrl(blobUrl: string): Promise<Blob> {
 async function uploadBlobToPresignedUrl(blobUrl: string): Promise<string> {
   const blob = await fetchBlobFromUrl(blobUrl);
 
-  // The image key is deterministic but unique: timestamp + a
-  // short random suffix. The backend's `upload-images` endpoint
-  // expects the bare key (not the presigned URL), and it maps that
-  // key to the public URL the editor splices into the markdown.
+  // The backend's `upload-images` endpoint expects the bare key, not the
+  // presigned URL, and maps that key to the public URL the editor splices
+  // into the markdown.
   const extension = blob.type.split('/').pop() || 'png';
   const filename = `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
   const key = `articles/${filename}.${extension}`;
@@ -99,11 +88,8 @@ async function uploadBlobToPresignedUrl(blobUrl: string): Promise<string> {
 }
 
 /**
- * Returns the backend-resolved URLs (not the raw OSS keys) — the
- * editor rewrites the markdown with them before `createArticle` /
- * `updateArticle` accepts it, so the persisted body must contain
- * URLs the browser can load. `uploadArticleImages` is the source of
- * truth for what public URL each key maps to.
+ * Returns the backend-resolved URLs (not the raw OSS keys): the persisted
+ * body must contain URLs the browser can load.
  */
 export async function uploadArticleMarkdownImages(
   blobUrls: string[],

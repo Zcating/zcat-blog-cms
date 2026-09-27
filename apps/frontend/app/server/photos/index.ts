@@ -1,22 +1,9 @@
 /*
- * Photos operation surface:
- *
- *   - getPhotos              — GET    /cms/photos?albumId=&page=&pageSize=  (protected)
- *   - getEmptyAlbumPhotos    — GET    /cms/photos/empty-album               (protected)
- *   - getPhoto               — GET    /cms/photos/detail?id=                 (protected)
- *   - createPhoto            — POST   /cms/photos/create                     (protected)
- *   - createAlbumPhoto       — POST   /cms/photos/create/with-album          (protected)
- *   - updatePhoto            — POST   /cms/photos/update                     (protected)
- *   - updateAlbumPhoto       — POST   /cms/photos/update/with-album          (protected)
- *   - deletePhoto            — POST   /cms/photos/delete                     (protected)
- *
- * Server functions are thin shells over the pure helpers in
- * `./photos-helpers.ts`. Each protected function composes the shared
- * `createProtectedFunctionMiddleware`.
- *
- * Stable `queryOptions` factories are exported for loaders and route
- * components. They reference the server functions by identity so the
- * cache key stays in sync with the RPC.
+ * Photos operation surface. Server functions are thin shells over the pure
+ * helpers in `./photos-helpers.ts`; every protected function composes the
+ * shared `createProtectedFunctionMiddleware`. The `queryOptions` factories
+ * reference the server functions by identity so the cache key stays in sync
+ * with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -140,10 +127,8 @@ export const deletePhoto = createServerFn({ method: 'POST' })
   );
 
 /**
- * The query key encodes
- * the effective `albumId / page / pageSize` so each (album, page) has
- * its own cache slot — consumers can mutate one album without
- * invalidating sibling albums.
+ * The key encodes the effective `albumId / page / pageSize` so a mutation
+ * in one album does not invalidate its siblings.
  */
 export function photoListQueryOptions(input: Partial<GetPhotosInput> = {}) {
   const resolved: GetPhotosInput = GetPhotosInputSchema.parse(input);

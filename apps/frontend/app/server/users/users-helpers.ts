@@ -1,15 +1,6 @@
-/*
- * Tests inject `fetch` directly into the helpers — the ONLY mocked
- * boundary.
- *
- * Design rules:
- *   - `contact` is a JSON string in the backend response and MUST be
- *     parsed at the boundary into an object. On write, the helper sends
- *     `contact` as an object (the backend serialises it itself).
- *   - Errors are mapped through the shared `envelopeToApiError` so the
- *     existing ResultCode -> ApiErrorTag vocabulary is reused.
- */
-
+// `contact` is a JSON string on the wire and MUST be parsed at the
+// boundary; the write path sends it back as an object because the
+// backend serialises it itself.
 import { z } from 'zod';
 
 import type { CookieIO } from '@cms/server/cookies';

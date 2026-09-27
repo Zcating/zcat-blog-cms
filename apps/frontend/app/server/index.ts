@@ -13,14 +13,17 @@ export {
 } from './result';
 export type { Envelope, EnvelopeIssue } from './result';
 
-export { envelopeToApiError, mapResultCodeToTag } from './errors';
+export {
+  envelopeToApiError,
+  isNotFoundError,
+  mapResultCodeToTag,
+} from './errors';
 export type { ApiError, ApiErrorTag } from './errors';
 
 export { BackendUrlMissingError, resolveBackendApiUrl } from './env';
 
 export {
   authorizeFromCookie,
-  buildAuthorizationHeader,
   clearSessionCookie,
   liveCookieIO,
   parseSessionCookie,

@@ -1,11 +1,8 @@
 /*
  * The page MUST read its paginated data from the canonical
- * `photoListQueryOptions` cache. The route loader prefetches the cache
- * slot via `queryClient.query({ ...photoListQueryOptions(...), staleTime: 'static' })`
- * so SSR has a warm cache by the time the page mounts.
- *
- * On mutation failure, the cache is restored from a snapshot taken
- * before the optimistic update — no automatic retries.
+ * `photoListQueryOptions` cache, which the route loader prefetches with
+ * `staleTime: 'static'`. A mutation failure restores the cache from the
+ * snapshot taken before the optimistic update — no automatic retries.
  */
 
 import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
@@ -20,6 +17,7 @@ import {
   PaginationWorkspace,
 } from '@cms/core';
 import type { GetPhotosInput, Photo } from '@cms/server/photos/schemas';
+import { coerceQueryInt } from '@cms/shared/hooks/use-pagination-action';
 
 import { PhotoCard, type PhotoCardData } from '../../album/components/album';
 
@@ -202,25 +200,15 @@ export default function Photos({ search }: PhotosListProps) {
 }
 
 /**
- * 从路由传入的 search 参数中派生照片列表 Query key，使页面 key 与
- * 路由 loader 预热的 key 保持一致。loader 已经用同样的参数调用了
- * `query({ ...options, staleTime: 'static' })`，因此 SSR 首次渲染命中缓存。
+ * 页面 key 必须与路由 loader 预热的 key 完全一致，否则 SSR 首屏读不到缓存。
  */
 function derivePhotosListQueryInput(
   search: Record<string, unknown>,
 ): GetPhotosInput {
-  const albumId = coerceQueryNumber(search.albumId, 0);
+  const albumId = coerceQueryInt(search.albumId, 0);
   return {
     albumId: albumId > 0 ? albumId : undefined,
-    page: coerceQueryNumber(search.page, 1),
-    pageSize: coerceQueryNumber(search.pageSize, 20),
+    page: coerceQueryInt(search.page, 1),
+    pageSize: coerceQueryInt(search.pageSize, 20),
   };
-}
-
-function coerceQueryNumber(raw: unknown, defaultValue: number): number {
-  if (raw == null || raw === '') {
-    return defaultValue;
-  }
-  const parsed = Number(raw);
-  return Number.isNaN(parsed) ? defaultValue : parsed;
 }

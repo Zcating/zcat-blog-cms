@@ -241,4 +241,42 @@ describe('route loader: /_cms/albums/$albumId', () => {
     expect(getPhotosMock).not.toHaveBeenCalled();
     expect(getEmptyAlbumPhotosMock).not.toHaveBeenCalled();
   });
+
+  it('turns an ERR0007 album failure into a router not-found', async () => {
+    getPhotoAlbumMock.mockRejectedValue({
+      _tag: 'NotFound',
+      message: '相册不存在',
+    });
+    getPhotosMock.mockResolvedValue(ALBUM_PHOTOS);
+    getEmptyAlbumPhotosMock.mockResolvedValue(EMPTY_ALBUM_PHOTOS);
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const error = await loader(
+      buildLoaderArgs(buildSearch(''), { albumId: '404' }, queryClient),
+    ).catch((thrown: unknown) => thrown);
+
+    expect(error).toMatchObject({ isNotFound: true });
+  });
+
+  it.each(['LoginError', 'DatabaseError', 'UnknownError'])(
+    'lets the %s album failure reach the error boundary, not the not-found page',
+    async (tag) => {
+      getPhotoAlbumMock.mockRejectedValue({ _tag: tag, message: 'boom' });
+      getPhotosMock.mockResolvedValue(ALBUM_PHOTOS);
+      getEmptyAlbumPhotosMock.mockResolvedValue(EMPTY_ALBUM_PHOTOS);
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      const error = await loader(
+        buildLoaderArgs(buildSearch(''), { albumId: '7' }, queryClient),
+      ).catch((thrown: unknown) => thrown);
+
+      expect(error).toEqual({ _tag: tag, message: 'boom' });
+    },
+  );
 });

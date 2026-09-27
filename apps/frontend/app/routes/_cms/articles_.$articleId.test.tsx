@@ -87,4 +87,34 @@ describe('route loader: /_cms/articles/$articleId', () => {
     ).rejects.toThrow('Invalid article id');
     expect(queryMock).not.toHaveBeenCalled();
   });
+
+  it('turns an ERR0007 detail failure into a router not-found', async () => {
+    const queryClient = makeQueryClient();
+    queryMock.mockRejectedValueOnce({
+      _tag: 'NotFound',
+      message: '文章不存在',
+    });
+
+    const error = await ensureArticleDetailQueries({
+      params: { articleId: '999' },
+      context: { queryClient },
+    }).catch((thrown: unknown) => thrown);
+
+    expect(error).toMatchObject({ isNotFound: true });
+  });
+
+  it.each(['LoginError', 'DatabaseError', 'UnknownError', 'ValidationError'])(
+    'lets the %s failure reach the error boundary instead of the not-found page',
+    async (tag) => {
+      const queryClient = makeQueryClient();
+      queryMock.mockRejectedValueOnce({ _tag: tag, message: 'boom' });
+
+      const error = await ensureArticleDetailQueries({
+        params: { articleId: '999' },
+        context: { queryClient },
+      }).catch((thrown: unknown) => thrown);
+
+      expect(error).toEqual({ _tag: tag, message: 'boom' });
+    },
+  );
 });

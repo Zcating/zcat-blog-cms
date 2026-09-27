@@ -26,6 +26,7 @@ import {
   useLoadingFn,
 } from '@cms/core';
 import { photoAlbumDetailQueryOptions } from '@cms/server/albums';
+import { coerceQueryInt } from '@cms/shared/hooks/use-pagination-action';
 import type { PhotoAlbumDetail } from '@cms/server/albums/schemas';
 import {
   emptyAlbumPhotosQueryOptions,
@@ -63,10 +64,9 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
   const { data: reminderPhotosRaw } = useSuspenseQuery(
     emptyAlbumPhotosQueryOptions(),
   );
-  // The `queryFn` in each `*QueryOptions` factory is a closure
-  // over a TanStack Start server function, which TypeScript cannot
-  // infer through. The shapes are pinned by the corresponding
-  // Zod schemas, so we narrow here.
+  // `queryFn` is a closure over a TanStack Start server function, which
+  // TypeScript cannot infer through; the shapes are pinned by the
+  // corresponding Zod schemas.
   const album = albumRaw as unknown as PhotoAlbumDetail;
   const albumPhotoPagination = photosRaw as unknown as PaginatedPhotos;
   const reminderPhotos = reminderPhotosRaw as unknown as Photo[];
@@ -80,7 +80,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
   const deletePhotoMutation = useDeleteAlbumPhoto(photoQueryInput);
   const addPhotosMutation = useAddPhotosToAlbum(photoQueryInput);
 
-  // 编辑相册
   const editAlbum = useAlbumForm({
     title: '编辑相册',
     confirmText: '保存',
@@ -93,7 +92,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     },
   });
 
-  // 新增相册照片
   const addPhoto = usePhotoForm({
     title: '新增照片',
     async onSubmit(data: AlbumPhotoFormValues) {
@@ -107,7 +105,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     },
   });
 
-  // 编辑照片
   const editPhoto = usePhotoForm({
     title: '编辑照片',
     confirmText: '保存',
@@ -122,12 +119,10 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     },
   });
 
-  // 选择照片
   const selectPhoto = async () => {
-    // `showPhotoSelector` was built against the legacy
-    // `PhotosApi.Photo` shape (albumId: number | undefined). The
-    // server surface now returns albumId: number | null | undefined
-    // — narrow here so the two interfaces stay aligned.
+    // The legacy `Photo` shape declared `albumId: number | undefined`; the
+    // server surface returns `number | null | undefined`, so narrow `null`
+    // to `undefined` to keep the component contract intact.
     const candidates = reminderPhotos
       .filter((photo) => photo.albumId !== album.id)
       .map((photo) => ({
@@ -159,7 +154,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     });
   };
 
-  // 删除照片
   const deletePhoto = async (photo: Photo) => {
     const confirm = await ZDialog.confirm({
       title: '删除照片',
@@ -182,7 +176,6 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
     });
   };
 
-  // 设为封面
   const coverSetter = useCoverSetter(album);
 
   return (
@@ -210,11 +203,8 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
         columnClassName="px-0"
         renderItem={(item) => (
           <PhotoCard
-            // `PhotoCard` was built against the legacy
-            // `PhotosApi.Photo` shape (albumId: number | undefined).
-            // The server surface returns `albumId: number | null |
-            // undefined`; narrow `null` to `undefined` so the
-            // legacy component contract stays intact.
+            // The legacy `Photo` shape declared `albumId: number |
+            // undefined`; narrow `null` to `undefined` here.
             data={{
               ...item,
               albumId: item.albumId ?? undefined,
@@ -237,9 +227,8 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
 }
 
 /**
- * 从路由传入的 search 参数中派生照片分页 Query key，使页面 key 与
- * 路由 loader 预热的 key 保持一致。loader 已经用同样的参数调用了
- * `query({ ...options, staleTime: 'static' })`，因此 SSR 首次渲染命中缓存。
+ * 页面 key 必须与路由 loader 预热的 key 完全一致，否则 SSR 首屏读不到
+ * 缓存。这里用同一个 `coerceQueryInt` 保证两边算出同一组参数。
  */
 function derivePhotoQueryInput(
   albumId: number,
@@ -247,22 +236,11 @@ function derivePhotoQueryInput(
 ): GetPhotosInput {
   return {
     albumId,
-    page: coerceQueryNumber(search.page, 1),
-    pageSize: coerceQueryNumber(search.pageSize, 20),
+    page: coerceQueryInt(search.page, 1),
+    pageSize: coerceQueryInt(search.pageSize, 20),
   };
 }
 
-function coerceQueryNumber(raw: unknown, defaultValue: number): number {
-  if (raw == null || raw === '') {
-    return defaultValue;
-  }
-  const parsed = Number(raw);
-  return Number.isNaN(parsed) ? defaultValue : parsed;
-}
-
-/**
- * 照片编辑表单
- */
 const usePhotoForm = createSchemaForm({
   fields: {
     id: createConstNumber(),
@@ -278,7 +256,6 @@ const usePhotoForm = createSchemaForm({
   }),
 });
 
-// 相册编辑表单
 const useAlbumForm = createSchemaForm({
   fields: {
     id: createConstNumber(),

@@ -1,21 +1,9 @@
 /*
- * Photo-albums operation surface:
- *
- *   - getPhotoAlbums        — GET    /cms/photo-albums?page=&pageSize=  (protected)
- *   - getPhotoAlbum         — GET    /cms/photo-albums/:id              (protected)
- *   - createPhotoAlbum      — POST   /cms/photo-albums                  (protected)
- *   - updatePhotoAlbum      — POST   /cms/photo-albums/update           (protected)
- *   - deletePhotoAlbum      — POST   /cms/photo-albums/delete           (protected)
- *   - setPhotoAlbumCover    — POST   /cms/photo-albums/cover            (protected)
- *   - addPhotos             — POST   /cms/photo-albums/add-photos       (protected)
- *
- * Server functions are thin shells over the pure helpers in
- * `./albums-helpers.ts`. Each protected function composes the shared
- * `createProtectedFunctionMiddleware`.
- *
- * Stable `queryOptions` factories are exported for loaders and route
- * components. They reference the server functions by identity so the
- * cache key stays in sync with the RPC.
+ * Photo-albums operation surface. Server functions are thin shells over the
+ * pure helpers in `./albums-helpers.ts`; every protected function composes
+ * the shared `createProtectedFunctionMiddleware`. The `queryOptions` factories
+ * reference the server functions by identity so the cache key stays in sync
+ * with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';
@@ -134,10 +122,6 @@ export const addPhotos = createServerFn({ method: 'POST' })
     }),
   );
 
-/**
- * Keyed by the `(page, pageSize)` tuple so each page has its own cache
- * slot.
- */
 export function photoAlbumsListQueryOptions(
   input: Partial<GetPhotoAlbumsInput> = {},
 ) {
@@ -156,12 +140,6 @@ export function photoAlbumDetailQueryOptions(input: GetPhotoAlbumInput) {
   });
 }
 
-/**
- * Shares the same backing data shape as the detail query but uses a
- * distinct key so consumers can scope cache lifecycles independently
- * (e.g. refresh cover on `setPhotoAlbumCover` without invalidating detail
- * screens).
- */
 export function photoAlbumCoverQueryOptions(input: GetPhotoAlbumInput) {
   return queryOptions({
     queryKey: ['albums', 'cover', input.id] as const,

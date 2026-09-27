@@ -16,29 +16,16 @@ import React from 'react';
 import type { Photo } from '@cms/server/photos/schemas';
 
 interface PhotoSelectorProps {
-  /** 照片列表 */
   photos: Photo[];
-  /** 选择模式 */
   mode?: 'single' | 'multiple';
-  /** 已选择的照片ID列表 */
   selectedIds?: number[];
-  /** 选择变化回调 */
   onSelectionChange?: (selectedIds: number[]) => void;
-  /** 确认选择回调 */
   onConfirm?: (selectedPhotos: Photo[]) => void;
-  /** 取消回调 */
   onCancel?: () => void;
-  /** 是否显示操作按钮 */
   showActions?: boolean;
-  /** 自定义类名 */
   className?: string;
 }
 
-/**
- * 照片选择器
- * @param props
- * @returns
- */
 export function PhotoSelector(props: PhotoSelectorProps) {
   const {
     photos,

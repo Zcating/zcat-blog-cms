@@ -1,19 +1,9 @@
 /*
- * Article-tags operation surface:
- *
- *   - listArticleTags       — GET    /cms/article-tags         (protected)
- *   - getArticleTag         — GET    /cms/article-tags/:id     (protected)
- *   - createArticleTag      — POST   /cms/article-tags         (protected)
- *   - updateArticleTag      — PUT    /cms/article-tags/:id     (protected)
- *   - deleteArticleTag      — DELETE /cms/article-tags/:id     (protected)
- *
- * Server functions are thin shells over the pure helpers in
- * `./article-tags-helpers.ts`. Each protected function composes the
- * shared `createProtectedFunctionMiddleware`.
- *
- * Stable `queryOptions` factories are exported for loaders and route
- * components. They reference the server functions by identity so the
- * cache key stays in sync with the RPC.
+ * Article-tags operation surface. Server functions are thin shells over the
+ * pure helpers in `./article-tags-helpers.ts`; every protected function
+ * composes the shared `createProtectedFunctionMiddleware`. The `queryOptions`
+ * factories reference the server functions by identity so the cache key
+ * stays in sync with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';

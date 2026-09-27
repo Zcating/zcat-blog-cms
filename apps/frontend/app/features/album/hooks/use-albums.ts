@@ -10,8 +10,8 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { QueryClient, QueryKey } from '@tanstack/react-query';
 
+import { useOptimisticCache } from '@cms/shared/query/use-optimistic-cache';
 import {
   createPhotoAlbum,
   deletePhotoAlbum,
@@ -47,15 +47,15 @@ export interface UseAlbumListInput {
   pageSize: number;
 }
 
-interface AlbumListMutationContext {
-  previous: PaginatedPhotoAlbums | undefined;
+interface MutationRollbackContext {
+  restore: () => void;
+}
+
+interface AlbumListMutationContext extends MutationRollbackContext {
   optimisticId: number;
 }
 
-interface AlbumUpdateMutationContext {
-  detail: PhotoAlbumDetail | undefined;
-  lists: Array<[QueryKey, PaginatedPhotoAlbums | undefined]>;
-}
+type AlbumUpdateMutationContext = MutationRollbackContext;
 
 /**
  * crypto.randomUUID() 避免 Date.now() 冲突（连续点击新增会覆盖乐观更新）
@@ -67,20 +67,12 @@ function buildOptimisticAlbumId(): number {
   );
 }
 
-function restoreLists(
-  queryClient: QueryClient,
-  lists: Array<[QueryKey, PaginatedPhotoAlbums | undefined]>,
-): void {
-  for (const [key, data] of lists) {
-    queryClient.setQueryData(key, data);
-  }
-}
-
 /**
  * 乐观新增：调用 `createPhotoAlbum`，失败时回滚到快照。
  */
 export function useCreateAlbum(input: UseAlbumListInput) {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoAlbumsListQueryOptions({
     page: input.page,
     pageSize: input.pageSize,
@@ -106,13 +98,9 @@ export function useCreateAlbum(input: UseAlbumListInput) {
       return album as PhotoAlbum;
     },
     onMutate: async (values) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotoAlbums>(
-        options.queryKey,
-      );
       const now = new Date().toISOString();
       const optimisticId = buildOptimisticAlbumId();
-      const optimistic: PhotoAlbumData = {
+      const optimisticRow: PhotoAlbumData = {
         id: optimisticId,
         name: values.name,
         description: values.description,
@@ -123,20 +111,16 @@ export function useCreateAlbum(input: UseAlbumListInput) {
         updatedAt: now,
         loading: true,
       };
-      queryClient.setQueryData<PaginatedPhotoAlbums>(
+      const restore = await optimistic.slot<PaginatedPhotoAlbums>(
         options.queryKey,
         (current) =>
           current
-            ? { ...current, data: [...current.data, optimistic] }
+            ? { ...current, data: [...current.data, optimisticRow] }
             : current,
       );
-      return { previous, optimisticId };
+      return { restore, optimisticId };
     },
-    onError: (_error, _values, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+    onError: (_error, _values, context) => context?.restore(),
     onSuccess: (album, _values, context) => {
       queryClient.setQueryData<PaginatedPhotoAlbums>(
         options.queryKey,
@@ -161,6 +145,7 @@ export function useCreateAlbum(input: UseAlbumListInput) {
  */
 export function useUpdateAlbum() {
   const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
 
   return useMutation<
     PhotoAlbum,
@@ -186,26 +171,20 @@ export function useUpdateAlbum() {
       const detailKey = photoAlbumDetailQueryOptions({
         id: values.id,
       }).queryKey;
-      await queryClient.cancelQueries({ queryKey: detailKey });
-      await queryClient.cancelQueries({
-        queryKey: albumsListQueryPrefix,
-      });
-      const detail = queryClient.getQueryData<PhotoAlbumDetail>(detailKey);
-      const lists = queryClient.getQueriesData<PaginatedPhotoAlbums>({
-        queryKey: albumsListQueryPrefix,
-      });
-      queryClient.setQueryData<PhotoAlbumDetail>(detailKey, (current) =>
-        current
-          ? {
-              ...current,
-              name: values.name,
-              description: values.description,
-              available: values.available,
-            }
-          : current,
+      const restoreDetail = await optimistic.slot<PhotoAlbumDetail>(
+        detailKey,
+        (current) =>
+          current
+            ? {
+                ...current,
+                name: values.name,
+                description: values.description,
+                available: values.available,
+              }
+            : current,
       );
-      queryClient.setQueriesData<PaginatedPhotoAlbums>(
-        { queryKey: albumsListQueryPrefix },
+      const restoreLists = await optimistic.prefix<PaginatedPhotoAlbums>(
+        albumsListQueryPrefix,
         (current) =>
           current
             ? {
@@ -224,16 +203,14 @@ export function useUpdateAlbum() {
               }
             : current,
       );
-      return { detail, lists };
+      return {
+        restore: () => {
+          restoreDetail();
+          restoreLists();
+        },
+      };
     },
-    onError: (_error, values, context) => {
-      if (!context) return;
-      queryClient.setQueryData(
-        photoAlbumDetailQueryOptions({ id: values.id }).queryKey,
-        context.detail,
-      );
-      restoreLists(queryClient, context.lists);
-    },
+    onError: (_error, _values, context) => context?.restore(),
     onSuccess: (album, values) => {
       queryClient.setQueryData<PhotoAlbumDetail>(
         photoAlbumDetailQueryOptions({ id: values.id }).queryKey,
@@ -259,34 +236,24 @@ export function useUpdateAlbum() {
  * 乐观删除：从列表缓存移除该相册，失败时回滚到快照。
  */
 export function useDeleteAlbum(input: UseAlbumListInput) {
-  const queryClient = useQueryClient();
+  const optimistic = useOptimisticCache();
   const options = photoAlbumsListQueryOptions({
     page: input.page,
     pageSize: input.pageSize,
   });
 
-  return useMutation<void, Error, number, AlbumListMutationContext>({
+  return useMutation<void, Error, number, MutationRollbackContext>({
     mutationFn: async (id) => {
       await deletePhotoAlbum({ data: { id } });
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: options.queryKey });
-      const previous = queryClient.getQueryData<PaginatedPhotoAlbums>(
-        options.queryKey,
-      );
-      queryClient.setQueryData<PaginatedPhotoAlbums>(
-        options.queryKey,
-        (current) =>
+    onMutate: (id) =>
+      optimistic
+        .slot<PaginatedPhotoAlbums>(options.queryKey, (current) =>
           current
             ? { ...current, data: current.data.filter((row) => row.id !== id) }
             : current,
-      );
-      return { previous, optimisticId: id };
-    },
-    onError: (_error, _id, context) => {
-      if (context) {
-        queryClient.setQueryData(options.queryKey, context.previous);
-      }
-    },
+        )
+        .then((restore) => ({ restore })),
+    onError: (_error, _id, context) => context?.restore(),
   });
 }

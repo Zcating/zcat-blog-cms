@@ -1,17 +1,5 @@
-/*
- * The loader prefetches two Query slots via
- * `context.queryClient.query({ ...options, staleTime: 'static' })`
- * so the page can `useSuspenseQuery` from a warm cache:
- *
- *   1. `articlesListQueryOptions({ page, pageSize })` — the
- *      paginated article list (no `content` / `tags` columns per
- *      the backend SELECT).
- *   2. `articleTagsListQueryOptions()` — the full tag list, so
- *      the in-page tag manager renders without a second trip.
- *
- * `page` / `pageSize` come from the URL search params. Defaults
- * mirror the legacy list page (1 / 10).
- */
+// The page MUST read a warm cache slot, so the loader hydrates both the
+// article list and the tag list before the page mounts.
 
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -23,15 +11,6 @@ import type { PaginationSearch } from '@cms/shared/hooks/use-pagination-action';
 import { articlesListQueryOptions } from '@cms/server/articles';
 import { articleTagsListQueryOptions } from '@cms/server/article-tags';
 
-/**
- * Pure loader logic — extracted so it can be unit-tested without
- * booting the TanStack Start runtime (the `createServerFn`
- * boundary requires the AsyncLocalStorage Start context).
- *
- * `search` is already validated by `paginationSearchSchema`, so
- * `page` / `pageSize` arrive as positive integers or `undefined`
- * and the documented 1 / 10 defaults are applied here.
- */
 export async function ensureArticleListQueries({
   search,
   context,

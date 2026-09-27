@@ -11,10 +11,16 @@
  *    types this module owns.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
+import { mapResultCodeToTag as mapBlogCode } from '../../../blog/app/server/errors';
 
 import {
   envelopeToApiError,
+  isNotFoundError,
   mapResultCodeToTag,
   type ApiError,
   type ApiErrorTag,
@@ -33,6 +39,7 @@ describe('mapResultCodeToTag', () => {
       ['ERR0004', 'UploadError'],
       ['ERR0005', 'ValidationError'],
       ['ERR0006', 'UnknownError'],
+      ['ERR0007', 'NotFound'],
     ];
     for (const [code, tag] of cases) {
       expect(mapResultCodeToTag(code)).toBe(tag);
@@ -130,6 +137,7 @@ describe('envelopeToApiError — real backend bodies with no data key', () => {
       ['ERR0004', 'Upload rejected', 'UploadError'],
       ['ERR0005', 'Request failed validation', 'ValidationError'],
       ['ERR0006', 'Internal Server Error', 'UnknownError'],
+      ['ERR0007', '资源不存在', 'NotFound'],
     ];
     for (const [code, message, tag] of cases) {
       expect(envelopeToApiError(wire({ code, message }))).toEqual({
@@ -160,5 +168,138 @@ describe('envelopeToApiError — real backend bodies with no data key', () => {
       _tag: 'UnknownError',
       message: 'Malformed error envelope from backend',
     });
+  });
+});
+
+function fromEnvelope(body: unknown): unknown {
+  const apiError = envelopeToApiError(body);
+  if (!apiError) throw new Error('envelope carried no error');
+  return apiError;
+}
+
+describe('isNotFoundError', () => {
+  it('classifies the missing-resource envelope the backend actually sends', () => {
+    const error = fromEnvelope({ code: 'ERR0007', message: '相册不存在' });
+
+    expect(error).toEqual({ _tag: 'NotFound', message: '相册不存在' });
+    expect(isNotFoundError(error)).toBe(true);
+  });
+
+  it('classifies by code, so a reworded not-found message is still a not-found', () => {
+    expect(
+      isNotFoundError(
+        fromEnvelope({ code: 'ERR0007', message: '该内容已被移除' }),
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps a denied token out, because not-allowed is not does-not-exist', () => {
+    const error = fromEnvelope({ code: 'ERR0002', message: 'Unauthorized' });
+
+    expect(error).toEqual({ _tag: 'LoginError', message: 'Unauthorized' });
+    expect(isNotFoundError(error)).toBe(false);
+  });
+
+  it.each(['ERR0003', 'ERR0006'])(
+    'keeps the genuine fault %s out of the not-found classification',
+    (code) => {
+      expect(
+        isNotFoundError(fromEnvelope({ code, message: '数据库异常' })),
+      ).toBe(false);
+    },
+  );
+
+  it('keeps a message that reads like a not-found out, when the code is a fault', () => {
+    expect(
+      isNotFoundError(fromEnvelope({ code: 'ERR0006', message: '相册不存在' })),
+    ).toBe(false);
+  });
+
+  it('ignores anything that is not a thrown ApiError', () => {
+    expect(isNotFoundError(new Error('boom'))).toBe(false);
+    expect(isNotFoundError({ _tag: 'UnknownError' })).toBe(false);
+    expect(isNotFoundError('NotFound')).toBe(false);
+    expect(isNotFoundError(null)).toBe(false);
+    expect(isNotFoundError(undefined)).toBe(false);
+  });
+});
+
+const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
+
+const BACKEND_RESULT_DATA = join(
+  REPO_ROOT,
+  'apps',
+  'backend',
+  'src',
+  'model',
+  'result-data.ts',
+);
+
+function backendResultCodes(): string[] {
+  const source = readFileSync(BACKEND_RESULT_DATA, 'utf8');
+  return [
+    ...new Set(
+      [...source.matchAll(/=\s*'(0000|ERR\d+)'/g)].map((match) => match[1]),
+    ),
+  ];
+}
+
+const BACKEND_FAILURE_CODES = backendResultCodes().filter(
+  (code) => code !== '0000',
+);
+
+const UNDECLARED_CODES = ['ERR0000', 'ERR0008', 'ERR0099', 'NOPE'];
+
+describe('ResultCode mapping parity with the blog app', () => {
+  it('derives the failure codes from the backend enum, not a copy of it', () => {
+    expect(BACKEND_FAILURE_CODES).toEqual([
+      'ERR0001',
+      'ERR0002',
+      'ERR0003',
+      'ERR0004',
+      'ERR0005',
+      'ERR0006',
+      'ERR0007',
+    ]);
+  });
+
+  it.each(BACKEND_FAILURE_CODES)(
+    'maps the backend failure code %s in this app',
+    (code) => {
+      expect(mapResultCodeToTag(code)).not.toBeNull();
+    },
+  );
+
+  it.each(BACKEND_FAILURE_CODES)(
+    'maps the backend failure code %s identically in both apps',
+    (code) => {
+      expect(mapResultCodeToTag(code)).toBe(mapBlogCode(code));
+    },
+  );
+
+  it.each(UNDECLARED_CODES)(
+    'leaves the code %s unmapped in both apps, so neither invents a tag',
+    (code) => {
+      expect(mapResultCodeToTag(code)).toBeNull();
+      expect(mapBlogCode(code)).toBeNull();
+    },
+  );
+
+  it('exposes the same tag vocabulary in both apps', () => {
+    const tags: ApiErrorTag[] = [
+      'LoginError',
+      'RegisterError',
+      'DatabaseError',
+      'UploadError',
+      'ValidationError',
+      'NotFound',
+      'UnknownError',
+    ];
+
+    for (const code of BACKEND_FAILURE_CODES) {
+      const tag = mapResultCodeToTag(code);
+      expect(tags).toContain(tag ?? null);
+      expect(mapBlogCode(code)).toBe(tag ?? null);
+    }
   });
 });

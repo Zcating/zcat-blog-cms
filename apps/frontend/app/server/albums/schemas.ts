@@ -1,17 +1,12 @@
 /*
  * The `{ code, message, data }` envelope is unwrapped by `parseEnvelope`;
- * these schemas only describe the payload that lives in `data`.
- *
- * Sources:
- *   - apps/backend/src/features/cms/photo-album/photo-album.schema.ts
- *   - apps/backend/src/features/cms/photo-album/photo-album.service.ts
- *   - apps/backend/src/features/cms/photo/photo.service.ts
+ * these schemas only describe the payload that lives in `data`. They mirror
+ * apps/backend/src/features/cms/photo-album/*.schema.ts and the Prisma
+ * SELECTs in photo-album.service.ts / photo.service.ts.
  */
 
 import { z } from 'zod';
 
-// Mirror the backend `safeNumber` style so server function inputs match
-// what Hono's `zValidator('query')` would produce.
 const coercePage = z.union([z.number(), z.string()]).transform((value) => {
   if (typeof value === 'number') return value;
   const parsed = Number.parseInt(value, 10);
@@ -45,7 +40,6 @@ export const CreatePhotoAlbumInputSchema = z.object({
 
 export type CreatePhotoAlbumInput = z.infer<typeof CreatePhotoAlbumInputSchema>;
 
-/** The id is the route discriminator and is required. */
 export const UpdatePhotoAlbumInputSchema = z.object({
   id: z.coerce.number().int().positive(),
   name: z.string().optional(),
@@ -83,11 +77,9 @@ export const DeletePhotoAlbumInputSchema = z.object({
 export type DeletePhotoAlbumInput = z.infer<typeof DeletePhotoAlbumInputSchema>;
 
 /**
- * Cover photo embedded in the album list response.
- *
- * The backend `findAll` joins `PhotoAlbum.coverId -> Photo` and returns
- * either a full `Photo` row or `null`. Empty-album photo rows have
- * `albumId = null`, which is why the schema accepts that.
+ * The backend's `findAll` joins `coverId -> Photo` and returns a full `Photo`
+ * row or `null`; empty-album photo rows carry `albumId = null`, hence the
+ * nullable `albumId` here.
  */
 export const PhotoAlbumCoverSchema = z.object({
   id: z.number().int(),
@@ -103,13 +95,8 @@ export const PhotoAlbumCoverSchema = z.object({
 export type PhotoAlbumCover = z.infer<typeof PhotoAlbumCoverSchema>;
 
 /**
- * List-shape album payload returned by `GET /cms/photo-albums`.
- *
- * The backend's `findAll` projects these fields:
- *   id, name, description, coverId, createdAt, updatedAt, available, cover.
- * `description` is always a string on the list response (the backend
- * creates albums with `description ?? ''`), so it is required here.
- * `available` is non-null on the Prisma row.
+ * `description` is always a string on the list response (the backend creates
+ * albums with `description ?? ''`), so it is required here.
  */
 export const PhotoAlbumSchema = z.object({
   id: z.number().int(),
@@ -135,13 +122,9 @@ export const PaginatedPhotoAlbumsSchema = z.object({
 export type PaginatedPhotoAlbums = z.infer<typeof PaginatedPhotoAlbumsSchema>;
 
 /**
- * Detail-shape album payload returned by `GET /cms/photo-albums/:id`.
- *
- * The backend `findById` returns the raw Prisma row, so this carries
- * `coverId` only (no embedded `cover` join). `description` and
- * `available` are technically non-null on the Prisma row but the legacy
- * client interface declared them optional; we preserve the lenient shape
- * for forward compatibility with any future backend relaxation.
+ * `description` and `available` are non-null on the Prisma row but the legacy
+ * client interface declared them optional; the lenient shape is kept for
+ * forward compatibility with any future backend relaxation.
  */
 export const PhotoAlbumDetailSchema = z.object({
   id: z.number().int(),

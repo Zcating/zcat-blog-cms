@@ -1,20 +1,9 @@
 /*
- * Articles operation surface:
- *
- *   - getArticles            — GET  /cms/articles?page=&pageSize= (protected)
- *   - getArticle             — GET  /cms/articles/detail?id=     (protected)
- *   - createArticle          — POST /cms/articles/create          (protected)
- *   - updateArticle          — POST /cms/articles/update          (protected)
- *   - deleteArticle          — POST /cms/articles/delete          (protected)
- *   - uploadArticleImages    — POST /cms/articles/upload-images   (protected)
- *
- * Server functions are thin shells over the pure helpers in
- * `./articles-helpers.ts`. Each protected function composes the
- * shared `createProtectedFunctionMiddleware`.
- *
- * Stable `queryOptions` factories are exported for loaders and route
- * components. They reference the server functions by identity so the
- * cache key stays in sync with the RPC.
+ * Articles operation surface. Server functions are thin shells over the pure
+ * helpers in `./articles-helpers.ts`; every protected function composes the
+ * shared `createProtectedFunctionMiddleware`. The `queryOptions` factories
+ * reference the server functions by identity so the cache key stays in sync
+ * with the RPC.
  */
 
 import { queryOptions } from '@tanstack/react-query';

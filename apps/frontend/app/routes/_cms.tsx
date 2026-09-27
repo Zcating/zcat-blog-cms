@@ -1,29 +1,11 @@
 /*
- * The `beforeLoad` is a UX guard only:
- *   - It calls the public typed `isValid` server function to learn
- *     whether the current cookie represents a live session.
- *   - On invalid (or any error), it empties the private Query cache and
- *     then throws a redirect to `/login`, so the user lands on the
- *     login screen before any private UI is rendered and the next
- *     session starts from an empty cache.
- *   - On valid, it loads the current user via the protected
- *     `getCurrentUser` server function, seeds the FULL `UserInfo`
- *     into the per-request Query cache under the canonical
- *     `userInfoQueryOptions().queryKey`, and hands the layout a
- *     minimal `{ name, avatar }` subset for the sidebar avatar.
+ * This `beforeLoad` is a UX guard, NOT the security boundary: it shapes
+ * the navigation experience, while `createProtectedFunctionMiddleware`
+ * is what actually keeps private data private.
  *
- * IMPORTANT: this guard is NOT the security boundary. Protected
- * server functions enforce their own auth via
- * `createProtectedFunctionMiddleware`. The route guard shapes the
- * navigation experience; it cannot keep private data private.
- *
- * Query-cache contract:
- *   - `_cms` MUST write the complete `UserInfo` into the Query
- *     cache under `['users','current']`. Shell components see the
- *     shell subset via prop drilling; components that need the
- *     full payload (user-info page, dashboard header) read it from
- *     the same query key. A partial seed silently breaks every
- *     consumer of `userInfoQueryOptions()`.
+ * Query-cache contract: `_cms` MUST write the complete `UserInfo` under
+ * `['users','current']`. A partial seed silently breaks every consumer of
+ * `userInfoQueryOptions()`.
  */
 
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
@@ -46,8 +28,7 @@ export const Route = createFileRoute('/_cms')({
       // A session change starts from an EMPTY private cache. The
       // previous session's entries were written under `staleTime:
       // 'static'`, so without this wipe the next account to sign in on
-      // this tab keeps reading them. Same helper the logout handler
-      // and the cache `onError` hooks use.
+      // this tab keeps reading them.
       clearPrivateQueryCache(context.queryClient);
       throw redirect({
         to: decision.to,

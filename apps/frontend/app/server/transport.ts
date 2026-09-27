@@ -1,13 +1,10 @@
 /*
  * Rules enforced by every helper in this file:
  *   1. No automatic retries. The `fetch` boundary is called exactly once.
- *   2. No `/api/bff/*` URLs. Only the resolved backend base URL is used.
- *   3. The base URL is taken from the injected `env` resolver (which
- *      itself reads `BACKEND_API_URL` per request). No `VITE_*` fallback.
- *   4. Authorization is forwarded ONLY for the `*Authorized*` helpers,
- *      and ONLY from the request's session Cookie (no implicit
- *      cross-request leakage).
- *   5. The shared `fetch` boundary is the only thing tests may mock.
+ *   2. The base URL comes only from the injected `env` resolver; there is
+ *      no `VITE_*` fallback and no `/api/bff/*` indirection.
+ *   3. `Authorization` is forwarded only by the `*Authorized*` helpers,
+ *      and only from the request's own session Cookie.
  */
 
 import { envelopeToApiError } from './errors';

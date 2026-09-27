@@ -1,11 +1,5 @@
-/*
- * The `_cms` `beforeLoad` is the single source of truth for the auth
- * gate — there is no `loader()` here on purpose.
- *
- * The component deliberately keeps the existing `@zcat/ui` sidebar
- * primitives and the menu shape so the visual identity of the
- * shell is preserved.
- */
+// The `_cms` `beforeLoad` is the single source of truth for the auth gate —
+// there is deliberately no `loader()` here.
 
 import {
   Separator,

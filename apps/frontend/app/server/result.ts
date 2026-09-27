@@ -1,19 +1,13 @@
 /*
  * Success is signalled by `code === '0000'`; non-success codes map to the
- * existing `ApiErrorTag` vocabulary in `./errors`.
- *
- * Server functions unwrap success envelopes to their `data` payload via
- * `parseEnvelope`. Anything that does not validate as a success envelope is
- * thrown as a typed `ResponseValidationError` so the failure is caught at
- * the contract boundary instead of leaking into the caller's data slot.
+ * `ApiErrorTag` vocabulary in `./errors`. `parseEnvelope` unwraps a success
+ * envelope to its `data` payload and throws a typed `ResponseValidationError`
+ * otherwise, so a contract failure is caught here instead of leaking into the
+ * caller's data slot.
  */
 
 import { z } from 'zod';
 
-/**
- * The literal `'0000'` discriminator keeps the parser strict: a non-success
- * envelope never reaches the caller's `data` field.
- */
 export const successEnvelopeSchema = z.object({
   code: z.literal('0000'),
   message: z.string(),
@@ -21,14 +15,11 @@ export const successEnvelopeSchema = z.object({
 });
 
 /**
- * Loose envelope (success or error) for code that needs to inspect both.
- *
- * `data` is OPTIONAL here, unlike in `successEnvelopeSchema`. The backend's
- * auth middleware answers a rejected token with a literal
- * `{ code, message }` pair and `createResult` drops an absent `data` when
- * `JSON.stringify` runs, so a real error envelope has no `data` key at all.
- * Requiring the key made every such envelope parse as malformed and turned
- * an expired session into an `UnknownError`.
+ * `data` is OPTIONAL here, unlike in `successEnvelopeSchema`: the backend's
+ * auth middleware answers a rejected token with a literal `{ code, message }`
+ * pair, so a real error envelope has no `data` key at all. Requiring the key
+ * made every such envelope parse as malformed and turned an expired session
+ * into an `UnknownError`.
  */
 export const envelopeSchema = z.object({
   code: z.string(),
