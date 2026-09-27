@@ -92,4 +92,14 @@ describe('ZPagination', () => {
     expect(screen.queryByLabelText('Go to previous page')).toBeNull();
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('renders no paging control when the page count is not a usable number', () => {
+    const { container } = render(
+      <ZPagination page={1} totalPages={Number.NaN} />,
+    );
+
+    expect(screen.queryByLabelText('Go to next page')).toBeNull();
+    expect(screen.queryByLabelText('Go to previous page')).toBeNull();
+    expect(container).toBeEmptyDOMElement();
+  });
 });
