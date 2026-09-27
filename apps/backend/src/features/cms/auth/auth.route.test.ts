@@ -31,7 +31,9 @@ describe('authRoutes', () => {
 
   describe('POST /login', () => {
     it('returns 200 with accessToken on successful login', async () => {
-      mockAuthService.login.mockReturnValue(Effect.succeed({ accessToken: 'token123' }));
+      mockAuthService.login.mockReturnValue(
+        Effect.succeed({ accessToken: 'token123' }),
+      );
       const app = createApp();
 
       const res = await app.request('/login', {
@@ -73,6 +75,24 @@ describe('authRoutes', () => {
 
       const body = await res.json();
       expect(body.code).toBe('ERR0006');
+    });
+
+    it('reports a database rejection as a database error, not a failed login', async () => {
+      const prismaFailure = new Error('Unique constraint failed');
+      prismaFailure.name = 'PrismaClientKnownRequestError';
+      mockAuthService.login.mockReturnValue(Effect.fail(prismaFailure));
+      const app = createApp();
+
+      const res = await app.request('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: 'pass' }),
+      });
+
+      const body = await res.json();
+      expect(body.code).toBe('ERR0003');
+      expect(body.message).toBe('数据库操作失败');
+      expect(body.message).not.toBe('登录失败');
     });
   });
 

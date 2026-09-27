@@ -21,7 +21,11 @@ vi.mock('../../../common/prisma.service', () => ({
 }));
 
 vi.mock('../../../common/oss.service', () => ({
-  ossService: { getPrivateUrl: vi.fn(), presignUploadUrl: vi.fn(), deleteFile: vi.fn() },
+  ossService: {
+    getPrivateUrl: vi.fn(),
+    presignUploadUrl: vi.fn(),
+    deleteFile: vi.fn(),
+  },
 }));
 
 vi.mock('../../../common/config.service', () => ({
@@ -97,6 +101,32 @@ describe('authService', () => {
         userAgent: 'Mozilla/5.0',
         expiresAt: expect.any(Date),
       });
+    });
+
+    it('stamps every issued token with a distinct jti', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        username: 'admin',
+        password: 'hashed-password',
+        salt: 'somesalt',
+      });
+      mockBcrypt.compare.mockResolvedValue(true);
+      mockJwt.sign.mockReturnValue('token123');
+      whitelistMocks.create.mockReturnValue(Effect.succeed({ id: 1 }));
+
+      await appRuntime.runPromise(authService.login('admin', 'password'));
+      await appRuntime.runPromise(authService.login('admin', 'password'));
+
+      const [first, second] = mockJwt.sign.mock.calls;
+      expect(first[0]).toEqual({
+        username: 'admin',
+        sub: 1,
+        jti: expect.any(String),
+      });
+      expect(first[0].jti).not.toBe(second[0].jti);
+      expect(first[0].jti).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
     });
 
     it('returns null when user not found', async () => {

@@ -10,6 +10,14 @@ import { authService } from './auth.service';
 
 const authRoutes = new Hono();
 
+// Effect 的 FiberFailure 会把底层错误包进 name（如 "(FiberFailure) PrismaClientKnownRequestError"），
+// 且只暴露 stack/message/name —— 既没有 code，也没有可枚举的 cause。所以 `code === 'P2002'` 与
+// `instanceof Prisma.PrismaClientKnownRequestError` 都无法命中，改成 instanceof 会静默丢掉这个前缀。
+// 子串匹配同时覆盖完全没有 code 的 PrismaClientInitializationError（数据库不可达）。
+function isDatabaseFailure(error: unknown): boolean {
+  return error instanceof Error && error.name.includes('PrismaClient');
+}
+
 authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { username, password } = c.req.valid('json');
   const device = c.req.header('User-Agent');
@@ -43,10 +51,13 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     );
   } catch (error) {
     logger.error('Login error:', error);
+    const databaseFailure = isDatabaseFailure(error);
     return c.json(
       createResult({
-        code: ResultCode.UnknownError,
-        message: '登录失败',
+        code: databaseFailure
+          ? ResultCode.DatabaseError
+          : ResultCode.UnknownError,
+        message: databaseFailure ? '数据库操作失败' : '登录服务异常',
       }),
     );
   }

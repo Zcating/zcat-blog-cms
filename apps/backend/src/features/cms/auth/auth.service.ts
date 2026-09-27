@@ -1,5 +1,6 @@
 ﻿import * as bcrypt from 'bcrypt';
 import { Effect } from 'effect';
+import { randomUUID } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
 import { config } from '../../../common/config.service';
@@ -36,7 +37,7 @@ export function login(
     }
 
     const token = jwt.sign(
-      { username: user.username, sub: user.id },
+      { username: user.username, sub: user.id, jti: randomUUID() },
       config.jwtSecret,
       { expiresIn: '1d' },
     );
@@ -56,11 +57,7 @@ export function login(
   });
 }
 
-export function register(
-  username: string,
-  password: string,
-  email: string,
-) {
+export function register(username: string, password: string, email: string) {
   return Effect.gen(function* () {
     if (!config.allowRegister) {
       return { code: 'REGISTER_LIMIT' as const };
@@ -80,9 +77,7 @@ export function register(
     }
 
     const salt = yield* tryPromise(() => bcrypt.genSalt());
-    const hashedPassword = yield* tryPromise(() =>
-      bcrypt.hash(password, salt),
-    );
+    const hashedPassword = yield* tryPromise(() => bcrypt.hash(password, salt));
 
     const user = yield* tryPromise(() =>
       prisma.user.create({

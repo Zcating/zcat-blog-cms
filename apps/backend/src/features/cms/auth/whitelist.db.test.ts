@@ -1,7 +1,15 @@
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'node:crypto';
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import { app } from '@backend/app';
 import { appRuntime } from '@backend/common/effect';
@@ -19,6 +27,8 @@ const sha256Hex = (value: string) =>
 
 const USER_A = 'whitelist-db-user-a';
 const USER_B = 'whitelist-db-user-b';
+
+const FROZEN_CLOCK = new Date('2026-06-01T10:00:00.000Z');
 
 let userAId = 0;
 let userBId = 0;
@@ -62,6 +72,29 @@ const callProtectedRoute = (token?: string) =>
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
+const postLogin = (username: string) =>
+  app.request('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'vitest',
+    },
+    body: JSON.stringify({ username, password: PASSWORD }),
+  });
+
+async function loginExpectingSuccess(username: string) {
+  const response = await postLogin(username);
+  const body = await response.json();
+
+  if (body.code !== '0000') {
+    throw new Error(
+      `login for ${username} returned ${body.code} ${body.message}`,
+    );
+  }
+
+  return body.data.accessToken as string;
+}
+
 async function readProtectedRoute(token?: string) {
   const response = await callProtectedRoute(token);
   return { status: response.status, body: await response.json() };
@@ -72,8 +105,6 @@ const logout = (token: string) =>
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function expireEntry(token: string) {
   await prismaService.$executeRaw`
@@ -135,6 +166,33 @@ describe('token whitelist against a real database', () => {
 
   beforeEach(async () => {
     await prismaService.$executeRaw`DELETE FROM "token_whitelist"`;
+  });
+
+  it('keeps two logins issued in the same clock second as two live sessions', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FROZEN_CLOCK);
+
+    try {
+      const firstToken = await loginExpectingSuccess(USER_A);
+      const secondToken = await loginExpectingSuccess(USER_A);
+
+      expect(secondToken).not.toBe(firstToken);
+
+      const rows = await readRows(userAId);
+      expect(rows.map((row) => row.tokenHash)).toEqual([
+        sha256Hex(firstToken),
+        sha256Hex(secondToken),
+      ]);
+
+      expect((await readProtectedRoute(firstToken)).body.code).toBe('0000');
+      expect((await readProtectedRoute(secondToken)).body.code).toBe('0000');
+
+      expect((await logout(firstToken)).status).toBe(200);
+      expect((await readProtectedRoute(firstToken)).status).toBe(401);
+      expect((await readProtectedRoute(secondToken)).body.code).toBe('0000');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('stores only the sha256 of an issued token, expiring it one day out', async () => {
@@ -203,7 +261,6 @@ describe('token whitelist against a real database', () => {
 
   it('removes one entry by id and every entry of one user without touching another', async () => {
     await loginAs(USER_A);
-    await wait(1100);
     const secondTokenA = await loginAs(USER_A);
     await loginAs(USER_B);
 
