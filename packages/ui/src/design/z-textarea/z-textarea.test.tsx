@@ -7,6 +7,30 @@ import zod from 'zod';
 import { createZForm } from '../z-form/create-z-form';
 import { ZTextarea } from './z-textarea';
 
+const forwarded = vi.hoisted(() => ({
+  props: [] as Record<string, unknown>[],
+}));
+
+vi.mock('@zcat/ui/shadcn', async () => {
+  const actual =
+    await vi.importActual<Record<string, unknown>>('@zcat/ui/shadcn');
+  const React = await import('react');
+  const Textarea = React.forwardRef<
+    HTMLTextAreaElement,
+    React.TextareaHTMLAttributes<HTMLTextAreaElement>
+  >(({ ...props }, ref) => {
+    forwarded.props.push(props);
+    return React.createElement('textarea', { ref, ...props });
+  });
+  Textarea.displayName = 'MockTextarea';
+
+  return { ...actual, Textarea };
+});
+
+function lastForwardedProps(): Record<string, unknown> {
+  return forwarded.props.at(-1) ?? {};
+}
+
 describe('ZTextarea', () => {
   it('renders with placeholder', () => {
     render(<ZTextarea placeholder="请输入内容" />);
@@ -102,6 +126,42 @@ describe('ZTextarea 表单字段容器内的值级变更通道', () => {
     await userEvent.type(screen.getByTestId('textarea'), 'a');
 
     expect(onValueChange).toHaveBeenCalledWith('a');
+    expect(domChannel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ZTextarea 转发的 props', () => {
+  it('表单字段容器注入的 props 到达元素，但 DOM 事件级通道被剔除', () => {
+    render(<RemarkFormHarness />);
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).toContain('onBlur');
+    expect(Object.keys(props)).toContain('name');
+    expect(Object.keys(props)).not.toContain('onInput');
+    expect(typeof props.onChange).toBe('function');
+  });
+
+  it('调用方运行时注入的 onChange 不是元素上的 change 通道', () => {
+    const onValueChange = vi.fn();
+    const domChannel = vi.fn();
+    render(
+      <ZTextarea
+        data-testid="textarea"
+        onValueChange={onValueChange}
+        {...({ onChange: domChannel } as unknown as React.ComponentProps<
+          typeof ZTextarea
+        >)}
+      />,
+    );
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).not.toContain('onInput');
+    expect(props.onChange).not.toBe(domChannel);
+
+    (props.onChange as (event: { target: { value: string } }) => void)({
+      target: { value: 'z' },
+    });
+    expect(onValueChange).toHaveBeenCalledWith('z');
     expect(domChannel).not.toHaveBeenCalled();
   });
 });

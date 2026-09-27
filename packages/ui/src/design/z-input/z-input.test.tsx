@@ -7,6 +7,28 @@ import zod from 'zod';
 import { createZForm } from '../z-form/create-z-form';
 import { ZInput } from './z-input';
 
+const forwarded = vi.hoisted(() => ({
+  props: [] as Record<string, unknown>[],
+}));
+
+vi.mock('@zcat/ui/shadcn/ui/input', async () => {
+  const React = await import('react');
+  const Input = React.forwardRef<
+    HTMLInputElement,
+    React.ComponentProps<'input'>
+  >(({ ...props }, ref) => {
+    forwarded.props.push(props);
+    return React.createElement('input', { ref, ...props });
+  });
+  Input.displayName = 'MockInput';
+
+  return { Input };
+});
+
+function lastForwardedProps(): Record<string, unknown> {
+  return forwarded.props.at(-1) ?? {};
+}
+
 describe('ZInput', () => {
   it('renders with placeholder', () => {
     render(<ZInput placeholder="请输入" />);
@@ -104,6 +126,42 @@ describe('ZInput 表单字段容器内的值级变更通道', () => {
     await userEvent.type(screen.getByTestId('input'), 'a');
 
     expect(onValueChange).toHaveBeenCalledWith('a');
+    expect(domChannel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ZInput 转发的 props', () => {
+  it('表单字段容器注入的 props 到达元素，但 DOM 事件级通道被剔除', () => {
+    render(<UserFormHarness />);
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).toContain('onBlur');
+    expect(Object.keys(props)).toContain('name');
+    expect(Object.keys(props)).not.toContain('onInput');
+    expect(typeof props.onChange).toBe('function');
+  });
+
+  it('调用方运行时注入的 onChange 不是元素上的 change 通道', () => {
+    const onValueChange = vi.fn();
+    const domChannel = vi.fn();
+    render(
+      <ZInput
+        data-testid="input"
+        onValueChange={onValueChange}
+        {...({ onChange: domChannel } as unknown as React.ComponentProps<
+          typeof ZInput
+        >)}
+      />,
+    );
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).not.toContain('onInput');
+    expect(props.onChange).not.toBe(domChannel);
+
+    (props.onChange as (event: { target: { value: string } }) => void)({
+      target: { value: 'z' },
+    });
+    expect(onValueChange).toHaveBeenCalledWith('z');
     expect(domChannel).not.toHaveBeenCalled();
   });
 });

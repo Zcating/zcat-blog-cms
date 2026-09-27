@@ -7,6 +7,42 @@ import zod from 'zod';
 import { createZForm } from '../z-form/create-z-form';
 import { ZCheckbox } from './z-checkbox';
 
+const forwarded = vi.hoisted(() => ({
+  props: [] as Record<string, unknown>[],
+}));
+
+vi.mock('@zcat/ui/shadcn/ui/checkbox', async () => {
+  const React = await import('react');
+  const Checkbox = React.forwardRef<
+    HTMLButtonElement,
+    {
+      checked?: boolean;
+      onCheckedChange?: (checked: boolean) => void;
+      children?: React.ReactNode;
+    }
+  >(({ checked, onCheckedChange, children, ...props }, ref) => {
+    forwarded.props.push(props);
+    return React.createElement(
+      'button',
+      {
+        ref,
+        type: 'button',
+        'data-state': checked ? 'checked' : 'unchecked',
+        onClick: () => onCheckedChange?.(!checked),
+        ...props,
+      },
+      children,
+    );
+  });
+  Checkbox.displayName = 'MockCheckbox';
+
+  return { Checkbox };
+});
+
+function lastForwardedProps(): Record<string, unknown> {
+  return forwarded.props.at(-1) ?? {};
+}
+
 describe('ZCheckbox', () => {
   it('renders unchecked by default', () => {
     render(<ZCheckbox data-testid="cb" />);
@@ -79,6 +115,31 @@ describe('ZCheckbox 表单字段容器内的值级变更通道', () => {
 
     fireEvent.input(screen.getByTestId('agreed'));
     expect(domChannel).not.toHaveBeenCalled();
+  });
+});
+
+describe('ZCheckbox 转发的 props', () => {
+  it('表单字段容器注入的 DOM 事件级 onChange 不会进入转发的 props', () => {
+    render(<TermsFormHarness />);
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).toContain('onBlur');
+    expect(Object.keys(props)).toContain('name');
+    expect(Object.keys(props)).not.toContain('onChange');
+    expect(Object.keys(props)).not.toContain('onInput');
+  });
+
+  it('调用方运行时注入的 onChange 与 onInput 都不会进入转发的 props', () => {
+    const domChannel = vi.fn();
+    const injected = {
+      onChange: domChannel,
+      onInput: domChannel,
+    } as unknown as React.ComponentProps<typeof ZCheckbox>;
+    render(<ZCheckbox data-testid="cb" {...injected} />);
+
+    const props = lastForwardedProps();
+    expect(Object.keys(props)).not.toContain('onChange');
+    expect(Object.keys(props)).not.toContain('onInput');
   });
 });
 
