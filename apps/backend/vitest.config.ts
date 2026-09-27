@@ -19,7 +19,7 @@ export default defineConfig({
       JWT_SECRET: 'test-secret',
     },
     include: ['src/**/*.test.ts'],
-    exclude: ['dist/**', 'node_modules/**', 'test/**'],
+    exclude: ['dist/**', 'node_modules/**', 'test/**', 'src/**/*.db.test.ts'],
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',

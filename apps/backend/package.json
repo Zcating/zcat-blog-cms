@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:db": "vitest run --config vitest.db.config.ts",
     "db:generate": "npx dotenv -e .env -- pnpm exec prisma generate",
     "db:deploy": "npx dotenv -e .env -- pnpm exec prisma migrate dev",
     "db:status": "npx dotenv -e .env -- pnpm exec prisma migrate status",
