@@ -8,3 +8,8 @@ npm-debug.log*
 .DS_Store
 apps/*/node_modules
 packages/*/node_modules
+
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.deploy.example

@@ -52,8 +52,8 @@ services:
     ports:
       - '9090:9090'
     env_file:
-      - .env.deploy.dev
-      - apps/backend/.env.development
+      - .env.deploy
+      - apps/backend/.env.production
     depends_on:
       cms_pg:
         condition: service_healthy

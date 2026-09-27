@@ -28,4 +28,6 @@ status: accepted
 
 **已知残留，代码无法关闭。** 模板现已可证明完整，但仍**不可直接部署**：`NODE_ENV=production` 下 `CORS_ALLOWED_ORIGINS` 为空意味着拒绝所有来源，干净克隆会启动成功然后不服务任何浏览器流量。存在性可从代码强制，那个值不能。运维必须填写。
 
-**已交付但属实现缺陷、非本决策范围。** `docker-compose.yml` 的 backend 服务声明 `env_file: [.env.deploy.dev, apps/backend/.env.development]`，而 `scripts/docker-push.ts` 上传的是 `.env.deploy` 与 `apps/backend/.env.production`；compose 对缺失的 `env_file` 硬失败，因此远端部署独立于本决策而损坏。
+**已交付但属实现缺陷、非本决策范围。** `docker-compose.yml` 的 backend 服务原声明 `env_file: [.env.deploy.dev, apps/backend/.env.development]`，而 `scripts/docker-push.ts` 上传的是 `.env.deploy` 与 `apps/backend/.env.production`；compose 对缺失的 `env_file` 硬失败，因此远端部署独立于本决策而损坏。backend 已对齐为 `[.env.deploy, apps/backend/.env.production]`：把 `.env.deploy.dev` 与 `.env.development` 上传到生产机等于把开发凭据放上生产机，与本决策拒绝写入 git 历史是同一种不可逆性。
+
+**残留未修，同一类缺陷。** `cms_pg`、`minio`、`frontend`、`blog` 四个服务仍声明 `env_file: [.env.deploy.dev]`，而 push 不上传该文件。实测 compose 解析整个项目并在**第一个**缺失项即硬失败（顺序为 `cms_pg` 在最前），因此远端 `docker-compose up` 仍然起不来——只修 backend 并不能让远端可用。`cms_pg` 与 `minio` 未一并修改是刻意的：本机的这两个容器正是由本文件创建的（compose 标签 `project.config_files` 指向仓库根的 `docker-compose.yml`，不存在 `docker-compose.dev.yaml`），改动其 `env_file` 会变更 config-hash，使下次 `docker compose up` 以 `.env.deploy` 的 `POSTGRES_PASSWORD` 重建容器，与既有数据卷的密码不符。
