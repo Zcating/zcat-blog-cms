@@ -154,6 +154,9 @@ importers:
       '@originjs/crypto-js-wasm':
         specifier: ^1.1.1
         version: 1.1.1
+      '@tanstack/react-router':
+        specifier: 1.170.39
+        version: 1.170.39(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-start':
         specifier: 1.168.58
         version: 1.168.58(crossws@0.4.12(srvx@1.0.5))(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rolldown@1.2.11)(rollup@4.55.1)(vite@8.3.1(@types/node@25.0.5)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))
@@ -172,6 +175,9 @@ importers:
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       dayjs:
         specifier: ^1.11.13
         version: 1.11.21
@@ -317,6 +323,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@4.3.3)
+      '@tanstack/react-router':
+        specifier: 1.170.39
+        version: 1.170.39(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@zcat/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -369,6 +378,9 @@ importers:
       '@tanstack/react-start':
         specifier: 1.168.58
         version: 1.168.58(crossws@0.4.12(srvx@1.0.5))(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rolldown@1.2.11)(rollup@4.55.1)(vite@8.3.1(@types/node@20.19.42)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.43.1)(tsx@4.22.4)(yaml@2.8.2))
+      '@tanstack/router-core':
+        specifier: 1.171.32
+        version: 1.171.32
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -402,6 +414,9 @@ importers:
       nitro:
         specifier: 3.0.260903-beta
         version: 3.0.260903-beta
+      seroval:
+        specifier: ^1.6.7
+        version: 1.6.7
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3

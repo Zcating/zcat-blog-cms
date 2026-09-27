@@ -5,7 +5,7 @@ services:
     container_name: cms_pg
     restart: unless-stopped
     env_file:
-      - .env.deploy.dev
+      - .env.deploy
     ports:
       - '15400:5432'
     volumes:
@@ -28,7 +28,7 @@ services:
       - '19000:9000'
       - '19001:9001'
     env_file:
-      - .env.deploy.dev
+      - .env.deploy
     volumes:
       - minio_data:/data
     networks:
@@ -75,7 +75,7 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - .env.deploy.dev
+      - .env.deploy
     networks:
       - app-network
 
@@ -90,7 +90,7 @@ services:
     stdin_open: true
     tty: true
     env_file:
-      - .env.deploy.dev
+      - .env.deploy
     ports:
       - '1024:1024'
     networks:
