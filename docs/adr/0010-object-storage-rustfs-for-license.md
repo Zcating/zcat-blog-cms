@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # 对象存储服务端由 MinIO 换成 RustFS，理由是许可证而非性能
@@ -14,6 +14,7 @@ MinIO 的**服务端**采用 AGPL-3.0，本项目不接受；RustFS 服务端采
 - 保留 `minio` npm SDK 作为通用 S3 客户端。它 Apache-2.0，且已是既定依赖；换掉它不解决许可证问题。
 - 环境变量与代码标识符一律改用供应商中立名：`OSS_*` 与 `oss*`。**不是** `RUSTFS_*`——契约里的供应商名会让下一次换型成本最高。
 - 凭据**合并为一对** `OSS_ACCESS_KEY` / `OSS_SECRET_KEY`，服务端与客户端共用；由 compose 把这对中性名映射为服务端认识的 `RUSTFS_*`。
+- 这两个变量用 `required()` 读取，与 `DATABASE_URL` / `JWT_SECRET` 一致。理由见后果中实测到的那条脚雷；这条改动同时让既有的部署守卫自动把它们归为必需。
 - 桶与公开读策略由后端容器启动时的一次性幂等脚本创建，复用已有的 S3 SDK，**不引入任何额外镜像**。
 - 去掉对象存储服务的健康检查，`depends_on` 降为 `service_started`，改由引导脚本带退避重试自行等待。
 - Web 控制台保留，但只绑定 `127.0.0.1`。
@@ -41,4 +42,10 @@ MinIO 的**服务端**采用 AGPL-3.0，本项目不接受；RustFS 服务端采
 - **RustFS 不支持桶 ACL 授权**（官方兼容性矩阵标为 intentionally unsupported），公开读只能用桶策略表达。引导脚本因此必须走 `PutBucketPolicy`，用 ACL 会失败——这属于预期，不是缺陷。
 - **启动时序的责任转移到引导脚本。** 去掉健康检查意味着"存储是否就绪"由引导脚本的退避重试负责，失败信息出现在它的日志里，而不是 compose 的服务健康状态里。
 - **不得调用桶 ACL**，也**不得在签发预签名 PUT 时带上 `ContentMD5` 或 `ContentLength`**——后者是 RustFS 侧已记录的 `SignatureDoesNotMatch` 来源；本项目现有代码不带，故天然避开。
-- **本记录在 spike 通过前保持 `proposed`。** 上述兼容性判断目前来自官方文档与源码阅读，尚未在运行的系统上验证；上线前还须复核官方镜像页的生产就绪声明（撰写本记录时该页面未能取得）。
+  **兼容性已实测，而非仅据文档推断。** 用仓库自带的 `minio` 8.0.7 SDK（作为通用 S3 客户端）对 `rustfs/rustfs:1.0.0` 容器做了五项验证，全部通过，无阻塞项：建桶与 `PutBucketPolicy` 设公开读；60 秒预签名 PUT 往返（真实 PUT → 匿名 GET 200 → `statObject` 确认字节与 content-type）；匿名读的对照（不存在的键返回 **404 `NoSuchKey` 而非 403**，非公开桶才返回 403，故这一对构成公开读确实生效的证据）；引导步骤幂等；`removeObject` 后匿名 GET 转 404。此外确认无需配置 region（SDK 默认 `us-east-1` 即被接受，且 RustFS **并不校验** region，填 `eu-west-1` 同样跑通）。空的命名卷可直接使用、无需 `chown`，因为 Docker 从镜像目录的属主播种，而容器以非 root 的 `10001:10001` 运行。
+
+**实测到一条真实的脚雷，它决定了凭据必须 `required()`。** 未设置 `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` 时，服务端**不会失败**：它照常启动并对外服务，只在 stderr 告警，随后**回退到内置默认凭据 `rustfsadmin` / `rustfsadmin`**。这不是文档推断——实测以该凭据认证成功，换任何其他 key 则得到 `InvalidAccessKeyId`。也就是说，一次漏配的部署会得到一台**运行中、全权限、且 root 密钥就印在镜像 entrypoint 里**的存储。细节上，entrypoint 对**空字符串**是硬失败，对**变量未设置**只告警，两种失败模式都需要堵住，而 `required()` 的判据恰好同时覆盖两者。
+
+**桶创建的幂等靠返回 HTTP 200 实现，而不是靠错误码。** 这不是 SDK 吞掉了错误：`makeBucket` 只接受 HTTP 200，其余状态一律重抛，且 `BucketAlreadyOwnedByYou` 在 SDK 中根本不存在。因此**引导脚本不得采用"捕获 `BucketAlreadyOwnedByYou` 即视为已就绪"这一常见写法**——在 RustFS 上它永远不会被触发，幂等必须靠"重跑一遍同样成功"来判断。
+
+仍未核实的一项：官方镜像页上的生产就绪声明（撰写本记录时该页面未能取得），上线前须复核。spike 的匿名 GET 打在 S3 端口本身，未覆盖"经独立公网主机名读取"这一段；但那是基础设施拓扑而非兼容性差异，对 MinIO 与 RustFS 同等适用。
