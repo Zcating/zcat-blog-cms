@@ -6,7 +6,7 @@ status: accepted
 
 `.env.deploy` 与 `.env.deploy.dev` 被 `.gitignore` 的 `.env.*` 忽略，而 compose 用 `env_file` 为各服务注入环境（backend 服务声明的是 `[.env.deploy.dev, apps/backend/.env.development]`）。这意味着**整个部署契约没有任何版本控制**：新增运行时必需变量是静默的本地改动。ADR-0004 引入的 `BACKEND_API_URL` 正是这样——它从未出现在任何受版本控制的文件里，而缺失时 `env.ts` 会抛错且无 fallback，因此整个博客在 Docker 中全挂；同时单测注入 env 解析器、Playwright 显式设置该变量，**测试全绿**。而干净克隆根本没有该 env 文件，compose 会直接失败。
 
-这两个文件不能直接提交：它们含 `SSH_PASSWORD`、`POSTGRES_PASSWORD`、`SESSION_SECRET`、`MINIO_ACCESS_KEY`、`MINIO_SECRET_KEY`。
+这两个文件不能直接提交：它们含 `SSH_PASSWORD`、`POSTGRES_PASSWORD`、`SESSION_SECRET`、`OSS_ACCESS_KEY`、`OSS_SECRET_KEY`。
 
 ## 决策
 

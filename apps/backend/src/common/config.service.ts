@@ -48,14 +48,14 @@ export const config = Object.freeze({
   // Log
   logLevel: process.env.LOG_LEVEL,
 
-  // MinIO / OSS
-  minioEndpoint: optional('MINIO_ENDPOINT', 'localhost'),
-  minioPort: Number(optional('MINIO_PORT', '9000')),
-  minioUseSsl: optional('MINIO_USE_SSL', 'false') === 'true',
-  minioAccessKey: optional('MINIO_ACCESS_KEY', ''),
-  minioSecretKey: optional('MINIO_SECRET_KEY', ''),
-  minioPublicUrl: optional('MINIO_PUBLIC_URL', ''),
-  minioBucket: optional('MINIO_BUCKET', ''),
+  // Object storage
+  ossEndpoint: optional('OSS_ENDPOINT', 'localhost'),
+  ossPort: Number(optional('OSS_PORT', '9000')),
+  ossUseSsl: optional('OSS_USE_SSL', 'false') === 'true',
+  ossAccessKey: required('OSS_ACCESS_KEY'),
+  ossSecretKey: required('OSS_SECRET_KEY'),
+  ossPublicUrl: optional('OSS_PUBLIC_URL', ''),
+  ossBucket: optional('OSS_BUCKET', ''),
 
   // Security
   corsAllowedOrigins: parseCorsOrigins(isProduction ? [] : devCorsOrigins),

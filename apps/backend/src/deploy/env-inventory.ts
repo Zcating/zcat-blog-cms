@@ -110,14 +110,6 @@ export const CONTAINER_ONLY_KEYS: ReadonlyMap<string, string> = new Map([
     'POSTGRES_PASSWORD',
     'consumed by the cms_pg container, never by the backend process',
   ],
-  [
-    'MINIO_ROOT_USER',
-    'read by the minio server process, never by the backend client, which reads MINIO_ACCESS_KEY',
-  ],
-  [
-    'MINIO_ROOT_PASSWORD',
-    'read by the minio server process, never by the backend client, which reads MINIO_SECRET_KEY',
-  ],
 ]);
 
 export const CONTAINER_ENV_TEMPLATE = '.env.deploy.example';

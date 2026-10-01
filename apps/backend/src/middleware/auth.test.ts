@@ -11,13 +11,19 @@ vi.mock('jsonwebtoken', () => ({ default: mockJwt, ...mockJwt }));
 const mockWhitelistValidate = vi.hoisted(() => vi.fn());
 
 // Mock the singleton files so the Effect tags pick up the mocks
-// and the real MinIO client / Prisma client are not loaded.
+// and the real OSS client / Prisma client are not loaded.
 vi.mock('../common/prisma.service', () => ({
-  prismaService: { tokenWhitelist: { findUnique: vi.fn(), deleteMany: vi.fn() } },
+  prismaService: {
+    tokenWhitelist: { findUnique: vi.fn(), deleteMany: vi.fn() },
+  },
 }));
 
 vi.mock('../common/oss.service', () => ({
-  ossService: { getPrivateUrl: vi.fn(), presignUploadUrl: vi.fn(), deleteFile: vi.fn() },
+  ossService: {
+    getPrivateUrl: vi.fn(),
+    presignUploadUrl: vi.fn(),
+    deleteFile: vi.fn(),
+  },
 }));
 
 vi.mock('../features/cms/auth/whitelist.service', () => ({

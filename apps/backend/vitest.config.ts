@@ -17,6 +17,9 @@ export default defineConfig({
     env: {
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
       JWT_SECRET: 'test-secret',
+      OSS_ACCESS_KEY: 'test-access-key',
+      OSS_SECRET_KEY: 'test-secret-key',
+      OSS_BUCKET: 'pictures',
     },
     include: ['src/**/*.test.ts'],
     exclude: ['dist/**', 'node_modules/**', 'test/**', 'src/**/*.db.test.ts'],

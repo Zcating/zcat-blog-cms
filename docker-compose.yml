@@ -18,26 +18,27 @@ services:
       timeout: 2s
       retries: 20
 
-  minio:
-    image: minio/minio:latest
-    hostname: minio
-    container_name: cms_minio
+  oss:
+    image: rustfs/rustfs:1.0.0
+    hostname: oss
+    container_name: cms_oss
     restart: unless-stopped
-    command: server /data --console-address ':9001'
+    entrypoint:
+      - /bin/sh
+      - -c
+      - export RUSTFS_ACCESS_KEY="$$OSS_ACCESS_KEY" RUSTFS_SECRET_KEY="$$OSS_SECRET_KEY"; exec /entrypoint.sh "$$@"
+      - sh
+    command:
+      - /data
     ports:
       - '19000:9000'
-      - '19001:9001'
+      - '127.0.0.1:19001:9001'
     env_file:
       - .env.deploy
     volumes:
-      - minio_data:/data
+      - oss_data:/data
     networks:
       - app-network
-    healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   backend:
     build:
@@ -57,8 +58,8 @@ services:
     depends_on:
       cms_pg:
         condition: service_healthy
-      minio:
-        condition: service_healthy
+      oss:
+        condition: service_started
     networks:
       - app-network
 
@@ -103,4 +104,4 @@ networks:
 
 volumes:
   cms_pg:
-  minio_data:
+  oss_data:

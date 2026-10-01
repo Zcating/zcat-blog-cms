@@ -12,6 +12,7 @@
     "start": "node dist/src/main.js",
     "build": "pnpm run db:generate:prod && tsc -p tsconfig.build.json && node scripts/resolve-dist-specifiers.mjs",
     "build:dev": "pnpm run db:generate:dev && tsc -p tsconfig.build.json",
+    "bootstrap:oss": "node dist/src/bootstrap-oss.js",
     "lint": "oxlint src --fix",
     "test": "vitest run",
     "test:watch": "vitest",

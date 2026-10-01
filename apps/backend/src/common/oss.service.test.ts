@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
 const mockConfig = vi.hoisted(() => ({
-  minioPublicUrl: 'http://localhost:9000',
-  minioBucket: 'pictures-bucket',
-  minioEndpoint: 'localhost',
-  minioPort: 9000,
-  minioUseSsl: false,
-  minioAccessKey: '',
-  minioSecretKey: '',
+  ossPublicUrl: 'http://localhost:9000',
+  ossBucket: 'pictures-bucket',
+  ossEndpoint: 'localhost',
+  ossPort: 9000,
+  ossUseSsl: false,
+  ossAccessKey: '',
+  ossSecretKey: '',
 }));
 
 vi.mock('./config.service', () => ({
@@ -30,8 +30,8 @@ import { ossService } from './oss.service';
 describe('ossService', () => {
   afterEach(() => {
     vi.clearAllMocks();
-    mockConfig.minioPublicUrl = 'http://localhost:9000';
-    mockConfig.minioBucket = 'pictures-bucket';
+    mockConfig.ossPublicUrl = 'http://localhost:9000';
+    mockConfig.ossBucket = 'pictures-bucket';
   });
 
   describe('getUrl', () => {
@@ -41,7 +41,7 @@ describe('ossService', () => {
     });
 
     it('returns empty string when public url is not configured', () => {
-      mockConfig.minioPublicUrl = '';
+      mockConfig.ossPublicUrl = '';
       const url = ossService.getUrl('test.jpg');
       expect(url).toBe('');
     });
@@ -65,7 +65,7 @@ describe('ossService', () => {
     });
 
     it('does nothing when bucket is not configured', async () => {
-      mockConfig.minioBucket = '';
+      mockConfig.ossBucket = '';
       await ossService.deleteObject('test.jpg');
       expect(mockRemoveObject).not.toHaveBeenCalled();
     });
@@ -94,7 +94,7 @@ describe('ossService', () => {
     });
 
     it('returns empty string when bucket is not configured', async () => {
-      mockConfig.minioBucket = '';
+      mockConfig.ossBucket = '';
       const url = await ossService.presignUploadUrl('test.jpg');
       expect(url).toBe('');
     });

@@ -2,42 +2,38 @@ import { Client } from 'minio';
 
 import { config } from './config.service';
 
-function createMinioClient(): Client {
+function createOssClient(): Client {
   return new Client({
-    endPoint: config.minioEndpoint,
-    port: config.minioPort,
-    useSSL: config.minioUseSsl,
-    accessKey: config.minioAccessKey,
-    secretKey: config.minioSecretKey,
+    endPoint: config.ossEndpoint,
+    port: config.ossPort,
+    useSSL: config.ossUseSsl,
+    accessKey: config.ossAccessKey,
+    secretKey: config.ossSecretKey,
   });
 }
 
-const minioClient = createMinioClient();
+const ossClient = createOssClient();
 
 function getUrl(key: string): string {
-  if (!config.minioPublicUrl) {
+  if (!config.ossPublicUrl) {
     return '';
   }
-  return `${config.minioPublicUrl}/${config.minioBucket}/${key}`;
+  return `${config.ossPublicUrl}/${config.ossBucket}/${key}`;
 }
 
 async function deleteObject(key: string): Promise<void> {
-  if (!config.minioBucket) {
+  if (!config.ossBucket) {
     return;
   }
-  await minioClient.removeObject(config.minioBucket, key);
+  await ossClient.removeObject(config.ossBucket, key);
 }
 
 async function presignUploadUrl(key: string): Promise<string> {
-  if (!config.minioBucket) {
+  if (!config.ossBucket) {
     return '';
   }
   try {
-    const url = await minioClient.presignedPutObject(
-      config.minioBucket,
-      key,
-      60,
-    );
+    const url = await ossClient.presignedPutObject(config.ossBucket, key, 60);
     return url;
   } catch {
     return '';

@@ -18,6 +18,8 @@ export default defineConfig({
     environment: 'node',
     env: {
       JWT_SECRET: 'test-secret',
+      OSS_ACCESS_KEY: 'test-access-key',
+      OSS_SECRET_KEY: 'test-secret-key',
     },
     include: ['src/**/*.db.test.ts'],
     exclude: ['dist/**', 'node_modules/**'],
