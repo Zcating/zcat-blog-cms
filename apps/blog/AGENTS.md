@@ -9,7 +9,7 @@
 
 ## 技术栈
 
-- React + React Router（framework mode）
+- React + TanStack Router / TanStack Start（file-based routing）
 - Tailwind CSS
 - 依赖 `@zcat/ui`
 
@@ -39,4 +39,3 @@
 
 - 至少覆盖关键主路径：页面访问、核心交互、接口异常分支
 - E2E 使用 Playwright，测试需可重复运行且稳定通过
-

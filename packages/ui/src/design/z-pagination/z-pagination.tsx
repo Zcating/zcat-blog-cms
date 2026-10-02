@@ -101,6 +101,10 @@ export function ZPagination({
   getHref,
   onPageChange,
 }: ZPaginationProps) {
+  if (!(totalPages > 1)) {
+    return null;
+  }
+
   /**
    * 基础页码计算
    */

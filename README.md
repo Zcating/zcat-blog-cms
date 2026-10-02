@@ -13,8 +13,8 @@
 ## 技术栈
 
 - Blog 前端：React + React Router
-- CMS 前端：React + React Router
-- 后端：Nest.js + Prisma
+- CMS 前端：React + TanStack Start / TanStack Router
+- 后端：Hono + Prisma
 - 数据库：PostgreSQL
 
 ## 安装与运行
@@ -22,6 +22,8 @@
 1. 克隆项目仓库：`git clone https://github.com/zcating/zcat-blog-cms.git`
 2. 进入项目目录：`cd zcat-blog-cms`
 3. 安装依赖：`pnpm install`
-4. 运行项目：`pnpm run dev`
-5. 访问 CMS 前端：`http://localhost:5173`
-6. 访问博客：`http://localhost:3000`
+4. 配置环境变量：各应用的 `.env` 文件不会提交，需自行创建；CMS 管理后台可参考 `apps/frontend/.env.example`
+5. 运行项目：`pnpm run dev`
+6. 访问 CMS 前端：`http://localhost:3000`
+7. 访问博客：`http://localhost:1024`
+8. 访问后端 API：`http://localhost:9090/api`

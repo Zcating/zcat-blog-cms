@@ -77,9 +77,9 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| src | string | - | 图片地址 |
-| alt | string | - | 图片无法显示时的替代文本（必须） |
-| fallback | ReactNode | - | 图片加载失败或未设置时显示的内容 |
-| size | 'sm' \| 'md' \| 'lg' | 'md' | 头像尺寸 |
+| Attribute | Type                 | Default | Description                      |
+| :-------- | :------------------- | :------ | :------------------------------- |
+| src       | string               | -       | 图片地址                         |
+| alt       | string               | -       | 图片无法显示时的替代文本（必须） |
+| fallback  | ReactNode            | -       | 图片加载失败或未设置时显示的内容 |
+| size      | 'sm' \| 'md' \| 'lg' | 'md'    | 头像尺寸                         |

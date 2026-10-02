@@ -1,0 +1,95 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "oxc", "react", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "ignorePatterns": [
+    "**/build/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/.react-router/**"
+  ],
+  "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "off"
+  },
+  "env": {
+    "builtin": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.2.3"
+    }
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/no-empty-object-type": "off",
+    "@typescript-eslint/unbound-method": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off",
+    "react/no-children-prop": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/no-unstable-nested-components": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "vitest/require-mock-type-parameters": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "apps/backend/**/*.{js,cjs,mjs,ts,cts,mts}",
+        "scripts/**/*.{js,cjs,mjs,ts,cts,mts}"
+      ],
+      "env": {
+        "node": true
+      }
+    },
+    {
+      "files": [
+        "apps/blog/**/*.{js,jsx,ts,tsx,cjs,mjs,cts,mts}",
+        "apps/frontend/**/*.{js,jsx,ts,tsx,cjs,mjs,cts,mts}",
+        "packages/ui/**/*.{js,jsx,ts,tsx,cjs,mjs,cts,mts}",
+        "packages/doc/**/*.{js,jsx,ts,tsx,cjs,mjs,cts,mts}"
+      ],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": [
+        "**/*.test.{js,jsx,ts,tsx}",
+        "**/*.spec.{js,jsx,ts,tsx}",
+        "**/*.e2e.test.{js,jsx,ts,tsx}"
+      ],
+      "env": {
+        "vitest": true,
+        "node": true
+      }
+    },
+    {
+      "files": [
+        "apps/backend/src/common/oss.service.test.ts",
+        "apps/frontend/app/features/user-info/routes/user-info.test.tsx",
+        "apps/frontend/app/shared/hooks/use-loading-fn.ts",
+        "apps/frontend/app/shared/hooks/use-loading-fn.test.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-array.test.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-object.ts",
+        "apps/frontend/app/shared/hooks/use-optimistic-object.test.ts",
+        "apps/frontend/vite.config.ts",
+        "packages/doc/vite.config.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "error"
+      }
+    }
+  ]
+}

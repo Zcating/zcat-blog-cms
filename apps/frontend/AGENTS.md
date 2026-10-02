@@ -9,10 +9,13 @@
 
 ## 技术栈
 
-- React + React Router（framework mode）
+- React + TanStack Start（Vite + file-based routing）
+- TanStack Router + TanStack Query
 - Tailwind CSS
 - Ant Design 生态组件
 - 依赖 `@zcat/ui`
+
+`app/routes/` 中的 TanStack 路由文件名允许使用框架要求的 `$`、`__` 等约定；其他 frontend 文件仍使用 kebab-case。
 
 ## 开发命令
 
@@ -39,4 +42,3 @@
 
 - 覆盖核心后台流程：登录、内容管理、媒体管理等关键路径
 - E2E 使用 Playwright，要求在本地可稳定通过
-

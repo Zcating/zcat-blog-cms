@@ -2,10 +2,10 @@ import { Card, ZView } from '@zcat/ui';
 
 import { stringDateFormat } from '@blog/common';
 
-import type { ArticleApi } from '@blog/apis';
+import type { Article } from '@blog/server/article/schemas';
 
 export interface PostExcerptCardProps {
-  value: ArticleApi.Article;
+  value: Article;
 }
 
 export function PostExcerptCard(props: PostExcerptCardProps) {

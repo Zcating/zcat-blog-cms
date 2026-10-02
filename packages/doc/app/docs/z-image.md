@@ -57,10 +57,10 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| src | string | - | 图片地址 |
-| alt | string | - | 图片描述 |
-| contentMode | 'cover' \| 'contain' \| 'fill' \| 'none' \| 'scale-down' | 'cover' | 图片填充模式 |
-| className | string | - | 自定义类名 |
-| ...props | React.ImgHTMLAttributes | - | 支持所有原生 img 属性 |
+| Attribute   | Type                                                     | Default | Description           |
+| :---------- | :------------------------------------------------------- | :------ | :-------------------- |
+| src         | string                                                   | -       | 图片地址              |
+| alt         | string                                                   | -       | 图片描述              |
+| contentMode | 'cover' \| 'contain' \| 'fill' \| 'none' \| 'scale-down' | 'cover' | 图片填充模式          |
+| className   | string                                                   | -       | 自定义类名            |
+| ...props    | React.ImgHTMLAttributes                                  | -       | 支持所有原生 img 属性 |

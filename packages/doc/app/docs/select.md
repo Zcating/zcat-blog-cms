@@ -38,10 +38,10 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| options | \{ label: React.ReactNode; value: T \}[] | - | 选项列表 |
-| value | T | - | 当前选中的值 |
-| onValueChange | (value: T) => void | - | 值变化时的回调 |
-| placeholder | string | - | 占位文本 |
-| className | string | - | 自定义类名 |
+| Attribute     | Type                                     | Default | Description    |
+| :------------ | :--------------------------------------- | :------ | :------------- |
+| options       | \{ label: React.ReactNode; value: T \}[] | -       | 选项列表       |
+| value         | T                                        | -       | 当前选中的值   |
+| onValueChange | (value: T) => void                       | -       | 值变化时的回调 |
+| placeholder   | string                                   | -       | 占位文本       |
+| className     | string                                   | -       | 自定义类名     |

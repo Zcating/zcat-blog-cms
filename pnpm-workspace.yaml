@@ -2,14 +2,22 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
+allowBuilds:
+  '@prisma/engines': true
+  '@swc/core': false
+  bcrypt: false
+  core-js: false
+  cpu-features: false
+  esbuild: false
+  prisma: false
+  ssh2: false
+
 # injectWorkspacePackages: true
 # syncInjectedDepsAfterScripts:
 #   - build
 #   - dist
 
-
 ignoredBuiltDependencies:
-  - '@nestjs/core'
   - '@prisma/client'
   - '@prisma/engines'
   - '@scarf/scarf'

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export * from './z-select';
 export * from './z-avatar';
 export * from './z-stick-header';
@@ -27,11 +29,9 @@ export * from './z-qrcode';
 export * from './z-tree';
 export * from './types';
 
-export {};
-
 declare global {
   interface CommonOption<T = string> {
-    label: React.ReactNode;
+    label: ReactNode;
     value: T;
   }
 }

@@ -7,7 +7,7 @@ export default defineConfig((options) => ({
   external: ['react', 'react-dom'],
   platform: 'neutral',
   injectStyle: false,
-  dts: false,
+  dts: true,
   clean: !options.watch,
   // clean: true,
   splitting: true,

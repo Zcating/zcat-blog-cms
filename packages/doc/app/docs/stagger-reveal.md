@@ -110,12 +110,12 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| selector | string | - | CSS 选择器，用于选择需要执行动画的子元素 |
-| direction | 'left' \| 'right' \| 'top' \| 'bottom' | 'left' | 动画进入的方向 |
-| duration | number | 0.85 | 动画持续时间（秒） |
-| stagger | number | 0.06 | 每个元素动画之间的间隔时间（秒） |
-| ease | string | 'power2.out' | GSAP 缓动函数 |
-| dependencies | unknown[] | [] | 依赖项数组，当依赖项变化时重新执行动画 |
-| className | string | - | 自定义类名 |
+| Attribute    | Type                                   | Default      | Description                              |
+| :----------- | :------------------------------------- | :----------- | :--------------------------------------- |
+| selector     | string                                 | -            | CSS 选择器，用于选择需要执行动画的子元素 |
+| direction    | 'left' \| 'right' \| 'top' \| 'bottom' | 'left'       | 动画进入的方向                           |
+| duration     | number                                 | 0.85         | 动画持续时间（秒）                       |
+| stagger      | number                                 | 0.06         | 每个元素动画之间的间隔时间（秒）         |
+| ease         | string                                 | 'power2.out' | GSAP 缓动函数                            |
+| dependencies | unknown[]                              | []           | 依赖项数组，当依赖项变化时重新执行动画   |
+| className    | string                                 | -            | 自定义类名                               |

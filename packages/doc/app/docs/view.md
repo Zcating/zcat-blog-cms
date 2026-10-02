@@ -24,7 +24,7 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| backgroundColor | string | - | 背景颜色 |
-| ...props | React.HTMLAttributes | - | 支持所有原生 div 属性 |
+| Attribute       | Type                 | Default | Description           |
+| :-------------- | :------------------- | :------ | :-------------------- |
+| backgroundColor | string               | -       | 背景颜色              |
+| ...props        | React.HTMLAttributes | -       | 支持所有原生 div 属性 |

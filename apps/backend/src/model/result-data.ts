@@ -12,6 +12,7 @@ const CODE_ENUMS = [
   'ERR0005',
   // 其他未知错误
   'ERR0006',
+  'ERR0007',
 ] as const;
 
 export interface ResultData<T> {
@@ -41,6 +42,8 @@ export const enum ResultCode {
   ValidationError = 'ERR0005',
   // 其他未知错误
   UnknownError = 'ERR0006',
+  // 资源不存在
+  ResourceNotFound = 'ERR0007',
 }
 
 export function createResult<T>(params: CreateResultParams<T>): ResultData<T> {

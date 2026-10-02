@@ -70,15 +70,75 @@ export const DOCUMENT_CONFIGURES = {
     to: 'z-chat',
     contentImporter: () => import('./z-chat.md?raw'),
   },
+  'z-sidebar': {
+    title: 'Sidebar',
+    to: 'z-sidebar',
+    contentImporter: () => import('./z-sidebar.md?raw'),
+  },
+  'z-sticky-header': {
+    title: 'StickyHeader',
+    to: 'z-sticky-header',
+    contentImporter: () => import('./z-sticky-header.md?raw'),
+  },
+  'z-navigation-menu': {
+    title: 'NavigationMenu',
+    to: 'z-navigation-menu',
+    contentImporter: () => import('./z-navigation-menu.md?raw'),
+  },
+  'z-input': {
+    title: 'Input',
+    to: 'z-input',
+    contentImporter: () => import('./z-input.md?raw'),
+  },
   'z-textarea': {
     title: 'Textarea',
     to: 'z-textarea',
     contentImporter: () => import('./z-textarea.md?raw'),
   },
-  'z-sidebar': {
-    title: 'Sidebar',
-    to: 'z-sidebar',
-    contentImporter: () => import('./z-sidebar.md?raw'),
+  'z-checkbox': {
+    title: 'Checkbox',
+    to: 'z-checkbox',
+    contentImporter: () => import('./z-checkbox.md?raw'),
+  },
+  'z-toggle-group': {
+    title: 'ToggleGroup',
+    to: 'z-toggle-group',
+    contentImporter: () => import('./z-toggle-group.md?raw'),
+  },
+  'z-form': {
+    title: 'Form',
+    to: 'z-form',
+    contentImporter: () => import('./z-form.md?raw'),
+  },
+  'z-image-upload': {
+    title: 'ImageUpload',
+    to: 'z-image-upload',
+    contentImporter: () => import('./z-image-upload.md?raw'),
+  },
+  'z-collapsible': {
+    title: 'Collapsible',
+    to: 'z-collapsible',
+    contentImporter: () => import('./z-collapsible.md?raw'),
+  },
+  'z-drawer': {
+    title: 'Drawer',
+    to: 'z-drawer',
+    contentImporter: () => import('./z-drawer.md?raw'),
+  },
+  'z-grid': {
+    title: 'Grid',
+    to: 'z-grid',
+    contentImporter: () => import('./z-grid.md?raw'),
+  },
+  'z-tree': {
+    title: 'Tree',
+    to: 'z-tree',
+    contentImporter: () => import('./z-tree.md?raw'),
+  },
+  'z-qrcode': {
+    title: 'QRCode',
+    to: 'z-qrcode',
+    contentImporter: () => import('./z-qrcode.md?raw'),
   },
   'stagger-reveal': {
     title: 'StaggerReveal',

@@ -1,10 +1,6 @@
 import shell from 'shelljs';
 
-import {
-  createStepError,
-  createStepSuccess,
-  StepResult,
-} from './step-result';
+import { createStepError, createStepSuccess, StepResult } from './step-result';
 
 export function normalizeError(error: unknown) {
   let errorMessage = '';

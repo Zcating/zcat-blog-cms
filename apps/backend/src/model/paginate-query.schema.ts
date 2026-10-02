@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 import { safeNumber } from '@backend/utils';
@@ -17,7 +16,7 @@ export const PaginateQuerySchema = z.object({
   order: z.enum(ORDER_OPTIONS).default('latest'),
 });
 
-export class PaginateQueryDto extends createZodDto(PaginateQuerySchema) {}
+export type PaginateQueryDto = z.infer<typeof PaginateQuerySchema>;
 
 export interface PaginateResult<T> {
   data: T[];
@@ -25,4 +24,19 @@ export interface PaginateResult<T> {
   page: number;
   pageSize: number;
   total: number;
+}
+
+export function createPaginateResult<T>(
+  data: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+): PaginateResult<T> {
+  return {
+    data,
+    total,
+    totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+    page,
+    pageSize,
+  };
 }

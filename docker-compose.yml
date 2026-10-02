@@ -4,10 +4,12 @@ services:
     hostname: cms_pg
     container_name: cms_pg
     restart: unless-stopped
-    env_file:
-      - .env.deploy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - '5432:5432'
+      - '15400:5432'
     volumes:
       - cms_pg:/var/lib/postgresql/data
     networks:
@@ -18,56 +20,92 @@ services:
       timeout: 2s
       retries: 20
 
+  oss:
+    image: rustfs/rustfs:1.0.0
+    hostname: oss
+    container_name: cms_oss
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - export RUSTFS_ACCESS_KEY="$$OSS_ACCESS_KEY" RUSTFS_SECRET_KEY="$$OSS_SECRET_KEY"; exec /entrypoint.sh "$$@"
+      - sh
+    command:
+      - /data
+    ports:
+      - '19000:9000'
+      - '127.0.0.1:19001:9001'
+    environment:
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY}
+    volumes:
+      - oss_data:/data
+    networks:
+      - app-network
+
   backend:
     build:
       context: .
-      dockerfile: ./apps/backend/Dockerfile
+      dockerfile: Dockerfile.backend
       target: backend
-    image: ${DOCKER_REGISTRY}/cms_backend:latest
+    image: cms_backend:latest
     container_name: cms_backend
     restart: unless-stopped
     stdin_open: true
     tty: true
     ports:
       - '9090:9090'
-    env_file:
-      - .env.deploy
-      - apps/backend/.env.production
+    environment:
+      ENV: ${ENV}
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OSS_ENDPOINT: ${OSS_ENDPOINT}
+      OSS_PORT: ${OSS_PORT}
+      OSS_USE_SSL: ${OSS_USE_SSL}
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY}
+      OSS_PUBLIC_URL: ${OSS_PUBLIC_URL}
+      OSS_BUCKET: ${OSS_BUCKET}
     depends_on:
       cms_pg:
         condition: service_healthy
+      oss:
+        condition: service_started
     networks:
       - app-network
 
   frontend:
     build:
       context: .
-      dockerfile: ./apps/frontend/Dockerfile
+      dockerfile: Dockerfile.frontend
       target: frontend
-    image: ${DOCKER_REGISTRY}/cms_frontend:latest
+    image: cms_frontend:latest
     container_name: cms_frontend
     restart: unless-stopped
     stdin_open: true
     tty: true
     ports:
       - '3000:3000'
-    env_file:
-      - .env.deploy
+    environment:
+      BACKEND_API_URL: ${BACKEND_API_URL}
     networks:
       - app-network
 
   blog:
     build:
       context: .
-      dockerfile: ./apps/blog/Dockerfile
+      dockerfile: Dockerfile.blog
       target: blog
-    image: ${DOCKER_REGISTRY}/cms_blog:latest
+    image: ${DOCKER_REGISTRY}cms_blog:latest
     container_name: blog
     restart: unless-stopped
     stdin_open: true
     tty: true
-    env_file:
-      - .env.deploy
+    environment:
+      BACKEND_API_URL: ${BACKEND_API_URL}
     ports:
       - '1024:1024'
     networks:
@@ -80,3 +118,4 @@ networks:
 
 volumes:
   cms_pg:
+  oss_data:

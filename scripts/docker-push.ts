@@ -5,9 +5,12 @@
  * @description 该脚本用于通过 SSH 连接到远程服务器并执行 Docker 容器部署
  *              支持文件传输、docker-compose 命令执行、dry-run 预览模式
  *              所有配置均从环境变量读取，不支持命令行参数传递敏感信息
+ *              仓库根目录只有一份 .env：容器契约与部署凭据同处一个文件。
+ *              compose 不用 env_file，而是按服务从 .env 显式插值，
+ *              因此 SSH 凭据虽然在同一文件里，却不会进入任何容器。
  *
  * @example
- * # 基本部署（从 .env.deploy 读取配置）
+ * # 基本部署（从 .env 读取 SSH 配置）
  * pnpm docker:push
  *
  * # 预览模式（仅打印将要执行的命令，不实际执行）
@@ -19,12 +22,15 @@
  * # 跳过确认直接执行
  * pnpm docker:push --yes
  *
- * # 环境变量说明 (.env.deploy)
+ * # 环境变量说明 (.env)
  * DOCKER_REGISTRY=localhost:5000   # Docker 镜像仓库地址
  * SSH_HOST=localhost                # SSH 服务器地址（必填）
  * SSH_PORT=22                          # SSH 端口号（默认 22）
  * SSH_USER=root                        # SSH 用户名（必填）
- * SSH_PASSWORD=your_password           # SSH 密码（必填）
+ * SSH_PASSWORD=your_password        # SSH 密码（必填）
+ * REMOTE_DIR=/opt/cms               # 远程部署目录，必须是绝对路径（必填）
+ * DRY_RUN=false                     # 严格写 true 时进入预览模式
+ * SKIP_BUILD=false                  # 严格写 true 时跳过本地构建与推送
  */
 
 import * as fs from 'fs';
@@ -54,7 +60,7 @@ const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
 ) as Record<string, any>;
 
-const BACKEND_ENV_FILE = './apps/backend/.env.production';
+const ENV_FILE = './.env';
 
 /**
  * SSH 配置 schema - 使用 zod 进行类型验证
@@ -83,7 +89,7 @@ const DeployConfigSchema = z.object({
   dryRun: z.boolean(),
   skipConfirm: z.boolean(),
   skipBuild: z.boolean(),
-  envFile: z.string().optional().default('.env.deploy'),
+  envFile: z.string().optional().default(ENV_FILE),
 });
 
 /**
@@ -123,7 +129,7 @@ function loadEnvConfig(envFile: string): Record<string, string> {
 function generateConfig(
   options: Record<string, any>,
 ): StepResult<DeployConfig> {
-  const envConfig = loadEnvConfig(options.envFile || '.env.deploy');
+  const envConfig = loadEnvConfig(options.envFile || ENV_FILE);
   const result = DeployConfigSchema.safeParse({
     dockerRegistry: envConfig.DOCKER_REGISTRY || '',
     projectName: options.projectName || '',
@@ -137,7 +143,7 @@ function generateConfig(
     dryRun: options.dryRun || envConfig.DRY_RUN === 'true',
     skipConfirm: options.yes || false,
     skipBuild: options.skipBuild || envConfig.SKIP_BUILD === 'true',
-    envFile: options.envFile || '.env.deploy',
+    envFile: options.envFile || ENV_FILE,
   });
   if (!result.success) {
     const errorMessages = result.error.issues
@@ -283,7 +289,7 @@ async function executeRemoteTasks(
       return uploadCompose;
     }
 
-    // 4.1 上传环境文件
+    // 4.1 上传环境文件，容器契约与部署凭据同在这一份里
     const envFileName = path.basename(config.envFile);
     const remoteEnvFile = `${config.remoteDir}/${envFileName}`;
     const uploadEnv = await executeUploadFile(
@@ -296,23 +302,13 @@ async function executeRemoteTasks(
       return uploadEnv;
     }
 
-    // 4.2 上传后端环境文件
-    const remoteBackendEnv = `${config.remoteDir}/apps/backend/.env.production`;
-    const uploadBackendEnv = await executeUploadFile(
-      ssh,
-      BACKEND_ENV_FILE,
-      remoteBackendEnv,
-      config.dryRun,
-    );
-    if (!uploadBackendEnv.success) {
-      return uploadBackendEnv;
-    }
-
     // 5. 远程 Docker 操作
     // 注意：如果远程只有 docker-compose (v1)，则需要改为 docker-compose
     // 假设远程环境支持 docker compose (v2) 或者 docker-compose 是别名
     // 原脚本使用的是 docker-compose，这里保持一致，但建议检查远程环境
-    const baseCmd = `cd ${config.remoteDir} && docker-compose --env-file ${envFileName}`;
+    // DOCKER_REGISTRY 随 .env 一起上传；这里再以前缀形式显式传一次，
+    // 保证远端 compose 无论从文件还是从 shell 都能解析到镜像名。
+    const baseCmd = `cd ${config.remoteDir} && DOCKER_REGISTRY=${config.dockerRegistry} docker-compose --env-file ${envFileName}`;
 
     // 部署单个服务
     const pullResult = await executeRemoteCommand(
@@ -375,14 +371,20 @@ async function main(): Promise<void> {
 
   program
     .option('-p, --project-name <name>', '指定项目名称', '')
-    .option('--env-file <file>', '指定环境变量文件', '.env.deploy')
+    .option(
+      '--env-file <file>',
+      '环境变量文件，容器契约与部署凭据同在一份，上传到远端',
+      ENV_FILE,
+    )
     .option('--skip-build', '跳过本地构建阶段')
     .option('--dry-run', '预览模式 - 仅打印命令，不实际执行')
     .option('-y, --yes', '跳过确认直接执行')
     .action(async (options: Record<string, any>) => {
-      if (!fs.existsSync(BACKEND_ENV_FILE)) {
-        colorError(`后端环境文件 ${BACKEND_ENV_FILE} 不存在`);
-        return;
+      for (const envFile of [options.envFile || ENV_FILE]) {
+        if (!fs.existsSync(envFile)) {
+          colorError(`部署所需的环境文件 ${envFile} 不存在`);
+          return;
+        }
       }
 
       const validationResult = generateConfig(options);

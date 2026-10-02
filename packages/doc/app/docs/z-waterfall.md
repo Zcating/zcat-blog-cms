@@ -35,11 +35,11 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| data | T[] | - | 数据源数组 |
-| columns | number | - | 列数 |
-| columnGap | 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| '3xl' \| '4xl' | - | 列间距 |
-| rowGap | 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| '3xl' \| '4xl' | - | 行间距 |
-| renderItem | (item: T, index: number) => React.ReactNode | - | 自定义渲染函数 |
-| className | string | - | 自定义类名 |
+| Attribute  | Type                                                    | Default | Description    |
+| :--------- | :------------------------------------------------------ | :------ | :------------- |
+| data       | T[]                                                     | -       | 数据源数组     |
+| columns    | number                                                  | -       | 列数           |
+| columnGap  | 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| '3xl' \| '4xl' | -       | 列间距         |
+| rowGap     | 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| '3xl' \| '4xl' | -       | 行间距         |
+| renderItem | (item: T, index: number) => React.ReactNode             | -       | 自定义渲染函数 |
+| className  | string                                                  | -       | 自定义类名     |

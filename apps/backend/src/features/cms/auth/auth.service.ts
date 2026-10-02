@@ -1,106 +1,118 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+﻿import * as bcrypt from 'bcrypt';
+import { Effect } from 'effect';
+import { randomUUID } from 'node:crypto';
+import jwt from 'jsonwebtoken';
 
-import { PrismaService } from '@backend/common';
-import { createResult, ResultCode } from '@backend/model';
+import { config } from '../../../common/config.service';
+import { PrismaService, tryPromise } from '../../../common/effect';
 
-@Injectable()
-export class AuthService {
-  constructor(
-    private prismaService: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+import { tokenWhitelistService } from './whitelist.service';
 
-  async validateUser(username: string, pass: string) {
-    const user = await this.prismaService.user.findUnique({
-      where: { username },
-    });
-    if (!user) {
-      return null;
-    }
-    const hashPassword = await bcrypt.hash(pass, user.salt);
-    if (user.password !== hashPassword) {
-      return null;
-    }
-    return user;
-  }
-
-  async login(loginDto: { username: string; password: string }) {
-    const user = await this.validateUser(loginDto.username, loginDto.password);
-    if (!user) {
-      return createResult({
-        code: ResultCode.LoginError,
-        message: '用户名或密码错误',
-      });
-    }
-
-    return createResult({
-      code: ResultCode.Success,
-      message: '登录成功',
-      data: {
-        accessToken: this.jwtService.sign({
-          username: user.username,
-          sub: user.id,
-        }),
-      },
-    });
-  }
-
-  async register(registerDto: {
-    username: string;
-    password: string;
-    email: string;
-  }) {
-    const users = await this.prismaService.user.findMany();
-    console.log(users);
-    if (users.length >= 1) {
-      return createResult({
-        code: ResultCode.RegisterError,
-        message: '注册失败',
-      });
-    }
-    // console.log(bcrypt);
-    // return {
-    //   accessToken: '',
-    // };
-    // 检查用户名是否已存在
-    const existingUser = await this.prismaService.user.findUnique({
-      where: {
-        username: registerDto.username,
-      },
-    });
-    if (existingUser) {
-      return createResult({
-        code: ResultCode.RegisterError,
-        message: '用户已存在',
-      });
-    }
-
-    // 密码加密
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(registerDto.password, salt);
-
-    // 创建新用户
-    const createdUser = await this.prismaService.user.create({
-      data: {
-        username: registerDto.username,
-        password: hashedPassword,
-        email: registerDto.email,
-        salt,
-      },
-    });
-
-    // 返回JWT令牌
-    return createResult({
-      code: ResultCode.Success,
-      message: '注册成功',
-      data: {
-        accessToken: this.jwtService.sign({
-          username: createdUser.username,
-          sub: createdUser.id,
-        }),
-      },
-    });
-  }
+interface LoginOptions {
+  device?: string;
+  ip?: string;
+  userAgent?: string;
 }
+
+export function login(
+  username: string,
+  password: string,
+  options?: LoginOptions,
+) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const user = yield* tryPromise(() =>
+      prisma.user.findUnique({ where: { username } }),
+    );
+
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = yield* tryPromise(() =>
+      bcrypt.compare(password, user.password),
+    );
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const token = jwt.sign(
+      { username: user.username, sub: user.id, jti: randomUUID() },
+      config.jwtSecret,
+      { expiresIn: '1d' },
+    );
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    yield* tokenWhitelistService.create({
+      token,
+      userId: user.id,
+      device: options?.device,
+      ip: options?.ip,
+      userAgent: options?.userAgent,
+      expiresAt,
+    });
+
+    return { accessToken: token };
+  });
+}
+
+export function register(username: string, password: string, email: string) {
+  return Effect.gen(function* () {
+    if (!config.allowRegister) {
+      return { code: 'REGISTER_LIMIT' as const };
+    }
+
+    const prisma = yield* PrismaService;
+    const users = yield* tryPromise(() => prisma.user.findMany());
+    if (users.length >= 1) {
+      return { code: 'REGISTER_LIMIT' as const };
+    }
+
+    const existingUser = yield* tryPromise(() =>
+      prisma.user.findUnique({ where: { username } }),
+    );
+    if (existingUser) {
+      return { code: 'USER_EXISTS' as const };
+    }
+
+    const salt = yield* tryPromise(() => bcrypt.genSalt());
+    const hashedPassword = yield* tryPromise(() => bcrypt.hash(password, salt));
+
+    const user = yield* tryPromise(() =>
+      prisma.user.create({
+        data: {
+          username,
+          password: hashedPassword,
+          email,
+          salt,
+        },
+      }),
+    );
+
+    const token = jwt.sign({ username, sub: user.id }, config.jwtSecret, {
+      expiresIn: '1d',
+    });
+
+    return { code: 'SUCCESS' as const, accessToken: token };
+  });
+}
+
+export function logout(token: string) {
+  return Effect.gen(function* () {
+    yield* tokenWhitelistService.remove(token);
+  });
+}
+
+export function isValid(token: string) {
+  return Effect.gen(function* () {
+    try {
+      jwt.verify(token, config.jwtSecret);
+      return yield* tokenWhitelistService.validate(token);
+    } catch {
+      return false;
+    }
+  });
+}
+
+export const authService = { login, register, logout, isValid };

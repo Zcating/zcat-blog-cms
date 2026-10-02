@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
+﻿import { Cache } from '@backend/utils/cache';
+import { verifyPayloadChecksum } from '@backend/utils/hash';
+import { logger } from '@backend/utils';
 
-import { Statistic } from '@backend/prisma';
-import { hashTest } from '@backend/utils/hash';
+import { Effect } from 'effect';
 
-import { PrismaService } from './prisma.service';
+import { PrismaService, tryPromise } from './effect';
 
 // 博客访客记录DTO
 interface BlogVisitorDto {
@@ -15,7 +15,15 @@ interface BlogVisitorDto {
   os: string;
   device: string;
   deviceId: string;
-  hmac: string;
+}
+
+// Minimal request-like shape compatible with the legacy express-based
+// callers. The original signature used `express.Request`; we keep the
+// same surface (headers, ip, get()) without pulling in @types/express.
+interface RequestLike {
+  ip?: string;
+  headers: Record<string, string | string[] | undefined>;
+  get: (name: string) => string | undefined;
 }
 
 // 统计查询条件
@@ -47,32 +55,53 @@ export interface StatisticsChartData {
   uniqueVisitors: number;
 }
 
-@Injectable()
-export class StatisticService {
-  private readonly osList = [
-    'macOS',
-    'Windows',
-    'iOS',
-    'iPadOS',
-    'Android',
-    'Linux',
-  ];
+/**
+ * Anonymize a client IP for storage (GDPR / privacy).
+ * IPv4: keep first 3 octets, zero the last. IPv6: keep first 48 bits, zero the rest.
+ */
+function maskClientIp(ip: string): string {
+  if (!ip || ip === 'unknown') {
+    return ip;
+  }
+  if (ip.includes(':')) {
+    const parts = ip.split(':');
+    if (parts.length < 3) {
+      return 'unknown';
+    }
+    const head = parts.slice(0, 3).join(':');
+    const tailLen = Math.max(parts.length - 3, 0);
+    return head + ':' + Array(tailLen).fill('0').join(':');
+  }
+  const octets = ip.split('.');
+  if (octets.length !== 4) {
+    return 'unknown';
+  }
+  return octets[0] + '.' + octets[1] + '.' + octets[2] + '.0';
+}
 
-  constructor(private readonly prisma: PrismaService) {}
+const osList = ['macOS', 'Windows', 'iOS', 'iPadOS', 'Android', 'Linux'];
 
-  /**
-   * 记录博客访客
-   * @param {Request} request 请求对象
-   * @param {BlogVisitorDto} visitorDto 博客访客记录DTO
-   * @returns {Promise<void>}
-   */
-  async recordVisitor(
-    request: Request,
-    visitorDto: BlogVisitorDto,
-  ): Promise<void> {
-    const hash = request.headers['data-hash'] as string;
-    const result = hashTest(visitorDto, hash);
+// 60s in-memory cache for the dashboard summary; shared across requests.
+const summaryCache = new Cache<StatisticsSummary>(1000, 60);
+
+/**
+ * 记录博客访客
+ */
+export function recordVisitor(
+  request: RequestLike,
+  visitorDto: BlogVisitorDto,
+) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+
+    const hash = request.headers['data-hash'];
+    const checksum = Array.isArray(hash) ? hash[0] : hash;
+    const result = verifyPayloadChecksum(visitorDto, checksum ?? '');
     if (!result) {
+      logger.warn(
+        { event: 'payload_checksum_mismatch', pagePath: visitorDto.pagePath },
+        'Payload checksum does not match the request payload',
+      );
       return;
     }
 
@@ -80,61 +109,59 @@ export class StatisticService {
       return;
     }
 
-    if (!this.osList.includes(visitorDto.os)) {
+    if (!osList.includes(visitorDto.os)) {
       return;
     }
 
     // 获取客户端IP
+    const xff = request.headers['x-forwarded-for'];
     const clientIp =
-      request.ip || (request.headers['x-forwarded-for'] as string) || 'unknown';
+      request.ip || (Array.isArray(xff) ? xff[0] : xff) || 'unknown';
+    const maskedIp = maskClientIp(clientIp);
 
     // 获取referrer信息
     const referrer = visitorDto.referrer || request.get('Referer') || '';
 
-    // 创建统计记录，直接使用前端传递的设备信息
-    // 异步入库
+    yield* Effect.tryPromise(() =>
+      prisma.statistic.create({
+        data: {
+          pagePath: visitorDto.pagePath,
+          pageTitle: visitorDto.pageTitle,
+          browser: visitorDto.browser,
+          os: visitorDto.os,
+          device: visitorDto.device,
+          deviceId: visitorDto.deviceId,
+          ip: maskedIp,
+          referrer,
+        },
+      }),
+    );
+  });
+}
 
-    await this.prisma.statistic.create({
-      data: {
-        pagePath: visitorDto.pagePath,
-        pageTitle: visitorDto.pageTitle,
-        browser: visitorDto.browser,
-        os: visitorDto.os,
-        device: visitorDto.device,
-        deviceId: visitorDto.deviceId,
-        ip: clientIp,
-        referrer,
-      },
-    });
-  }
+/**
+ * 获取统计数据（分页）
+ */
+export function getStatistics(
+  condition: StatisticQueryCondition,
+  page: number = 1,
+  limit: number = 10,
+) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
 
-  /**
-   * 获取统计数据（分页）
-   */
-  async getStatistics(
-    condition: StatisticQueryCondition,
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{
-    data: Statistic[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
-    // 获取总数
-    const total = await this.prisma.statistic.count({
-      where: condition,
-    });
+    const total = yield* Effect.tryPromise(() =>
+      prisma.statistic.count({ where: condition }),
+    );
 
-    // 获取分页数据
-    const data = await this.prisma.statistic.findMany({
-      where: condition,
-      orderBy: {
-        time: 'desc',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const data = yield* Effect.tryPromise(() =>
+      prisma.statistic.findMany({
+        where: condition,
+        orderBy: { time: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    );
 
     return {
       data,
@@ -142,147 +169,136 @@ export class StatisticService {
       page,
       limit,
     };
-  }
+  });
+}
 
-  /**
-   * 获取统计摘要
-   */
-  async getSummary(): Promise<StatisticsSummary> {
+/**
+ * 获取统计摘要（并发查询 + 60s 内存缓存）
+ */
+export function getSummary() {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const cached = summaryCache.get('summary:v1');
+    if (cached) {
+      return cached;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // 总访问量
-    const totalVisits = await this.prisma.statistic.count();
-
-    // 总独立访客数（按设备ID去重）
-    const totalUniqueVisitors = await this.prisma.statistic.groupBy({
-      by: ['deviceId'],
-      _count: {
-        deviceId: true,
-      },
-    });
-
-    // 今日访问量
-    const todayVisits = await this.prisma.statistic.count({
-      where: {
-        time: {
-          gte: today,
-          lt: tomorrow,
-        },
-      },
-    });
-
-    // 今日独立访客数（按设备ID去重）
-    const todayUniqueVisitors = await this.prisma.statistic.groupBy({
-      by: ['deviceId'],
-      where: {
-        time: {
-          gte: today,
-          lt: tomorrow,
-        },
-      },
-      _count: {
-        ip: true,
-      },
-    });
-
-    // 热门页面（最近7天）
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const topPagesData = await this.prisma.statistic.groupBy({
-      by: ['pagePath', 'pageTitle'],
-      where: {
-        time: {
-          gte: sevenDaysAgo,
-        },
-        pagePath: {
-          not: null,
-        },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _count: {
-          id: 'desc',
-        },
-      },
-      take: 10,
-    });
+    const [
+      totalVisits,
+      totalUniqueVisitors,
+      todayVisits,
+      todayUniqueVisitors,
+      topPagesData,
+    ] = yield* Effect.all(
+      [
+        Effect.tryPromise(() => prisma.statistic.count()),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['deviceId'],
+            _count: { deviceId: true },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.count({
+            where: { time: { gte: today, lt: tomorrow } },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['deviceId'],
+            where: { time: { gte: today, lt: tomorrow } },
+            _count: { ip: true },
+          }),
+        ),
+        Effect.tryPromise(() =>
+          prisma.statistic.groupBy({
+            by: ['pagePath', 'pageTitle'],
+            where: { time: { gte: sevenDaysAgo }, pagePath: { not: null } },
+            _count: { id: true },
+            orderBy: { _count: { id: 'desc' } },
+            take: 10,
+          }),
+        ),
+      ],
+      { concurrency: 'unbounded' },
+    );
 
-    const topPages = topPagesData.map((item) => ({
-      pagePath: item.pagePath || '',
-      pageTitle: item.pageTitle || item.pagePath || '',
-      visitCount: item._count.id,
-    }));
+    const topPages = topPagesData.map(
+      (item: {
+        pagePath: string | null;
+        pageTitle: string | null;
+        _count: { id: number };
+      }) => ({
+        pagePath: item.pagePath || '',
+        pageTitle: item.pageTitle || item.pagePath || '',
+        visitCount: item._count.id,
+      }),
+    );
 
-    return {
+    const summary: StatisticsSummary = {
       totalVisits,
       totalUniqueVisitors: totalUniqueVisitors.length,
       todayVisits,
       todayUniqueVisitors: todayUniqueVisitors.length,
       topPages,
     };
-  }
 
-  /**
-   * 获取图表数据
-   */
-  async getChartData(days: number = 7): Promise<StatisticsChartData[]> {
+    summaryCache.set('summary:v1', summary);
+    return summary;
+  });
+}
+
+/**
+ * 获取图表数据（单次拉取 + 应用层按天分桶，从 2N 次查询降到 1 次）
+ */
+export function getChartData(days: number = 7) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
 
-    // 生成日期范围
-    const dateRange: Date[] = [];
+    const rows = yield* Effect.tryPromise(() =>
+      prisma.statistic.findMany({
+        where: { time: { gte: startDate } },
+        select: { time: true, ip: true },
+      }),
+    );
+
+    // 初始化空白日
+    const buckets = new Map<
+      string,
+      { visits: number; uniqueIps: Set<string> }
+    >();
     for (let i = 0; i < days; i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      dateRange.push(date);
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().split('T')[0];
+      buckets.set(key, { visits: 0, uniqueIps: new Set() });
     }
 
-    // 获取每天的统计数据
-    const chartData: StatisticsChartData[] = [];
-
-    for (const date of dateRange) {
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
-
-      // 当天访问量
-      const visits = await this.prisma.statistic.count({
-        where: {
-          time: {
-            gte: date,
-            lt: nextDate,
-          },
-        },
-      });
-
-      // 当天独立访客数
-      const uniqueVisitorsData = await this.prisma.statistic.groupBy({
-        by: ['ip'],
-        where: {
-          time: {
-            gte: date,
-            lt: nextDate,
-          },
-        },
-        _count: {
-          ip: true,
-        },
-      });
-
-      chartData.push({
-        date: date.toISOString().split('T')[0],
-        visits,
-        uniqueVisitors: uniqueVisitorsData.length,
-      });
+    for (const row of rows) {
+      const key = row.time.toISOString().split('T')[0];
+      const bucket = buckets.get(key);
+      if (!bucket) continue;
+      bucket.visits += 1;
+      bucket.uniqueIps.add(row.ip);
     }
 
-    return chartData;
-  }
+    return Array.from(buckets.entries()).map(([date, b]) => ({
+      date,
+      visits: b.visits,
+      uniqueVisitors: b.uniqueIps.size,
+    }));
+  });
 }

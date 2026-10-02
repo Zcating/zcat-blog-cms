@@ -1,41 +1,16 @@
-import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+﻿import { serve } from '@hono/node-server';
 
-import { AppModule } from './app.module';
+import { appRuntime } from './common/effect/runtime';
+import { config } from './common/config.service';
+import { app } from './app';
+import { cleanupProgram } from './features/cms/auth/whitelist-cleanup';
+import { logger } from './utils';
 
-async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+serve({
+  fetch: app.fetch,
+  port: config.port,
+});
 
-  const configService = app.get(ConfigService);
+appRuntime.runFork(cleanupProgram);
 
-  // 配置CORS
-  app.enableCors({
-    origin: [
-      configService.get('FRONTEND_URL') ?? '',
-      configService.get('BLOG_URL') ?? '',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Data-Hash'],
-    credentials: true,
-  });
-
-  // 配置解析器的最大大小
-  app.useBodyParser('json', { limit: '10mb' });
-
-  // 配置 Swagger
-  const config = new DocumentBuilder()
-    .setTitle('cms 后台管理系统')
-    .setDescription('cms 后台管理系统 API 描述')
-    .setVersion('1.0')
-    .addTag('cms')
-    .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
-
-  // 启动应用
-  await app.listen(configService.get('PORT') ?? 9090);
-}
-
-bootstrap();
+logger.info(`Server running on http://localhost:${config.port}`);

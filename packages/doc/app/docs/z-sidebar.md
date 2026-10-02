@@ -7,7 +7,7 @@
 ```typescript
 import { ZSidebar, type ZSidebarOption, ZView } from '@zcat/ui';
 import { Home, Settings, User } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet } from '@tanstack/react-router';
 
 const sidebarOptions: ZSidebarOption[] = [
   {
@@ -60,22 +60,22 @@ export default function Layout() {
 
 ## ZSidebar Props
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| options | ZSidebarOption[] | - | 侧边栏菜单配置数组 |
-| renderItem | (item: ZSidebarItemConfig) => React.ReactNode | - | 自定义菜单项渲染函数 |
-| header | React.ReactNode | - | 顶部导航栏内容（吸顶） |
-| sidebarHeader | React.ReactNode | - | 侧边栏顶部内容 |
-| sidebarFooter | React.ReactNode | - | 侧边栏底部内容 |
-| footer | React.ReactNode | - | 主内容区域底部内容 |
-| children | React.ReactNode | - | 主内容区域 |
+| Attribute     | Type                                          | Default | Description            |
+| :------------ | :-------------------------------------------- | :------ | :--------------------- |
+| options       | ZSidebarOption[]                              | -       | 侧边栏菜单配置数组     |
+| renderItem    | (item: ZSidebarItemConfig) => React.ReactNode | -       | 自定义菜单项渲染函数   |
+| header        | React.ReactNode                               | -       | 顶部导航栏内容（吸顶） |
+| sidebarHeader | React.ReactNode                               | -       | 侧边栏顶部内容         |
+| sidebarFooter | React.ReactNode                               | -       | 侧边栏底部内容         |
+| footer        | React.ReactNode                               | -       | 主内容区域底部内容     |
+| children      | React.ReactNode                               | -       | 主内容区域             |
 
 ## ZSidebarOption Props
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| label | string | - | 菜单项显示的文本 |
-| value | string | - | 菜单项的值 |
-| icon | React.ComponentType | - | 菜单项图标组件 |
-| children | ZSidebarOption[] | - | 子菜单项配置 |
-| open | boolean | - | 是否默认展开 |
+| Attribute | Type                | Default | Description      |
+| :-------- | :------------------ | :------ | :--------------- |
+| label     | string              | -       | 菜单项显示的文本 |
+| value     | string              | -       | 菜单项的值       |
+| icon      | React.ComponentType | -       | 菜单项图标组件   |
+| children  | ZSidebarOption[]    | -       | 子菜单项配置     |
+| open      | boolean             | -       | 是否默认展开     |

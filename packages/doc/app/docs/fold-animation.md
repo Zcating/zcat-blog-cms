@@ -58,8 +58,8 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| isOpen | boolean | - | 控制展开/收起状态 |
-| duration | number | 0.3 | 动画持续时间（秒） |
-| children | React.ReactNode | - | 动画内容 |
+| Attribute | Type            | Default | Description        |
+| :-------- | :-------------- | :------ | :----------------- |
+| isOpen    | boolean         | -       | 控制展开/收起状态  |
+| duration  | number          | 0.3     | 动画持续时间（秒） |
+| children  | React.ReactNode | -       | 动画内容           |

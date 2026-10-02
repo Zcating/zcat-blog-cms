@@ -67,10 +67,10 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| title | ReactNode | - | 弹窗标题 |
-| content | ReactNode | - | 弹窗内容 |
-| footer | React.FC<{ onClose: () => void }> | - | 自定义底部区域 |
-| contentContainerClassName | string | - | DialogContent 容器样式类名 |
-| onClose | () => void | - | 弹窗关闭后的回调 |
+| Attribute                 | Type                              | Default | Description                |
+| :------------------------ | :-------------------------------- | :------ | :------------------------- |
+| title                     | ReactNode                         | -       | 弹窗标题                   |
+| content                   | ReactNode                         | -       | 弹窗内容                   |
+| footer                    | React.FC<{ onClose: () => void }> | -       | 自定义底部区域             |
+| contentContainerClassName | string                            | -       | DialogContent 容器样式类名 |
+| onClose                   | () => void                        | -       | 弹窗关闭后的回调           |

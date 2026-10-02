@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 interface OssConfig {
@@ -20,17 +19,15 @@ export const SystemSettingUpdateDtoSchema = z.object({
 });
 
 export const UploadTokenDtoSchema = z.object({
-  type: z.enum(['article', 'photo']),
+  key: z.string(),
 });
 
 export interface SystemSetting {
   ossConfig: OssConfig;
 }
 
-export class SystemSettingDto extends createZodDto(SystemSettingDtoSchema) {}
-
-export class SystemSettingUpdateDto extends createZodDto(
-  SystemSettingUpdateDtoSchema,
-) {}
-
-export class UploadTokenDto extends createZodDto(UploadTokenDtoSchema) {}
+export type SystemSettingDto = z.infer<typeof SystemSettingDtoSchema>;
+export type SystemSettingUpdateDto = z.infer<
+  typeof SystemSettingUpdateDtoSchema
+>;
+export type UploadTokenDto = z.infer<typeof UploadTokenDtoSchema>;

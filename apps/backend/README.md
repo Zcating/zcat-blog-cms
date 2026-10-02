@@ -3,11 +3,6 @@
 例子：
 
 ```text
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=******
-DB_DATABASE=******
-DB_SYNCHRONIZE=true
-JWT_SECRET=******
+DATABASE_URL=postgresql://user:password@localhost:5432/cms
+JWT_SECRET=your-secret-key
 ```

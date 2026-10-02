@@ -2,10 +2,10 @@ import { ZMarkdown, ZView } from '@zcat/ui';
 
 import { stringDateFormat } from '@blog/common';
 
-import type { ArticleApi } from '@blog/apis';
+import type { ArticleDetail } from '@blog/server/article/schemas';
 
 export interface PostContentViewProps {
-  value: ArticleApi.ArticleDetail;
+  value: ArticleDetail;
 }
 export function PostContentView(props: PostContentViewProps) {
   // TODO: Parse content which format is markdown

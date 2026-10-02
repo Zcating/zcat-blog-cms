@@ -4,3 +4,5 @@ export * from './safe-type';
 // export * from './image';
 export * from './constant';
 export * from './paginate';
+export * from './cache';
+export * from './logger';

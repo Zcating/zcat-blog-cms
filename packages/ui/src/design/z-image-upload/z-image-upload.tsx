@@ -1,5 +1,4 @@
 import React from 'react';
-import { DefaultValues } from 'react-hook-form';
 
 import { usePropsValue } from '@zcat/ui/hooks';
 import { IconPhoto } from '@zcat/ui/icons';
@@ -53,7 +52,6 @@ export function ZImageUpload(props: ZImageUploadProps) {
 
     const url = URL.createObjectURL(file);
     setImageUrl(url);
-    onChange?.(url);
   };
 
   return (

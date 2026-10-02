@@ -29,8 +29,8 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| content | string | - | Markdown 文本内容 |
-| className | string | - | 自定义类名 |
-| customCodeComponents | Record<string, React.ComponentType> | - | 自定义代码块组件 |
+| Attribute            | Type                                | Default | Description       |
+| :------------------- | :---------------------------------- | :------ | :---------------- |
+| content              | string                              | -       | Markdown 文本内容 |
+| className            | string                              | -       | 自定义类名        |
+| customCodeComponents | Record<string, React.ComponentType> | -       | 自定义代码块组件  |

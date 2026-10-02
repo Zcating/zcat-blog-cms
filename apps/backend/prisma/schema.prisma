@@ -125,3 +125,19 @@ model Statistic {
   @@index([ip])
   @@map("statistic")
 }
+
+model TokenWhitelist {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @db.VarChar(64)
+  userId    Int
+  device    String?  @db.VarChar(255)
+  ip        String?  @db.VarChar(45)
+  userAgent String?  @db.Text
+  expiresAt DateTime @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([tokenHash], map: "IDX_token_whitelist_hash")
+  @@index([userId], map: "IDX_token_whitelist_userId")
+  @@index([expiresAt], map: "IDX_token_whitelist_expiresAt")
+  @@map("token_whitelist")
+}

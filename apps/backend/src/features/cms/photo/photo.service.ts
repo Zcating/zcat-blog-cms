@@ -1,54 +1,30 @@
-import { Injectable } from '@nestjs/common';
-import { isNumber } from 'class-validator';
+﻿import { Effect } from 'effect';
 
-import { OssService, PrismaService } from '@backend/common';
-import { PaginateResult } from '@backend/model';
-import { Photo } from '@backend/prisma';
+import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-import {
-  CreateAlbumPhotoDto,
-  UpdateAlbumPhotoDto,
-} from '../photo-album/photo-album.schema';
+type PhotoWithUrls = {
+  url: string;
+  thumbnailUrl: string;
+};
 
-import {
-  CreatePhotoDto,
-  GetPhotosDto,
-  UpdateAlbumPhotoResultDto,
-  UpdatePhotoDto,
-} from './photo.schema';
+function transformPhoto<T extends PhotoWithUrls>(
+  oss: { getPrivateUrl: (url: string) => string },
+  photo: T,
+): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
+  return {
+    ...photo,
+    url: oss.getPrivateUrl(photo.url),
+    thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
+  };
+}
 
-@Injectable()
-export class PhotoService {
-  constructor(
-    private prisma: PrismaService,
-    private ossService: OssService,
-  ) {}
-
-  /**
-   * 获取相册照片
-   * @param albumId 相册ID
-   * @returns 相册照片列表
-   */
-  async getPhotos(albumId?: number | null) {
-    if (isNumber(albumId) && albumId <= 0) {
-      return [];
-    }
-
-    const photos = await this.prisma.photo.findMany({
-      where: {
-        albumId: albumId,
-      },
-    });
-
-    return photos.map((photo) => this.transformPhoto(photo));
-  }
-
-  async getPhotosWithPagination(
-    dto: GetPhotosDto,
-  ): Promise<PaginateResult<Photo>> {
-    const { albumId, page, pageSize } = dto;
-
-    if (isNumber(albumId) && albumId <= 0) {
+export function findAll(
+  albumId: number | undefined,
+  page: number,
+  pageSize: number,
+) {
+  return Effect.gen(function* () {
+    if (albumId !== undefined && albumId <= 0) {
       return {
         data: [],
         page,
@@ -58,201 +34,214 @@ export class PhotoService {
       };
     }
 
-    const where = {
-      albumId: albumId,
-    };
+    const where = albumId !== undefined ? { albumId } : {};
+    const prisma = yield* PrismaService;
 
-    const [photos, total] = await Promise.all([
-      this.prisma.photo.findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.photo.count({ where }),
+    const [photos, total] = yield* Effect.all([
+      tryPromise(() =>
+        prisma.photo.findMany({
+          where,
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          orderBy: { createdAt: 'desc' },
+        }),
+      ),
+      tryPromise(() => prisma.photo.count({ where })),
     ]);
 
-    const totalPages = Math.ceil(total / pageSize);
+    const oss = yield* OssService;
 
     return {
-      data: photos.map((photo) => this.transformPhoto(photo)),
+      data: photos.map((photo) => transformPhoto(oss, photo)),
       page,
       pageSize,
-      totalPages,
+      totalPages: Math.ceil(total / pageSize),
       total,
     };
-  }
+  });
+}
 
-  /**
-   * 获取照片详情
-   * @param id 照片ID
-   * @returns 照片详情
-   */
-  async getPhoto(id: number) {
-    const photo = await this.prisma.photo.findUnique({
-      where: { id },
-    });
+export function findEmptyAlbum() {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const photos = yield* tryPromise(() =>
+      prisma.photo.findMany({ where: { albumId: null } }),
+    );
+
+    const oss = yield* OssService;
+    return photos.map((photo) => transformPhoto(oss, photo));
+  });
+}
+
+export function findById(id: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const photo = yield* tryPromise(() =>
+      prisma.photo.findUnique({ where: { id } }),
+    );
 
     if (!photo) {
       return null;
     }
 
-    return this.transformPhoto(photo);
-  }
+    const oss = yield* OssService;
+    return transformPhoto(oss, photo);
+  });
+}
 
-  async createPhoto(body: CreatePhotoDto): Promise<Photo> {
-    // const imageUrlResult = await createImageUrls(image);
-    const photo = await this.prisma.photo.create({
-      data: {
-        name: body.name,
-        url: body.url || '',
-        thumbnailUrl: body.thumbnailUrl || '',
-        albumId: body.albumId,
-      },
-    });
-
-    return this.transformPhoto(photo);
-  }
-
-  async updatePhoto(body: UpdatePhotoDto): Promise<Photo> {
-    const result = await this.prisma.photo.update({
-      where: { id: body.id },
-      data: {
-        name: body.name,
-        url: body.url,
-        thumbnailUrl: body.thumbnailUrl,
-        albumId: body.albumId,
-      },
-    });
-
-    return this.transformPhoto(result);
-  }
-
-  /**
-   * 创建相册照片
-   * @param body 创建照片参数
-   * @returns 创建成功返回照片，失败返回null
-   */
-  async createAlbumPhoto(body: CreateAlbumPhotoDto): Promise<Photo> {
-    const photo = await this.prisma.photo.create({
-      data: {
-        name: body.name,
-        url: body.url || '',
-        thumbnailUrl: body.thumbnailUrl || '',
-        albumId: body.albumId,
-      },
-    });
-
-    return this.transformPhoto(photo);
-  }
-
-  /**
-   * 更新相册照片
-   * @param image 照片文件
-   * @param body 更新照片参数
-   * @returns 更新成功返回照片，失败返回null
-   */
-  async updateAlbumPhoto(
-    body: UpdateAlbumPhotoDto,
-  ): Promise<UpdateAlbumPhotoResultDto | null> {
-    // 先更新相册封面
-    if (body.isCover) {
-      await this.prisma.photoAlbum.update({
-        where: { id: body.albumId },
+export function create(data: {
+  name?: string;
+  url?: string;
+  thumbnailUrl?: string;
+  albumId?: number | null;
+}) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const photo = yield* tryPromise(() =>
+      prisma.photo.create({
         data: {
-          coverId: body.id,
+          name: data.name ?? '',
+          url: data.url || '',
+          thumbnailUrl: data.thumbnailUrl || '',
+          albumId: data.albumId,
         },
-      });
-    }
+      }),
+    );
 
-    // 再更新照片
-    const updatedPhoto = await this.prisma.photo.update({
-      where: { id: body.id },
-      data: {
-        name: body.name,
-        url: body.url,
-        thumbnailUrl: body.thumbnailUrl,
-        albumId: body.albumId,
-      },
-    });
+    const oss = yield* OssService;
+    return transformPhoto(oss, photo);
+  });
+}
 
+export function update(
+  id: number,
+  data: {
+    name?: string;
+    url?: string;
+    thumbnailUrl?: string;
+    albumId?: number | null;
+  },
+) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const photo = yield* tryPromise(() =>
+      prisma.photo.update({
+        where: { id },
+        data: {
+          name: data.name,
+          url: data.url,
+          thumbnailUrl: data.thumbnailUrl,
+          albumId: data.albumId,
+        },
+      }),
+    );
+
+    const oss = yield* OssService;
+    return transformPhoto(oss, photo);
+  });
+}
+
+export function updateWithAlbum(
+  id: number,
+  albumId: number,
+  data: {
+    name?: string;
+    url?: string;
+    thumbnailUrl?: string;
+    isCover?: boolean;
+  },
+) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const updatedPhoto = yield* tryPromise(() =>
+      prisma.$transaction(async (tx) => {
+        const existingPhoto = await tx.photo.findUnique({
+          where: { id },
+          select: { albumId: true },
+        });
+
+        if (existingPhoto && existingPhoto.albumId !== albumId) {
+          await tx.photoAlbum.updateMany({
+            where: { coverId: id, id: { not: albumId } },
+            data: { coverId: null },
+          });
+        }
+
+        const photo = await tx.photo.update({
+          where: { id },
+          data: {
+            name: data.name,
+            url: data.url,
+            thumbnailUrl: data.thumbnailUrl,
+            albumId,
+          },
+        });
+
+        if (data.isCover) {
+          await tx.photoAlbum.update({
+            where: { id: albumId },
+            data: { coverId: id },
+          });
+        }
+
+        return photo;
+      }),
+    );
+
+    const oss = yield* OssService;
     return {
-      ...this.transformPhoto(updatedPhoto),
-      albumId: body.albumId,
-      isCover: body.isCover,
+      ...transformPhoto(oss, updatedPhoto),
+      albumId,
+      isCover: data.isCover,
     };
-  }
+  });
+}
 
-  /**
-   * 删除照片
-   * @param id 照片ID
-   * @returns 删除成功返回true，失败返回false
-   */
-  async deletePhoto(id: number) {
-    const photo = await this.prisma.photo.findUnique({
-      where: { id },
-    });
+export function deleteById(id: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const photo = yield* tryPromise(() =>
+      prisma.$transaction(async (tx) => {
+        const existingPhoto = await tx.photo.findUnique({ where: { id } });
+
+        if (!existingPhoto) {
+          return null;
+        }
+
+        await tx.photoAlbum.updateMany({
+          where: { coverId: id },
+          data: { coverId: null },
+        });
+
+        await tx.photo.delete({ where: { id } });
+
+        return existingPhoto;
+      }),
+    );
 
     if (!photo) {
       return false;
     }
 
-    // 删除 oss 的数据
-    await Promise.allSettled([
-      this.ossService.deleteFile(photo.url),
-      this.ossService.deleteFile(photo.thumbnailUrl),
-    ]);
-
-    // 删除数据库记录
-    await this.prisma.photo.delete({
-      where: { id },
-    });
+    const oss = yield* OssService;
+    yield* Effect.all(
+      [
+        tryPromise(() => oss.deleteFile(photo.url)),
+        tryPromise(() => oss.deleteFile(photo.thumbnailUrl)),
+      ],
+      { concurrency: 'unbounded' },
+    );
 
     return true;
-  }
-
-  /**
-   * 获取相册列表
-   * @returns 相册列表
-   */
-  async getAlbums() {
-    const albums = await this.prisma.photoAlbum.findMany();
-    const covers = await this.prisma.photo.findMany({
-      where: {
-        id: {
-          in: albums.map((album) => album.coverId).filter((id) => id !== null),
-        },
-      },
-    });
-
-    const result = albums.map((album) => {
-      const foundedCover = covers.find((cover) => cover.id === album.coverId);
-      const cover = foundedCover ? this.transformPhoto(foundedCover) : null;
-      return {
-        id: album.id,
-        name: album.name,
-        description: album.description,
-        coverId: album.coverId,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-        available: album.available,
-        cover,
-      };
-    });
-
-    return result;
-  }
-
-  /**
-   * 转换照片为私有URL
-   * @param {Photo} photo 照片
-   * @returns {Photo} 转换后的照片
-   */
-  transformPhoto(photo: Photo): Photo {
-    return {
-      ...photo,
-      url: this.ossService.getPrivateUrl(photo.url),
-      thumbnailUrl: this.ossService.getPrivateUrl(photo.thumbnailUrl),
-    };
-  }
+  });
 }
+
+export const photoService = {
+  findAll,
+  findEmptyAlbum,
+  findById,
+  create,
+  update,
+  updateWithAlbum,
+  delete: deleteById,
+};

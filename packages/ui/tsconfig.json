@@ -1,44 +1,27 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2022"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
     "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
     "composite": true,
     "paths": {
-      "@zcat/ui": [
-        "./src/index.ts"
-      ],
-      "@zcat/ui/*": [
-        "./src/*"
-      ],
-      "@zcat/ui/shadcn": [
-        "./src/shadcn/index.ts"
-      ],
-      "@zcat/ui/shadcn/*": [
-        "./src/shadcn/*"
-      ]
+      "@zcat/ui": ["./src/index.ts"],
+      "@zcat/ui/*": ["./src/*"],
+      "@zcat/ui/shadcn": ["./src/shadcn/index.ts"],
+      "@zcat/ui/shadcn/*": ["./src/shadcn/*"]
     }
   },
   "include": [
     "src/**/*",
-    "scripts/**/*"
+    "scripts/**/*",
+    "vitest.config.ts",
+    "vitest.setup.ts"
   ],
-  "exclude": [
-    "tsup.config.ts",
-    "e2e/**/*",
-    "playwright.config.ts"
-  ]
+  "exclude": ["tsup.config.ts", "e2e/**/*", "playwright.config.ts"]
 }

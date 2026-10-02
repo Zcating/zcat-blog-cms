@@ -83,10 +83,10 @@ export function DemoComponent() {
 
 ## API
 
-| Attribute | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| options | CascaderOption[] | [] | 数据源，结构包含 label, value, children |
-| value | T[] | - | 当前选中的值（受控） |
-| defaultValue | T[] | [] | 默认选中的值（非受控） |
-| onValueChange | (value: T[]) => void | - | 选中项变化时的回调 |
-| placeholder | string | '请选择' | 占位文本 |
+| Attribute     | Type                 | Default  | Description                             |
+| :------------ | :------------------- | :------- | :-------------------------------------- |
+| options       | CascaderOption[]     | []       | 数据源，结构包含 label, value, children |
+| value         | T[]                  | -        | 当前选中的值（受控）                    |
+| defaultValue  | T[]                  | []       | 默认选中的值（非受控）                  |
+| onValueChange | (value: T[]) => void | -        | 选中项变化时的回调                      |
+| placeholder   | string               | '请选择' | 占位文本                                |

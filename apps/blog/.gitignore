@@ -1,6 +1,14 @@
 .DS_Store
 /node_modules/
 
-# React Router
-/.react-router/
+# Build output
 /build/
+
+# TanStack Start
+/.output/
+/.nitro/
+/.vite/
+
+# Playwright
+/playwright-report/
+/test-results/

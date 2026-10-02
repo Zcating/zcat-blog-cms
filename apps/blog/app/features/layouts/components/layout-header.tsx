@@ -5,22 +5,30 @@ import {
   ZView,
   type LinkOption,
 } from '@zcat/ui';
+import { Link, useRouterState } from '@tanstack/react-router';
 import React from 'react';
-import { Link, useLocation } from 'react-router';
 
-interface LayoutHeaderProps {
+export interface LayoutNavRenderLinkProps {
+  to: string;
+  className: string;
+  children: React.ReactNode;
+}
+
+export interface LayoutNavProps {
   className?: string;
   options: LinkOption[];
   prefix?: React.ReactNode;
+  pathname: string;
+  renderLink: (props: LayoutNavRenderLinkProps) => React.ReactNode;
 }
 
-export function LayoutHeader({
+export function LayoutNav({
   className,
   options,
   prefix,
-}: LayoutHeaderProps) {
-  const { pathname } = useLocation();
-
+  pathname,
+  renderLink,
+}: LayoutNavProps) {
   const checkIsActive = (to: string) => {
     if (to === '/') {
       return pathname === '/';
@@ -35,24 +43,41 @@ export function LayoutHeader({
         {prefix && <Separator orientation="vertical" className="mr-2 h-4" />}
         <ZNavigationMenu
           options={options}
-          renderItem={(option, index) => {
-            const isActive = checkIsActive(option.to);
-            return (
-              <Link
-                key={index.toString()}
-                to={option.to}
-                className={
-                  isActive
-                    ? 'text-primary font-medium transition-colors'
-                    : 'text-muted-foreground hover:text-primary transition-colors'
-                }
-              >
-                {option.title}
-              </Link>
-            );
-          }}
+          renderItem={(option) =>
+            renderLink({
+              to: option.to,
+              className: checkIsActive(option.to)
+                ? 'text-primary font-medium transition-colors'
+                : 'text-muted-foreground hover:text-primary transition-colors',
+              children: option.title,
+            })
+          }
         />
       </ZView>
     </ZStickyHeader>
+  );
+}
+
+interface LayoutHeaderProps {
+  className?: string;
+  options: LinkOption[];
+  prefix?: React.ReactNode;
+}
+
+export function LayoutHeader(props: LayoutHeaderProps) {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
+  return (
+    <LayoutNav
+      {...props}
+      pathname={pathname}
+      renderLink={({ to, className, children }) => (
+        <Link to={to as never} className={className}>
+          {children}
+        </Link>
+      )}
+    />
   );
 }

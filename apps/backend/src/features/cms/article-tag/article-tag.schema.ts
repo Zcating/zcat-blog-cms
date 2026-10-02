@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 export const CreateArticleTagDtoSchema = z.object({
@@ -9,10 +8,5 @@ export const UpdateArticleTagDtoSchema = z.object({
   name: z.string().optional(),
 });
 
-export class CreateArticleTagDto extends createZodDto(
-  CreateArticleTagDtoSchema,
-) {}
-
-export class UpdateArticleTagDto extends createZodDto(
-  UpdateArticleTagDtoSchema,
-) {}
+export type CreateArticleTagDto = z.infer<typeof CreateArticleTagDtoSchema>;
+export type UpdateArticleTagDto = z.infer<typeof UpdateArticleTagDtoSchema>;

@@ -1,76 +1,86 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Effect } from 'effect';
 
-import { OssService, PrismaService } from '@backend/common';
+import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-import { UserInfoDto } from './user-info.schema';
-
-export interface UpdateUserInfoInput {
-  name?: string;
-  contact?: string;
-  occupation?: string;
-  avatar?: string;
-  aboutMe?: string;
-  abstract?: string;
+function transformUserInfo<T extends { avatar?: string | null }>(
+  oss: { getPrivateUrl: (url: string) => string },
+  userInfo: T,
+): T {
+  if (userInfo.avatar) {
+    return {
+      ...userInfo,
+      avatar: oss.getPrivateUrl(userInfo.avatar || ''),
+    } as T;
+  }
+  return userInfo;
 }
 
-@Injectable()
-export class UserInfoService {
-  constructor(
-    private prisma: PrismaService,
-    private ossService: OssService,
-  ) {}
-
-  async getUserInfo(userId?: number | null) {
+export function get(userId: number | undefined) {
+  return Effect.gen(function* () {
     if (!userId) {
       return null;
     }
 
-    let result = await this.prisma.userInfo.findUnique({
-      where: { id: userId },
-    });
+    const prisma = yield* PrismaService;
+    let result = yield* tryPromise(() =>
+      prisma.userInfo.findUnique({ where: { id: userId } }),
+    );
 
     if (!result) {
-      result = await this.prisma.userInfo.create({
-        data: {
-          name: '',
-          contact: '{}',
-          occupation: '',
-          avatar: '',
-          aboutMe: '',
-          abstract: '',
-          userId: userId,
-        },
-      });
+      result = yield* tryPromise(() =>
+        prisma.userInfo.create({
+          data: {
+            name: '',
+            contact: '{}',
+            occupation: '',
+            avatar: '',
+            aboutMe: '',
+            abstract: '',
+            userId,
+          },
+        }),
+      );
     }
 
-    return this.transformUserInfo(result);
-  }
-
-  async updateUserInfo(userId: number, body: UserInfoDto) {
-    const updated = await this.prisma.userInfo.update({
-      where: { id: userId },
-      data: {
-        name: body.name,
-        contact: JSON.stringify(body.contact),
-        occupation: body.occupation,
-        avatar: body.avatar,
-        aboutMe: body.aboutMe,
-        abstract: body.abstract,
-      },
-    });
-
-    return this.transformUserInfo(updated);
-  }
-
-  private transformUserInfo<T extends { avatar?: string | null }>(
-    userInfo: T,
-  ): T {
-    if (userInfo.avatar) {
-      return {
-        ...userInfo,
-        avatar: this.ossService.getPrivateUrl(userInfo.avatar || ''),
-      } as T;
-    }
-    return userInfo;
-  }
+    const oss = yield* OssService;
+    return transformUserInfo(oss, result);
+  });
 }
+
+export function update(
+  userId: number | undefined,
+  data: {
+    name?: string;
+    contact?: Record<string, string>;
+    occupation?: string;
+    avatar?: string;
+    aboutMe?: string;
+    abstract?: string;
+  },
+) {
+  return Effect.gen(function* () {
+    if (!userId) {
+      return null;
+    }
+
+    const prisma = yield* PrismaService;
+    const updated = yield* tryPromise(() =>
+      prisma.userInfo.update({
+        where: { id: userId },
+        data: {
+          name: data.name,
+          contact: JSON.stringify(data.contact),
+          occupation: data.occupation,
+          avatar: data.avatar,
+          aboutMe: data.aboutMe,
+          abstract: data.abstract,
+        },
+      }),
+    );
+
+    const oss = yield* OssService;
+    return transformUserInfo(oss, updated);
+  });
+}
+
+export const userInfoService = { get, update };

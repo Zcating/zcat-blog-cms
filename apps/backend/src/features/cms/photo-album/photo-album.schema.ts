@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 import type { Photo, PhotoAlbum } from '@backend/prisma';
@@ -55,17 +54,11 @@ export const SetCoverDtoSchema = z.object({
   photoId: z.coerce.number().int().positive(),
 });
 
-export class CreatePhotoAlbumDto extends createZodDto(
-  CreatePhotoAlbumDtoSchema,
-) {}
-export class CreateAlbumPhotoDto extends createZodDto(
-  CreateAlbumPhotoDtoSchema,
-) {}
-export class UpdateAlbumDto extends createZodDto(UpdateAlbumDtoSchema) {}
-export class UpdateAlbumPhotoDto extends createZodDto(
-  UpdateAlbumPhotoDtoSchema,
-) {}
-export class SetCoverDto extends createZodDto(SetCoverDtoSchema) {}
+export type CreatePhotoAlbumDto = z.infer<typeof CreatePhotoAlbumDtoSchema>;
+export type CreateAlbumPhotoDto = z.infer<typeof CreateAlbumPhotoDtoSchema>;
+export type UpdateAlbumDto = z.infer<typeof UpdateAlbumDtoSchema>;
+export type UpdateAlbumPhotoDto = z.infer<typeof UpdateAlbumPhotoDtoSchema>;
+export type SetCoverDto = z.infer<typeof SetCoverDtoSchema>;
 
 export interface ReturnPhotoAlbumDto extends Omit<PhotoAlbum, 'coverId'> {
   cover: Photo | null;

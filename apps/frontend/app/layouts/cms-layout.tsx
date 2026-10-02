@@ -1,6 +1,12 @@
+// The `_cms` `beforeLoad` is the single source of truth for the auth gate —
+// there is deliberately no `loader()` here.
+
 import {
   Separator,
   SidebarTrigger,
+  ZAvatar,
+  ZDialog,
+  ZNotification,
   ZSidebar,
   ZStickyHeader,
   ZView,
@@ -10,105 +16,80 @@ import {
   BookImageIcon,
   Gauge,
   ImageIcon,
+  LogOut,
   NotebookIcon,
   SettingsIcon,
   UserIcon,
 } from 'lucide-react';
 import React from 'react';
-import {
-  Link,
-  Outlet,
-  useNavigate,
-  useRouteError,
-  isRouteErrorResponse,
-  useLocation,
-} from 'react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 
-const FRONTEND_VERSION = '1.0.0';
+import { logout } from '@cms/server/auth';
+import { clearPrivateQueryCache } from '@cms/shared/query';
 
-export function ErrorBoundary() {
-  const error = useRouteError();
-  const navigate = useNavigate();
-  const [message, setMessage] = React.useState('');
+import type { CmsShellUser } from '@cms/shared/auth/cms-access';
 
-  React.useEffect(() => {
-    if (isRouteErrorResponse(error)) {
-      setMessage(`状态码：${error.status} \n 错误内容: ${error.statusText}`);
-    }
-    if (error instanceof Error) {
-      if (error.message === 'Unauthorized') {
-        navigate('/login');
-      } else {
-        setMessage(error.message);
-      }
-    } else {
-      setMessage('未知错误');
-    }
-  }, [navigate, error]);
-
-  return (
-    <Layout>
-      <div>{message}</div>
-    </Layout>
-  );
+/**
+ * Layout entry — receives the pre-loaded shell user from the
+ * `_cms` route via prop drilling. We deliberately do NOT reach
+ * into the router context here so the layout file can be tested
+ * with a plain JSX render.
+ */
+export function CMSLayoutShell({
+  cmsUser,
+  children,
+}: {
+  cmsUser?: CmsShellUser;
+  children: React.ReactNode;
+}) {
+  return <Layout cmsUser={cmsUser}>{children}</Layout>;
 }
-
-export default function CMSLayout() {
-  return (
-    <Layout>
-      <Outlet />
-    </Layout>
-  );
-}
-
-const menuItems: ZSidebarOption[] = [
-  {
-    label: '仪表盘',
-    value: '/dashboard',
-    icon: Gauge,
-  },
-  {
-    label: '文章管理',
-    value: '/articles',
-    icon: NotebookIcon,
-  },
-  // {
-  //   label: '分类管理',
-  //   value: '/article-categories',
-  //   icon: (props: any) => <TagsOutlined {...props} style={{ ...props.style, color: 'oklch(0.48 0.18 55)' }} />,
-  // },
-  {
-    label: '相册管理',
-    value: '/albums',
-    icon: BookImageIcon,
-  },
-  {
-    label: '照片管理',
-    value: '/photos',
-    icon: ImageIcon,
-  },
-  {
-    label: '用户信息',
-    value: '/user-info',
-    icon: UserIcon,
-  },
-  {
-    label: '系统设置',
-    value: '/settings',
-    icon: SettingsIcon,
-  },
-];
 
 function isActive(value: string | undefined, activeValue: string | undefined) {
   return !!activeValue?.startsWith(value ?? '');
 }
 
 interface LayoutProps {
+  cmsUser?: CmsShellUser;
   children: React.ReactNode;
 }
 
-function Layout(props: LayoutProps) {
+function Layout({ cmsUser, children }: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const name = cmsUser?.name ?? '';
+  const avatar = cmsUser?.avatar ?? '';
+
+  const handleLogout = async () => {
+    const confirmed = await ZDialog.confirm({
+      title: '退出登录',
+      content: '确认退出当前账号？',
+      confirmText: '退出',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
+
+    let logoutError: unknown;
+    try {
+      await logout();
+    } catch (error) {
+      logoutError = error;
+    }
+    // Wipe the entire private Query cache so no stale user/tenant
+    // data lingers on the next session. The browser singleton is
+    // preserved — only the entries are dropped. This must run even
+    // when `logout()` rejected, so it is never inside the try above.
+    clearPrivateQueryCache(queryClient);
+    await navigate({ to: '/login' });
+
+    if (logoutError !== undefined) {
+      await ZNotification.error(
+        logoutError instanceof Error ? logoutError.message : '退出失败，请重试',
+      );
+    }
+  };
 
   const renderItem = (item: ZSidebarOption) => {
     if (!item.value) {
@@ -145,8 +126,23 @@ function Layout(props: LayoutProps) {
       currentValue={location.pathname}
       isActive={isActive}
       sidebarFooter={
-        <div className="text-xs text-muted-foreground text-center py-4">
-          v{FRONTEND_VERSION}
+        <div className="flex items-center justify-between px-3 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <ZAvatar
+              src={avatar}
+              alt={name}
+              size="sm"
+              className="w-8 h-8 shrink-0"
+            />
+            <span className="text-sm font-medium truncate">{name}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors shrink-0"
+          >
+            <LogOut className="size-4" />
+          </button>
         </div>
       }
     >
@@ -155,9 +151,42 @@ function Layout(props: LayoutProps) {
           id="cms-layout-content"
           className="absolute top-0 left-0 bottom-0 right-0 overflow-auto"
         >
-          {props.children}
+          {children}
         </ZView>
       </ZView>
     </ZSidebar>
   );
 }
+
+const menuItems: ZSidebarOption[] = [
+  {
+    label: '仪表盘',
+    value: '/dashboard',
+    icon: Gauge,
+  },
+  {
+    label: '文章管理',
+    value: '/articles',
+    icon: NotebookIcon,
+  },
+  {
+    label: '相册管理',
+    value: '/albums',
+    icon: BookImageIcon,
+  },
+  {
+    label: '照片管理',
+    value: '/photos',
+    icon: ImageIcon,
+  },
+  {
+    label: '用户信息',
+    value: '/user-info',
+    icon: UserIcon,
+  },
+  {
+    label: '系统设置',
+    value: '/settings',
+    icon: SettingsIcon,
+  },
+];
