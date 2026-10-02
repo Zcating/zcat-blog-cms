@@ -1,8 +1,8 @@
 import pino from 'pino';
 
-import { config } from '../common/config.service';
+import { config, isProduction } from '../common/config.service';
 
-const isDev = config.nodeEnv !== 'production';
+const isDev = !isProduction;
 
 const pinoLogger = pino({
   level: config.logLevel || (isDev ? 'debug' : 'info'),

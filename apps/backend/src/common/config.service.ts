@@ -21,23 +21,15 @@ function parseCorsOrigins(defaultOrigins: string[]): string[] {
     .filter((o) => o.length > 0);
 }
 
-function parseAllowRegister(defaultValue: boolean): boolean {
-  const raw = process.env.ALLOW_REGISTER;
-  if (raw === undefined) {
-    return defaultValue;
-  }
-  return raw === 'true';
-}
+const env = optional('ENV', 'DEVELOPMENT');
 
-const nodeEnv = optional('NODE_ENV', 'development');
-const isProduction = nodeEnv === 'production';
+export const isProduction = env.trim().toUpperCase() === 'PRODUCTION';
 
 const devCorsOrigins = ['http://localhost:3000', 'http://localhost:1024'];
 
 export const config = Object.freeze({
   // App
   port: Number(optional('PORT', '9090')),
-  nodeEnv,
 
   // Database
   databaseUrl: required('DATABASE_URL'),
@@ -55,9 +47,9 @@ export const config = Object.freeze({
   ossAccessKey: required('OSS_ACCESS_KEY'),
   ossSecretKey: required('OSS_SECRET_KEY'),
   ossPublicUrl: optional('OSS_PUBLIC_URL', ''),
-  ossBucket: optional('OSS_BUCKET', ''),
+  ossBucket: required('OSS_BUCKET'),
 
   // Security
   corsAllowedOrigins: parseCorsOrigins(isProduction ? [] : devCorsOrigins),
-  allowRegister: parseAllowRegister(!isProduction),
+  allowRegister: !isProduction,
 });

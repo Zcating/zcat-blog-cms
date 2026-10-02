@@ -40,7 +40,7 @@
 ## 数据库与环境
 
 - 本地数据库优先通过 docker 启动 `cms_pg`
-- 环境变量从 `.env` 或 `apps/backend/.env.development` 加载
+- 环境变量从 `apps/backend/.env` 加载，其中未声明的变量回落到仓库根目录的 `.env`
 - 新增环境变量需同步文档说明用途与默认值策略
 
 ## 测试要求

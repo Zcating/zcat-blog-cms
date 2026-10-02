@@ -11,7 +11,7 @@ CMS 管理后台（`apps/frontend`）：管理博客的文章、分类、标签�
 
 ## 环境变量
 
-复制 `.env.example` 为 `.env` 与 `.env.development` 并按本地后端地址填写，变量说明见模板内注释。
+复制 `.env.example` 为 `.env` 并按本地后端地址填写，变量说明见模板内注释。
 
 ## 开发命令
 

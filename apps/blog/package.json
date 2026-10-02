@@ -8,8 +8,6 @@
   "scripts": {
     "dev": "dotenv -e .env -- vite dev",
     "dev:fresh": "node ../../scripts/kill-port.mjs 1024 && pnpm run dev",
-    "dev:prod": "vite dev --mode production",
-    "build:dev": "vite build --mode development",
     "build": "vite build --mode production",
     "start:dev": "npx cross-env PORT=1024 node .output/server/index.mjs",
     "start": "npx cross-env PORT=1024 node .output/server/index.mjs",
