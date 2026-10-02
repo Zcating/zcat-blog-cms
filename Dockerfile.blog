@@ -21,4 +21,4 @@ FROM base AS blog
 COPY --from=build /prod/blog /prod/blog
 WORKDIR /prod/blog
 EXPOSE 1024
-CMD [ "sh", "-c", "pnpm run start" ]
+CMD [ "sh", "-c", "npm run start" ]
