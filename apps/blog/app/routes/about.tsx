@@ -35,7 +35,7 @@ function AboutPage() {
       className="w-full h-full flex flex-col items-center gap-10"
       direction="top"
     >
-      <Card data-about-card="true" className="w-2xl">
+      <Card data-about-card="true" className="w-full max-w-2xl">
         <CardHeader className="flex justify-center">
           <ZAvatar
             alt={userInfo.name}
@@ -50,7 +50,7 @@ function AboutPage() {
           <p className="text-sm">欢迎来到我的博客！</p>
         </CardContent>
       </Card>
-      <Card data-about-card="true" className="w-2xl">
+      <Card data-about-card="true" className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">关于我</CardTitle>
         </CardHeader>
@@ -58,7 +58,7 @@ function AboutPage() {
           <p className="text-sm">{userInfo.aboutMe}</p>
         </CardContent>
       </Card>
-      <Card data-about-card="true" className="w-2xl">
+      <Card data-about-card="true" className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">联系我</CardTitle>
         </CardHeader>
