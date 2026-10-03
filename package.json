@@ -52,7 +52,7 @@
     "oxlint": "^1.67.0",
     "shelljs": "^0.10.0",
     "ts-node": "^10.9.2",
-    "vite": "^7.1.7",
+    "vite": "catalog:",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "lint-staged": {
