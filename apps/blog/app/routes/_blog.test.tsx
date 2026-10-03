@@ -34,7 +34,7 @@ vi.mock('@tanstack/react-router', async () => {
 
 import { Route } from './_blog';
 
-const MENU_TITLES = ['首页', '文章', '相册', '工具箱', 'AI 聊天', '关于'];
+const MENU_TITLES = ['首页', '文章', '相册', '工具箱', '关于'];
 
 describe('route component: /_blog layout', () => {
   beforeEach(() => {

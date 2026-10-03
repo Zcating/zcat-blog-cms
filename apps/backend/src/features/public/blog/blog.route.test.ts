@@ -5,7 +5,7 @@ import { Effect } from 'effect';
 const mockPrisma = vi.hoisted(() => ({
   article: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
   photoAlbum: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
-  photo: { findMany: vi.fn() },
+  photo: { findMany: vi.fn(), count: vi.fn() },
   userInfo: { findUnique: vi.fn() },
 }));
 
@@ -398,6 +398,170 @@ describe('blogRoutes', () => {
     });
   });
 
+  describe('GET /photo/list', () => {
+    const photoRow = (id: number, albumId: number | null, url: string) => ({
+      id,
+      name: `photo ${id}`,
+      url,
+      thumbnailUrl: `${url}_t`,
+      createdAt: new Date('2026-05-20T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-20T00:00:00.000Z'),
+      albumId,
+    });
+
+    beforeEach(() => {
+      mockPrisma.photoAlbum.findMany.mockReset();
+      mockPrisma.photo.findMany.mockReset();
+      mockPrisma.photo.count.mockReset();
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([]);
+      mockPrisma.photo.findMany.mockResolvedValue([]);
+      mockPrisma.photo.count.mockResolvedValue(0);
+    });
+
+    it('returns each photo with the name of the album it belongs to', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Album One' },
+        { id: 2, name: 'Album Two' },
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(2);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow(20, 2, 'newest.jpg'),
+        photoRow(10, 1, 'oldest.jpg'),
+      ]);
+      mockOss.getPrivateUrl.mockImplementation(
+        (url: string) => `https://cdn.example.com/${url}`,
+      );
+      const app = createApp();
+
+      const res = await app.request('/photo/list?page=1&pageSize=10');
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data.data).toHaveLength(2);
+      expect(body.data.data[0]).toMatchObject({
+        id: 20,
+        albumId: 2,
+        albumName: 'Album Two',
+      });
+      expect(body.data.data[0].url).toBe('https://cdn.example.com/newest.jpg');
+      expect(body.data.data[0].thumbnailUrl).toBe(
+        'https://cdn.example.com/newest.jpg_t',
+      );
+      expect(body.data.data[1].albumName).toBe('Album One');
+    });
+
+    it('returns the whole pagination result shape and nothing else', async () => {
+      const app = createApp();
+
+      const res = await app.request('/photo/list');
+      const body = await res.json();
+
+      expect(Object.keys(body.data).sort()).toEqual([
+        'data',
+        'page',
+        'pageSize',
+        'total',
+        'totalPages',
+      ]);
+    });
+
+    it('never serves a photo out of an album that is not published', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Published' },
+        { id: 2, name: 'Also Published' },
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow(1, 1, 'visible.jpg'),
+      ]);
+      const app = createApp();
+
+      await app.request('/photo/list');
+
+      const albumQuery = mockPrisma.photoAlbum.findMany.mock.calls[0]?.[0];
+      expect(albumQuery.where).toEqual({ available: true });
+      const photoQuery = mockPrisma.photo.findMany.mock.calls[0]?.[0];
+      expect(photoQuery.where).toEqual({ albumId: { in: [1, 2] } });
+      expect(photoQuery.orderBy).toEqual({ createdAt: 'desc' });
+      const countQuery = mockPrisma.photo.count.mock.calls[0]?.[0];
+      expect(countQuery.where).toEqual({ albumId: { in: [1, 2] } });
+    });
+
+    it('drops a photo that carries no album rather than serving it nameless', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Published' },
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow(1, null, 'orphan.jpg'),
+      ]);
+      const app = createApp();
+
+      const res = await app.request('/photo/list');
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data.data).toEqual([]);
+    });
+
+    it('reports zero total pages when no published photos exist', async () => {
+      const app = createApp();
+
+      const res = await app.request('/photo/list');
+      const body = await res.json();
+
+      expect(body.data).toEqual({
+        data: [],
+        total: 0,
+        totalPages: 0,
+        page: 1,
+        pageSize: 10,
+      });
+    });
+
+    it('keeps the grand total when the requested page is past the end', async () => {
+      mockPrisma.photo.count.mockResolvedValue(23);
+      const app = createApp();
+
+      const res = await app.request('/photo/list?page=9&pageSize=10');
+      const body = await res.json();
+
+      expect(body.data).toEqual({
+        data: [],
+        total: 23,
+        totalPages: 3,
+        page: 9,
+        pageSize: 10,
+      });
+    });
+
+    it('reports an error when the photo count fails instead of an empty page', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Album One' },
+      ]);
+      mockPrisma.photo.findMany.mockResolvedValue([photoRow(1, 1, 'a.jpg')]);
+      mockPrisma.photo.count.mockRejectedValue(new Error('db error'));
+      const app = createApp();
+
+      const res = await app.request('/photo/list');
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
+      expect(body.data).toBeUndefined();
+    });
+
+    it('reports an error when the photo query fails', async () => {
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockRejectedValue(new Error('db error'));
+      const app = createApp();
+
+      const res = await app.request('/photo/list');
+      const body = await res.json();
+
+      expect(body.code).toBe('ERR0006');
+    });
+  });
+
   describe('GET /gallery/:id', () => {
     it('returns gallery detail', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue({
@@ -481,6 +645,26 @@ describe('blogRoutes', () => {
       const body = await res.json();
 
       expect(body.code).toBe('ERR0006');
+    });
+  });
+
+  describe('GET /visitor', () => {
+    it('answers the probe in a success envelope and names the recording method', async () => {
+      mockRecordVisitor.mockReturnValue(Effect.succeed(undefined));
+
+      const res = await createApp().request('/visitor');
+      const body = await res.json();
+
+      expect(body.code).toBe('0000');
+      expect(body.data).toEqual({ recordsVisit: false, method: 'POST' });
+    });
+
+    it('records nothing, because only POST carries a visit', async () => {
+      mockRecordVisitor.mockReturnValue(Effect.succeed(undefined));
+
+      await createApp().request('/visitor');
+
+      expect(mockRecordVisitor).not.toHaveBeenCalled();
     });
   });
 

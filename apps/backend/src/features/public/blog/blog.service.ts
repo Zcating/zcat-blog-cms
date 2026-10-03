@@ -178,6 +178,49 @@ export function getGalleryDetail(id: string) {
   });
 }
 
+export function getPhotoList(page: number, pageSize: number) {
+  return Effect.gen(function* () {
+    const prisma = yield* PrismaService;
+    const oss = yield* OssService;
+
+    const albums = yield* tryPromise(() =>
+      prisma.photoAlbum.findMany({
+        where: { available: true },
+        select: { id: true, name: true },
+      }),
+    );
+
+    const albumNames = new Map(albums.map((album) => [album.id, album.name]));
+    const publishedAlbumIds = [...albumNames.keys()];
+
+    const rawPhotos = yield* tryPromise(() =>
+      prisma.photo.findMany({
+        ...createPaginate(page, pageSize),
+        where: { albumId: { in: publishedAlbumIds } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    );
+
+    const total = yield* tryPromise(() =>
+      prisma.photo.count({ where: { albumId: { in: publishedAlbumIds } } }),
+    );
+
+    const photos = rawPhotos
+      .filter((photo) => photo.albumId !== null)
+      .map((photo) => ({
+        id: photo.id,
+        name: photo.name,
+        url: oss.getPrivateUrl(photo.url),
+        thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
+        createdAt: photo.createdAt,
+        albumId: photo.albumId as number,
+        albumName: albumNames.get(photo.albumId as number) ?? '',
+      }));
+
+    return createPaginateResult(photos, total, page, pageSize);
+  });
+}
+
 export function recordVisitor(
   visitorDto: {
     pagePath: string;
@@ -252,6 +295,7 @@ export const blogService = {
   getArticleDetail,
   getGalleryList,
   getGalleryDetail,
+  getPhotoList,
   recordVisitor,
   getUserInfo,
 };

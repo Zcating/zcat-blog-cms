@@ -103,6 +103,34 @@ blogRoutes.get(
   },
 );
 
+// GET /photo/list - 获取照片流
+blogRoutes.get(
+  '/photo/list',
+  zValidator('query', PaginateQuerySchema),
+  async (c) => {
+    try {
+      const query = c.req.valid('query');
+
+      logger.info({ query }, '获取照片流, query:');
+
+      const result = await appRuntime.runPromise(
+        blogService.getPhotoList(query.page, query.pageSize),
+      );
+
+      return c.json(
+        createResult({
+          code: ResultCode.Success,
+          message: 'success',
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logger.error('获取照片流失败', error);
+      throw error;
+    }
+  },
+);
+
 // GET /gallery/:id - 获取相册详情
 blogRoutes.get('/gallery/:id', async (c) => {
   try {
@@ -135,6 +163,17 @@ blogRoutes.get('/gallery/:id', async (c) => {
     throw error;
   }
 });
+
+// GET /visitor - 访客上报端点的可达性探测：只回答访客由哪个方法记录，不产生任何访客记录
+blogRoutes.get('/visitor', (c) =>
+  c.json(
+    createResult({
+      code: ResultCode.Success,
+      message: 'success',
+      data: { recordsVisit: false, method: 'POST' },
+    }),
+  ),
+);
 
 // POST /visitor - 记录博客访客
 blogRoutes.post(

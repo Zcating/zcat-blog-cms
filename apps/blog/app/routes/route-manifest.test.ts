@@ -93,15 +93,7 @@ describe('migrated toolbox URLs', () => {
   );
 });
 
-describe('migrated ai-chat and XML feed URLs', () => {
-  it('renders the ai-chat page', async () => {
-    const resolved = await resolve('/ai-chat');
-
-    expect(resolved.id).toBe('/ai-chat');
-    expect(resolved.isLeaf).toBe(true);
-    expect(resolved.rendersNotFound).toBe(false);
-  });
-
+describe('migrated XML feed URLs', () => {
   it.each([
     ['/rss.xml', '/rss.xml'],
     ['/sitemap.xml', '/sitemap.xml'],
@@ -144,16 +136,14 @@ describe('the root document advertises the live feeds', () => {
 });
 
 describe('unknown URLs fall through to the root not-found screen', () => {
-  it.each([
-    '/toolbox/not-a-tool',
-    '/toolbox/markdown-to-html/extra',
-    '/ai-chat/extra',
-    '/nope',
-  ])('%s', async (pathname) => {
-    const resolved = await resolve(pathname);
+  it.each(['/toolbox/not-a-tool', '/toolbox/markdown-to-html/extra', '/nope'])(
+    '%s',
+    async (pathname) => {
+      const resolved = await resolve(pathname);
 
-    expect(resolved.rendersNotFound).toBe(true);
-  });
+      expect(resolved.rendersNotFound).toBe(true);
+    },
+  );
 
   it('keeps the root not-found screen wired', () => {
     expect(routeTree.options.notFoundComponent).toBeDefined();

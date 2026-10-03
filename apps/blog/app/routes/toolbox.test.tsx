@@ -32,7 +32,7 @@ vi.mock('@tanstack/react-router', async () => {
 
 import { Route } from './toolbox';
 
-const MENU_TITLES = ['首页', '文章', '相册', '工具箱', 'AI 聊天', '关于'];
+const MENU_TITLES = ['首页', '文章', '相册', '工具箱', '关于'];
 const SIDEBAR_LABELS = [
   '导航',
   '常用',

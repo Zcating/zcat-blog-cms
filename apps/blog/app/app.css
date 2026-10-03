@@ -120,6 +120,37 @@ body {
   --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
 }
 
+@keyframes hero-dash-drift {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+@keyframes hero-marker-travel {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+
+  12%,
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+}
+
+@utility animate-hero-dash {
+  animation: hero-dash-drift 0.9s linear infinite;
+}
+
+@utility animate-hero-marker {
+  animation: hero-marker-travel 2.6s ease-in-out infinite;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

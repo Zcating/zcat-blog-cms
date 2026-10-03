@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getArticleListMock, getUserInfoMock } = vi.hoisted(() => ({
-  getArticleListMock: vi.fn(),
-  getUserInfoMock: vi.fn(),
-}));
+const { getArticleListMock, getUserInfoMock, getPhotoListMock } = vi.hoisted(
+  () => ({
+    getArticleListMock: vi.fn(),
+    getUserInfoMock: vi.fn(),
+    getPhotoListMock: vi.fn(),
+  }),
+);
 
 vi.mock('@blog/server/article', async () => {
   const actual = await vi.importActual<typeof import('@blog/server/article')>(
@@ -23,6 +26,17 @@ vi.mock('@blog/server/user', async () => {
   return {
     ...actual,
     getUserInfo: (...args: unknown[]) => getUserInfoMock(...args),
+  };
+});
+
+vi.mock('@blog/server/photo', async () => {
+  const actual =
+    await vi.importActual<typeof import('@blog/server/photo')>(
+      '@blog/server/photo',
+    );
+  return {
+    ...actual,
+    getPhotoList: (...args: unknown[]) => getPhotoListMock(...args),
   };
 });
 
@@ -58,183 +72,190 @@ const USER_INFO = {
   contact: { email: 'a@example.com', github: 'https://github.com/zcat' },
 };
 
+function makeArticle(id: number) {
+  return {
+    id,
+    title: `文章 ${id}`,
+    excerpt: `摘要 ${id}`,
+    content: '# 正文',
+    createByUserId: null,
+    createdAt: '2026-05-19T12:00:00.000Z',
+    updatedAt: '2026-05-19T12:00:00.000Z',
+    publishAt: '2026-05-19T12:00:00.000Z',
+    articleAndArticleTags: [],
+  };
+}
+
+function makePhoto(id: number) {
+  return {
+    id,
+    name: `照片 ${id}`,
+    url: `https://cdn.example.com/${id}.jpg`,
+    thumbnailUrl: `https://cdn.example.com/${id}_t.jpg`,
+    createdAt: '2026-05-20T00:00:00.000Z',
+    albumId: 2,
+    albumName: '相册 2',
+  };
+}
+
 const ARTICLE_LIST = {
-  data: [
-    {
-      id: 1,
-      title: '第一篇文章',
-      excerpt: '这里是摘要',
-      content: '# 正文',
-      createByUserId: null,
-      createdAt: '2026-05-19T12:00:00.000Z',
-      updatedAt: '2026-05-19T12:00:00.000Z',
-      publishAt: '2026-05-19T12:00:00.000Z',
-      articleAndArticleTags: [],
-    },
-  ],
+  data: Array.from({ length: 5 }, (_, index) => makeArticle(index + 1)),
   total: 23,
   totalPages: 3,
-  page: 2,
+  page: 1,
   pageSize: 10,
 };
 
+const PHOTO_LIST = {
+  data: Array.from({ length: 12 }, (_, index) => makePhoto(index + 101)),
+  total: 40,
+  totalPages: 4,
+  page: 1,
+  pageSize: 10,
+};
+
+function setupDefaults() {
+  getUserInfoMock.mockReset();
+  getArticleListMock.mockReset();
+  getPhotoListMock.mockReset();
+  getUserInfoMock.mockResolvedValue(USER_INFO);
+  getArticleListMock.mockResolvedValue(ARTICLE_LIST);
+  getPhotoListMock.mockResolvedValue(PHOTO_LIST);
+}
+
 describe('route loader: /_blog/', () => {
-  beforeEach(() => {
-    getArticleListMock.mockReset();
-    getUserInfoMock.mockReset();
-    getUserInfoMock.mockResolvedValue(USER_INFO);
-    getArticleListMock.mockResolvedValue(ARTICLE_LIST);
-  });
+  beforeEach(setupDefaults);
 
-  it('resolves the article page and the user profile from the backend payloads', async () => {
-    const result = await loader({ search: { page: '2', order: 'latest' } });
+  it('resolves the user info the hero renders, the articles and the photo feed from the backend payloads', async () => {
+    const result = await loader({ search: { order: 'latest' } });
 
-    expect(result.pagination).toEqual(ARTICLE_LIST);
-    expect(result.pagination.data[0]?.id).toBe(1);
     expect(result.userInfo).toEqual(USER_INFO);
     expect(result.userInfo).not.toHaveProperty('createdAt');
-    expect(result.userInfo).not.toHaveProperty('updatedAt');
-    expect(result.page).toBe(2);
     expect(result.order).toBe('latest');
   });
 
-  it('passes page, pageSize and order through to the article list server function', async () => {
-    await loader({ search: { page: '3', order: 'oldest' } });
+  it('asks for exactly five articles and twelve photos, the two numbers the grid is built from', async () => {
+    await loader({ search: { order: 'latest' } });
 
-    expect(getArticleListMock).toHaveBeenCalledTimes(1);
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 3, pageSize: 10, order: 'oldest' },
+      data: { page: 1, pageSize: 5, order: 'latest' },
+    });
+    expect(getPhotoListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 12 },
     });
   });
 
-  it('falls back to the first page and the latest order when the search params are absent', async () => {
-    const result = await loader({ search: {} });
+  it('opens the grid with photos, not with articles', async () => {
+    const result = await loader({ search: { order: 'latest' } });
 
-    expect(result.page).toBe(1);
-    expect(result.order).toBe('latest');
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
-    });
+    expect(result.items[0]?.kind).toBe('photo');
+    expect(result.items[1]?.kind).toBe('photo');
   });
 
-  it('falls back to the first page when the page search param is not a positive number', async () => {
-    const result = await loader({ search: { page: 'not-a-page' } });
+  it('carries every article and every photo into the grid exactly once', async () => {
+    const result = await loader({ search: { order: 'latest' } });
 
-    expect(result.page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
-    });
+    const articleIds = result.items
+      .filter((item) => item.kind === 'article')
+      .map((item) => item.article?.id);
+    const photoIds = result.items
+      .filter((item) => item.kind === 'photo')
+      .map((item) => item.photo?.id);
+
+    expect(articleIds).toEqual([1, 2, 3, 4, 5]);
+    expect(photoIds).toEqual(PHOTO_LIST.data.map((photo) => photo.id));
+    expect(result.items).toHaveLength(5 + 12);
   });
 
-  it('falls back to the first page when the page search param is zero or negative', async () => {
-    const zero = parseRealUrl('?page=0');
-    expect(zero.page).toBe(0);
-    const negative = parseRealUrl('?page=-3');
-    expect(negative.page).toBe(-3);
+  it('scatters the articles through the photo run instead of trailing them at the end', async () => {
+    const result = await loader({ search: { order: 'latest' } });
+    const kinds = result.items.map((item) => item.kind);
 
-    expect((await loader({ search: { page: zero.page } })).page).toBe(1);
-    expect((await loader({ search: { page: negative.page } })).page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
+    expect(kinds.lastIndexOf('article')).toBeLessThan(kinds.length - 1);
+    expect(kinds.filter((kind) => kind === 'article').length).toBe(5);
+  });
+
+  it('gives every photo card the album it can navigate to', async () => {
+    const result = await loader({ search: { order: 'latest' } });
+
+    const photos = result.items.filter((item) => item.kind === 'photo');
+    expect(photos).toHaveLength(12);
+    for (const item of photos) {
+      expect(item.photo?.albumId).toBe(2);
+      expect(item.photo?.albumName).toBe('相册 2');
+    }
+  });
+
+  it('drops the articles out of the grid when the backend has none', async () => {
+    getArticleListMock.mockResolvedValue({
+      data: [],
+      total: 0,
+      totalPages: 0,
+      page: 1,
+      pageSize: 10,
     });
+
+    const result = await loader({ search: { order: 'latest' } });
+
+    expect(result.items.filter((item) => item.kind === 'article')).toEqual([]);
+    expect(result.items.filter((item) => item.kind === 'photo')).toHaveLength(
+      12,
+    );
+  });
+
+  it('drops the photos out of the grid when the backend has none', async () => {
+    getPhotoListMock.mockResolvedValue({
+      data: [],
+      total: 0,
+      totalPages: 0,
+      page: 1,
+      pageSize: 10,
+    });
+
+    const result = await loader({ search: { order: 'latest' } });
+
+    expect(result.items.filter((item) => item.kind === 'photo')).toEqual([]);
+    expect(result.items.filter((item) => item.kind === 'article')).toHaveLength(
+      5,
+    );
   });
 });
 
 describe('route search validation: /_blog/', () => {
-  beforeEach(() => {
-    getArticleListMock.mockReset();
-    getUserInfoMock.mockReset();
-    getUserInfoMock.mockResolvedValue(USER_INFO);
-    getArticleListMock.mockResolvedValue({ ...ARTICLE_LIST, page: 2 });
+  beforeEach(setupDefaults);
+
+  it('keeps the order param strict', () => {
+    expect(() => validateSearch({ order: 'newest' })).toThrow(/Invalid option/);
   });
 
-  it('serves page 2 for the numeric page TanStack Router parses out of a real ?page=2 URL', async () => {
-    const search = parseRealUrl('?page=2');
-    expect(typeof search.page).toBe('number');
+  it('honours the order the reader picked', async () => {
+    const result = await loader({ search: { order: 'oldest' } });
 
-    const validated = validateSearch(search);
-    expect(validated.page).toBe(2);
-
-    const result = await loader({ search: { page: validated.page } });
-
-    expect(result.page).toBe(2);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 2, pageSize: 10, order: 'latest' },
-    });
-  });
-
-  it('serves page 2 for the string page the pagination control itself navigates with', async () => {
-    const navigated = String(2);
-    expect(typeof navigated).toBe('string');
-
-    const validated = validateSearch({ page: navigated });
-    expect(validated.page).toBe(2);
-
-    const result = await loader({ search: { page: validated.page } });
-
-    expect(result.page).toBe(2);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 2, pageSize: 10, order: 'latest' },
-    });
-  });
-
-  it('keeps the order param strict while coercing the page next to it', async () => {
-    const search = parseRealUrl('?page=2&order=oldest');
-
-    const validated = validateSearch(search);
-    expect(validated).toEqual({ page: 2, order: 'oldest' });
-
-    const result = await loader({
-      search: { page: validated.page, order: validated.order },
-    });
-
-    expect(result.page).toBe(2);
     expect(result.order).toBe('oldest');
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 2, pageSize: 10, order: 'oldest' },
+      data: { page: 1, pageSize: 5, order: 'oldest' },
     });
   });
 
-  it('still rejects an order outside the enum', () => {
-    expect(() => validateSearch({ page: 2, order: 'newest' })).toThrow(
-      /Invalid option/,
-    );
+  it('falls back to the latest order when the search params are absent', async () => {
+    const result = await loader({ search: {} });
+
+    expect(result.order).toBe('latest');
+    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
+      data: { page: 1, pageSize: 5, order: 'latest' },
+    });
   });
 
-  it('accepts a mistyped ?page= from a real URL and falls back to page 1 instead of throwing a search param error', async () => {
-    const search = parseRealUrl('?page=not-a-page&order=oldest');
-    expect(typeof search.page).toBe('string');
-
-    expect(() => validateSearch(search)).not.toThrow();
-    const validated = validateSearch(search);
-    expect(validated.page).toBeUndefined();
+  it('ignores a leftover page param rather than paginating the homepage', async () => {
+    const search = parseRealUrl('?page=3&order=oldest');
 
     const result = await loader({
-      search: { page: validated.page, order: validated.order },
+      search: { page: Number(search.page), order: 'oldest' },
     });
 
-    expect(result.page).toBe(1);
     expect(result.order).toBe('oldest');
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'oldest' },
-    });
-  });
-
-  it('admits a zero or negative ?page= and lets the loader sanitiser clamp it to page 1', async () => {
-    const zero = parseRealUrl('?page=0');
-    const negative = parseRealUrl('?page=-3');
-    expect(zero.page).toBe(0);
-    expect(negative.page).toBe(-3);
-
-    expect(() => validateSearch(zero)).not.toThrow();
-    expect(() => validateSearch(negative)).not.toThrow();
-    expect(validateSearch(zero).page).toBe(0);
-    expect(validateSearch(negative).page).toBe(-3);
-
-    expect((await loader({ search: { page: 0 } })).page).toBe(1);
-    expect((await loader({ search: { page: -3 } })).page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
+      data: { page: 1, pageSize: 5, order: 'oldest' },
     });
   });
 });

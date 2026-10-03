@@ -1,54 +1,95 @@
 import {
-  Calendar,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  RainbowBorder,
   StaggerReveal,
-  ZAvatar,
-  ZPagination,
-  ZSelect,
+  ZImagePreload,
   ZView,
+  ZWaterfall,
 } from '@zcat/ui';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { safePositiveNumber } from '@blog/common';
-import { PostExcerptCard } from '@blog/features';
+import { Hero, PostExcerptCard } from '@blog/features';
 import { getArticleList } from '@blog/server/article';
+import { getPhotoList } from '@blog/server/photo';
 import { getUserInfo } from '@blog/server/user';
 
+import type { Article } from '@blog/server/article/schemas';
 import type { GetArticleListInput } from '@blog/server/article/schemas';
+import type { PhotoFeedItem } from '@blog/server/photo/schemas';
 
 const SITE = 'https://blog.zcat.example';
 
+const ARTICLE_COUNT = 5;
+const PHOTO_COUNT = 12;
+const PHOTOS_PER_ARTICLE = 2;
+
 type Order = GetArticleListInput['order'];
 
-const SORT_OPTIONS = [
-  { value: 'latest', label: '最新' },
-  { value: 'oldest', label: '最早' },
-] as CommonOption<Order>[];
-
 const homeSearchSchema = z.looseObject({
-  page: z.coerce.number().int().optional().catch(undefined),
   order: z.enum(['latest', 'oldest']).optional(),
 });
 
+export type HomeGridItem =
+  | { kind: 'photo'; photo: PhotoFeedItem }
+  | { kind: 'article'; article: Article };
+
 interface HomeLoaderArgs {
-  search: { page?: string | number; order?: Order };
+  search: { page?: number; order?: Order };
+}
+
+export function buildHomeGridItems(
+  articles: Article[],
+  photos: PhotoFeedItem[],
+): HomeGridItem[] {
+  const items: HomeGridItem[] = [];
+  let articleIndex = 0;
+  let photoIndex = 0;
+  let photosSinceArticle = 0;
+
+  while (articleIndex < articles.length || photoIndex < photos.length) {
+    const photoRoom = photos.length - photoIndex;
+    const articleRoom = articles.length - articleIndex;
+
+    if (
+      articleRoom > 0 &&
+      photosSinceArticle >= PHOTOS_PER_ARTICLE &&
+      articleRoom <= photoRoom
+    ) {
+      items.push({ kind: 'article', article: articles[articleIndex]! });
+      articleIndex += 1;
+      photosSinceArticle = 0;
+      continue;
+    }
+
+    if (photoRoom > 0) {
+      items.push({ kind: 'photo', photo: photos[photoIndex]! });
+      photoIndex += 1;
+      photosSinceArticle += 1;
+      continue;
+    }
+
+    items.push({ kind: 'article', article: articles[articleIndex]! });
+    articleIndex += 1;
+    photosSinceArticle = 0;
+  }
+
+  return items;
 }
 
 export async function loader({ search }: HomeLoaderArgs) {
-  const page = safePositiveNumber(search.page, 1);
   const order: Order = search.order ?? 'latest';
 
-  const [userInfo, pagination] = await Promise.all([
+  const [userInfo, articles, photos] = await Promise.all([
     getUserInfo(),
-    getArticleList({ data: { page, pageSize: 10, order } }),
+    getArticleList({ data: { page: 1, pageSize: ARTICLE_COUNT, order } }),
+    getPhotoList({ data: { page: 1, pageSize: PHOTO_COUNT } }),
   ]);
 
-  return { userInfo, pagination, page, order };
+  return {
+    userInfo,
+    order,
+    items: buildHomeGridItems(articles.data, photos.data),
+  };
 }
 
 export const Route = createFileRoute('/_blog/')({
@@ -72,95 +113,63 @@ export const Route = createFileRoute('/_blog/')({
 });
 
 function HomePage() {
-  const { userInfo, pagination, page, order } = Route.useLoaderData();
-  const navigate = useNavigate();
-
-  const toSearch = (nextPage: number, nextOrder: Order) => ({
-    page: String(nextPage),
-    order: nextOrder,
-  });
-
-  const goToPage = (nextPage: number) => {
-    navigate({ to: '/', search: toSearch(nextPage, order) });
-  };
-
-  const handleOrderChange = (value: Order) => {
-    navigate({ to: '/', search: toSearch(1, value) });
-  };
+  const { userInfo, items } = Route.useLoaderData();
 
   return (
-    <ZView className="flex flex-col gap-5">
-      <ZView className="px-4 flex gap-12 overflow-x-hidden">
-        <StaggerReveal
-          selector='[data-home-left-card="true"]'
-          className="sticky flex flex-col gap-3 self-start"
-        >
-          <Card data-home-left-card="true" className="w-xs">
-            <CardHeader className="flex justify-center">
-              <RainbowBorder className="rounded-full">
-                <ZAvatar
-                  alt={userInfo.name}
-                  src={userInfo.avatar}
-                  fallback={userInfo.name}
-                />
-              </RainbowBorder>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 items-center">
-              <p className="text-2xl font-bold">{userInfo.name}</p>
-              <p className="text-lg">噢！你来了！</p>
-            </CardContent>
-          </Card>
-          <Card data-home-left-card="true" className="w-xs">
-            <CardHeader>
-              <CardTitle>文章排序</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 items-center">
-              <ZSelect
-                className="w-full"
-                options={SORT_OPTIONS}
-                value={order}
-                onValueChange={handleOrderChange}
-              />
-            </CardContent>
-          </Card>
-          <Card data-home-left-card="true" className="w-xs">
-            <CardHeader>
-              <CardTitle>日历</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <Calendar
-                mode="single"
-                className="rounded-md border shadow-sm"
-                aria-hidden="true"
-              />
-            </CardContent>
-          </Card>
-        </StaggerReveal>
-        <StaggerReveal
-          className="flex-1 flex flex-col gap-5"
-          selector='[data-home-article-card="true"]'
-          direction="right"
-          dependencies={[pagination]}
-        >
-          {pagination.data.map((article, index) => (
-            <Link
-              data-home-article-card="true"
-              to="/post-board/$id"
-              params={{ id: String(article.id) }}
-              preload="intent"
-              className="block"
-              key={index}
-            >
-              <PostExcerptCard value={article} />
-            </Link>
-          ))}
-        </StaggerReveal>
-      </ZView>
-      <ZPagination
-        page={page}
-        totalPages={pagination.totalPages}
-        onPageChange={goToPage}
-      />
+    <ZView className="flex flex-col gap-5 px-4 md:px-10">
+      <Hero userInfo={userInfo} />
+      <StaggerReveal
+        selector='[data-home-grid-item="true"]'
+        direction="bottom"
+        dependencies={[items]}
+      >
+        <ZWaterfall
+          data={items}
+          columnCount={4}
+          columnCountConfig={{ sm: 2, lg: 3 }}
+          renderItem={(item) => <HomeGridItemCard item={item} />}
+        />
+      </StaggerReveal>
     </ZView>
+  );
+}
+
+function HomeGridItemCard({ item }: { item: HomeGridItem }) {
+  if (item.kind === 'photo') {
+    return <PhotoCard photo={item.photo} />;
+  }
+  return (
+    <Link
+      to="/post-board/$id"
+      params={{ id: String(item.article.id) }}
+      preload="intent"
+      className="block"
+    >
+      <PostExcerptCard value={item.article} />
+    </Link>
+  );
+}
+
+function PhotoCard({ photo }: { photo: PhotoFeedItem }) {
+  return (
+    <Link
+      to="/gallery/$id"
+      params={{ id: String(photo.albumId) }}
+      preload="intent"
+      className="block"
+    >
+      <Card
+        data-home-grid-item="true"
+        className="group relative p-0! overflow-hidden"
+      >
+        <ZImagePreload src={photo.url} />
+        <ZView className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <p className="text-xl font-bold text-white text-center px-4">
+            {photo.name}
+          </p>
+          <p className="text-sm text-white/80">{photo.albumName}</p>
+        </ZView>
+      </Card>
+    </Link>
   );
 }
