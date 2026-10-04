@@ -10,11 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as BlogRouteImport } from './routes/_blog'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ToolboxRouteImport } from './routes/toolbox'
 import { Route as BlogIndexRouteImport } from './routes/_blog/index'
+import { Route as BlogAboutRouteImport } from './routes/_blog/about'
 import { Route as BlogGalleryRouteImport } from './routes/_blog/gallery'
 import { Route as BlogPostBoardRouteImport } from './routes/_blog/post-board'
 import { Route as ToolboxIndexRouteImport } from './routes/toolbox/index'
@@ -35,11 +35,6 @@ const BlogRoute = BlogRouteImport.update({
   id: '/_blog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RssDotxmlRoute = RssDotxmlRouteImport.update({
   id: '/rss.xml',
   path: '/rss.xml',
@@ -58,6 +53,11 @@ const ToolboxRoute = ToolboxRouteImport.update({
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => BlogRoute,
+} as any)
+const BlogAboutRoute = BlogAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => BlogRoute,
 } as any)
 const BlogGalleryRoute = BlogGalleryRouteImport.update({
@@ -138,10 +138,10 @@ const ApiBlogVisitorRoute = ApiBlogVisitorRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof BlogIndexRoute
-  '/about': typeof AboutRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/toolbox': typeof ToolboxRouteWithChildren
+  '/about': typeof BlogAboutRoute
   '/gallery': typeof BlogGalleryRoute
   '/post-board': typeof BlogPostBoardRoute
   '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
@@ -159,9 +159,9 @@ export interface FileRoutesByFullPath {
   '/api/blog/visitor': typeof ApiBlogVisitorRoute
 }
 export interface FileRoutesByTo {
-  '/about': typeof AboutRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/about': typeof BlogAboutRoute
   '/gallery': typeof BlogGalleryRoute
   '/post-board': typeof BlogPostBoardRoute
   '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
@@ -182,10 +182,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_blog': typeof BlogRouteWithChildren
-  '/about': typeof AboutRoute
   '/rss.xml': typeof RssDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/toolbox': typeof ToolboxRouteWithChildren
+  '/_blog/about': typeof BlogAboutRoute
   '/_blog/gallery': typeof BlogGalleryRoute
   '/_blog/post-board': typeof BlogPostBoardRoute
   '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
@@ -207,10 +207,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/rss.xml'
     | '/sitemap.xml'
     | '/toolbox'
+    | '/about'
     | '/gallery'
     | '/post-board'
     | '/toolbox/aes-crypto'
@@ -228,9 +228,9 @@ export interface FileRouteTypes {
     | '/api/blog/visitor'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/about'
     | '/rss.xml'
     | '/sitemap.xml'
+    | '/about'
     | '/gallery'
     | '/post-board'
     | '/toolbox/aes-crypto'
@@ -250,10 +250,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_blog'
-    | '/about'
     | '/rss.xml'
     | '/sitemap.xml'
     | '/toolbox'
+    | '/_blog/about'
     | '/_blog/gallery'
     | '/_blog/post-board'
     | '/toolbox/aes-crypto'
@@ -274,7 +274,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
-  AboutRoute: typeof AboutRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ToolboxRoute: typeof ToolboxRouteWithChildren
@@ -288,13 +287,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rss.xml': {
@@ -323,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/_blog/about': {
+      id: '/_blog/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof BlogAboutRouteImport
       parentRoute: typeof BlogRoute
     }
     '/_blog/gallery': {
@@ -434,6 +433,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface BlogRouteChildren {
+  BlogAboutRoute: typeof BlogAboutRoute
   BlogGalleryRoute: typeof BlogGalleryRoute
   BlogPostBoardRoute: typeof BlogPostBoardRoute
   BlogIndexRoute: typeof BlogIndexRoute
@@ -442,6 +442,7 @@ interface BlogRouteChildren {
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
+  BlogAboutRoute: BlogAboutRoute,
   BlogGalleryRoute: BlogGalleryRoute,
   BlogPostBoardRoute: BlogPostBoardRoute,
   BlogIndexRoute: BlogIndexRoute,
@@ -482,7 +483,6 @@ const ToolboxRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
-  AboutRoute: AboutRoute,
   RssDotxmlRoute: RssDotxmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ToolboxRoute: ToolboxRouteWithChildren,

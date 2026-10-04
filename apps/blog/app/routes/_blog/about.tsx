@@ -14,7 +14,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getUserInfo } from '@blog/server/user';
 
-export const Route = createFileRoute('/about')({
+export const Route = createFileRoute('/_blog/about')({
   head: () => ({
     meta: [{ title: '关于' }, { name: 'description', content: '个人技术博客' }],
   }),
@@ -32,7 +32,7 @@ function AboutPage() {
   return (
     <StaggerReveal
       selector='[data-about-card="true"]'
-      className="w-full h-full flex flex-col items-center gap-10"
+      className="w-full h-full flex flex-col items-center gap-10 px-4 md:px-10"
       direction="top"
     >
       <Card data-about-card="true" className="w-full max-w-2xl">
