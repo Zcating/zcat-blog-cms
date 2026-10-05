@@ -10,6 +10,9 @@
 /.nitro/
 /.vite/
 
+# Generated on dev/build, and lint-staged would reformat it into a permanent diff
+/app/routeTree.gen.ts
+
 # Playwright
 /playwright-report/
 /test-results/
