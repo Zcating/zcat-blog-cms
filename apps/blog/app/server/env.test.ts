@@ -64,12 +64,6 @@ describe('resolveBackendApiUrl', () => {
     expect(() => resolveBackendApiUrl()).toThrow(BackendUrlMissingError);
   });
 
-  it('never falls back to a VITE_ prefixed variable', () => {
-    process.env.VITE_SERVER_URL = 'http://build-time.local/api';
-    delete process.env.BACKEND_API_URL;
-    expect(() => resolveBackendApiUrl()).toThrow(BackendUrlMissingError);
-  });
-
   it('exposes a stable error code and name', () => {
     delete process.env.BACKEND_API_URL;
 

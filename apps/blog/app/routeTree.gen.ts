@@ -8,203 +8,212 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as BlogRouteImport } from './routes/_blog'
-import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ToolboxRouteImport } from './routes/toolbox'
-import { Route as BlogIndexRouteImport } from './routes/_blog/index'
-import { Route as BlogAboutRouteImport } from './routes/_blog/about'
-import { Route as BlogGalleryRouteImport } from './routes/_blog/gallery'
-import { Route as BlogPostBoardRouteImport } from './routes/_blog/post-board'
-import { Route as ToolboxIndexRouteImport } from './routes/toolbox/index'
-import { Route as ToolboxAesCryptoRouteImport } from './routes/toolbox/aes-crypto'
-import { Route as ToolboxBase64ToImageRouteImport } from './routes/toolbox/base64-to-image'
-import { Route as ToolboxHashRouteImport } from './routes/toolbox/hash'
-import { Route as ToolboxIdCardGeneratorRouteImport } from './routes/toolbox/id-card-generator'
-import { Route as ToolboxIpLookupRouteImport } from './routes/toolbox/ip-lookup'
-import { Route as ToolboxJsonViewerRouteImport } from './routes/toolbox/json-viewer'
-import { Route as ToolboxMarkdownToHtmlRouteImport } from './routes/toolbox/markdown-to-html'
-import { Route as ToolboxQrcodeGeneratorRouteImport } from './routes/toolbox/qrcode-generator'
-import { Route as ToolboxRsaCryptoRouteImport } from './routes/toolbox/rsa-crypto'
-import { Route as BlogGalleryIdRouteImport } from './routes/_blog/gallery_.$id'
-import { Route as BlogPostBoardIdRouteImport } from './routes/_blog/post-board_.$id'
-import { Route as ApiBlogVisitorRouteImport } from './routes/api/blog/visitor'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as BlogRouteImport } from './routes/_blog';
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml';
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml';
+import { Route as ToolboxRouteImport } from './routes/toolbox';
+import { Route as BlogIndexRouteImport } from './routes/_blog/index';
+import { Route as BlogAboutRouteImport } from './routes/_blog/about';
+import { Route as BlogGalleryRouteImport } from './routes/_blog/gallery';
+import { Route as BlogPostBoardRouteImport } from './routes/_blog/post-board';
+import { Route as ToolboxIndexRouteImport } from './routes/toolbox/index';
+import { Route as ToolboxAesCryptoRouteImport } from './routes/toolbox/aes-crypto';
+import { Route as ToolboxBase64ToImageRouteImport } from './routes/toolbox/base64-to-image';
+import { Route as ToolboxHashRouteImport } from './routes/toolbox/hash';
+import { Route as ToolboxIdCardGeneratorRouteImport } from './routes/toolbox/id-card-generator';
+import { Route as ToolboxIpLookupRouteImport } from './routes/toolbox/ip-lookup';
+import { Route as ToolboxJsonViewerRouteImport } from './routes/toolbox/json-viewer';
+import { Route as ToolboxMarkdownToHtmlRouteImport } from './routes/toolbox/markdown-to-html';
+import { Route as ToolboxQrcodeGeneratorRouteImport } from './routes/toolbox/qrcode-generator';
+import { Route as ToolboxRsaCryptoRouteImport } from './routes/toolbox/rsa-crypto';
+import { Route as BlogGalleryIdRouteImport } from './routes/_blog/gallery_.$id';
+import { Route as BlogPostBoardIdRouteImport } from './routes/_blog/post-board_.$id';
+import { Route as ApiBlogVisitorRouteImport } from './routes/api/blog/visitor';
+import { Route as ApiOssImageRouteImport } from './routes/api/oss/image';
 
 const BlogRoute = BlogRouteImport.update({
   id: '/_blog',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RssDotxmlRoute = RssDotxmlRouteImport.update({
   id: '/rss.xml',
   path: '/rss.xml',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ToolboxRoute = ToolboxRouteImport.update({
   id: '/toolbox',
   path: '/toolbox',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const BlogAboutRoute = BlogAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const BlogGalleryRoute = BlogGalleryRouteImport.update({
   id: '/gallery',
   path: '/gallery',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const BlogPostBoardRoute = BlogPostBoardRouteImport.update({
   id: '/post-board',
   path: '/post-board',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const ToolboxIndexRoute = ToolboxIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxAesCryptoRoute = ToolboxAesCryptoRouteImport.update({
   id: '/aes-crypto',
   path: '/aes-crypto',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxBase64ToImageRoute = ToolboxBase64ToImageRouteImport.update({
   id: '/base64-to-image',
   path: '/base64-to-image',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxHashRoute = ToolboxHashRouteImport.update({
   id: '/hash',
   path: '/hash',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxIdCardGeneratorRoute = ToolboxIdCardGeneratorRouteImport.update({
   id: '/id-card-generator',
   path: '/id-card-generator',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxIpLookupRoute = ToolboxIpLookupRouteImport.update({
   id: '/ip-lookup',
   path: '/ip-lookup',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxJsonViewerRoute = ToolboxJsonViewerRouteImport.update({
   id: '/json-viewer',
   path: '/json-viewer',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxMarkdownToHtmlRoute = ToolboxMarkdownToHtmlRouteImport.update({
   id: '/markdown-to-html',
   path: '/markdown-to-html',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxQrcodeGeneratorRoute = ToolboxQrcodeGeneratorRouteImport.update({
   id: '/qrcode-generator',
   path: '/qrcode-generator',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const ToolboxRsaCryptoRoute = ToolboxRsaCryptoRouteImport.update({
   id: '/rsa-crypto',
   path: '/rsa-crypto',
   getParentRoute: () => ToolboxRoute,
-} as any)
+} as any);
 const BlogGalleryIdRoute = BlogGalleryIdRouteImport.update({
   id: '/gallery_/$id',
   path: '/gallery/$id',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const BlogPostBoardIdRoute = BlogPostBoardIdRouteImport.update({
   id: '/post-board_/$id',
   path: '/post-board/$id',
   getParentRoute: () => BlogRoute,
-} as any)
+} as any);
 const ApiBlogVisitorRoute = ApiBlogVisitorRouteImport.update({
   id: '/api/blog/visitor',
   path: '/api/blog/visitor',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const ApiOssImageRoute = ApiOssImageRouteImport.update({
+  id: '/api/oss/image',
+  path: '/api/oss/image',
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof BlogIndexRoute
-  '/rss.xml': typeof RssDotxmlRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/toolbox': typeof ToolboxRouteWithChildren
-  '/about': typeof BlogAboutRoute
-  '/gallery': typeof BlogGalleryRoute
-  '/post-board': typeof BlogPostBoardRoute
-  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
-  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute
-  '/toolbox/hash': typeof ToolboxHashRoute
-  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute
-  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute
-  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute
-  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute
-  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute
-  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute
-  '/toolbox/': typeof ToolboxIndexRoute
-  '/gallery/$id': typeof BlogGalleryIdRoute
-  '/post-board/$id': typeof BlogPostBoardIdRoute
-  '/api/blog/visitor': typeof ApiBlogVisitorRoute
+  '/': typeof BlogIndexRoute;
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
+  '/toolbox': typeof ToolboxRouteWithChildren;
+  '/about': typeof BlogAboutRoute;
+  '/gallery': typeof BlogGalleryRoute;
+  '/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
+  '/toolbox/': typeof ToolboxIndexRoute;
+  '/gallery/$id': typeof BlogGalleryIdRoute;
+  '/post-board/$id': typeof BlogPostBoardIdRoute;
+  '/api/blog/visitor': typeof ApiBlogVisitorRoute;
+  '/api/oss/image': typeof ApiOssImageRoute;
 }
 export interface FileRoutesByTo {
-  '/rss.xml': typeof RssDotxmlRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/about': typeof BlogAboutRoute
-  '/gallery': typeof BlogGalleryRoute
-  '/post-board': typeof BlogPostBoardRoute
-  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
-  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute
-  '/toolbox/hash': typeof ToolboxHashRoute
-  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute
-  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute
-  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute
-  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute
-  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute
-  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute
-  '/': typeof BlogIndexRoute
-  '/toolbox': typeof ToolboxIndexRoute
-  '/gallery/$id': typeof BlogGalleryIdRoute
-  '/post-board/$id': typeof BlogPostBoardIdRoute
-  '/api/blog/visitor': typeof ApiBlogVisitorRoute
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
+  '/about': typeof BlogAboutRoute;
+  '/gallery': typeof BlogGalleryRoute;
+  '/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
+  '/': typeof BlogIndexRoute;
+  '/toolbox': typeof ToolboxIndexRoute;
+  '/gallery/$id': typeof BlogGalleryIdRoute;
+  '/post-board/$id': typeof BlogPostBoardIdRoute;
+  '/api/blog/visitor': typeof ApiBlogVisitorRoute;
+  '/api/oss/image': typeof ApiOssImageRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/_blog': typeof BlogRouteWithChildren
-  '/rss.xml': typeof RssDotxmlRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/toolbox': typeof ToolboxRouteWithChildren
-  '/_blog/about': typeof BlogAboutRoute
-  '/_blog/gallery': typeof BlogGalleryRoute
-  '/_blog/post-board': typeof BlogPostBoardRoute
-  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute
-  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute
-  '/toolbox/hash': typeof ToolboxHashRoute
-  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute
-  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute
-  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute
-  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute
-  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute
-  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute
-  '/_blog/': typeof BlogIndexRoute
-  '/toolbox/': typeof ToolboxIndexRoute
-  '/_blog/gallery_/$id': typeof BlogGalleryIdRoute
-  '/_blog/post-board_/$id': typeof BlogPostBoardIdRoute
-  '/api/blog/visitor': typeof ApiBlogVisitorRoute
+  __root__: typeof rootRouteImport;
+  '/_blog': typeof BlogRouteWithChildren;
+  '/rss.xml': typeof RssDotxmlRoute;
+  '/sitemap.xml': typeof SitemapDotxmlRoute;
+  '/toolbox': typeof ToolboxRouteWithChildren;
+  '/_blog/about': typeof BlogAboutRoute;
+  '/_blog/gallery': typeof BlogGalleryRoute;
+  '/_blog/post-board': typeof BlogPostBoardRoute;
+  '/toolbox/aes-crypto': typeof ToolboxAesCryptoRoute;
+  '/toolbox/base64-to-image': typeof ToolboxBase64ToImageRoute;
+  '/toolbox/hash': typeof ToolboxHashRoute;
+  '/toolbox/id-card-generator': typeof ToolboxIdCardGeneratorRoute;
+  '/toolbox/ip-lookup': typeof ToolboxIpLookupRoute;
+  '/toolbox/json-viewer': typeof ToolboxJsonViewerRoute;
+  '/toolbox/markdown-to-html': typeof ToolboxMarkdownToHtmlRoute;
+  '/toolbox/qrcode-generator': typeof ToolboxQrcodeGeneratorRoute;
+  '/toolbox/rsa-crypto': typeof ToolboxRsaCryptoRoute;
+  '/_blog/': typeof BlogIndexRoute;
+  '/toolbox/': typeof ToolboxIndexRoute;
+  '/_blog/gallery_/$id': typeof BlogGalleryIdRoute;
+  '/_blog/post-board_/$id': typeof BlogPostBoardIdRoute;
+  '/api/blog/visitor': typeof ApiBlogVisitorRoute;
+  '/api/oss/image': typeof ApiOssImageRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
     | '/rss.xml'
@@ -226,7 +235,8 @@ export interface FileRouteTypes {
     | '/gallery/$id'
     | '/post-board/$id'
     | '/api/blog/visitor'
-  fileRoutesByTo: FileRoutesByTo
+    | '/api/oss/image';
+  fileRoutesByTo: FileRoutesByTo;
   to:
     | '/rss.xml'
     | '/sitemap.xml'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/gallery/$id'
     | '/post-board/$id'
     | '/api/blog/visitor'
+    | '/api/oss/image';
   id:
     | '__root__'
     | '/_blog'
@@ -270,175 +281,184 @@ export interface FileRouteTypes {
     | '/_blog/gallery_/$id'
     | '/_blog/post-board_/$id'
     | '/api/blog/visitor'
-  fileRoutesById: FileRoutesById
+    | '/api/oss/image';
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  BlogRoute: typeof BlogRouteWithChildren
-  RssDotxmlRoute: typeof RssDotxmlRoute
-  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  ToolboxRoute: typeof ToolboxRouteWithChildren
-  ApiBlogVisitorRoute: typeof ApiBlogVisitorRoute
+  BlogRoute: typeof BlogRouteWithChildren;
+  RssDotxmlRoute: typeof RssDotxmlRoute;
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
+  ToolboxRoute: typeof ToolboxRouteWithChildren;
+  ApiBlogVisitorRoute: typeof ApiBlogVisitorRoute;
+  ApiOssImageRoute: typeof ApiOssImageRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/_blog': {
-      id: '/_blog'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/_blog';
+      path: '';
+      fullPath: '/';
+      preLoaderRoute: typeof BlogRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/rss.xml': {
-      id: '/rss.xml'
-      path: '/rss.xml'
-      fullPath: '/rss.xml'
-      preLoaderRoute: typeof RssDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/rss.xml';
+      path: '/rss.xml';
+      fullPath: '/rss.xml';
+      preLoaderRoute: typeof RssDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/sitemap.xml';
+      path: '/sitemap.xml';
+      fullPath: '/sitemap.xml';
+      preLoaderRoute: typeof SitemapDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/toolbox': {
-      id: '/toolbox'
-      path: '/toolbox'
-      fullPath: '/toolbox'
-      preLoaderRoute: typeof ToolboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/toolbox';
+      path: '/toolbox';
+      fullPath: '/toolbox';
+      preLoaderRoute: typeof ToolboxRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/_blog/': {
-      id: '/_blog/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof BlogIndexRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/_blog/about': {
-      id: '/_blog/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof BlogAboutRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/about';
+      path: '/about';
+      fullPath: '/about';
+      preLoaderRoute: typeof BlogAboutRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/_blog/gallery': {
-      id: '/_blog/gallery'
-      path: '/gallery'
-      fullPath: '/gallery'
-      preLoaderRoute: typeof BlogGalleryRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/gallery';
+      path: '/gallery';
+      fullPath: '/gallery';
+      preLoaderRoute: typeof BlogGalleryRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/_blog/post-board': {
-      id: '/_blog/post-board'
-      path: '/post-board'
-      fullPath: '/post-board'
-      preLoaderRoute: typeof BlogPostBoardRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/post-board';
+      path: '/post-board';
+      fullPath: '/post-board';
+      preLoaderRoute: typeof BlogPostBoardRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/toolbox/': {
-      id: '/toolbox/'
-      path: '/'
-      fullPath: '/toolbox/'
-      preLoaderRoute: typeof ToolboxIndexRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/';
+      path: '/';
+      fullPath: '/toolbox/';
+      preLoaderRoute: typeof ToolboxIndexRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/aes-crypto': {
-      id: '/toolbox/aes-crypto'
-      path: '/aes-crypto'
-      fullPath: '/toolbox/aes-crypto'
-      preLoaderRoute: typeof ToolboxAesCryptoRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/aes-crypto';
+      path: '/aes-crypto';
+      fullPath: '/toolbox/aes-crypto';
+      preLoaderRoute: typeof ToolboxAesCryptoRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/base64-to-image': {
-      id: '/toolbox/base64-to-image'
-      path: '/base64-to-image'
-      fullPath: '/toolbox/base64-to-image'
-      preLoaderRoute: typeof ToolboxBase64ToImageRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/base64-to-image';
+      path: '/base64-to-image';
+      fullPath: '/toolbox/base64-to-image';
+      preLoaderRoute: typeof ToolboxBase64ToImageRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/hash': {
-      id: '/toolbox/hash'
-      path: '/hash'
-      fullPath: '/toolbox/hash'
-      preLoaderRoute: typeof ToolboxHashRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/hash';
+      path: '/hash';
+      fullPath: '/toolbox/hash';
+      preLoaderRoute: typeof ToolboxHashRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/id-card-generator': {
-      id: '/toolbox/id-card-generator'
-      path: '/id-card-generator'
-      fullPath: '/toolbox/id-card-generator'
-      preLoaderRoute: typeof ToolboxIdCardGeneratorRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/id-card-generator';
+      path: '/id-card-generator';
+      fullPath: '/toolbox/id-card-generator';
+      preLoaderRoute: typeof ToolboxIdCardGeneratorRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/ip-lookup': {
-      id: '/toolbox/ip-lookup'
-      path: '/ip-lookup'
-      fullPath: '/toolbox/ip-lookup'
-      preLoaderRoute: typeof ToolboxIpLookupRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/ip-lookup';
+      path: '/ip-lookup';
+      fullPath: '/toolbox/ip-lookup';
+      preLoaderRoute: typeof ToolboxIpLookupRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/json-viewer': {
-      id: '/toolbox/json-viewer'
-      path: '/json-viewer'
-      fullPath: '/toolbox/json-viewer'
-      preLoaderRoute: typeof ToolboxJsonViewerRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/json-viewer';
+      path: '/json-viewer';
+      fullPath: '/toolbox/json-viewer';
+      preLoaderRoute: typeof ToolboxJsonViewerRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/markdown-to-html': {
-      id: '/toolbox/markdown-to-html'
-      path: '/markdown-to-html'
-      fullPath: '/toolbox/markdown-to-html'
-      preLoaderRoute: typeof ToolboxMarkdownToHtmlRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/markdown-to-html';
+      path: '/markdown-to-html';
+      fullPath: '/toolbox/markdown-to-html';
+      preLoaderRoute: typeof ToolboxMarkdownToHtmlRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/qrcode-generator': {
-      id: '/toolbox/qrcode-generator'
-      path: '/qrcode-generator'
-      fullPath: '/toolbox/qrcode-generator'
-      preLoaderRoute: typeof ToolboxQrcodeGeneratorRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/qrcode-generator';
+      path: '/qrcode-generator';
+      fullPath: '/toolbox/qrcode-generator';
+      preLoaderRoute: typeof ToolboxQrcodeGeneratorRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/toolbox/rsa-crypto': {
-      id: '/toolbox/rsa-crypto'
-      path: '/rsa-crypto'
-      fullPath: '/toolbox/rsa-crypto'
-      preLoaderRoute: typeof ToolboxRsaCryptoRouteImport
-      parentRoute: typeof ToolboxRoute
-    }
+      id: '/toolbox/rsa-crypto';
+      path: '/rsa-crypto';
+      fullPath: '/toolbox/rsa-crypto';
+      preLoaderRoute: typeof ToolboxRsaCryptoRouteImport;
+      parentRoute: typeof ToolboxRoute;
+    };
     '/_blog/gallery_/$id': {
-      id: '/_blog/gallery_/$id'
-      path: '/gallery/$id'
-      fullPath: '/gallery/$id'
-      preLoaderRoute: typeof BlogGalleryIdRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/gallery_/$id';
+      path: '/gallery/$id';
+      fullPath: '/gallery/$id';
+      preLoaderRoute: typeof BlogGalleryIdRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/_blog/post-board_/$id': {
-      id: '/_blog/post-board_/$id'
-      path: '/post-board/$id'
-      fullPath: '/post-board/$id'
-      preLoaderRoute: typeof BlogPostBoardIdRouteImport
-      parentRoute: typeof BlogRoute
-    }
+      id: '/_blog/post-board_/$id';
+      path: '/post-board/$id';
+      fullPath: '/post-board/$id';
+      preLoaderRoute: typeof BlogPostBoardIdRouteImport;
+      parentRoute: typeof BlogRoute;
+    };
     '/api/blog/visitor': {
-      id: '/api/blog/visitor'
-      path: '/api/blog/visitor'
-      fullPath: '/api/blog/visitor'
-      preLoaderRoute: typeof ApiBlogVisitorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/api/blog/visitor';
+      path: '/api/blog/visitor';
+      fullPath: '/api/blog/visitor';
+      preLoaderRoute: typeof ApiBlogVisitorRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/api/oss/image': {
+      id: '/api/oss/image';
+      path: '/api/oss/image';
+      fullPath: '/api/oss/image';
+      preLoaderRoute: typeof ApiOssImageRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 interface BlogRouteChildren {
-  BlogAboutRoute: typeof BlogAboutRoute
-  BlogGalleryRoute: typeof BlogGalleryRoute
-  BlogPostBoardRoute: typeof BlogPostBoardRoute
-  BlogIndexRoute: typeof BlogIndexRoute
-  BlogGalleryIdRoute: typeof BlogGalleryIdRoute
-  BlogPostBoardIdRoute: typeof BlogPostBoardIdRoute
+  BlogAboutRoute: typeof BlogAboutRoute;
+  BlogGalleryRoute: typeof BlogGalleryRoute;
+  BlogPostBoardRoute: typeof BlogPostBoardRoute;
+  BlogIndexRoute: typeof BlogIndexRoute;
+  BlogGalleryIdRoute: typeof BlogGalleryIdRoute;
+  BlogPostBoardIdRoute: typeof BlogPostBoardIdRoute;
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
@@ -448,21 +468,21 @@ const BlogRouteChildren: BlogRouteChildren = {
   BlogIndexRoute: BlogIndexRoute,
   BlogGalleryIdRoute: BlogGalleryIdRoute,
   BlogPostBoardIdRoute: BlogPostBoardIdRoute,
-}
+};
 
-const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren);
 
 interface ToolboxRouteChildren {
-  ToolboxAesCryptoRoute: typeof ToolboxAesCryptoRoute
-  ToolboxBase64ToImageRoute: typeof ToolboxBase64ToImageRoute
-  ToolboxHashRoute: typeof ToolboxHashRoute
-  ToolboxIdCardGeneratorRoute: typeof ToolboxIdCardGeneratorRoute
-  ToolboxIpLookupRoute: typeof ToolboxIpLookupRoute
-  ToolboxJsonViewerRoute: typeof ToolboxJsonViewerRoute
-  ToolboxMarkdownToHtmlRoute: typeof ToolboxMarkdownToHtmlRoute
-  ToolboxQrcodeGeneratorRoute: typeof ToolboxQrcodeGeneratorRoute
-  ToolboxRsaCryptoRoute: typeof ToolboxRsaCryptoRoute
-  ToolboxIndexRoute: typeof ToolboxIndexRoute
+  ToolboxAesCryptoRoute: typeof ToolboxAesCryptoRoute;
+  ToolboxBase64ToImageRoute: typeof ToolboxBase64ToImageRoute;
+  ToolboxHashRoute: typeof ToolboxHashRoute;
+  ToolboxIdCardGeneratorRoute: typeof ToolboxIdCardGeneratorRoute;
+  ToolboxIpLookupRoute: typeof ToolboxIpLookupRoute;
+  ToolboxJsonViewerRoute: typeof ToolboxJsonViewerRoute;
+  ToolboxMarkdownToHtmlRoute: typeof ToolboxMarkdownToHtmlRoute;
+  ToolboxQrcodeGeneratorRoute: typeof ToolboxQrcodeGeneratorRoute;
+  ToolboxRsaCryptoRoute: typeof ToolboxRsaCryptoRoute;
+  ToolboxIndexRoute: typeof ToolboxIndexRoute;
 }
 
 const ToolboxRouteChildren: ToolboxRouteChildren = {
@@ -476,10 +496,10 @@ const ToolboxRouteChildren: ToolboxRouteChildren = {
   ToolboxQrcodeGeneratorRoute: ToolboxQrcodeGeneratorRoute,
   ToolboxRsaCryptoRoute: ToolboxRsaCryptoRoute,
   ToolboxIndexRoute: ToolboxIndexRoute,
-}
+};
 
 const ToolboxRouteWithChildren =
-  ToolboxRoute._addFileChildren(ToolboxRouteChildren)
+  ToolboxRoute._addFileChildren(ToolboxRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
@@ -487,17 +507,18 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ToolboxRoute: ToolboxRouteWithChildren,
   ApiBlogVisitorRoute: ApiBlogVisitorRoute,
-}
+  ApiOssImageRoute: ApiOssImageRoute,
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
+import type { getRouter } from './router.tsx';
+import type { startInstance } from './start.ts';
 declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
   }
 }

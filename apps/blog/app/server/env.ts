@@ -1,22 +1,44 @@
-export class BackendUrlMissingError extends Error {
-  readonly code = 'BackendUrlMissingError';
-  readonly name = 'BackendUrlMissingError';
+export class EnvUrlMissingError extends Error {
+  readonly code: string;
+  readonly name: string;
 
-  constructor(
-    message = 'BACKEND_API_URL environment variable is required for blog server functions',
-  ) {
+  constructor(name: string, message: string) {
     super(message);
+    this.name = name;
+    this.code = name;
   }
 }
 
-export function resolveBackendApiUrl(): string {
-  const raw = process.env.BACKEND_API_URL;
-  if (typeof raw !== 'string') {
-    throw new BackendUrlMissingError();
-  }
-  const trimmed = raw.trim();
+export const BackendUrlMissingError = EnvUrlMissingError;
+export const OssInternalUrlMissingError = EnvUrlMissingError;
+
+function requireEnvUrl(
+  variable: 'BACKEND_API_URL' | 'OSS_INTERNAL_URL',
+  errorName: string,
+  purpose: string,
+): string {
+  const trimmed = process.env[variable]?.trim() ?? '';
   if (trimmed.length === 0) {
-    throw new BackendUrlMissingError();
+    throw new EnvUrlMissingError(
+      errorName,
+      `${variable} environment variable is required ${purpose}`,
+    );
   }
   return trimmed.replace(/\/+$/, '');
+}
+
+export function resolveBackendApiUrl(): string {
+  return requireEnvUrl(
+    'BACKEND_API_URL',
+    'BackendUrlMissingError',
+    'for blog server functions',
+  );
+}
+
+export function resolveOssInternalUrl(): string {
+  return requireEnvUrl(
+    'OSS_INTERNAL_URL',
+    'OssInternalUrlMissingError',
+    'by the blog image proxy',
+  );
 }

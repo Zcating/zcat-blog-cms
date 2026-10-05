@@ -34,14 +34,6 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '127.0.0.1',
       port: Number(env.VITE_PORT),
-      proxy: {
-        '/api': {
-          target: env.VITE_SERVER_URL,
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-      },
     },
     define: {
       global: 'globalThis',

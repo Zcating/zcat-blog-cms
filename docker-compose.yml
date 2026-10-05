@@ -106,6 +106,7 @@ services:
     tty: true
     environment:
       BACKEND_API_URL: ${BACKEND_API_URL}
+      OSS_INTERNAL_URL: ${OSS_INTERNAL_URL}
     ports:
       - '1024:1024'
     networks:
