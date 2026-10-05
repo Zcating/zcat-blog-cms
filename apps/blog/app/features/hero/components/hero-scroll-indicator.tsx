@@ -4,7 +4,7 @@ export function HeroScrollIndicator() {
   return (
     <ZView
       aria-hidden="true"
-      className="flex shrink-0 flex-col items-center gap-2 pt-4"
+      className="pointer-events-none flex shrink-0 flex-col items-center gap-2 pt-4 md:fixed md:top-1/2 md:right-5 md:z-40 md:flex-col-reverse md:gap-3 md:pt-0 md:-translate-y-1/2"
     >
       <svg
         width="2"
@@ -32,7 +32,7 @@ export function HeroScrollIndicator() {
           className="text-foreground motion-safe:animate-hero-marker"
         />
       </svg>
-      <span className="text-muted-foreground text-[10px] font-medium tracking-[0.35em]">
+      <span className="text-muted-foreground text-[10px] font-medium tracking-[0.35em] md:[writing-mode:vertical-rl]">
         SCROLL
       </span>
     </ZView>
