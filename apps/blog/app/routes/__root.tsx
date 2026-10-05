@@ -25,6 +25,13 @@ export const Route = createRootRoute({
     ],
     links: [
       {
+        rel: 'preload',
+        href: '/fonts/orbitron-black.ttf',
+        as: 'font',
+        type: 'font/ttf',
+        crossOrigin: 'anonymous',
+      },
+      {
         rel: 'alternate',
         type: 'application/rss+xml',
         title: 'ZCAT Blog',
