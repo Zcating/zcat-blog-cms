@@ -87,7 +87,7 @@ export function PhotoSelector(props: PhotoSelectorProps) {
         <div className="h-full w-full flex items-center justify-center overflow-auto">
           <ZImage
             className="w-full h-full"
-            src={photo.url}
+            src={photo.signedUrl}
             alt={photo.name}
             contentMode="contain"
           />
@@ -188,7 +188,7 @@ function PhotoSelectorCard(props: PhotoSelectorCardProps) {
       <div className="aspect-4/3 bg-gray-200">
         <ZImagePreload
           className="w-full h-full"
-          src={photo.thumbnailUrl}
+          src={photo.signedThumbnailUrl}
           alt={photo.name}
           contentMode="scale-down"
         />

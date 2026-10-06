@@ -81,6 +81,10 @@ async function fetchImageFile(url?: string): Promise<Blob | undefined> {
   return response.blob();
 }
 
+function buildFilename(): string {
+  return `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
+}
+
 async function uploadPhotoFile(
   image?: string,
 ): Promise<UploadPhotoResult | undefined> {
@@ -90,7 +94,7 @@ async function uploadPhotoFile(
   }
 
   const extension = imageFile.type.split('/').pop() || 'jpg';
-  const filename = `${Date.now()}-${Math.floor(Math.random() * 10 ** 7)}`;
+  const filename = buildFilename();
   const key = `photos/${filename}.${extension}`;
   const thumbnailKey = `photos/${filename}.thumbnail.${extension}`;
 
@@ -167,5 +171,24 @@ export const OssAction = {
 
   async deletePhoto(id: number) {
     await deletePhoto({ data: { id } });
+  },
+
+  /**
+   * 上传头像：复用同一条预签名直传链路，不生成缩略图，只返回
+   * `user/<timestamp>-<random>.<ext>` 对象 key 交给调用方提交。
+   */
+  async uploadAvatar(image: string): Promise<string> {
+    const imageFile = await fetchImageFile(image);
+    if (!imageFile) {
+      throw new Error('uploadAvatar requires a locally picked file');
+    }
+
+    const extension = imageFile.type.split('/').pop() || 'jpg';
+    const key = `user/${buildFilename()}.${extension}`;
+
+    const presignedUrl = await getPresignedUploadUrl(key);
+    await uploadToOss(presignedUrl, imageFile);
+
+    return key;
   },
 };

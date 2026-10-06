@@ -14,7 +14,7 @@ const mockPrisma = vi.hoisted(() => ({
 }));
 
 const mockOssService = vi.hoisted(() => ({
-  getArticleUrl: vi.fn(),
+  presignDownloadUrl: vi.fn(),
 }));
 
 vi.mock('../../../common/prisma.service', () => ({
@@ -140,17 +140,31 @@ describe('articleService', () => {
   });
 
   describe('getUploadUrls', () => {
-    it('returns upload URLs for images', async () => {
-      mockOssService.getArticleUrl
-        .mockReturnValueOnce('url1')
-        .mockReturnValueOnce('url2');
+    it('returns a presigned read address per image', async () => {
+      mockOssService.presignDownloadUrl
+        .mockResolvedValueOnce('https://signed.example/img1')
+        .mockResolvedValueOnce('https://signed.example/img2');
 
       const result = await appRuntime.runPromise(
         articleService.getUploadUrls(['img1', 'img2']),
       );
 
-      expect(result).toEqual(['url1', 'url2']);
-      expect(mockOssService.getArticleUrl).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([
+        'https://signed.example/img1',
+        'https://signed.example/img2',
+      ]);
+      expect(mockOssService.presignDownloadUrl).toHaveBeenCalledTimes(2);
+      expect(mockOssService.presignDownloadUrl).toHaveBeenCalledWith('img1');
+    });
+
+    it('fails the whole call when one image cannot be signed', async () => {
+      mockOssService.presignDownloadUrl.mockRejectedValueOnce(
+        new Error('signing unavailable'),
+      );
+
+      await expect(
+        appRuntime.runPromise(articleService.getUploadUrls(['img1'])),
+      ).rejects.toThrow('signing unavailable');
     });
   });
 });

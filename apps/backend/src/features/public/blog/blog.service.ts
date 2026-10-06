@@ -5,27 +5,48 @@ import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 import { createPaginateResult } from '@backend/model';
 import { createPaginate, safeNumber, safeParse } from '@backend/utils';
 
+import {
+  BlogPhotoDtoSchema,
+  BlogPhotoFeedItemDtoSchema,
+  BlogUserInfoDtoSchema,
+} from './blog.schema';
+
 const ORDER_MAP = {
   latest: 'desc',
   oldest: 'asc',
 } as const;
 
-type PhotoWithUrls = {
+type PhotoRow = {
   id: number;
+  name: string;
   url: string;
   thumbnailUrl: string;
+  albumId: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-function transformPhoto<T extends PhotoWithUrls>(
-  oss: { getPrivateUrl: (url: string) => string },
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> &
-  Pick<PhotoWithUrls, 'url' | 'thumbnailUrl'> {
-  return {
-    ...photo,
-    url: oss.getPrivateUrl(photo.url),
-    thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
-  };
+function transformPhoto(oss: OssService, photo: PhotoRow) {
+  return tryPromise(async () => {
+    const [signedUrl, signedThumbnailUrl] = await Promise.all([
+      oss.presignDownloadUrl(photo.url),
+      oss.presignDownloadUrl(photo.thumbnailUrl),
+    ]);
+    return BlogPhotoDtoSchema.parse({
+      ...photo,
+      signedUrl,
+      signedThumbnailUrl,
+    });
+  });
+}
+
+function transformPhotos(oss: OssService, photos: PhotoRow[]) {
+  return Effect.all(
+    photos.map((photo) => transformPhoto(oss, photo)),
+    {
+      concurrency: 'unbounded',
+    },
+  );
 }
 
 export function getArticleList(
@@ -87,7 +108,6 @@ export function getArticleDetail(id: string) {
 export function getGalleryList(page: number, pageSize: number) {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
-    const oss = yield* OssService;
 
     const albumModels = yield* tryPromise(() =>
       prisma.photoAlbum.findMany({
@@ -108,7 +128,7 @@ export function getGalleryList(page: number, pageSize: number) {
       prisma.photoAlbum.count({ where: { available: true } }),
     );
 
-    let photos: ReturnType<typeof transformPhoto>[] = [];
+    let photos: PhotoRow[] = [];
     if (albumModels.length > 0) {
       const rawPhotos = yield* tryPromise(() =>
         prisma.photo.findMany({
@@ -119,7 +139,9 @@ export function getGalleryList(page: number, pageSize: number) {
           },
         }),
       );
-      photos = rawPhotos.map((photo) => transformPhoto(oss, photo));
+
+      const oss = yield* OssService;
+      photos = yield* transformPhotos(oss, rawPhotos);
     }
 
     const galleries = albumModels.map((item) => ({
@@ -139,7 +161,6 @@ export function getGalleryDetail(id: string) {
   return Effect.gen(function* () {
     const albumId = safeNumber(id);
     const prisma = yield* PrismaService;
-    const oss = yield* OssService;
 
     const album = yield* tryPromise(() =>
       prisma.photoAlbum.findUnique({
@@ -164,7 +185,9 @@ export function getGalleryDetail(id: string) {
         where: { albumId },
       }),
     );
-    const photos = rawPhotos.map((photo) => transformPhoto(oss, photo));
+
+    const oss = yield* OssService;
+    const photos = yield* transformPhotos(oss, rawPhotos);
 
     return {
       id: album.id,
@@ -181,7 +204,6 @@ export function getGalleryDetail(id: string) {
 export function getPhotoList(page: number, pageSize: number) {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
-    const oss = yield* OssService;
 
     const albums = yield* tryPromise(() =>
       prisma.photoAlbum.findMany({
@@ -205,17 +227,17 @@ export function getPhotoList(page: number, pageSize: number) {
       prisma.photo.count({ where: { albumId: { in: publishedAlbumIds } } }),
     );
 
-    const photos = rawPhotos
-      .filter((photo) => photo.albumId !== null)
-      .map((photo) => ({
-        id: photo.id,
-        name: photo.name,
-        url: oss.getPrivateUrl(photo.url),
-        thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
-        createdAt: photo.createdAt,
-        albumId: photo.albumId as number,
+    const oss = yield* OssService;
+    const signedPhotos = yield* transformPhotos(
+      oss,
+      rawPhotos.filter((photo) => photo.albumId !== null),
+    );
+    const photos = signedPhotos.map((photo) =>
+      BlogPhotoFeedItemDtoSchema.parse({
+        ...photo,
         albumName: albumNames.get(photo.albumId as number) ?? '',
-      }));
+      }),
+    );
 
     return createPaginateResult(photos, total, page, pageSize);
   });
@@ -261,7 +283,6 @@ export function recordVisitor(
 export function getUserInfo() {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
-    const oss = yield* OssService;
 
     const userInfo = yield* tryPromise(() =>
       prisma.userInfo.findUnique({
@@ -279,14 +300,21 @@ export function getUserInfo() {
       }),
     );
 
-    return {
+    const oss = yield* OssService;
+    const avatar = userInfo?.avatar || '';
+    const signedAvatar = avatar
+      ? yield* tryPromise(() => oss.presignDownloadUrl(avatar))
+      : '';
+
+    return BlogUserInfoDtoSchema.parse({
       name: userInfo?.name || '',
       occupation: userInfo?.occupation || '',
       abstract: userInfo?.abstract || '',
       aboutMe: userInfo?.aboutMe || '',
-      avatar: oss.getPrivateUrl(userInfo?.avatar || ''),
+      avatar,
+      signedAvatar,
       contact: safeParse<Record<string, string>>(userInfo?.contact, {}),
-    };
+    });
   });
 }
 

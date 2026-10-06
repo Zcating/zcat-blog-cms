@@ -45,11 +45,9 @@ const mockPrisma = vi.hoisted(() => {
 });
 
 const mockOss = vi.hoisted(() => ({
-  getUrl: vi.fn((key: string) => key),
   deleteObject: vi.fn(),
   presignUploadUrl: vi.fn(),
-  getPrivateUrl: vi.fn((key: string) => key || ''),
-  getArticleUrl: vi.fn((key: string) => key || ''),
+  presignDownloadUrl: vi.fn(),
   deleteFile: vi.fn(async () => true),
 }));
 
@@ -74,6 +72,28 @@ vi.mock('../../middleware/auth', () => ({
 
 import { app } from '../../app';
 
+const signatureForKey = (key: string): string => {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < key.length; index += 1) {
+    hash ^= key.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+};
+
+const presignedUrlFor = (key: string): string =>
+  `https://signed.oss.invalid/${key}?X-Amz-Signature=${signatureForKey(key)}`;
+
+const photoRow = {
+  id: 11,
+  name: 'Sunset',
+  url: 'photos/sunset.jpg',
+  thumbnailUrl: 'photos/sunset.thumbnail.jpg',
+  albumId: 3,
+  createdAt: new Date('2026-01-02T03:04:05.000Z'),
+  updatedAt: new Date('2026-01-02T03:04:05.000Z'),
+};
+
 const clientEnvelopeSchema = z.object({
   code: z.string(),
   message: z.string(),
@@ -90,6 +110,8 @@ const clientPhotoSchema = z.object({
   name: z.string(),
   url: z.string(),
   thumbnailUrl: z.string(),
+  signedUrl: z.string(),
+  signedThumbnailUrl: z.string(),
 });
 
 const clientArticleSchema = z.object({
@@ -153,6 +175,12 @@ const post = (path: string, body: unknown) =>
   });
 
 describe('CMS absence contract through the real app, service and error handler', () => {
+  beforeEach(() => {
+    mockOss.presignDownloadUrl.mockImplementation(async (key: string) =>
+      presignedUrlFor(key),
+    );
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -494,6 +522,81 @@ describe('CMS absence contract through the real app, service and error handler',
       expect(classifyAsAdminClient(body, clientTagsListSchema)).toEqual({
         kind: 'data',
       });
+    });
+  });
+});
+
+describe('the admin client photo schema against a real success payload', () => {
+  const clientPhotoListSchema = z.object({
+    data: z.array(clientPhotoSchema),
+  });
+
+  const photoList = async () => {
+    mockPrisma.photo.findMany.mockResolvedValue([photoRow]);
+    mockPrisma.photo.count.mockResolvedValue(1);
+    return (await get('/api/cms/photos?page=1&pageSize=10')).json();
+  };
+
+  beforeEach(() => {
+    mockOss.presignDownloadUrl.mockImplementation(async (key: string) =>
+      presignedUrlFor(key),
+    );
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reaches the photo schema and accepts a signed photo payload as data', async () => {
+    const body = await photoList();
+
+    expect(body.code).toBe('0000');
+    expect(classifyAsAdminClient(body, clientPhotoListSchema)).toEqual({
+      kind: 'data',
+    });
+  });
+
+  it('carries both signed read addresses alongside the unchanged bare object keys', async () => {
+    const body = await photoList();
+    const item = body.data.data[0];
+
+    expect(Object.keys(item).sort()).toEqual([
+      'albumId',
+      'createdAt',
+      'id',
+      'name',
+      'signedThumbnailUrl',
+      'signedUrl',
+      'thumbnailUrl',
+      'updatedAt',
+      'url',
+    ]);
+    expect(item.url).toBe('photos/sunset.jpg');
+    expect(item.thumbnailUrl).toBe('photos/sunset.thumbnail.jpg');
+    expect(item.signedUrl).toBe(presignedUrlFor('photos/sunset.jpg'));
+    expect(item.signedThumbnailUrl).toBe(
+      presignedUrlFor('photos/sunset.thumbnail.jpg'),
+    );
+  });
+
+  it('reads the same payload as a validation error once the signed fields are gone, so the acceptance above is not vacuous', async () => {
+    const body = await photoList();
+    const stripped = {
+      ...body,
+      data: {
+        ...body.data,
+        data: body.data.data.map(
+          ({
+            signedUrl,
+            signedThumbnailUrl,
+            ...bare
+          }: Record<string, unknown>) => bare,
+        ),
+      },
+    };
+
+    expect(classifyAsAdminClient(stripped, clientPhotoListSchema)).toEqual({
+      kind: 'validation-error',
     });
   });
 });

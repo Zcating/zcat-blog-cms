@@ -27,7 +27,11 @@ function jsonResponse(body: unknown, status = 200): Response {
 const PHOTO = {
   id: 10,
   name: 'cover.jpg',
-  url: 'https://cdn.example.com/cover.jpg',
+  url: 'cover.jpg',
+  signedUrl:
+    'https://bucket.oss-cn-guangzhou.aliyuncs.com/cover.jpg?OSSAccessKeyId=x&Expires=1',
+  signedThumbnailUrl:
+    'https://bucket.oss-cn-guangzhou.aliyuncs.com/cover.thumbnail.jpg?OSSAccessKeyId=x&Expires=1',
   thumbnailUrl: 'https://cdn.example.com/cover_t.jpg',
   albumId: 1,
   createdAt: '2024-01-01T00:00:00.000Z',
@@ -81,6 +85,7 @@ describe('fetchGalleryList', () => {
     );
 
     expect(result.data[0]?.cover?.url).toBe(PHOTO.url);
+    expect(result.data[0]?.cover?.signedUrl).toBe(PHOTO.signedUrl);
     expect(result.total).toBe(23);
     expect(result.totalPages).toBe(3);
     expect(capturedMethod).toBe('GET');
@@ -243,6 +248,25 @@ describe('fetchGalleryDetail', () => {
         code: '0000',
         message: 'success',
         data: { ...GALLERY, photos: [{ id: 'oops' }] },
+      }),
+    );
+
+    await expect(
+      fetchGalleryDetail({ id: '1' }, { fetch: fetchImpl }),
+    ).rejects.toBeInstanceOf(ResponseValidationError);
+  });
+
+  it('rejects a photo carrying only the bare object key, so no gallery page can render an unresolvable src', async () => {
+    const { signedUrl: _omitted, ...bareKeyPhoto } = PHOTO;
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({
+        code: '0000',
+        message: 'success',
+        data: {
+          ...GALLERY,
+          cover: bareKeyPhoto,
+          photos: [bareKeyPhoto],
+        },
       }),
     );
 

@@ -1,6 +1,8 @@
 /*
- * The page MUST NOT call any of the legacy `UserApi` / `OssAction`
- * surfaces; only the `@cms/server/users` server function is mocked here.
+ * The page MUST NOT call any of the legacy `UserApi` surfaces; the
+ * backend call is the `@cms/server/users` server function and the only
+ * other boundary is `OssAction.uploadAvatar`, which turns a picked
+ * `blob:` URL into the object key the update payload must carry.
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,6 +20,8 @@ import type { UserInfo as UserInfoType } from '@cms/server/users/users-helpers';
 // ---------------------------------------------------------------------------
 
 const mockUpdateCurrentUser = vi.fn();
+const mockUploadAvatar = vi.fn();
+const stagedAvatar = vi.hoisted(() => ({ value: '' }));
 
 vi.mock('@cms/server/users', async () => {
   const actual =
@@ -30,9 +34,16 @@ vi.mock('@cms/server/users', async () => {
   };
 });
 
+vi.mock('@cms/core', () => ({
+  OssAction: {
+    uploadAvatar: (...args: unknown[]) => mockUploadAvatar(...args),
+  },
+}));
+
 interface MockFormApi {
   instance: {
     reset: (values?: unknown) => void;
+    watch: (name: string) => string;
     handleSubmit: (fn: (values: unknown) => void) => () => void;
   };
   submit: (values?: unknown) => void;
@@ -46,6 +57,7 @@ type MockFormProps = FormHTMLAttributes<HTMLFormElement> & {
 type MockFormItemProps = HTMLAttributes<HTMLDivElement> & {
   name: string;
   label?: string;
+  description?: string;
   children?: ReactNode;
 };
 
@@ -112,18 +124,28 @@ vi.mock('@zcat/ui', () => ({
           return {
             instance: {
               reset: vi.fn(),
+              // `ZImageUpload` only ever reports a `blob:` URL, so the
+              // staged value is read from the shared holder.
+              watch: () => stagedAvatar.value,
               handleSubmit: (fn: (values: unknown) => void) => () =>
-                fn(STUB_VALUES),
+                fn({ ...STUB_VALUES, avatar: stagedAvatar.value }),
             },
             // Mirror real behaviour: `form.submit` IS the
             // caller-supplied `onSubmit` (see create-z-form.tsx).
             submit: (values: unknown) => onSubmit(values),
           };
         },
-        Item: ({ name, label, children, ...props }: MockFormItemProps) => (
+        Item: ({
+          name,
+          label,
+          description,
+          children,
+          ...props
+        }: MockFormItemProps) => (
           <div data-testid={`form-item-${name}`} {...props}>
             {label && <label>{label}</label>}
             {children}
+            {description && <small>{description}</small>}
           </div>
         ),
       },
@@ -131,7 +153,6 @@ vi.mock('@zcat/ui', () => ({
     return FormComponent;
   },
   useWatch: () => {},
-  safeObjectURL: (url: string) => url,
 }));
 
 vi.mock('lucide-react', () => ({
@@ -146,7 +167,8 @@ const SEED_USER: UserInfoType = {
   name: 'Admin',
   contact: { email: 'admin@test.com', github: 'admin' },
   occupation: 'Developer',
-  avatar: '',
+  avatar: 'avatar/admin.jpg',
+  signedAvatar: 'https://signed.example/avatar.jpg',
   aboutMe: 'About me',
   abstract: 'Abstract',
 };
@@ -176,6 +198,7 @@ function renderPage(overrides: Partial<UserInfoType> = {}) {
 describe('UserInfo page (Phase 3b)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stagedAvatar.value = '';
   });
 
   it('reads user data from the userInfoQueryOptions cache', () => {
@@ -253,9 +276,78 @@ describe('UserInfo page (Phase 3b)', () => {
     await waitFor(() => {
       expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
     });
+    // The avatar field is never seeded from the backend, so an untouched
+    // field must post the stored object key — never the signed URL.
+    expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({ avatar: 'avatar/admin.jpg' }),
+    });
+    expect(mockUploadAvatar).not.toHaveBeenCalled();
     await waitFor(() => {
       expect(queryClient.getQueryData(userInfoQueryOptions().queryKey)).toEqual(
         updated,
+      );
+    });
+  });
+
+  it('uploads a picked avatar and posts its user/ object key, never the blob URL', async () => {
+    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+    mockUploadAvatar.mockResolvedValueOnce('user/1758711739085-1685914.png');
+    mockUpdateCurrentUser.mockResolvedValueOnce({
+      ...SEED_USER,
+      avatar: 'user/1758711739085-1685914.png',
+      signedAvatar: 'https://signed.example/user/1758711739085-1685914.png',
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => {
+      expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
+    });
+    expect(mockUploadAvatar).toHaveBeenCalledWith(
+      'blob:http://localhost:3000/picked-avatar',
+    );
+
+    const posted = mockUpdateCurrentUser.mock.calls[0]?.[0] as {
+      data: { avatar: string };
+    };
+    expect(posted.data.avatar).toBe('user/1758711739085-1685914.png');
+    expect(posted.data.avatar.startsWith('user/')).toBe(true);
+    expect(posted.data.avatar).not.toContain('blob:');
+    expect(posted.data.avatar).not.toContain('http');
+  });
+
+  it('keeps the staged file visible in the read-only display while editing', () => {
+    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+
+    expect(screen.getByTestId('avatar')).toHaveAttribute(
+      'src',
+      'blob:http://localhost:3000/picked-avatar',
+    );
+  });
+
+  it('does not post the profile when the avatar upload fails', async () => {
+    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+    mockUploadAvatar.mockRejectedValueOnce(new Error('上传失败'));
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => {
+      expect(mockUploadAvatar).toHaveBeenCalledTimes(1);
+    });
+    expect(mockUpdateCurrentUser).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByTestId('user-info-error')).toHaveTextContent(
+        '上传失败',
       );
     });
   });

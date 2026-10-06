@@ -9,22 +9,25 @@ const mockPrisma = vi.hoisted(() => ({
   userInfo: { findUnique: vi.fn() },
 }));
 
-const mockOss = vi.hoisted(() => ({
-  getPrivateUrl: vi.fn((url: string) => url || ''),
-}));
-
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
+
+const mockOssService = vi.hoisted(() => ({
+  presignDownloadUrl: vi.fn(
+    async (key: string) => `https://signed.example/${key}`,
+  ),
+  deleteFile: vi.fn(),
+}));
 
 vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
 }));
 
-vi.mock('../../../common/oss.service', () => ({
-  ossService: mockOss,
-}));
-
 vi.mock('../../../common/statistic-service', () => ({
   recordVisitor: mockRecordVisitor,
+}));
+
+vi.mock('../../../common/oss.service', () => ({
+  ossService: mockOssService,
 }));
 
 import { logger } from '@backend/utils';
@@ -32,6 +35,16 @@ import blogRoutes from './blog.route';
 import { errorHandler } from '../../../middleware/error-handler';
 
 const capturedInfoArgs: unknown[][] = [];
+
+const coverRow = (id: number, url: string) => ({
+  id,
+  name: `photo ${id}`,
+  url,
+  thumbnailUrl: `${url}_t`,
+  albumId: 1,
+  createdAt: new Date('2026-05-20T00:00:00.000Z'),
+  updatedAt: new Date('2026-05-20T00:00:00.000Z'),
+});
 
 const createApp = () => {
   const app = new Hono();
@@ -261,12 +274,7 @@ describe('blogRoutes', () => {
         },
       ]);
       mockPrisma.photoAlbum.count.mockResolvedValue(1);
-      mockPrisma.photo.findMany.mockResolvedValue([
-        { id: 100, url: 'cover.jpg', thumbnailUrl: 'cover_t.jpg' },
-      ]);
-      mockOss.getPrivateUrl.mockImplementation(
-        (url: string) => `https://cdn.example.com/${url}`,
-      );
+      mockPrisma.photo.findMany.mockResolvedValue([coverRow(100, 'cover.jpg')]);
       const app = createApp();
 
       const res = await app.request('/gallery');
@@ -274,6 +282,32 @@ describe('blogRoutes', () => {
 
       expect(body.code).toBe('0000');
       expect(body.data.data).toHaveLength(1);
+    });
+
+    it('serialises a signed read address on the gallery cover', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        {
+          id: 1,
+          name: 'Album 1',
+          description: 'Desc 1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          coverId: 100,
+        },
+      ]);
+      mockPrisma.photoAlbum.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([coverRow(100, 'cover.jpg')]);
+      const app = createApp();
+
+      const res = await app.request('/gallery');
+      const body = await res.json();
+
+      expect(body.data.data[0].cover).toMatchObject({
+        url: 'cover.jpg',
+        thumbnailUrl: 'cover.jpg_t',
+        signedUrl: 'https://signed.example/cover.jpg',
+        signedThumbnailUrl: 'https://signed.example/cover.jpg_t',
+      });
     });
 
     it('returns error when gallery list fails', async () => {
@@ -428,9 +462,6 @@ describe('blogRoutes', () => {
         photoRow(20, 2, 'newest.jpg'),
         photoRow(10, 1, 'oldest.jpg'),
       ]);
-      mockOss.getPrivateUrl.mockImplementation(
-        (url: string) => `https://cdn.example.com/${url}`,
-      );
       const app = createApp();
 
       const res = await app.request('/photo/list?page=1&pageSize=10');
@@ -443,9 +474,13 @@ describe('blogRoutes', () => {
         albumId: 2,
         albumName: 'Album Two',
       });
-      expect(body.data.data[0].url).toBe('https://cdn.example.com/newest.jpg');
-      expect(body.data.data[0].thumbnailUrl).toBe(
-        'https://cdn.example.com/newest.jpg_t',
+      expect(body.data.data[0].url).toBe('newest.jpg');
+      expect(body.data.data[0].thumbnailUrl).toBe('newest.jpg_t');
+      expect(body.data.data[0].signedUrl).toBe(
+        'https://signed.example/newest.jpg',
+      );
+      expect(body.data.data[0].signedThumbnailUrl).toBe(
+        'https://signed.example/newest.jpg_t',
       );
       expect(body.data.data[1].albumName).toBe('Album One');
     });
@@ -591,8 +626,8 @@ describe('blogRoutes', () => {
         updatedAt: new Date(),
       });
       mockPrisma.photo.findMany.mockResolvedValue([
-        { id: 10, url: 'cover.jpg', thumbnailUrl: 'cover_t.jpg' },
-        { id: 11, url: 'photo.jpg', thumbnailUrl: 'photo_t.jpg' },
+        coverRow(10, 'cover.jpg'),
+        coverRow(11, 'photo.jpg'),
       ]);
       const app = createApp();
 
@@ -602,6 +637,35 @@ describe('blogRoutes', () => {
       expect(body.code).toBe('0000');
       expect(body.data.cover).toBeTruthy();
       expect(body.data.photos[0].id).toBe(10);
+    });
+
+    it('serialises signed read addresses on the gallery detail cover and photos', async () => {
+      mockPrisma.photoAlbum.findUnique.mockResolvedValue({
+        id: 1,
+        name: 'Gallery',
+        coverId: 10,
+        description: 'Has cover',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      mockPrisma.photo.findMany.mockResolvedValue([
+        coverRow(10, 'cover.jpg'),
+        coverRow(11, 'photo.jpg'),
+      ]);
+      const app = createApp();
+
+      const res = await app.request('/gallery/1');
+      const body = await res.json();
+
+      expect(body.data.cover.signedUrl).toBe(
+        'https://signed.example/cover.jpg',
+      );
+      expect(
+        body.data.photos.map((photo: { signedUrl: string }) => photo.signedUrl),
+      ).toEqual([
+        'https://signed.example/cover.jpg',
+        'https://signed.example/photo.jpg',
+      ]);
     });
 
     it('reports resource-does-not-exist for a missing album without a data payload', async () => {

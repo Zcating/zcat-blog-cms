@@ -3,20 +3,31 @@
 import { createPaginate } from '@backend/utils';
 import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-type PhotoWithUrls = {
-  url: string;
-  thumbnailUrl: string;
-};
+import { PhotoResponseDtoSchema } from '../photo/photo.schema';
 
-function transformPhoto<T extends PhotoWithUrls>(
-  oss: { getPrivateUrl: (url: string) => string },
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
-  return {
-    ...photo,
-    url: oss.getPrivateUrl(photo.url),
-    thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
-  };
+function transformCover(
+  oss: OssService,
+  cover: {
+    id: number;
+    name: string;
+    url: string;
+    thumbnailUrl: string;
+    albumId: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+) {
+  return tryPromise(async () => {
+    const [signedUrl, signedThumbnailUrl] = await Promise.all([
+      oss.presignDownloadUrl(cover.url),
+      oss.presignDownloadUrl(cover.thumbnailUrl),
+    ]);
+    return PhotoResponseDtoSchema.parse({
+      ...cover,
+      signedUrl,
+      signedThumbnailUrl,
+    });
+  });
 }
 
 export function findAll(page: number, pageSize: number) {
@@ -48,25 +59,32 @@ export function findAll(page: number, pageSize: number) {
       }
     }
 
-    const oss = yield* OssService;
     type AlbumRow = Awaited<
       ReturnType<typeof prisma.photoAlbum.findMany>
     >[number];
-    const data = (albums as AlbumRow[]).map((album) => {
-      const foundedCover =
-        album.coverId !== null ? coverMap.get(album.coverId) : undefined;
-      const cover = foundedCover ? transformPhoto(oss, foundedCover) : null;
-      return {
-        id: album.id,
-        name: album.name,
-        description: album.description,
-        coverId: album.coverId,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-        available: album.available,
-        cover,
-      };
-    });
+
+    const oss = yield* OssService;
+    const signedCovers = yield* Effect.all(
+      [...coverMap.values()].map((cover) => transformCover(oss, cover)),
+      { concurrency: 'unbounded' },
+    );
+    const signedCoverMap = new Map(
+      signedCovers.map((cover) => [cover.id, cover]),
+    );
+
+    const data = (albums as AlbumRow[]).map((album) => ({
+      id: album.id,
+      name: album.name,
+      description: album.description,
+      coverId: album.coverId,
+      createdAt: album.createdAt,
+      updatedAt: album.updatedAt,
+      available: album.available,
+      cover:
+        album.coverId !== null
+          ? (signedCoverMap.get(album.coverId) ?? null)
+          : null,
+    }));
 
     return {
       data,

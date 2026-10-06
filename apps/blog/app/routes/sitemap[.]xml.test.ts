@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getArticleListMock } = vi.hoisted(() => ({
   getArticleListMock: vi.fn(),
@@ -16,7 +16,11 @@ vi.mock('@blog/server/article', async () => {
 
 // --- import after mocks ---
 
+import { BlogSiteUrlMissingError } from '@blog/server/env';
+
 import { Route } from './sitemap[.]xml';
+
+const SITE = 'https://blog.sitemap.test';
 
 const ARTICLES = [
   {
@@ -52,6 +56,11 @@ describe('server route: /sitemap.xml', () => {
       page: 1,
       pageSize: 1000,
     });
+    vi.stubEnv('BLOG_SITE_URL', SITE);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('registers a GET handler on the route', () => {
@@ -85,13 +94,34 @@ describe('server route: /sitemap.xml', () => {
     expect(body.match(/<url>/g)).toHaveLength(5);
     for (const staticPath of ['', 'post-board', 'about', 'gallery']) {
       expect(body).toContain(
-        `<url><loc>https://blog.zcat.example/${staticPath}</loc>`,
+        `<url><loc>https://blog.sitemap.test/${staticPath}</loc>`,
       );
     }
     expect(body).toContain(
-      '<url><loc>https://blog.zcat.example/post-board/7</loc>' +
+      '<url><loc>https://blog.sitemap.test/post-board/7</loc>' +
         '<lastmod>2026-05-20T12:00:00.000Z</lastmod></url>',
     );
+  });
+
+  it('reads the site origin from BLOG_SITE_URL on every request, with no hardcoded domain', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    vi.stubEnv('BLOG_SITE_URL', 'https://second.sitemap.test/');
+    const second = await (await getHandler()).text();
+
+    expect(second).toContain(
+      '<url><loc>https://second.sitemap.test/gallery</loc>',
+    );
+    expect(second).not.toContain(SITE);
+  });
+
+  it('fails loudly when BLOG_SITE_URL is absent, instead of emitting locs under a placeholder domain', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    vi.stubEnv('BLOG_SITE_URL', '');
+
+    await expect(getHandler()).rejects.toThrow(BlogSiteUrlMissingError);
+    expect(getArticleListMock).not.toHaveBeenCalled();
   });
 
   it('requests the latest thousand articles', async () => {
@@ -116,7 +146,7 @@ describe('server route: /sitemap.xml', () => {
     expect(contentType).toMatch(/charset\s*=\s*utf-8/i);
 
     const utf8 = new TextDecoder('utf-8').decode(bytes);
-    expect(utf8).toContain('<loc>https://blog.zcat.example/gallery</loc>');
+    expect(utf8).toContain('<loc>https://blog.sitemap.test/gallery</loc>');
     expect(bytes.every((byte) => byte < 0x80)).toBe(true);
   });
 });

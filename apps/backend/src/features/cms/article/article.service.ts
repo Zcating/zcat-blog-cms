@@ -73,9 +73,7 @@ export function deleteById(id: string) {
     }
 
     const prisma = yield* PrismaService;
-    yield* tryPromise(() =>
-      prisma.article.delete({ where: { id: safeId } }),
-    );
+    yield* tryPromise(() => prisma.article.delete({ where: { id: safeId } }));
     return true;
   });
 }
@@ -83,7 +81,10 @@ export function deleteById(id: string) {
 export function getUploadUrls(images: string[]) {
   return Effect.gen(function* () {
     const oss = yield* OssService;
-    return images.map((image) => oss.getArticleUrl(image));
+    return yield* Effect.all(
+      images.map((image) => tryPromise(() => oss.presignDownloadUrl(image))),
+      { concurrency: 'unbounded' },
+    );
   });
 }
 

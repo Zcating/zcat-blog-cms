@@ -15,15 +15,15 @@ const mockPrisma = vi.hoisted(() => ({
 }));
 
 // Mock the singleton files so the Effect tags pick up the mocks
-// and the real MinIO client is not loaded.
+// and the real OSS client is not loaded.
 vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
 }));
 
 vi.mock('../../../common/oss.service', () => ({
   ossService: {
-    getPrivateUrl: vi.fn(),
     presignUploadUrl: vi.fn(),
+    presignDownloadUrl: vi.fn(),
     deleteFile: vi.fn(),
   },
 }));

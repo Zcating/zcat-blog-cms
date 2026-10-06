@@ -1,6 +1,11 @@
+import { createHash } from 'node:crypto';
 import { createServer, type ServerResponse } from 'node:http';
 
-const port = 9090;
+import {
+  MOCK_BACKEND_PORT as port,
+  MOCK_BUCKET_PATH,
+  mockObjectUrl,
+} from './e2e-ports';
 
 function sendJson(response: ServerResponse, data: unknown, status = 200) {
   response.writeHead(status, { 'Content-Type': 'application/json' });
@@ -30,6 +35,58 @@ function sendError(
   response.end(JSON.stringify({ code, message, data }));
 }
 
+const SEED_OBJECT = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+const SEED_OBJECT_KEYS = [
+  'photos/1.jpg',
+  'photos/thumb_1.jpg',
+  'photos/2.jpg',
+  'photos/thumb_2.jpg',
+];
+
+interface StoredObject {
+  bytes: Buffer;
+  contentType: string;
+}
+
+interface StoredUpload {
+  key: string;
+  size: number;
+  contentType: string;
+  etag: string;
+  md5: string;
+  bodyBase64: string;
+}
+
+let objects = new Map<string, StoredObject>();
+let uploads: StoredUpload[] = [];
+let photoCreates: Array<Record<string, unknown>> = [];
+let photoCreateResponses: Array<Record<string, unknown>> = [];
+let userInfoUpdates: Array<Record<string, unknown>> = [];
+let userInfoUpdateResponses: Array<Record<string, unknown>> = [];
+
+function seedObjects() {
+  objects = new Map(
+    SEED_OBJECT_KEYS.map((key) => [
+      key,
+      { bytes: SEED_OBJECT, contentType: 'image/png' },
+    ]),
+  );
+}
+
+function corsHeaders(request: { headers: Record<string, unknown> }) {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+    'Access-Control-Allow-Headers':
+      (request.headers['access-control-request-headers'] as string) ?? '*',
+    'Access-Control-Max-Age': '600',
+  };
+}
+
 // Default seed data
 function getDefaultPhotos() {
   return [
@@ -38,6 +95,8 @@ function getDefaultPhotos() {
       name: '风景照',
       url: 'photos/1.jpg',
       thumbnailUrl: 'photos/thumb_1.jpg',
+      signedUrl: mockObjectUrl('photos/1.jpg'),
+      signedThumbnailUrl: mockObjectUrl('photos/thumb_1.jpg'),
       albumId: null as number | null,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
@@ -47,6 +106,8 @@ function getDefaultPhotos() {
       name: '人物照',
       url: 'photos/2.jpg',
       thumbnailUrl: 'photos/thumb_2.jpg',
+      signedUrl: mockObjectUrl('photos/2.jpg'),
+      signedThumbnailUrl: mockObjectUrl('photos/thumb_2.jpg'),
       albumId: null as number | null,
       createdAt: '2025-01-02T00:00:00.000Z',
       updatedAt: '2025-01-02T00:00:00.000Z',
@@ -179,12 +240,26 @@ const server = createServer((request, response) => {
     nextArticleId = 3;
     authInvalid = false;
     tokenRejected = false;
+    uploads = [];
+    photoCreates = [];
+    photoCreateResponses = [];
+    userInfoUpdates = [];
+    userInfoUpdateResponses = [];
+    seedObjects();
     sendJson(response, { ok: true });
     return;
   }
 
   if (url.pathname === '/api/test/state' && request.method === 'GET') {
-    sendJson(response, { albums, photos });
+    sendJson(response, {
+      albums,
+      photos,
+      uploads,
+      photoCreates,
+      photoCreateResponses,
+      userInfoUpdates,
+      userInfoUpdateResponses,
+    });
     return;
   }
 
@@ -203,6 +278,63 @@ const server = createServer((request, response) => {
   if (url.pathname === '/api/health') {
     sendJson(response, { ok: true });
     return;
+  }
+
+  if (url.pathname.startsWith(MOCK_BUCKET_PATH)) {
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204, corsHeaders(request));
+      response.end();
+      return;
+    }
+
+    if (request.method === 'GET') {
+      const key = decodeURIComponent(
+        url.pathname.slice(MOCK_BUCKET_PATH.length),
+      );
+      const object = objects.get(key);
+      if (!object) {
+        response.writeHead(404, corsHeaders(request));
+        response.end();
+        return;
+      }
+      response.writeHead(200, {
+        ...corsHeaders(request),
+        'Content-Type': object.contentType,
+        'Content-Length': String(object.bytes.length),
+      });
+      response.end(object.bytes);
+      return;
+    }
+
+    if (request.method === 'PUT') {
+      const key = decodeURIComponent(
+        url.pathname.slice(MOCK_BUCKET_PATH.length),
+      );
+      const chunks: Buffer[] = [];
+      request.on('data', (chunk: Buffer) => chunks.push(chunk));
+      request.on('end', () => {
+        const body = Buffer.concat(chunks);
+        const md5 = createHash('md5').update(body).digest('hex');
+        uploads.push({
+          key,
+          size: body.length,
+          contentType: request.headers['content-type'] ?? '',
+          etag: `"${md5.toUpperCase()}"`,
+          md5,
+          bodyBase64: body.toString('base64'),
+        });
+        objects.set(key, {
+          bytes: body,
+          contentType: request.headers['content-type'] ?? '',
+        });
+        response.writeHead(200, {
+          ...corsHeaders(request),
+          ETag: `"${md5.toUpperCase()}"`,
+        });
+        response.end();
+      });
+      return;
+    }
   }
 
   if (url.pathname === '/api/auth/login' && request.method === 'POST') {
@@ -252,7 +384,7 @@ const server = createServer((request, response) => {
   if (url.pathname === '/api/cms/system-setting/upload-config') {
     const key = url.searchParams.get('key') || 'default-key';
     sendJson(response, {
-      presignedUrl: `http://localhost:9000/mock-bucket/${key}?presigned=mock`,
+      presignedUrl: mockObjectUrl(key),
     });
     return;
   }
@@ -263,6 +395,7 @@ const server = createServer((request, response) => {
       contact: '{"email":"admin@test.com","github":"admin"}',
       occupation: 'Developer',
       avatar: '',
+      signedAvatar: '',
       aboutMe: 'About me',
       abstract: 'Abstract',
     });
@@ -279,7 +412,9 @@ const server = createServer((request, response) => {
     });
     request.on('end', () => {
       const parsed = JSON.parse(body) as Record<string, unknown>;
-      sendJson(response, {
+      userInfoUpdates.push(parsed);
+      const avatar = (parsed.avatar as string) || '';
+      const userInfo = {
         name: (parsed.name as string) || 'Admin',
         contact:
           typeof parsed.contact === 'string'
@@ -287,10 +422,14 @@ const server = createServer((request, response) => {
             : JSON.stringify(parsed.contact) ||
               '{"email":"admin@test.com","github":"admin"}',
         occupation: (parsed.occupation as string) || 'Developer',
-        avatar: (parsed.avatar as string) || '',
+        avatar,
+        signedAvatar:
+          avatar && !avatar.startsWith('blob:') ? mockObjectUrl(avatar) : '',
         aboutMe: (parsed.aboutMe as string) || 'About me',
         abstract: (parsed.abstract as string) || 'Abstract',
-      });
+      };
+      userInfoUpdateResponses.push(userInfo);
+      sendJson(response, userInfo);
     });
     return;
   }
@@ -454,15 +593,21 @@ const server = createServer((request, response) => {
     });
     request.on('end', () => {
       const parsed = JSON.parse(body) as Record<string, unknown>;
+      const url = parsed.url as string;
+      const thumbnailUrl = parsed.thumbnailUrl as string;
       const newPhoto = {
         id: photos.length + 1,
         name: parsed.name as string,
-        url: parsed.url as string,
-        thumbnailUrl: parsed.thumbnailUrl as string,
+        url,
+        thumbnailUrl,
+        signedUrl: mockObjectUrl(url),
+        signedThumbnailUrl: mockObjectUrl(thumbnailUrl),
         albumId: (parsed.albumId as number | null) || null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as (typeof photos)[number];
+      photoCreates.push(parsed);
+      photoCreateResponses.push(newPhoto);
       photos.push(newPhoto);
       sendJson(response, newPhoto);
     });
@@ -479,11 +624,15 @@ const server = createServer((request, response) => {
     });
     request.on('end', () => {
       const parsed = JSON.parse(body) as Record<string, unknown>;
+      const url = parsed.url as string;
+      const thumbnailUrl = parsed.thumbnailUrl as string;
       const newPhoto = {
         id: photos.length + 1,
         name: parsed.name as string,
-        url: parsed.url as string,
-        thumbnailUrl: parsed.thumbnailUrl as string,
+        url,
+        thumbnailUrl,
+        signedUrl: mockObjectUrl(url),
+        signedThumbnailUrl: mockObjectUrl(thumbnailUrl),
         albumId: (parsed.albumId as number | null) || null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -507,6 +656,8 @@ const server = createServer((request, response) => {
       const photo = photos.find((p) => p.id === parsed.id);
       if (photo) {
         Object.assign(photo, parsed, { updatedAt: new Date().toISOString() });
+        photo.signedUrl = mockObjectUrl(photo.url);
+        photo.signedThumbnailUrl = mockObjectUrl(photo.thumbnailUrl);
       }
       sendJson(response, photo ?? null);
     });
@@ -709,6 +860,8 @@ const server = createServer((request, response) => {
     }),
   );
 });
+
+seedObjects();
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`Mock backend listening on http://127.0.0.1:${port}`);

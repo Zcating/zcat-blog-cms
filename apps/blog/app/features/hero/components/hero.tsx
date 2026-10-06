@@ -1,6 +1,5 @@
 import { ZView } from '@zcat/ui';
 
-import { toSameOriginOssImage } from '@blog/common/utils';
 import type { UserInfo } from '@blog/server/user/schemas';
 
 import { HeroScrollIndicator } from './hero-scroll-indicator';
@@ -26,7 +25,7 @@ export function Hero({ userInfo }: HeroProps) {
           </p>
         </ZView>
         <ParticleAvatar
-          src={toSameOriginOssImage(userInfo.avatar)}
+          src={userInfo.signedAvatar}
           className="h-48 w-full shrink-0 sm:h-64 lg:h-full lg:flex-1"
         />
       </ZView>

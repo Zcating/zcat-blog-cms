@@ -72,6 +72,7 @@ function GalleryDetailPage() {
     const list: Array<{
       id: string;
       url: string;
+      thumbnailUrl: string;
       name?: string;
       description?: string;
       isCover?: boolean;
@@ -81,7 +82,8 @@ function GalleryDetailPage() {
     if (gallery.cover) {
       list.push({
         id: 'cover',
-        url: gallery.cover.url,
+        url: gallery.cover.signedUrl,
+        thumbnailUrl: gallery.cover.signedThumbnailUrl,
         name: gallery.name,
         description: gallery.description,
         isCover: true,
@@ -95,7 +97,8 @@ function GalleryDetailPage() {
       }
       list.push({
         id: String(photo.id),
-        url: photo.url,
+        url: photo.signedUrl,
+        thumbnailUrl: photo.signedThumbnailUrl,
         name: photo.name,
         description: '',
         isCover: false,

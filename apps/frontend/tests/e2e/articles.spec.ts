@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 /**
  * Article lane end-to-end coverage.
@@ -21,7 +22,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Articles', () => {
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:9090/api/test/reset');
+    await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
   });
 
   test('list, view, and delete articles', async ({ page }) => {

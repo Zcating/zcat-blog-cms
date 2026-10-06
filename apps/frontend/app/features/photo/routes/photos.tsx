@@ -57,6 +57,8 @@ function buildOptimisticPhoto(data: PhotoFormData): PhotoCardData {
     name: data.name,
     url: data.image,
     thumbnailUrl: data.image,
+    signedUrl: data.image,
+    signedThumbnailUrl: data.image,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     loading: true,
@@ -182,7 +184,7 @@ export default function Photos({ search }: PhotosListProps) {
                 edit({
                   id: data.id,
                   name: data.name,
-                  image: data.url,
+                  image: data.signedUrl,
                 })
               }
               onDelete={deletePhoto}

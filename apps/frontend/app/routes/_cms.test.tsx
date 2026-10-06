@@ -40,6 +40,7 @@ const FULL_USER = {
   contact: { email: 'admin@test.com', github: 'admin' },
   occupation: 'Developer',
   avatar: '',
+  signedAvatar: '',
   aboutMe: 'About me',
   abstract: 'Abstract',
 };
@@ -96,7 +97,7 @@ describe('_cms beforeLoad — valid session', () => {
 
     const result = (await runBeforeLoad(client)) as { cmsUser: unknown };
 
-    expect(result.cmsUser).toEqual({ name: 'Admin', avatar: '' });
+    expect(result.cmsUser).toEqual({ name: 'Admin', signedAvatar: '' });
     expect(client.getQueryData(['articles', 'list'])).toEqual([{ id: 1 }]);
     expect(client.getQueryData(['users', 'current'])).toEqual(FULL_USER);
   });

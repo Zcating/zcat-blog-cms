@@ -46,7 +46,10 @@ export async function decideCmsAccess(
     const fullUser = await options.getCurrentUser();
     return {
       kind: 'allow',
-      user: { name: fullUser.name, avatar: fullUser.avatar },
+      user: {
+        name: fullUser.name,
+        signedAvatar: fullUser.signedAvatar,
+      },
       userFull: fullUser,
     };
   } catch {

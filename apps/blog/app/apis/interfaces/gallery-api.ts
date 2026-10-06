@@ -3,6 +3,8 @@ export namespace GalleryApi {
     id: string;
     name: string;
     url: string;
+    signedUrl: string;
+    signedThumbnailUrl: string;
     thumbnailUrl: string;
   }
 }

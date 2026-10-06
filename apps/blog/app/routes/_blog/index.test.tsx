@@ -69,6 +69,7 @@ const USER_INFO = {
   abstract: 'abstract',
   aboutMe: 'about me',
   avatar: 'https://example.com/avatar.png',
+  signedAvatar: 'https://bucket.example.com/avatar.png?sig=1',
   contact: { email: 'a@example.com', github: 'https://github.com/zcat' },
 };
 
@@ -90,7 +91,9 @@ function makePhoto(id: number) {
   return {
     id,
     name: `照片 ${id}`,
-    url: `https://cdn.example.com/${id}.jpg`,
+    url: `photos/${id}.jpg`,
+    signedUrl: `https://bucket.example/${id}.jpg?sig=1`,
+    signedThumbnailUrl: `https://bucket.example/${id}.thumbnail.jpg?sig=1`,
     thumbnailUrl: `https://cdn.example.com/${id}_t.jpg`,
     createdAt: '2026-05-20T00:00:00.000Z',
     albumId: 2,

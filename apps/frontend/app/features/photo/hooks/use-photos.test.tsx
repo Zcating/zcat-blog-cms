@@ -58,6 +58,8 @@ describe('usePhotosList', () => {
           name: '风景照',
           url: 'photos/1.jpg',
           thumbnailUrl: 'photos/thumb_1.jpg',
+          signedUrl: 'https://signed.example/photos/1.jpg',
+          signedThumbnailUrl: 'https://signed.example/photos/thumb_1.jpg',
         },
       ],
       page: 1,

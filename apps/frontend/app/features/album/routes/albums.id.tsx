@@ -130,6 +130,8 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
         name: photo.name,
         url: photo.url,
         thumbnailUrl: photo.thumbnailUrl,
+        signedUrl: photo.signedUrl,
+        signedThumbnailUrl: photo.signedThumbnailUrl,
         albumId: photo.albumId ?? undefined,
         isCover: photo.isCover,
         createdAt: photo.createdAt,
@@ -213,7 +215,7 @@ export default function AlbumsId({ albumId, search }: AlbumsIdProps) {
               editPhoto({
                 id: data.id,
                 name: data.name,
-                image: data.url,
+                image: data.signedUrl,
                 albumId: album.id,
               })
             }

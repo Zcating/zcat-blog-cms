@@ -19,7 +19,9 @@ const mockPrisma = vi.hoisted(() => ({
 }));
 
 const mockOssService = vi.hoisted(() => ({
-  getPrivateUrl: vi.fn((url: string) => `private-${url}`),
+  presignDownloadUrl: vi.fn(
+    async (key: string) => `https://signed.example/${key}`,
+  ),
   deleteFile: vi.fn(),
 }));
 
@@ -37,6 +39,17 @@ vi.mock('../../../common/oss.service', () => ({
 
 import { photoService } from './photo.service';
 
+const photoRow = (overrides: Record<string, unknown> = {}) => ({
+  id: 1,
+  name: 'Photo 1',
+  url: 'photos/orig.jpg',
+  thumbnailUrl: 'photos/orig_t.jpg',
+  albumId: 1,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  ...overrides,
+});
+
 describe('photoService', () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -44,9 +57,7 @@ describe('photoService', () => {
 
   describe('findAll', () => {
     it('returns paginated photos', async () => {
-      const photos = [
-        { id: 1, url: 'u1', thumbnailUrl: 't1', name: 'Photo 1' },
-      ];
+      const photos = [photoRow()];
       mockPrisma.photo.findMany.mockResolvedValue(photos);
       mockPrisma.photo.count.mockResolvedValue(1);
 
@@ -60,7 +71,9 @@ describe('photoService', () => {
     });
 
     it('returns empty when albumId is invalid (<= 0)', async () => {
-      const result = await appRuntime.runPromise(photoService.findAll(0, 1, 10));
+      const result = await appRuntime.runPromise(
+        photoService.findAll(0, 1, 10),
+      );
 
       expect(result.data).toEqual([]);
       expect(result.total).toBe(0);
@@ -80,30 +93,84 @@ describe('photoService', () => {
       );
     });
 
-    it('transforms photo URLs', async () => {
-      const photos = [
-        { id: 1, url: 'orig', thumbnailUrl: 'orig-t', name: 'P1' },
-      ];
-      mockPrisma.photo.findMany.mockResolvedValue(photos);
+    it('returns the bare object key alongside a presigned read address', async () => {
+      mockPrisma.photo.findMany.mockResolvedValue([photoRow()]);
       mockPrisma.photo.count.mockResolvedValue(1);
 
       const result = await appRuntime.runPromise(
         photoService.findAll(undefined, 1, 10),
       );
 
-      expect(result.data[0].url).toBe('private-orig');
-      expect(result.data[0].thumbnailUrl).toBe('private-orig-t');
+      expect(result.data[0]).toEqual({
+        id: 1,
+        name: 'Photo 1',
+        url: 'photos/orig.jpg',
+        thumbnailUrl: 'photos/orig_t.jpg',
+        albumId: 1,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+        signedUrl: 'https://signed.example/photos/orig.jpg',
+        signedThumbnailUrl: 'https://signed.example/photos/orig_t.jpg',
+      });
+      expect(mockOssService.presignDownloadUrl).toHaveBeenCalledWith(
+        'photos/orig.jpg',
+      );
+    });
+
+    it('signs the thumbnail object on its own instead of rewriting the signed original', async () => {
+      mockPrisma.photo.findMany.mockResolvedValue([photoRow()]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+
+      const result = await appRuntime.runPromise(
+        photoService.findAll(undefined, 1, 10),
+      );
+
+      expect(mockOssService.presignDownloadUrl).toHaveBeenCalledWith(
+        'photos/orig_t.jpg',
+      );
+      expect(result.data[0].signedThumbnailUrl).not.toBe(
+        result.data[0].signedUrl,
+      );
+    });
+
+    it('does not leak fields the photo DTO does not declare', async () => {
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({ leakedInternalColumn: 'secret' }),
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+
+      const result = await appRuntime.runPromise(
+        photoService.findAll(undefined, 1, 10),
+      );
+
+      expect(result.data[0]).not.toHaveProperty('leakedInternalColumn');
+    });
+
+    it('fails the list when an address cannot be signed', async () => {
+      mockPrisma.photo.findMany.mockResolvedValue([photoRow()]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockOssService.presignDownloadUrl.mockRejectedValueOnce(
+        new Error('signing unavailable'),
+      );
+
+      await expect(
+        appRuntime.runPromise(photoService.findAll(undefined, 1, 10)),
+      ).rejects.toThrow('signing unavailable');
     });
   });
 
   describe('findEmptyAlbum', () => {
     it('returns photos with null albumId', async () => {
-      const photos = [{ id: 1, url: 'u', thumbnailUrl: 't', name: 'P1' }];
-      mockPrisma.photo.findMany.mockResolvedValue(photos);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({ albumId: null }),
+      ]);
 
       const result = await appRuntime.runPromise(photoService.findEmptyAlbum());
 
       expect(result).toHaveLength(1);
+      expect(result[0].signedUrl).toBe(
+        'https://signed.example/photos/orig.jpg',
+      );
       expect(mockPrisma.photo.findMany).toHaveBeenCalledWith({
         where: { albumId: null },
       });
@@ -112,16 +179,13 @@ describe('photoService', () => {
 
   describe('findById', () => {
     it('returns photo when found', async () => {
-      mockPrisma.photo.findUnique.mockResolvedValue({
-        id: 1,
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      mockPrisma.photo.findUnique.mockResolvedValue(photoRow());
 
       const result = await appRuntime.runPromise(photoService.findById(1));
 
       expect(result).not.toBeNull();
-      expect(result!.url).toBe('private-u');
+      expect(result!.url).toBe('photos/orig.jpg');
+      expect(result!.signedUrl).toBe('https://signed.example/photos/orig.jpg');
     });
 
     it('returns null when not found', async () => {
@@ -135,13 +199,9 @@ describe('photoService', () => {
 
   describe('create', () => {
     it('creates a photo with default values', async () => {
-      mockPrisma.photo.create.mockResolvedValue({
-        id: 1,
-        name: '',
-        url: 'u',
-        thumbnailUrl: 't',
-        albumId: null,
-      });
+      mockPrisma.photo.create.mockResolvedValue(
+        photoRow({ name: '', url: 'u', thumbnailUrl: 't', albumId: null }),
+      );
 
       const result = await appRuntime.runPromise(
         photoService.create({
@@ -159,17 +219,14 @@ describe('photoService', () => {
           albumId: undefined,
         },
       });
-      expect(result.url).toBe('private-u');
+      expect(result.url).toBe('u');
+      expect(result.signedUrl).toBe('https://signed.example/u');
     });
 
     it('creates a photo with albumId', async () => {
-      mockPrisma.photo.create.mockResolvedValue({
-        id: 2,
-        name: 'P',
-        url: 'u',
-        thumbnailUrl: 't',
-        albumId: 1,
-      });
+      mockPrisma.photo.create.mockResolvedValue(
+        photoRow({ id: 2, name: 'P', url: 'u', thumbnailUrl: 't', albumId: 1 }),
+      );
 
       const result = await appRuntime.runPromise(
         photoService.create({
@@ -186,11 +243,9 @@ describe('photoService', () => {
 
   describe('update', () => {
     it('updates a photo', async () => {
-      mockPrisma.photo.update.mockResolvedValue({
-        id: 1,
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      mockPrisma.photo.update.mockResolvedValue(
+        photoRow({ url: 'u', thumbnailUrl: 't' }),
+      );
 
       const result = await appRuntime.runPromise(
         photoService.update(1, { name: 'Updated' }),
@@ -211,12 +266,9 @@ describe('photoService', () => {
         albumId: 1,
       });
       mockPrisma.photoAlbum.update.mockResolvedValue({ id: 1 });
-      mockPrisma.photo.update.mockResolvedValue({
-        id: 1,
-        name: 'P',
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      mockPrisma.photo.update.mockResolvedValue(
+        photoRow({ name: 'P', url: 'u', thumbnailUrl: 't' }),
+      );
 
       const result = await appRuntime.runPromise(
         photoService.updateWithAlbum(1, 1, {
@@ -230,6 +282,7 @@ describe('photoService', () => {
         data: { coverId: 1 },
       });
       expect(result.isCover).toBe(true);
+      expect(result.signedUrl).toBe('https://signed.example/u');
     });
 
     it('skips cover update when isCover is not set', async () => {
@@ -237,12 +290,9 @@ describe('photoService', () => {
         id: 1,
         albumId: 1,
       });
-      mockPrisma.photo.update.mockResolvedValue({
-        id: 1,
-        name: 'P',
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      mockPrisma.photo.update.mockResolvedValue(
+        photoRow({ name: 'P', url: 'u', thumbnailUrl: 't' }),
+      );
 
       await appRuntime.runPromise(
         photoService.updateWithAlbum(1, 1, { name: 'P' }),
@@ -252,18 +302,12 @@ describe('photoService', () => {
     });
 
     it('clears old album cover when moving a cover photo to another album', async () => {
-      mockPrisma.photo.findUnique.mockResolvedValue({
-        id: 1,
-        albumId: 1,
-        url: 'u',
-        thumbnailUrl: 't',
-      });
-      mockPrisma.photo.update.mockResolvedValue({
-        id: 1,
-        name: 'Moved',
-        url: 'u',
-        thumbnailUrl: 't',
-      });
+      mockPrisma.photo.findUnique.mockResolvedValue(
+        photoRow({ id: 1, albumId: 1, url: 'u', thumbnailUrl: 't' }),
+      );
+      mockPrisma.photo.update.mockResolvedValue(
+        photoRow({ name: 'Moved', url: 'u', thumbnailUrl: 't' }),
+      );
 
       await appRuntime.runPromise(
         photoService.updateWithAlbum(1, 2, { name: 'Moved' }),

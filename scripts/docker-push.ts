@@ -1,38 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-/**
- * @fileoverview Docker 部署脚本 - SSH 远程服务器部署工具 (Node-SSH 重写版)
- * @description 该脚本用于通过 SSH 连接到远程服务器并执行 Docker 容器部署
- *              支持文件传输、docker-compose 命令执行、dry-run 预览模式
- *              所有配置均从环境变量读取，不支持命令行参数传递敏感信息
- *              仓库根目录只有一份 .env：容器契约与部署凭据同处一个文件。
- *              compose 不用 env_file，而是按服务从 .env 显式插值，
- *              因此 SSH 凭据虽然在同一文件里，却不会进入任何容器。
- *
- * @example
- * # 基本部署（从 .env 读取 SSH 配置）
- * pnpm docker:push
- *
- * # 预览模式（仅打印将要执行的命令，不实际执行）
- * pnpm docker:push --dry-run
- *
- * # 跳过本地构建阶段（直接推送已有镜像）
- * pnpm docker:push --skip-build
- *
- * # 跳过确认直接执行
- * pnpm docker:push --yes
- *
- * # 环境变量说明 (.env)
- * DOCKER_REGISTRY=localhost:5000   # Docker 镜像仓库地址
- * SSH_HOST=localhost                # SSH 服务器地址（必填）
- * SSH_PORT=22                          # SSH 端口号（默认 22）
- * SSH_USER=root                        # SSH 用户名（必填）
- * SSH_PASSWORD=your_password        # SSH 密码（必填）
- * REMOTE_DIR=/opt/cms               # 远程部署目录，必须是绝对路径（必填）
- * DRY_RUN=false                     # 严格写 true 时进入预览模式
- * SKIP_BUILD=false                  # 严格写 true 时跳过本地构建与推送
- */
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
@@ -56,31 +21,71 @@ import {
 } from './script-logger';
 import { StepResult, createStepError, createStepSuccess } from './step-result';
 
+interface CliOptions {
+  envFile: string;
+  projectName: string;
+  service: string;
+  skipBuild?: boolean;
+  dryRun?: boolean;
+  yes?: boolean;
+}
+
 const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
-) as Record<string, any>;
+) as { version?: string };
 
 const ENV_FILE = './.env';
+const TEMPLATE_FILE = './.env.example';
+const COMPOSE_FILE = './docker-compose.yml';
+const REMOTE_COMPOSE_FILE = 'docker-compose.yml';
 
-/**
- * SSH 配置 schema - 使用 zod 进行类型验证
- */
+const EXPECTED_PROJECT_NAME = 'cms';
+const DATA_VOLUME = 'cms_cms_pg';
+
+const COMPOSE_REQUIRED_VALUES = [
+  'ENV',
+  'DATABASE_URL',
+  'JWT_SECRET',
+  'BACKEND_API_URL',
+  'OSS_ENDPOINT',
+  'OSS_BUCKET',
+  'OSS_ACCESS_KEY',
+  'OSS_SECRET_KEY',
+  'POSTGRES_PASSWORD',
+];
+
+const SCRIPT_REQUIRED_VALUES = ['SSH_PASSWORD'];
+
+const RETIRED_ENV_KEYS = [
+  'NODE_ENV',
+  'OSS_PORT',
+  'OSS_USE_SSL',
+  'OSS_PUBLIC_URL',
+  'OSS_INTERNAL_URL',
+  'OSS_REGION',
+];
+
 const SSHConfigSchema = z.object({
   host: z.string().min(1, 'SSH 主机地址不能为空'),
   port: z.number().min(1).max(65535, 'SSH 端口号无效（应为 1-65535）'),
   user: z.string().min(1, 'SSH 用户名不能为空'),
 });
 
-/**
- * 部署配置 schema - 定义所有可配置项及其验证规则
- */
 const DeployConfigSchema = z.object({
   dockerRegistry: z
     .string()
-    .regex(/^[a-zA-Z0-9][a-zA-Z0-9.:-]*$/, 'Docker 镜像仓库地址格式无效')
-    .optional()
-    .default(''),
+    .min(
+      1,
+      'DOCKER_REGISTRY 不能为空：compose 直接把它与镜像名拼接，留空会解析成本地名 cms_backend:latest',
+    )
+    .regex(
+      /^[A-Za-z0-9][A-Za-z0-9.:-]*\/$/,
+      'DOCKER_REGISTRY 必须以斜杠结尾（如 103.84.110.53:5000/），compose 拼出 ${DOCKER_REGISTRY}cms_blog:latest，缺斜杠会得到 103.84.110.53:5000cms_blog:latest 这种非法镜像名',
+    ),
   projectName: z.string(),
+  service: z
+    .string()
+    .regex(/^[A-Za-z0-9_.-]*$/, '服务名只允许字母、数字、下划线、点和连字符'),
   sshConfig: SSHConfigSchema,
   sshPassword: z.string().optional().default(''),
   remoteDir: z
@@ -89,19 +94,17 @@ const DeployConfigSchema = z.object({
   dryRun: z.boolean(),
   skipConfirm: z.boolean(),
   skipBuild: z.boolean(),
-  envFile: z.string().optional().default(ENV_FILE),
+  envFile: z.string(),
+  envFileName: z.string(),
 });
 
-/**
- * 部署配置类型定义
- */
 type DeployConfig = z.infer<typeof DeployConfigSchema>;
 
-/**
- * 从环境变量文件加载配置
- * @param envFile - 环境变量文件路径
- * @returns 配置键值对对象
- */
+function fail(message: string): void {
+  colorError(message);
+  process.exitCode = 1;
+}
+
 function loadEnvConfig(envFile: string): Record<string, string> {
   const config: Record<string, string> = {};
   if (!fs.existsSync(envFile)) {
@@ -121,29 +124,138 @@ function loadEnvConfig(envFile: string): Record<string, string> {
   return config;
 }
 
-/**
- * 从命令行选项生成部署配置
- * @param options - 命令行选项对象
- * @returns 部署配置对象或错误信息
- */
-function generateConfig(
-  options: Record<string, any>,
-): StepResult<DeployConfig> {
-  const envConfig = loadEnvConfig(options.envFile || ENV_FILE);
+function collectComposeEnvRefs(): StepResult<string[]> {
+  if (!fs.existsSync(COMPOSE_FILE)) {
+    return createStepError(`compose 文件 ${COMPOSE_FILE} 不存在`);
+  }
+  const content = fs.readFileSync(COMPOSE_FILE, 'utf-8');
+  const refs = new Set<string>();
+  for (const match of content.matchAll(
+    /\$\{([A-Za-z_][A-Za-z0-9_]*)(?::[-?][^}]*)?\}/g,
+  )) {
+    refs.add(match[1]);
+  }
+  if (refs.size === 0) {
+    return createStepError(
+      `${COMPOSE_FILE} 里没有解析出任何 \${变量} 形式的引用，契约校验无法进行，请确认文件是否被改坏`,
+    );
+  }
+  return createStepSuccess([...refs].sort());
+}
+
+function findContractProblems(
+  values: Record<string, string>,
+  composeRefs: string[],
+  label: string,
+  requireNonEmpty: boolean,
+): string[] {
+  const problems: string[] = [];
+
+  const retired = RETIRED_ENV_KEYS.filter((key) => key in values);
+  if (retired.length > 0) {
+    problems.push(
+      `${label} 仍含已废弃的变量 ${retired.join('、')}，现行契约里没有任何读取方`,
+    );
+  }
+
+  for (const ref of composeRefs) {
+    if (!(ref in values)) {
+      problems.push(`${COMPOSE_FILE} 读取 ${ref}，但 ${label} 没有声明它`);
+      continue;
+    }
+    if (
+      requireNonEmpty &&
+      COMPOSE_REQUIRED_VALUES.includes(ref) &&
+      values[ref].trim() === ''
+    ) {
+      problems.push(`${label} 的 ${ref} 为空，容器启动即抛错`);
+    }
+  }
+
+  if (requireNonEmpty) {
+    for (const key of SCRIPT_REQUIRED_VALUES) {
+      if ((values[key] ?? '').trim() === '') {
+        problems.push(`${label} 的 ${key} 为空，SSH 认证会失败`);
+      }
+    }
+  }
+
+  const endpoint = (values.OSS_ENDPOINT ?? '').trim();
+  if (endpoint !== '' && !endpoint.startsWith('https://')) {
+    problems.push(
+      `${label} 的 OSS_ENDPOINT 必须带 https:// 前缀，当前为 ${endpoint}`,
+    );
+  }
+
+  const env = (values.ENV ?? '').trim().toUpperCase();
+  if (env !== '' && env !== 'DEVELOPMENT' && env !== 'PRODUCTION') {
+    problems.push(
+      `${label} 的 ENV=${values.ENV} 无法识别，未识别的取值会静默按开发模式运行`,
+    );
+  }
+
+  return problems;
+}
+
+function validateContract(
+  config: DeployConfig,
+  composeRefs: string[],
+): string[] {
+  const problems = findContractProblems(
+    loadEnvConfig(config.envFile),
+    composeRefs,
+    config.envFile,
+    true,
+  );
+  if (fs.existsSync(TEMPLATE_FILE)) {
+    problems.push(
+      ...findContractProblems(
+        loadEnvConfig(TEMPLATE_FILE),
+        composeRefs,
+        TEMPLATE_FILE,
+        false,
+      ),
+    );
+  } else {
+    colorWarning(
+      `${TEMPLATE_FILE} 不存在，跳过「compose 读取的变量是否都在模板里声明」这项对照`,
+    );
+  }
+  return problems;
+}
+
+function resolveProjectName(config: DeployConfig): StepResult<string> {
+  const dirName = config.remoteDir.replace(/\/+$/, '').split('/').pop() ?? '';
+  if (
+    dirName === EXPECTED_PROJECT_NAME &&
+    config.projectName === EXPECTED_PROJECT_NAME
+  ) {
+    return createStepSuccess(EXPECTED_PROJECT_NAME);
+  }
+  return createStepError(
+    `compose 项目名必须是 ${EXPECTED_PROJECT_NAME}：数据在卷 ${DATA_VOLUME} 上，卷全名是 <项目名>_<卷名>，项目名一旦不同，compose 会改绑一个新空卷、表现为数据消失。REMOTE_DIR=${config.remoteDir} 推出的目录名是 ${dirName || '(空)'}，--project-name 是 ${config.projectName}`,
+  );
+}
+
+function generateConfig(options: CliOptions): StepResult<DeployConfig> {
+  const envFile = options.envFile || ENV_FILE;
+  const envConfig = loadEnvConfig(envFile);
   const result = DeployConfigSchema.safeParse({
-    dockerRegistry: envConfig.DOCKER_REGISTRY || '',
-    projectName: options.projectName || '',
+    dockerRegistry: envConfig.DOCKER_REGISTRY ?? '',
+    projectName: options.projectName,
+    service: options.service ?? '',
     sshConfig: {
-      host: envConfig.SSH_HOST || '',
+      host: envConfig.SSH_HOST ?? '',
       port: parseInt(envConfig.SSH_PORT || '22', 10),
-      user: envConfig.SSH_USER || '',
+      user: envConfig.SSH_USER ?? '',
     },
-    sshPassword: envConfig.SSH_PASSWORD || '',
-    remoteDir: envConfig.REMOTE_DIR || '',
-    dryRun: options.dryRun || envConfig.DRY_RUN === 'true',
-    skipConfirm: options.yes || false,
-    skipBuild: options.skipBuild || envConfig.SKIP_BUILD === 'true',
-    envFile: options.envFile || ENV_FILE,
+    sshPassword: envConfig.SSH_PASSWORD ?? '',
+    remoteDir: envConfig.REMOTE_DIR ?? '',
+    dryRun: options.dryRun === true || envConfig.DRY_RUN === 'true',
+    skipConfirm: options.yes === true,
+    skipBuild: options.skipBuild === true || envConfig.SKIP_BUILD === 'true',
+    envFile,
+    envFileName: path.basename(envFile),
   });
   if (!result.success) {
     const errorMessages = result.error.issues
@@ -152,14 +264,22 @@ function generateConfig(
     colorError(`配置验证失败: ${errorMessages}`);
     return createStepError(errorMessages);
   }
+  if (result.data.envFileName === '' || result.data.envFileName === '.') {
+    const message = `--env-file 的值 ${envFile} 不是一个文件路径`;
+    colorError(`配置验证失败: ${message}`);
+    return createStepError(message);
+  }
   return createStepSuccess(result.data);
 }
 
-/**
- * 确认部署 - 显示配置摘要并等待用户确认
- * @param config - 部署配置对象
- * @returns 布尔值，用户确认返回 true，否则返回 false
- */
+function serviceSuffix(config: DeployConfig): string {
+  return config.service ? ` ${config.service}` : '';
+}
+
+function localComposeCommand(config: DeployConfig, action: string): string {
+  return `docker compose -p ${config.projectName} --env-file ${config.envFileName} ${action}${serviceSuffix(config)}`;
+}
+
 async function confirmDeploy(config: DeployConfig): Promise<boolean> {
   if (config.skipConfirm) {
     return true;
@@ -167,8 +287,11 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
 
   colorInfo(`部署配置摘要:
    Docker Registry: ${config.dockerRegistry}
+   Compose 项目名: ${config.projectName}（数据卷 ${DATA_VOLUME} 绑定在这个项目名上）
+   服务范围: ${config.service || '全部服务'}
    SSH Host: ${config.sshConfig.user}@${config.sshConfig.host}:${config.sshConfig.port}
    Remote Directory: ${config.remoteDir}
+   上传文件: ${COMPOSE_FILE}、${config.envFileName}
    Skip Build: ${config.skipBuild ? '是' : '否'}
    Dry Run Mode: ${config.dryRun ? '启用' : '禁用'}`);
 
@@ -184,48 +307,39 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
         answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
       if (!confirmed) {
         colorWarning('部署已取消');
+        process.exitCode = 1;
       }
       resolve(confirmed);
     });
   });
 }
 
-/**
- * 执行构建命令 - 调用 npm run build 进行项目构建
- */
 async function runBuild(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
     return createStepSuccess('构建已跳过');
   }
   return executeLocalCommand(
-    '执行项目构建',
-    `docker compose --env-file ${config.envFile} build ${config.projectName}`,
+    '本地构建镜像',
+    localComposeCommand(config, 'build'),
     config.dryRun,
   );
 }
 
-/**
- * 执行推送命令 - 对镜像进行 tag 并推送到镜像仓库
- */
 async function runPush(config: DeployConfig): Promise<StepResult<string>> {
   if (config.skipBuild) {
     return createStepSuccess('推送已跳过');
   }
   return executeLocalCommand(
     '推送镜像到仓库',
-    `docker compose --env-file ${config.envFile} push ${config.projectName}`,
+    localComposeCommand(config, 'push'),
     config.dryRun,
   );
 }
 
-/**
- * 执行本地任务：构建和推送镜像
- */
 async function executeLocalTasks(
   config: DeployConfig,
 ): Promise<StepResult<void>> {
-  // 1. 本地构建和推送
-  colorInfo('开始构建项目...');
+  colorInfo('本地构建镜像...');
   const buildResult = await runBuild(config);
   if (!buildResult.success) {
     return createStepError(`构建失败: ${buildResult.error}`);
@@ -240,15 +354,12 @@ async function executeLocalTasks(
   return createStepSuccess(undefined);
 }
 
-/**
- * 执行远程任务：SSH连接并执行部署
- */
 async function executeRemoteTasks(
   config: DeployConfig,
 ): Promise<StepResult<void>> {
-  const composeFilePath = 'docker-compose.yml';
+  const remoteComposeFile = `${config.remoteDir}/${REMOTE_COMPOSE_FILE}`;
+  const remoteEnvFile = `${config.remoteDir}/${config.envFileName}`;
 
-  // 2. SSH 连接
   colorInfo(`正在连接到 ${config.sshConfig.host}...`);
   const ssh = new NodeSSH();
 
@@ -259,29 +370,23 @@ async function executeRemoteTasks(
         port: config.sshConfig.port,
         username: config.sshConfig.user,
         password: config.sshPassword,
-        // privateKeyPath: ... // 如果需要支持私钥
       });
       colorSuccess('SSH 连接成功');
     }
 
-    // 3. 准备远程目录
-    const mkdirCmd = `mkdir -p ${config.remoteDir}/apps/backend && chmod -R 755 ${config.remoteDir}`;
     const mkdirResult = await executeRemoteCommand(
       ssh,
-      '创建远程目录结构',
-      mkdirCmd,
+      '创建远程部署目录',
+      `mkdir -p ${config.remoteDir} && chmod 700 ${config.remoteDir}`,
       config.dryRun,
     );
-
     if (!mkdirResult.success) {
       return mkdirResult;
     }
 
-    // 4. 上传文件
-    const remoteComposeFile = `${config.remoteDir}/docker-compose.yml`;
     const uploadCompose = await executeUploadFile(
       ssh,
-      composeFilePath,
+      COMPOSE_FILE,
       remoteComposeFile,
       config.dryRun,
     );
@@ -289,9 +394,6 @@ async function executeRemoteTasks(
       return uploadCompose;
     }
 
-    // 4.1 上传环境文件，容器契约与部署凭据同在这一份里
-    const envFileName = path.basename(config.envFile);
-    const remoteEnvFile = `${config.remoteDir}/${envFileName}`;
     const uploadEnv = await executeUploadFile(
       ssh,
       config.envFile,
@@ -302,42 +404,34 @@ async function executeRemoteTasks(
       return uploadEnv;
     }
 
-    // 5. 远程 Docker 操作
-    // 注意：如果远程只有 docker-compose (v1)，则需要改为 docker-compose
-    // 假设远程环境支持 docker compose (v2) 或者 docker-compose 是别名
-    // 原脚本使用的是 docker-compose，这里保持一致，但建议检查远程环境
-    // DOCKER_REGISTRY 随 .env 一起上传；这里再以前缀形式显式传一次，
-    // 保证远端 compose 无论从文件还是从 shell 都能解析到镜像名。
-    const baseCmd = `cd ${config.remoteDir} && DOCKER_REGISTRY=${config.dockerRegistry} docker-compose --env-file ${envFileName}`;
+    const chmodResult = await executeRemoteCommand(
+      ssh,
+      '收紧环境文件权限',
+      `chmod 600 ${remoteEnvFile}`,
+      config.dryRun,
+    );
+    if (!chmodResult.success) {
+      return chmodResult;
+    }
 
-    // 部署单个服务
+    const baseCmd = `cd ${config.remoteDir} && DOCKER_REGISTRY=${config.dockerRegistry} docker compose -p ${config.projectName} --env-file ${config.envFileName}`;
+
     const pullResult = await executeRemoteCommand(
       ssh,
-      `拉取服务镜像: ${config.projectName}`,
-      `${baseCmd} pull ${config.projectName}`,
+      '拉取镜像',
+      `${baseCmd} pull${serviceSuffix(config)}`,
       config.dryRun,
     );
     if (!pullResult.success) return pullResult;
 
-    // 部署单个服务
-    const downResult = await executeRemoteCommand(
-      ssh,
-      `停止服务: ${config.projectName}`,
-      `${baseCmd} down ${config.projectName}`,
-      config.dryRun,
-    );
-    if (!downResult.success) return downResult;
-
-    // 部署单个服务
     const upResult = await executeRemoteCommand(
       ssh,
-      `启动服务: ${config.projectName}`,
-      `${baseCmd} up -d ${config.projectName}`,
+      '启动服务',
+      `${baseCmd} up -d --no-build${serviceSuffix(config)}`,
       config.dryRun,
     );
     if (!upResult.success) return upResult;
 
-    // 6. 验证状态
     const psResult = await executeRemoteCommand(
       ssh,
       '验证服务状态',
@@ -346,10 +440,15 @@ async function executeRemoteTasks(
     );
     if (!psResult.success) return psResult;
 
-    colorSuccess('部署完成！', `应用已在 ${config.sshConfig.host} 上部署成功`);
+    colorSuccess(
+      '部署完成！',
+      `项目 ${config.projectName} 已在 ${config.sshConfig.host}:${config.remoteDir} 启动；数据卷应为 ${DATA_VOLUME}`,
+    );
     return createStepSuccess(undefined);
-  } catch (error: any) {
-    return createStepError(`SSH 连接或部署失败: ${error.message}`);
+  } catch (error: unknown) {
+    return createStepError(
+      `SSH 连接或部署失败: ${normalizeError(error).message}`,
+    );
   } finally {
     if (!config.dryRun) {
       ssh.dispose();
@@ -357,43 +456,67 @@ async function executeRemoteTasks(
   }
 }
 
-/**
- * 程序入口点
- * 解析命令行参数、加载配置、验证并执行部署
- */
 async function main(): Promise<void> {
   const program = new Command();
 
   program
     .name('docker-push')
-    .description('通过 SSH 远程部署 Docker 容器 (Node-SSH)')
+    .description(
+      '本地构建镜像并推送私有仓库，再通过 SSH 用 docker compose (v2) 在远端拉取启动',
+    )
     .version(packageJson.version || '1.0.0', '-V, --version');
 
   program
-    .option('-p, --project-name <name>', '指定项目名称', '')
+    .option(
+      '-p, --project-name <name>',
+      'compose 项目名，必须是 cms',
+      EXPECTED_PROJECT_NAME,
+    )
+    .option(
+      '--service <name>',
+      '只处理指定服务（如 backend/frontend/blog/cms_pg），缺省为全部服务',
+      '',
+    )
     .option(
       '--env-file <file>',
-      '环境变量文件，容器契约与部署凭据同在一份，上传到远端',
+      '环境变量文件，容器契约与部署凭据同在一份，上传到远端 REMOTE_DIR',
       ENV_FILE,
     )
-    .option('--skip-build', '跳过本地构建阶段')
+    .option('--skip-build', '跳过本地构建与推送，直接推送已有镜像')
     .option('--dry-run', '预览模式 - 仅打印命令，不实际执行')
     .option('-y, --yes', '跳过确认直接执行')
-    .action(async (options: Record<string, any>) => {
-      for (const envFile of [options.envFile || ENV_FILE]) {
-        if (!fs.existsSync(envFile)) {
-          colorError(`部署所需的环境文件 ${envFile} 不存在`);
-          return;
-        }
+    .action(async (options: CliOptions) => {
+      const envFile = options.envFile || ENV_FILE;
+      if (!fs.existsSync(envFile)) {
+        fail(`部署所需的环境文件 ${envFile} 不存在`);
+        return;
       }
 
       const validationResult = generateConfig(options);
       if (!validationResult.success) {
-        colorError(validationResult.error);
+        process.exitCode = 1;
+        return;
+      }
+      const config = validationResult.data;
+
+      const composeRefsResult = collectComposeEnvRefs();
+      if (!composeRefsResult.success) {
+        fail(composeRefsResult.error);
         return;
       }
 
-      const config = validationResult.data;
+      const projectNameResult = resolveProjectName(config);
+      if (!projectNameResult.success) {
+        fail(projectNameResult.error);
+        return;
+      }
+      config.projectName = projectNameResult.data;
+
+      const problems = validateContract(config, composeRefsResult.data);
+      if (problems.length > 0) {
+        fail(`部署契约校验失败:\n  - ${problems.join('\n  - ')}`);
+        return;
+      }
 
       if (config.dryRun) {
         colorInfo('当前模式: Dry Run 模式 - 仅预览命令，不会实际执行');
@@ -409,13 +532,13 @@ async function main(): Promise<void> {
 
       const localResult = await executeLocalTasks(config);
       if (!localResult.success) {
-        colorError(localResult.error);
+        fail(localResult.error);
         return;
       }
 
       const remoteResult = await executeRemoteTasks(config);
       if (!remoteResult.success) {
-        colorError(remoteResult.error);
+        fail(remoteResult.error);
         return;
       }
     });
@@ -423,7 +546,7 @@ async function main(): Promise<void> {
   program.parse();
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   const { message, stack } = normalizeError(error);
 
   colorError(`未捕获的异常: ${message}`);

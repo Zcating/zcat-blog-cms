@@ -49,7 +49,7 @@ async function renderShell() {
   const rootRoute = createRootRoute({
     component: () => (
       <QueryClientProvider client={client}>
-        <CMSLayoutShell cmsUser={{ name: 'Admin', avatar: '' }}>
+        <CMSLayoutShell cmsUser={{ name: 'Admin', signedAvatar: '' }}>
           <div>shell-child</div>
         </CMSLayoutShell>
       </QueryClientProvider>

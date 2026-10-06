@@ -1,5 +1,6 @@
 ﻿import { expect, test } from '@playwright/test';
 import type { Page, APIRequestContext } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 interface TestStateData {
   albums: Array<{ id: number; name: string; coverId: number | null }>;
@@ -9,7 +10,7 @@ interface TestStateData {
 async function readBackendState(
   request: APIRequestContext,
 ): Promise<TestStateData> {
-  const response = await request.get('http://127.0.0.1:9090/api/test/state');
+  const response = await request.get(`${MOCK_BACKEND_API_URL}/test/state`);
   return ((await response.json()) as { data: TestStateData }).data;
 }
 
@@ -24,7 +25,7 @@ async function login(page: Page) {
 test.describe('Albums', () => {
   // Reset shared mock backend state before each test
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:9090/api/test/reset');
+    await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
   });
 
   test('list, create, and delete albums', async ({ page }) => {

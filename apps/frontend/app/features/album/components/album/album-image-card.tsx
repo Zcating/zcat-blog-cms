@@ -50,7 +50,7 @@ export function AlbumImageCard(props: AlbumImageCardProps) {
       <ZImagePreload
         className="w-full h-full bg-muted"
         imageClassName="aspect-square"
-        src={data.cover?.url}
+        src={data.cover?.signedThumbnailUrl}
         alt={data.name}
         contentMode="cover"
       />

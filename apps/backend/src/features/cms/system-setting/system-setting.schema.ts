@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { OssObjectKeySchema } from '@backend/model';
+
 interface OssConfig {
   accessKey: string;
   secretKey: string;
@@ -19,7 +21,7 @@ export const SystemSettingUpdateDtoSchema = z.object({
 });
 
 export const UploadTokenDtoSchema = z.object({
-  key: z.string(),
+  key: OssObjectKeySchema,
 });
 
 export interface SystemSetting {

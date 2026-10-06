@@ -150,6 +150,8 @@ export default function Albums({ search }: AlbumsListProps) {
                     name: item.cover.name,
                     url: item.cover.url,
                     thumbnailUrl: item.cover.thumbnailUrl,
+                    signedUrl: item.cover.signedUrl,
+                    signedThumbnailUrl: item.cover.signedThumbnailUrl,
                     albumId: item.cover.albumId ?? undefined,
                     isCover: item.cover.isCover,
                     createdAt: item.cover.createdAt,

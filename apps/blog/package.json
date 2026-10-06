@@ -14,7 +14,7 @@
     "typecheck": "tsc",
     "test": "cross-env TZ=Asia/Shanghai vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "cross-env VITE_API_URL=http://127.0.0.1:9090/api vite build --mode production && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lint": "oxlint ./app --fix"
   },

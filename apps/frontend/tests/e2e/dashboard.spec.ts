@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 /**
  * Dashboard gate for the client-side read path.
@@ -15,7 +16,7 @@ import { expect, test } from '@playwright/test';
  */
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:9090/api/test/reset');
+    await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
   });
 
   test('renders every panel after a client-side login navigation', async ({

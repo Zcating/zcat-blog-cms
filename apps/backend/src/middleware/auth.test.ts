@@ -20,8 +20,8 @@ vi.mock('../common/prisma.service', () => ({
 
 vi.mock('../common/oss.service', () => ({
   ossService: {
-    getPrivateUrl: vi.fn(),
     presignUploadUrl: vi.fn(),
+    presignDownloadUrl: vi.fn(),
     deleteFile: vi.fn(),
   },
 }));

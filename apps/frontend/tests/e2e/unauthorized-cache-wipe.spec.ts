@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_URL } from './e2e-ports';
 
-const BACKEND = 'http://127.0.0.1:9090';
+const BACKEND = MOCK_BACKEND_URL;
 
 test.beforeEach(async ({ request }) => {
   await request.post(`${BACKEND}/api/test/reset`);

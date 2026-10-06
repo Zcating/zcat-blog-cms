@@ -2,17 +2,28 @@
 
 import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-function transformUserInfo<T extends { avatar?: string | null }>(
-  oss: { getPrivateUrl: (url: string) => string },
-  userInfo: T,
-): T {
-  if (userInfo.avatar) {
-    return {
-      ...userInfo,
-      avatar: oss.getPrivateUrl(userInfo.avatar || ''),
-    } as T;
-  }
-  return userInfo;
+import { UserInfoResponseDtoSchema } from './user-info.schema';
+
+type UserInfoRow = {
+  id: number;
+  name: string;
+  contact: string | null;
+  occupation: string | null;
+  avatar: string | null;
+  aboutMe: string | null;
+  abstract: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number | null;
+};
+
+function transformUserInfo(oss: OssService, userInfo: UserInfoRow) {
+  return tryPromise(async () => {
+    const signedAvatar = userInfo.avatar
+      ? await oss.presignDownloadUrl(userInfo.avatar)
+      : '';
+    return UserInfoResponseDtoSchema.parse({ ...userInfo, signedAvatar });
+  });
 }
 
 export function get(userId: number | undefined) {
@@ -43,7 +54,7 @@ export function get(userId: number | undefined) {
     }
 
     const oss = yield* OssService;
-    return transformUserInfo(oss, result);
+    return yield* transformUserInfo(oss, result);
   });
 }
 
@@ -79,7 +90,7 @@ export function update(
     );
 
     const oss = yield* OssService;
-    return transformUserInfo(oss, updated);
+    return yield* transformUserInfo(oss, updated);
   });
 }
 

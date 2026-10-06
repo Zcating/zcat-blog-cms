@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 test.beforeEach(async ({ request }) => {
-  await request.post('http://127.0.0.1:9090/api/test/reset');
+  await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
 });
 
 test('unauthenticated access to dashboard redirects to login', async ({
@@ -38,7 +39,7 @@ test('authenticated user gets Unauthorized should redirect to login', async ({
   await expect(page).toHaveURL(/\/dashboard(\?|$)/);
 
   // 现在让 mock 后端的 auth 失效
-  await page.request.post('http://127.0.0.1:9090/api/test/invalidate-auth');
+  await page.request.post(`${MOCK_BACKEND_API_URL}/test/invalidate-auth`);
 
   // 刷新页面触发请求
   await page.reload();
@@ -89,13 +90,13 @@ test('a second session in the same tab never renders the previous session cached
   // 后端在标签页空闲期间多了一篇文章。此时刷新页面就能看到三篇，
   // 所以第三篇缺席就等于「读的是上一次会话的缓存」。
   const created = await request.post(
-    'http://127.0.0.1:9090/api/cms/articles/create',
+    `${MOCK_BACKEND_API_URL}/cms/articles/create`,
     { data: { title: 'Session B Only', excerpt: 'written out of band' } },
   );
   expect(created.ok()).toBe(true);
 
   // --- 会话失效（cookie 仍在，失败发生在后端）---
-  await request.post('http://127.0.0.1:9090/api/test/invalidate-auth');
+  await request.post(`${MOCK_BACKEND_API_URL}/test/invalidate-auth`);
 
   // SPA 跳转，不刷新页面：QueryClient 保持不变。
   await page.getByRole('link', { name: '仪表盘' }).click();
@@ -103,7 +104,7 @@ test('a second session in the same tab never renders the previous session cached
 
   // --- 账号 B：让 mock 后端重新接受会话，然后在同一标签页登录 ---
   await request.post(
-    'http://127.0.0.1:9090/api/test/invalidate-auth?value=false',
+    `${MOCK_BACKEND_API_URL}/test/invalidate-auth?value=false`,
   );
   await page.getByLabel('用户名').fill('user-b');
   await page.getByLabel('密码').fill('secret-b');

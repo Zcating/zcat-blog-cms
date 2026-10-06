@@ -19,4 +19,4 @@ COPY --from=build /prod/backend /prod/backend
 COPY --from=build /usr/src/app/apps/backend/dist /prod/backend/dist
 WORKDIR /prod/backend
 EXPOSE 9090
-CMD [ "sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/bootstrap-oss.js && node dist/src/main.js" ]
+CMD [ "sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js" ]

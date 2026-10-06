@@ -39,7 +39,7 @@ function AboutPage() {
         <CardHeader className="flex justify-center">
           <ZAvatar
             alt={userInfo.name}
-            src={userInfo.avatar}
+            src={userInfo.signedAvatar || undefined}
             fallback={userInfo.name}
           />
         </CardHeader>

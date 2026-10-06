@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import {
+  APP_PORT,
+  APP_URL,
+  MOCK_BACKEND_API_URL,
+  MOCK_BACKEND_PORT,
+} from './tests/e2e/e2e-ports';
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
@@ -19,7 +26,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: APP_URL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -31,19 +38,21 @@ export default defineConfig({
   webServer: [
     {
       command: 'npx tsx ./tests/e2e/mock-backend.ts',
-      url: 'http://127.0.0.1:9090/api/health',
-      reuseExistingServer: !process.env.CI,
+      url: `${MOCK_BACKEND_API_URL}/health`,
+      env: { E2E_MOCK_BACKEND_PORT: String(MOCK_BACKEND_PORT) },
+      reuseExistingServer: false,
       timeout: 120000,
     },
     {
       command: 'node .output/server/index.mjs',
-      url: 'http://127.0.0.1:3000/login',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120000,
+      url: `${APP_URL}/login`,
       env: {
-        BACKEND_API_URL: 'http://127.0.0.1:9090/api',
+        BACKEND_API_URL: MOCK_BACKEND_API_URL,
+        PORT: String(APP_PORT),
         NODE_ENV: 'production',
       },
+      reuseExistingServer: false,
+      timeout: 120000,
     },
   ],
 });

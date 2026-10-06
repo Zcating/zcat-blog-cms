@@ -104,7 +104,7 @@ interface PhotoItemProps {
 }
 
 function PhotoItem({ value, onClick }: PhotoItemProps) {
-  const url = value.cover?.url;
+  const url = value.cover?.signedThumbnailUrl;
   const click = () => onClick(value);
   return (
     <ZView className="flex-1 flex flex-col items-center gap-4">

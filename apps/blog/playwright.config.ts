@@ -24,6 +24,7 @@ export default defineConfig({
     env: {
       PORT: '1024',
       BACKEND_API_URL: 'http://localhost:9090/api',
+      BLOG_SITE_URL: 'http://localhost:1024',
     },
   },
 });

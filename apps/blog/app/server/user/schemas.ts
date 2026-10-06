@@ -13,6 +13,7 @@ export const UserInfoSchema = z.object({
   abstract: z.string(),
   aboutMe: z.string(),
   avatar: z.string(),
+  signedAvatar: z.string(),
   contact: ContactSchema,
 });
 

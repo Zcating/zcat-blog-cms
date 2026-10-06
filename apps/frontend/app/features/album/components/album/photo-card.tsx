@@ -23,7 +23,7 @@ interface PhotoCardProps {
 }
 
 export function PhotoCard(props: PhotoCardProps) {
-  const srcUrl = props.data.thumbnailUrl;
+  const srcUrl = props.data.signedThumbnailUrl;
   const [visible, setVisible] = React.useState(false);
   const hover = () => {
     setVisible(true);
@@ -41,7 +41,7 @@ export function PhotoCard(props: PhotoCardProps) {
       content: (
         <ZImagePreload
           className="w-full max-h-[80vh]"
-          src={photo.url}
+          src={photo.signedUrl}
           alt={photo.name}
           contentMode="contain"
         />

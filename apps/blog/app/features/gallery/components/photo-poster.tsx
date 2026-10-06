@@ -13,7 +13,7 @@ export function PhotoPoster(props: PhotoPosterProps) {
         <ZImage
           contentMode="cover"
           className="max-h-[80vh]"
-          src={photo.url}
+          src={photo.signedUrl}
           alt={photo.name}
         />
       </ZView>
@@ -33,7 +33,7 @@ PhotoPoster.Cover = function Cover(props: PhotoPosterCoverProps) {
     <ZView className="w-full h-full flex flex-col items-center justify-center gap-20">
       <ZImage
         className="w-xl h-xl aspect-square"
-        src={photo.url}
+        src={photo.signedThumbnailUrl}
         alt={photo.name}
       />
       <ZView className="w-full flex flex-col items-center justify-center gap-5">

@@ -41,12 +41,9 @@ export const config = Object.freeze({
   logLevel: process.env.LOG_LEVEL,
 
   // Object storage
-  ossEndpoint: optional('OSS_ENDPOINT', 'localhost'),
-  ossPort: Number(optional('OSS_PORT', '9000')),
-  ossUseSsl: optional('OSS_USE_SSL', 'false') === 'true',
+  ossEndpoint: required('OSS_ENDPOINT'),
   ossAccessKey: required('OSS_ACCESS_KEY'),
   ossSecretKey: required('OSS_SECRET_KEY'),
-  ossPublicUrl: optional('OSS_PUBLIC_URL', ''),
   ossBucket: required('OSS_BUCKET'),
 
   // Security

@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getArticleList } from '@blog/server/article';
-
-const SITE = 'https://blog.zcat.example';
+import { resolveBlogSiteUrl } from '@blog/server/env';
 
 function escapeXml(s: string): string {
   return s
@@ -17,6 +16,7 @@ export const Route = createFileRoute('/rss.xml')({
   server: {
     handlers: {
       GET: async () => {
+        const site = resolveBlogSiteUrl();
         const { data } = await getArticleList({
           data: { page: 1, pageSize: 20, order: 'latest' },
         });
@@ -24,8 +24,8 @@ export const Route = createFileRoute('/rss.xml')({
           .map(
             (a) => `<item>
         <title>${escapeXml(a.title)}</title>
-        <link>${SITE}/post-board/${a.id}</link>
-        <guid>${SITE}/post-board/${a.id}</guid>
+        <link>${site}/post-board/${a.id}</link>
+        <guid>${site}/post-board/${a.id}</guid>
         <pubDate>${new Date(a.publishAt).toUTCString()}</pubDate>
         <description>${escapeXml(a.excerpt)}</description>
       </item>`,
@@ -35,7 +35,7 @@ export const Route = createFileRoute('/rss.xml')({
 <rss version="2.0">
   <channel>
     <title>ZCAT Blog</title>
-    <link>${SITE}</link>
+    <link>${site}</link>
     <description>个人技术博客</description>
     <language>zh-CN</language>
     ${items}

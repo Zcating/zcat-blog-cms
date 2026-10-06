@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 export interface FullUserInfo {
   name: string;
   avatar: string;
+  signedAvatar: string;
   occupation: string;
   contact: { email: string; github: string };
   aboutMe: string;
@@ -15,7 +16,7 @@ export interface FullUserInfo {
  */
 export interface CmsShellUser {
   name: string;
-  avatar: string;
+  signedAvatar: string;
 }
 
 /**

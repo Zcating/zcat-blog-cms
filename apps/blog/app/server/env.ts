@@ -10,10 +10,10 @@ export class EnvUrlMissingError extends Error {
 }
 
 export const BackendUrlMissingError = EnvUrlMissingError;
-export const OssInternalUrlMissingError = EnvUrlMissingError;
+export const BlogSiteUrlMissingError = EnvUrlMissingError;
 
 function requireEnvUrl(
-  variable: 'BACKEND_API_URL' | 'OSS_INTERNAL_URL',
+  variable: 'BACKEND_API_URL' | 'BLOG_SITE_URL',
   errorName: string,
   purpose: string,
 ): string {
@@ -35,10 +35,10 @@ export function resolveBackendApiUrl(): string {
   );
 }
 
-export function resolveOssInternalUrl(): string {
+export function resolveBlogSiteUrl(): string {
   return requireEnvUrl(
-    'OSS_INTERNAL_URL',
-    'OssInternalUrlMissingError',
-    'by the blog image proxy',
+    'BLOG_SITE_URL',
+    'BlogSiteUrlMissingError',
+    'by the blog robots, feed and sitemap routes',
   );
 }

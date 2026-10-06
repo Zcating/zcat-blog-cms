@@ -45,8 +45,10 @@ const GALLERY_LIST = {
       cover: {
         id: 30,
         name: 'cover.jpg',
-        url: 'https://example.com/30.jpg',
-        thumbnailUrl: 'https://example.com/30-thumb.jpg',
+        url: 'photos/30.jpg',
+        signedUrl: 'https://bucket.example/30.jpg?sig=1',
+        signedThumbnailUrl: 'https://bucket.example/30.thumbnail.jpg?sig=1',
+        thumbnailUrl: 'photos/30-thumb.jpg',
         albumId: 3,
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',

@@ -12,6 +12,7 @@ import { decideCmsAccess, type CmsAccessDecision } from './cms-access';
 const FULL_USER = {
   name: 'Admin',
   avatar: 'avatar.jpg',
+  signedAvatar: 'https://signed.example/avatar.jpg',
   occupation: 'Editor',
   contact: { email: 'admin@test.com', github: 'admin' },
   aboutMe: 'About me',
@@ -31,7 +32,10 @@ describe('decideCmsAccess', () => {
     // Both keys must be present and carry the right payload.
     expect(decision).toEqual({
       kind: 'allow',
-      user: { name: 'Admin', avatar: 'avatar.jpg' },
+      user: {
+        name: 'Admin',
+        signedAvatar: 'https://signed.example/avatar.jpg',
+      },
       userFull: FULL_USER,
     });
     expect(isValidMock).toHaveBeenCalledTimes(1);
@@ -88,7 +92,7 @@ describe('decideCmsAccess', () => {
     // Type-level sanity: both shapes are reachable through the union.
     const allowed: CmsAccessDecision = {
       kind: 'allow',
-      user: { name: 'A', avatar: '' },
+      user: { name: 'A', signedAvatar: '' },
       userFull: FULL_USER,
     };
     const denied: CmsAccessDecision = { kind: 'redirect', to: '/login' };

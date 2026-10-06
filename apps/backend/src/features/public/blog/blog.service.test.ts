@@ -16,31 +16,46 @@ const mockPrisma = vi.hoisted(() => ({
   },
   photo: {
     findMany: vi.fn(),
+    count: vi.fn(),
   },
   userInfo: {
     findUnique: vi.fn(),
   },
 }));
 
-const mockOssService = vi.hoisted(() => ({
-  getPrivateUrl: vi.fn((url: string) => `private-${url}`),
-}));
-
 const mockRecordVisitor = vi.hoisted(() => vi.fn());
+
+const mockOssService = vi.hoisted(() => ({
+  presignDownloadUrl: vi.fn(
+    async (key: string) => `https://signed.example/${key}`,
+  ),
+  deleteFile: vi.fn(),
+}));
 
 vi.mock('../../../common/prisma.service', () => ({
   prismaService: mockPrisma,
-}));
-
-vi.mock('../../../common/oss.service', () => ({
-  ossService: mockOssService,
 }));
 
 vi.mock('../../../common/statistic-service', () => ({
   recordVisitor: mockRecordVisitor,
 }));
 
+vi.mock('../../../common/oss.service', () => ({
+  ossService: mockOssService,
+}));
+
 import { blogService } from './blog.service';
+
+const photoRow = (overrides: Record<string, unknown> = {}) => ({
+  id: 1,
+  name: 'Photo 1',
+  url: 'photos/1.jpg',
+  thumbnailUrl: 'photos/1_thumbnail.jpg',
+  albumId: 1,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  ...overrides,
+});
 
 describe('blogService', () => {
   afterEach(() => {
@@ -164,7 +179,7 @@ describe('blogService', () => {
           coverId: 10,
         },
       ];
-      const photos = [{ id: 10, url: 'u', thumbnailUrl: 't' }];
+      const photos = [photoRow({ id: 10, url: 'u', thumbnailUrl: 't' })];
 
       mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
       mockPrisma.photoAlbum.count.mockResolvedValue(1);
@@ -176,6 +191,40 @@ describe('blogService', () => {
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].cover).toBeDefined();
+    });
+
+    it('gives the gallery cover the presigned address the blog schema requires', async () => {
+      const albums = [
+        {
+          id: 1,
+          name: 'Album',
+          description: 'Desc',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          coverId: 10,
+        },
+      ];
+
+      mockPrisma.photoAlbum.findMany.mockResolvedValue(albums);
+      mockPrisma.photoAlbum.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({
+          id: 10,
+          url: 'photos/10.jpg',
+          thumbnailUrl: 'photos/10_t.jpg',
+        }),
+      ]);
+
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryList(1, 10),
+      );
+
+      expect(result.data[0].cover).toMatchObject({
+        url: 'photos/10.jpg',
+        thumbnailUrl: 'photos/10_t.jpg',
+        signedUrl: 'https://signed.example/photos/10.jpg',
+        signedThumbnailUrl: 'https://signed.example/photos/10_t.jpg',
+      });
     });
 
     it('returns galleries without cover when no coverId', async () => {
@@ -241,8 +290,8 @@ describe('blogService', () => {
         updatedAt: new Date(),
       };
       const photos = [
-        { id: 10, url: 'u', thumbnailUrl: 't' },
-        { id: 11, url: 'u2', thumbnailUrl: 't2' },
+        photoRow({ id: 10, url: 'u', thumbnailUrl: 't' }),
+        photoRow({ id: 11, url: 'u2', thumbnailUrl: 't2' }),
       ];
 
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(album);
@@ -258,6 +307,35 @@ describe('blogService', () => {
       expect(result!.photos[0].id).toBe(10);
     });
 
+    it('signs every photo and the cover of the gallery detail', async () => {
+      const album = {
+        id: 1,
+        name: 'Album',
+        coverId: 10,
+        description: 'Desc',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.photoAlbum.findUnique.mockResolvedValue(album);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({ id: 10, url: 'photos/10.jpg' }),
+        photoRow({ id: 11, url: 'photos/11.jpg' }),
+      ]);
+
+      const result = await appRuntime.runPromise(
+        blogService.getGalleryDetail('1'),
+      );
+
+      expect(result!.cover!.signedUrl).toBe(
+        'https://signed.example/photos/10.jpg',
+      );
+      expect(result!.photos.map((photo) => photo.signedUrl)).toEqual([
+        'https://signed.example/photos/10.jpg',
+        'https://signed.example/photos/11.jpg',
+      ]);
+    });
+
     it('returns null when album not found', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
 
@@ -266,6 +344,53 @@ describe('blogService', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('getPhotoList', () => {
+    it('signs the original and the thumbnail of every feed item', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Album One' },
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({
+          id: 20,
+          url: 'photos/20.jpg',
+          thumbnailUrl: 'photos/20_t.jpg',
+        }),
+      ]);
+
+      const result = await appRuntime.runPromise(
+        blogService.getPhotoList(1, 10),
+      );
+
+      expect(result.data[0]).toMatchObject({
+        id: 20,
+        albumId: 1,
+        albumName: 'Album One',
+        url: 'photos/20.jpg',
+        thumbnailUrl: 'photos/20_t.jpg',
+        signedUrl: 'https://signed.example/photos/20.jpg',
+        signedThumbnailUrl: 'https://signed.example/photos/20_t.jpg',
+      });
+    });
+
+    it('drops a photo that carries no album rather than serving it nameless', async () => {
+      mockPrisma.photoAlbum.findMany.mockResolvedValue([
+        { id: 1, name: 'Album One' },
+      ]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow({ albumId: null }),
+      ]);
+
+      const result = await appRuntime.runPromise(
+        blogService.getPhotoList(1, 10),
+      );
+
+      expect(result.data).toEqual([]);
+      expect(mockOssService.presignDownloadUrl).not.toHaveBeenCalled();
     });
   });
 
@@ -322,7 +447,27 @@ describe('blogService', () => {
 
       expect(result.name).toBe('Admin');
       expect(result.contact).toEqual({ email: 'a@b.com' });
-      expect(result.avatar).toBe('private-avatar.jpg');
+      expect(result.avatar).toBe('avatar.jpg');
+    });
+
+    it('keeps the bare avatar key and adds a presigned address next to it', async () => {
+      mockPrisma.userInfo.findUnique.mockResolvedValue({
+        name: 'Admin',
+        occupation: 'Dev',
+        abstract: 'Bio',
+        aboutMe: 'About',
+        contact: '{}',
+        avatar: 'user/avatar.jpg',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await appRuntime.runPromise(blogService.getUserInfo());
+
+      expect(result.avatar).toBe('user/avatar.jpg');
+      expect(result.signedAvatar).toBe(
+        'https://signed.example/user/avatar.jpg',
+      );
     });
 
     it('returns defaults when user info not found', async () => {
@@ -332,6 +477,9 @@ describe('blogService', () => {
 
       expect(result.name).toBe('');
       expect(result.contact).toEqual({});
+      expect(result.avatar).toBe('');
+      expect(result.signedAvatar).toBe('');
+      expect(mockOssService.presignDownloadUrl).not.toHaveBeenCalled();
     });
   });
 });

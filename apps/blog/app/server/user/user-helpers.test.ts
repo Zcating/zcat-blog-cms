@@ -29,6 +29,7 @@ const USER_INFO = {
   abstract: 'Personal technical blog',
   aboutMe: 'About me',
   avatar: 'https://cdn.example.com/avatar.png',
+  signedAvatar: 'https://bucket.example.com/avatar.png?sig=1',
   contact: { email: 'a@b.com', github: 'https://github.com/zcat' },
 };
 

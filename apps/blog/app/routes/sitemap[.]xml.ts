@@ -1,24 +1,24 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getArticleList } from '@blog/server/article';
-
-const SITE = 'https://blog.zcat.example';
+import { resolveBlogSiteUrl } from '@blog/server/env';
 
 export const Route = createFileRoute('/sitemap.xml')({
   server: {
     handlers: {
       GET: async () => {
+        const site = resolveBlogSiteUrl();
         const { data } = await getArticleList({
           data: { page: 1, pageSize: 1000, order: 'latest' },
         });
         const staticUrls = ['', 'post-board', 'about', 'gallery'];
         const urls = [
           ...staticUrls.map((p) => ({
-            loc: `${SITE}/${p}`,
+            loc: `${site}/${p}`,
             lastmod: new Date().toISOString(),
           })),
           ...data.map((a) => ({
-            loc: `${SITE}/post-board/${a.id}`,
+            loc: `${site}/post-board/${a.id}`,
             lastmod: a.updatedAt,
           })),
         ];

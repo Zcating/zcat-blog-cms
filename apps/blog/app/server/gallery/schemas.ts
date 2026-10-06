@@ -19,6 +19,8 @@ export const PhotoSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   url: z.string(),
+  signedUrl: z.string(),
+  signedThumbnailUrl: z.string(),
   thumbnailUrl: z.string(),
   albumId: z.number().int().nullable().optional(),
   createdAt: z.string().optional(),

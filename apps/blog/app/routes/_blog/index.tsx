@@ -162,7 +162,7 @@ function PhotoCard({ photo }: { photo: PhotoFeedItem }) {
         data-home-grid-item="true"
         className="group relative p-0! overflow-hidden"
       >
-        <ZImagePreload src={photo.url} />
+        <ZImagePreload src={photo.signedThumbnailUrl} />
         <ZView className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <p className="text-xl font-bold text-white text-center px-4">
             {photo.name}

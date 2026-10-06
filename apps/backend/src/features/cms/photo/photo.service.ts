@@ -2,20 +2,37 @@
 
 import { OssService, PrismaService, tryPromise } from '../../../common/effect';
 
-type PhotoWithUrls = {
+import { PhotoResponseDtoSchema } from './photo.schema';
+
+type PhotoRow = {
+  id: number;
+  name: string;
   url: string;
   thumbnailUrl: string;
+  albumId: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-function transformPhoto<T extends PhotoWithUrls>(
-  oss: { getPrivateUrl: (url: string) => string },
-  photo: T,
-): Omit<T, 'url' | 'thumbnailUrl'> & PhotoWithUrls {
-  return {
-    ...photo,
-    url: oss.getPrivateUrl(photo.url),
-    thumbnailUrl: oss.getPrivateUrl(photo.thumbnailUrl),
-  };
+function transformPhoto(oss: OssService, photo: PhotoRow) {
+  return tryPromise(async () => {
+    const [signedUrl, signedThumbnailUrl] = await Promise.all([
+      oss.presignDownloadUrl(photo.url),
+      oss.presignDownloadUrl(photo.thumbnailUrl),
+    ]);
+    return PhotoResponseDtoSchema.parse({
+      ...photo,
+      signedUrl,
+      signedThumbnailUrl,
+    });
+  });
+}
+
+function transformPhotos(oss: OssService, photos: PhotoRow[]) {
+  return Effect.all(
+    photos.map((photo) => transformPhoto(oss, photo)),
+    { concurrency: 'unbounded' },
+  );
 }
 
 export function findAll(
@@ -50,9 +67,10 @@ export function findAll(
     ]);
 
     const oss = yield* OssService;
+    const data = yield* transformPhotos(oss, photos);
 
     return {
-      data: photos.map((photo) => transformPhoto(oss, photo)),
+      data,
       page,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
@@ -69,7 +87,7 @@ export function findEmptyAlbum() {
     );
 
     const oss = yield* OssService;
-    return photos.map((photo) => transformPhoto(oss, photo));
+    return yield* transformPhotos(oss, photos);
   });
 }
 
@@ -85,7 +103,7 @@ export function findById(id: number) {
     }
 
     const oss = yield* OssService;
-    return transformPhoto(oss, photo);
+    return yield* transformPhoto(oss, photo);
   });
 }
 
@@ -109,7 +127,7 @@ export function create(data: {
     );
 
     const oss = yield* OssService;
-    return transformPhoto(oss, photo);
+    return yield* transformPhoto(oss, photo);
   });
 }
 
@@ -137,7 +155,7 @@ export function update(
     );
 
     const oss = yield* OssService;
-    return transformPhoto(oss, photo);
+    return yield* transformPhoto(oss, photo);
   });
 }
 
@@ -189,8 +207,10 @@ export function updateWithAlbum(
     );
 
     const oss = yield* OssService;
+    const photo = yield* transformPhoto(oss, updatedPhoto);
+
     return {
-      ...transformPhoto(oss, updatedPhoto),
+      ...photo,
       albumId,
       isCover: data.isCover,
     };
@@ -201,22 +221,7 @@ export function deleteById(id: number) {
   return Effect.gen(function* () {
     const prisma = yield* PrismaService;
     const photo = yield* tryPromise(() =>
-      prisma.$transaction(async (tx) => {
-        const existingPhoto = await tx.photo.findUnique({ where: { id } });
-
-        if (!existingPhoto) {
-          return null;
-        }
-
-        await tx.photoAlbum.updateMany({
-          where: { coverId: id },
-          data: { coverId: null },
-        });
-
-        await tx.photo.delete({ where: { id } });
-
-        return existingPhoto;
-      }),
+      prisma.photo.findUnique({ where: { id } }),
     );
 
     if (!photo) {
@@ -224,12 +229,27 @@ export function deleteById(id: number) {
     }
 
     const oss = yield* OssService;
-    yield* Effect.all(
+    const deletedObjects = yield* Effect.all(
       [
         tryPromise(() => oss.deleteFile(photo.url)),
         tryPromise(() => oss.deleteFile(photo.thumbnailUrl)),
       ],
       { concurrency: 'unbounded' },
+    );
+
+    if (deletedObjects.some((deleted) => !deleted)) {
+      return yield* Effect.fail(new Error('删除照片文件失败，照片记录已保留'));
+    }
+
+    yield* tryPromise(() =>
+      prisma.$transaction(async (tx) => {
+        await tx.photoAlbum.updateMany({
+          where: { coverId: id },
+          data: { coverId: null },
+        });
+
+        await tx.photo.delete({ where: { id } });
+      }),
     );
 
     return true;

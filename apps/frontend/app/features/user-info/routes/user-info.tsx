@@ -12,20 +12,19 @@
 import {
   Button,
   createZForm,
-  ZAvatar,
   ZImageUpload as ImageUpload,
   ZInput,
   ZTextarea as Textarea,
   Label,
   useWatch,
-  safeObjectURL,
 } from '@zcat/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { z } from 'zod';
 
 import { updateCurrentUser, userInfoQueryOptions } from '@cms/server/users';
+import { OssAction } from '@cms/core';
+import { CmsAvatar } from '@cms/shared/ui';
 import type {
   UpdateUserInfoBody,
   UserInfo as ServerUserInfo,
@@ -33,6 +32,11 @@ import type {
 
 interface UserInfoValues extends ServerUserInfo {
   loading?: boolean;
+}
+
+/** 表单提交时 `avatar` 一定有值：要么是刚选中的 `blob:`，要么是库里的对象 key。 */
+interface UserInfoUpdateValues extends UpdateUserInfoBody {
+  avatar: string;
 }
 
 const UserInfoSchema = z.object({
@@ -54,6 +58,7 @@ const EMPTY_USER: UserInfoValues = {
   contact: { email: '', github: '' },
   occupation: '',
   avatar: '',
+  signedAvatar: '',
   aboutMe: '',
   abstract: '',
 };
@@ -62,22 +67,24 @@ export default function UserInfo() {
   const queryClient = useQueryClient();
   const { data } = useQuery(userInfoQueryOptions());
 
-  const userInfo: UserInfoValues = React.useMemo(() => {
-    if (!data) {
-      return EMPTY_USER;
-    }
-    return {
-      ...data,
-      avatar: safeObjectURL(data.avatar),
-    };
-  }, [data]);
+  const userInfo: UserInfoValues = data ?? EMPTY_USER;
 
   const [editable, setEditable] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const mutation = useMutation<ServerUserInfo, Error, UpdateUserInfoBody>({
-    mutationFn: (values) =>
-      updateCurrentUser({ data: values }) as Promise<ServerUserInfo>,
+  const mutation = useMutation<ServerUserInfo, Error, UserInfoUpdateValues>({
+    mutationFn: async (values) => {
+      // A staged file is still a local `blob:` URL here; the backend
+      // stores `avatar` verbatim, so the picked bytes must be uploaded
+      // first and replaced by its object key.
+      const avatar = values.avatar.startsWith('blob:')
+        ? await OssAction.uploadAvatar(values.avatar)
+        : values.avatar;
+
+      return updateCurrentUser({
+        data: { ...values, avatar },
+      }) as Promise<ServerUserInfo>;
+    },
     onSuccess: (response) => {
       queryClient.setQueryData(userInfoQueryOptions().queryKey, response);
       setEditable(false);
@@ -99,7 +106,7 @@ export default function UserInfo() {
         github: userInfo.contact.github,
       },
       occupation: userInfo.occupation,
-      avatar: userInfo.avatar,
+      avatar: '',
       aboutMe: userInfo.aboutMe,
       abstract: userInfo.abstract,
     },
@@ -112,7 +119,14 @@ export default function UserInfo() {
           github: values.contact.github,
         },
         occupation: values.occupation,
-        avatar: values.avatar,
+        // The field is never seeded from the backend, so an untouched
+        // field must fall back to the stored key: the backend requires
+        // `avatar` in the body and stores it verbatim, and the key is
+        // what the response is signed from. A picked file is uploaded by
+        // the mutation; a signed URL must never reach this payload.
+        avatar: values.avatar.startsWith('blob:')
+          ? values.avatar
+          : userInfo.avatar,
         aboutMe: values.aboutMe,
         abstract: values.abstract,
       });
@@ -131,14 +145,23 @@ export default function UserInfo() {
         github: userInfo.contact.github,
       },
       occupation: userInfo.occupation,
-      avatar: userInfo.avatar,
+      avatar: '',
       aboutMe: userInfo.aboutMe,
       abstract: userInfo.abstract,
     });
   });
 
+  // The avatar field only ever holds a locally chosen file. While one
+  // is staged it replaces the read-only display, so the old avatar does
+  // not linger next to the new selection.
+  const stagedAvatar = form.instance.watch('avatar');
+  const currentAvatar = stagedAvatar.startsWith('blob:')
+    ? stagedAvatar
+    : userInfo.signedAvatar;
+
+  // `onSuccess` leaves edit mode; keeping the form mounted here is what
+  // makes the in-flight upload visible instead of a silent freeze.
   const submit = async () => {
-    setEditable(false);
     form.instance.handleSubmit(form.submit)();
   };
 
@@ -180,9 +203,19 @@ export default function UserInfo() {
       ) : null}
       {editable ? (
         <UserInfoForm form={form} className="space-y-6 w-lg mb-20">
-          <UserInfoForm.Item name="avatar" label="头像">
-            <ImageUpload />
-          </UserInfoForm.Item>
+          <div className="flex items-center gap-6">
+            <UserInfoForm.Item
+              name="avatar"
+              label="头像"
+              description={pending ? '正在上传并保存…' : '留空则不修改'}
+            >
+              <ImageUpload />
+            </UserInfoForm.Item>
+            <div className="flex flex-col gap-2">
+              <Label className="text-muted-foreground">当前头像</Label>
+              <CmsAvatar src={currentAvatar} name={userInfo.name} />
+            </div>
+          </div>
           <UserInfoForm.Item name="name" label="用户名">
             <ZInput />
           </UserInfoForm.Item>
@@ -203,10 +236,10 @@ export default function UserInfo() {
           </UserInfoForm.Item>
         </UserInfoForm>
       ) : (
-        <div className="space-y-5 w-lg mb-40 relative">
+        <div className="space-y-5 w-lg mb-40">
           <div className="flex flex-col gap-2">
             <Label className="text-muted-foreground">头像</Label>
-            <ZAvatar src={userInfo.avatar} alt={userInfo.name} />
+            <CmsAvatar src={userInfo.signedAvatar} name={userInfo.name} />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-muted-foreground">用户名</Label>
@@ -232,11 +265,6 @@ export default function UserInfo() {
             <Label className="text-muted-foreground">关于我</Label>
             <TextField value={userInfo.aboutMe} />
           </div>
-          {pending ? (
-            <div className="absolute top-0 left-0 bottom-0 right-0 flex items-center justify-center bg-white/50 z-10">
-              <Loader2 className="animate-spin text-xl" />
-            </div>
-          ) : null}
         </div>
       )}
     </div>

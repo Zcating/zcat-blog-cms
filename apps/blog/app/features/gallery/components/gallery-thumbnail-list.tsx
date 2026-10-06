@@ -3,7 +3,7 @@ import { ZImage, ZView } from '@zcat/ui';
 export interface GalleryThumbnailListProps {
   items: {
     id: string;
-    url: string;
+    thumbnailUrl: string;
     name?: string;
   }[];
   value: number;
@@ -28,7 +28,7 @@ export function GalleryThumbnailList({
           }`}
         >
           <ZImage
-            src={item.url}
+            src={item.thumbnailUrl}
             alt={item.name}
             className="h-full w-full object-cover"
             contentMode="cover"

@@ -4,7 +4,6 @@
 import {
   Separator,
   SidebarTrigger,
-  ZAvatar,
   ZDialog,
   ZNotification,
   ZSidebar,
@@ -27,6 +26,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { logout } from '@cms/server/auth';
 import { clearPrivateQueryCache } from '@cms/shared/query';
+import { CmsAvatar } from '@cms/shared/ui';
 
 import type { CmsShellUser } from '@cms/shared/auth/cms-access';
 
@@ -60,7 +60,7 @@ function Layout({ cmsUser, children }: LayoutProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const name = cmsUser?.name ?? '';
-  const avatar = cmsUser?.avatar ?? '';
+  const avatar = cmsUser?.signedAvatar ?? '';
 
   const handleLogout = async () => {
     const confirmed = await ZDialog.confirm({
@@ -128,9 +128,9 @@ function Layout({ cmsUser, children }: LayoutProps) {
       sidebarFooter={
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex items-center gap-2 min-w-0">
-            <ZAvatar
+            <CmsAvatar
               src={avatar}
-              alt={name}
+              name={name}
               size="sm"
               className="w-8 h-8 shrink-0"
             />

@@ -18,6 +18,7 @@ export default defineConfig({
     environment: 'node',
     env: {
       JWT_SECRET: 'test-secret',
+      OSS_ENDPOINT: 'https://s3.oss-cn-guangzhou.aliyuncs.com',
       OSS_ACCESS_KEY: 'test-access-key',
       OSS_SECRET_KEY: 'test-secret-key',
       OSS_BUCKET: 'pictures',

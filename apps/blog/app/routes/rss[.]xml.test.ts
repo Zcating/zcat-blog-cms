@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getArticleListMock } = vi.hoisted(() => ({
   getArticleListMock: vi.fn(),
@@ -16,7 +16,11 @@ vi.mock('@blog/server/article', async () => {
 
 // --- import after mocks ---
 
+import { BlogSiteUrlMissingError } from '@blog/server/env';
+
 import { Route } from './rss[.]xml';
+
+const SITE = 'https://blog.rss.test';
 
 const ARTICLES = [
   {
@@ -52,6 +56,11 @@ describe('server route: /rss.xml', () => {
       page: 1,
       pageSize: 20,
     });
+    vi.stubEnv('BLOG_SITE_URL', SITE);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('registers a GET handler on the route', () => {
@@ -74,7 +83,7 @@ describe('server route: /rss.xml', () => {
     expect(body).toContain('<rss version="2.0">');
     expect(body).toContain('<channel>');
     expect(body).toContain('<title>ZCAT Blog</title>');
-    expect(body).toContain('<link>https://blog.zcat.example</link>');
+    expect(body).toContain('<link>https://blog.rss.test</link>');
     expect(body).toContain('<language>zh-CN</language>');
     expect(body.trimEnd().endsWith('</rss>')).toBe(true);
   });
@@ -85,12 +94,8 @@ describe('server route: /rss.xml', () => {
     const body = await (await getHandler()).text();
 
     expect(body).toContain('<title>第一篇 &amp; &lt;草稿&gt;</title>');
-    expect(body).toContain(
-      '<link>https://blog.zcat.example/post-board/7</link>',
-    );
-    expect(body).toContain(
-      '<guid>https://blog.zcat.example/post-board/7</guid>',
-    );
+    expect(body).toContain('<link>https://blog.rss.test/post-board/7</link>');
+    expect(body).toContain('<guid>https://blog.rss.test/post-board/7</guid>');
     expect(body).toContain('<pubDate>Tue, 19 May 2026 12:00:00 GMT</pubDate>');
     expect(body).toContain(
       '<description>摘要 &quot;quoted&quot;</description>',
@@ -107,6 +112,28 @@ describe('server route: /rss.xml', () => {
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
       data: { page: 1, pageSize: 20, order: 'latest' },
     });
+  });
+
+  it('reads the site origin from BLOG_SITE_URL on every request, with no hardcoded domain', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    vi.stubEnv('BLOG_SITE_URL', 'https://second.rss.test/');
+    const second = await (await getHandler()).text();
+
+    expect(second).toContain('<link>https://second.rss.test</link>');
+    expect(second).toContain(
+      '<link>https://second.rss.test/post-board/7</link>',
+    );
+    expect(second).not.toContain(SITE);
+  });
+
+  it('fails loudly when BLOG_SITE_URL is absent, instead of emitting links under a placeholder domain', async () => {
+    if (!getHandler) throw new Error('route has no GET handler');
+
+    vi.stubEnv('BLOG_SITE_URL', '');
+
+    await expect(getHandler()).rejects.toThrow(BlogSiteUrlMissingError);
+    expect(getArticleListMock).not.toHaveBeenCalled();
   });
 
   it('declares charset=utf-8, so an ISO-8859-1 defaulting client does not mojibake the Chinese', async () => {

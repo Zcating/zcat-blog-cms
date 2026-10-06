@@ -11,6 +11,8 @@ export const PhotoFeedItemSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   url: z.string(),
+  signedUrl: z.string(),
+  signedThumbnailUrl: z.string(),
   thumbnailUrl: z.string(),
   albumId: z.number().int(),
   albumName: z.string(),

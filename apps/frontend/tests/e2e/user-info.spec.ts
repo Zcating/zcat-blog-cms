@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 test.describe('User Info', () => {
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:9090/api/test/reset');
+    await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
   });
 
   test('view and edit user info', async ({ page }) => {

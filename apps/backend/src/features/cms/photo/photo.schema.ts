@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PaginateQuerySchema } from '@backend/model';
+import { OssObjectKeySchema, PaginateQuerySchema } from '@backend/model';
 
 export const CreatePhotoDtoSchema = z.object({
   name: z.string().min(1, '照片名称不能为空').max(32),
@@ -12,8 +12,8 @@ export const CreatePhotoDtoSchema = z.object({
       return v;
     }, z.boolean())
     .optional(),
-  url: z.string(),
-  thumbnailUrl: z.string(),
+  url: OssObjectKeySchema,
+  thumbnailUrl: OssObjectKeySchema,
 });
 
 export const AddPhotosDtoSchema = z.object({
@@ -25,8 +25,8 @@ export const UpdatePhotoDtoSchema = z.object({
   id: z.coerce.number().int().positive(),
   name: z.string().optional(),
   albumId: z.coerce.number().int().positive().optional(),
-  url: z.string().optional(),
-  thumbnailUrl: z.string().optional(),
+  url: OssObjectKeySchema.optional(),
+  thumbnailUrl: OssObjectKeySchema.optional(),
 });
 
 export const GetPhotosDtoSchema = z.object({
@@ -39,13 +39,21 @@ export type AddPhotosDto = z.infer<typeof AddPhotosDtoSchema>;
 export type UpdatePhotoDto = z.infer<typeof UpdatePhotoDtoSchema>;
 export type GetPhotosDto = z.infer<typeof GetPhotosDtoSchema>;
 
-export interface UpdateAlbumPhotoResultDto {
-  id: number;
-  name: string;
-  url: string;
-  isCover: boolean;
-  thumbnailUrl: string;
+export const PhotoResponseDtoSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  url: z.string(),
+  thumbnailUrl: z.string(),
+  albumId: z.number().int().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  signedUrl: z.string(),
+  signedThumbnailUrl: z.string(),
+});
+
+export type PhotoResponseDto = z.infer<typeof PhotoResponseDtoSchema>;
+
+export interface UpdateAlbumPhotoResultDto extends PhotoResponseDto {
   albumId: number;
-  createdAt: Date;
-  updatedAt: Date;
+  isCover: boolean;
 }

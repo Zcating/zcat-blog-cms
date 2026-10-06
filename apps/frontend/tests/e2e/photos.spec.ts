@@ -1,8 +1,9 @@
 ﻿import { expect, test } from '@playwright/test';
+import { MOCK_BACKEND_API_URL } from './e2e-ports';
 
 test.describe('Photos', () => {
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:9090/api/test/reset');
+    await request.post(`${MOCK_BACKEND_API_URL}/test/reset`);
   });
 
   test('list, create, and delete photos', async ({ page, request }) => {
@@ -58,7 +59,7 @@ test.describe('Photos', () => {
       .poll(
         async () => {
           const response = await request.get(
-            'http://127.0.0.1:9090/api/cms/photos',
+            `${MOCK_BACKEND_API_URL}/cms/photos`,
           );
           const body = (await response.json()) as {
             code: string;

@@ -48,6 +48,7 @@ const UserInfoDataSchema = z.object({
   contact: ContactWireSchema,
   occupation: z.string(),
   avatar: z.string(),
+  signedAvatar: z.string(),
   aboutMe: z.string(),
   abstract: z.string(),
 });
@@ -57,6 +58,7 @@ export interface UserInfo {
   contact: { email: string; github: string };
   occupation: string;
   avatar: string;
+  signedAvatar: string;
   aboutMe: string;
   abstract: string;
 }

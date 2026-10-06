@@ -56,6 +56,8 @@ function buildOptimisticPhoto(
     name: values.name,
     url: values.image,
     thumbnailUrl: values.image,
+    signedUrl: values.image,
+    signedThumbnailUrl: values.image,
     albumId: values.albumId,
     createdAt: now,
     updatedAt: now,

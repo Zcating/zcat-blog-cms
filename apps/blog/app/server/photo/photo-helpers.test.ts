@@ -26,7 +26,11 @@ function jsonResponse(body: unknown, status = 200): Response {
 const PHOTO = {
   id: 20,
   name: 'photo 20',
-  url: 'https://cdn.example.com/newest.jpg',
+  url: 'newest.jpg',
+  signedUrl:
+    'https://bucket.oss-cn-guangzhou.aliyuncs.com/newest.jpg?OSSAccessKeyId=x&Expires=1',
+  signedThumbnailUrl:
+    'https://bucket.oss-cn-guangzhou.aliyuncs.com/newest.thumbnail.jpg?OSSAccessKeyId=x&Expires=1',
   thumbnailUrl: 'https://cdn.example.com/newest_t.jpg',
   createdAt: '2026-05-20T00:00:00.000Z',
   albumId: 2,
@@ -72,6 +76,7 @@ describe('fetchPhotoList', () => {
 
     expect(result.data[0]?.albumName).toBe('Album Two');
     expect(result.data[0]?.albumId).toBe(2);
+    expect(result.data[0]?.signedUrl).toBe(PHOTO.signedUrl);
     expect(result.total).toBe(23);
     expect(result.totalPages).toBe(3);
     expect(capturedMethod).toBe('GET');
@@ -130,6 +135,35 @@ describe('fetchPhotoList', () => {
         message: 'success',
         data: {
           data: [{ id: 1, name: 'p', url: 'u', thumbnailUrl: 't' }],
+          total: 1,
+          totalPages: 1,
+          page: 1,
+          pageSize: 12,
+        },
+      }),
+    );
+
+    await expect(
+      fetchPhotoList(undefined, { fetch: fetchImpl }),
+    ).rejects.toBeInstanceOf(ResponseValidationError);
+  });
+
+  it('throws ResponseValidationError when a photo row carries only the bare object key', async () => {
+    const fetchImpl = makeFetch(() =>
+      jsonResponse({
+        code: '0000',
+        message: 'success',
+        data: {
+          data: [
+            {
+              id: 1,
+              name: 'p',
+              url: 'photos/1.jpg',
+              thumbnailUrl: 'photos/1_t.jpg',
+              albumId: 1,
+              albumName: 'a',
+            },
+          ],
           total: 1,
           totalPages: 1,
           page: 1,

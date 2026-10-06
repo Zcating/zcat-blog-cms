@@ -107,6 +107,42 @@ describe('OssAction', () => {
     });
   });
 
+  describe('uploadAvatar', () => {
+    it('uploads the picked file and returns a user/ object key', async () => {
+      const mockBlob = new Blob(['avatar'], { type: 'image/png' });
+
+      const fetchMock = vi.mocked(globalThis.fetch);
+      fetchMock.mockResolvedValueOnce({
+        blob: () => Promise.resolve(mockBlob),
+      } as Response);
+
+      mockGetSystemSettingUploadUrlServerFn.mockResolvedValueOnce({
+        presignedUrl: 'http://localhost:9000/bucket/user/1.png?presigned=abc',
+      });
+      fetchMock.mockResolvedValueOnce({ ok: true } as Response);
+
+      const key = await OssAction.uploadAvatar(
+        'blob:http://localhost/picked-avatar',
+      );
+
+      expect(key).toMatch(/^user\/\d+-\d+\.png$/);
+      expect(mockGetSystemSettingUploadUrlServerFn).toHaveBeenCalledWith({
+        data: { key },
+      });
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        'http://localhost:9000/bucket/user/1.png?presigned=abc',
+        expect.objectContaining({ method: 'PUT' }),
+      );
+    });
+
+    it('rejects a value that is not a locally picked file', async () => {
+      await expect(OssAction.uploadAvatar('user/123.png')).rejects.toThrow(
+        'uploadAvatar requires a locally picked file',
+      );
+      expect(mockGetSystemSettingUploadUrlServerFn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('deletePhoto', () => {
     it('invokes the server delete function so the row is removed server-side', async () => {
       mockDeletePhoto.mockResolvedValueOnce(undefined);

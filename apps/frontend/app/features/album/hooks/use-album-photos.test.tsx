@@ -86,6 +86,8 @@ function buildPhoto(overrides: Partial<Photo> = {}): Photo {
     name: '风景照',
     url: 'photos/1.jpg',
     thumbnailUrl: 'photos/thumb_1.jpg',
+    signedUrl: 'https://signed.example/photos/1.jpg',
+    signedThumbnailUrl: 'https://signed.example/photos/thumb_1.jpg',
     albumId: 5,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { OssObjectKeySchema } from '@backend/model';
+
 interface OssConfig {
   accessKey: string;
   secretKey: string;
@@ -12,7 +14,7 @@ export const UserInfoSchema = z.object({
     github: z.string(),
   }),
   occupation: z.string(),
-  avatar: z.string(),
+  avatar: OssObjectKeySchema,
   aboutMe: z.string(),
   abstract: z.string(),
 });
@@ -22,3 +24,19 @@ export interface SystemSetting {
 }
 
 export type UserInfoDto = z.infer<typeof UserInfoSchema>;
+
+export const UserInfoResponseDtoSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  contact: z.string().nullable(),
+  occupation: z.string().nullable(),
+  avatar: z.string().nullable(),
+  signedAvatar: z.string(),
+  aboutMe: z.string().nullable(),
+  abstract: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  userId: z.number().int().nullable(),
+});
+
+export type UserInfoResponseDto = z.infer<typeof UserInfoResponseDtoSchema>;

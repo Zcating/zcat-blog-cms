@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { OssObjectKeySchema } from '@backend/model';
+
 import type { Photo, PhotoAlbum } from '@backend/prisma';
 
 export const CreatePhotoAlbumDtoSchema = z.object({
@@ -17,8 +19,8 @@ export const CreatePhotoAlbumDtoSchema = z.object({
 export const CreateAlbumPhotoDtoSchema = z.object({
   albumId: z.coerce.number().int().positive(),
   name: z.string(),
-  url: z.string(),
-  thumbnailUrl: z.string(),
+  url: OssObjectKeySchema,
+  thumbnailUrl: OssObjectKeySchema,
 });
 
 export const UpdateAlbumDtoSchema = z.object({
@@ -45,8 +47,8 @@ export const UpdateAlbumPhotoDtoSchema = z.object({
     return v;
   }, z.boolean()),
   albumId: z.coerce.number().int().positive(),
-  url: z.string().optional(),
-  thumbnailUrl: z.string().optional(),
+  url: OssObjectKeySchema.optional(),
+  thumbnailUrl: OssObjectKeySchema.optional(),
 });
 
 export const SetCoverDtoSchema = z.object({

@@ -2,7 +2,7 @@
  * Contract under test:
  *   - After a successful `decideCmsAccess` run, the route must call
  *     `context.queryClient.setQueryData(userInfoQueryOptions().queryKey, fullUser)`
- *     where `fullUser` includes every `UserInfo` field — name,
+ *     where `fullUser` includes every `UserInfo` field �?name,
  *     avatar, occupation, contact, aboutMe, abstract.
  *   - The route MAY pass only `{ name, avatar }` to the shell
  *     component, but the Query cache itself must carry the full
@@ -20,7 +20,7 @@ import {
 } from './cms-seed';
 
 /**
- * UserInfoQueryOptions key — must match `@cms/server/users`
+ * UserInfoQueryOptions key �?must match `@cms/server/users`
  * `userInfoQueryOptions().queryKey`. We mirror it locally so the
  * test does not pull in the server module.
  */
@@ -32,6 +32,7 @@ describe('buildCmsCacheSeed (route-side cache writer)', () => {
     const fullUser: FullUserInfo = {
       name: 'Admin',
       avatar: 'avatar.jpg',
+      signedAvatar: 'https://signed.example/avatar.jpg',
       occupation: 'Editor',
       contact: { email: 'admin@test.com', github: 'admin' },
       aboutMe: 'About me',
@@ -56,12 +57,16 @@ describe('buildCmsCacheSeed (route-side cache writer)', () => {
     const fullUser: FullUserInfo = {
       name: 'Admin',
       avatar: 'avatar.jpg',
+      signedAvatar: 'https://signed.example/avatar.jpg',
       occupation: 'Editor',
       contact: { email: 'admin@test.com', github: 'admin' },
       aboutMe: 'About me',
       abstract: 'Abstract',
     };
-    const shellUser: CmsShellUser = { name: 'Admin', avatar: 'avatar.jpg' };
+    const shellUser: CmsShellUser = {
+      name: 'Admin',
+      signedAvatar: 'https://signed.example/avatar.jpg',
+    };
 
     expect(() =>
       buildCmsCacheSeed({ queryClient, fullUser, shellUser }),
@@ -70,7 +75,7 @@ describe('buildCmsCacheSeed (route-side cache writer)', () => {
     expect(queryClient.getQueryData(USER_INFO_KEY)).toEqual(fullUser);
   });
 
-  it('uses the canonical key — matches server `userInfoQueryOptions`', () => {
+  it('uses the canonical key �?matches server `userInfoQueryOptions`', () => {
     // If a future refactor renamed the key on the server but not
     // here, this test fails. The seed must point at the same key
     // that `useQuery(userInfoQueryOptions())` would read.
@@ -78,6 +83,7 @@ describe('buildCmsCacheSeed (route-side cache writer)', () => {
     const fullUser: FullUserInfo = {
       name: 'A',
       avatar: '',
+      signedAvatar: 'https://signed.example/avatar.jpg',
       occupation: '',
       contact: { email: '', github: '' },
       aboutMe: '',
@@ -99,6 +105,7 @@ describe('buildCmsCacheSeed (route-side cache writer)', () => {
     const fullUser: FullUserInfo = {
       name: 'Admin',
       avatar: 'avatar.jpg',
+      signedAvatar: 'https://signed.example/avatar.jpg',
       occupation: 'Editor',
       contact: { email: 'admin@test.com', github: 'admin' },
       aboutMe: 'About me',
