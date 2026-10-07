@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 
-import { StatisticsApi } from '@blog/apis';
+import { StatisticsApi } from '@blog/features/layouts/statistics-api';
 
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import type { ReactNode } from 'react';

@@ -1,9 +1,9 @@
 import { ZImage, ZView } from '@zcat/ui';
 
-import type { GalleryApi } from '@blog/apis';
+import type { Photo } from '@blog/server/gallery/schemas';
 
 interface PhotoPosterProps {
-  photo: GalleryApi.Photo;
+  photo: Photo;
 }
 export function PhotoPoster(props: PhotoPosterProps) {
   const { photo } = props;
@@ -22,7 +22,7 @@ export function PhotoPoster(props: PhotoPosterProps) {
 }
 
 interface PhotoPosterCoverProps {
-  photo: GalleryApi.Photo;
+  photo: Photo;
   name: string;
   description: string;
 }

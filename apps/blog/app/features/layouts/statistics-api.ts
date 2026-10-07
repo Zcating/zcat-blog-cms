@@ -1,7 +1,7 @@
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import CryptoJSW from '@originjs/crypto-js-wasm';
 
-import { HttpClient } from '../http/http-client';
+const VISIT_RECORD_ENDPOINT = '/api/blog/visitor';
 
 let md5Loaded = false;
 
@@ -51,9 +51,22 @@ export namespace StatisticsApi {
         md5Loaded = true;
       }
 
-      await HttpClient.post('blog/visitor', params, {
-        'Data-Hash': CryptoJSW.MD5(serializedParams).toString(),
+      const response = await fetch(VISIT_RECORD_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Data-Hash': CryptoJSW.MD5(serializedParams).toString(),
+        },
+        body: JSON.stringify(params),
       });
+      const result = (await response.json()) as {
+        code: string;
+        message: string;
+      };
+
+      if (result.code !== '0000') {
+        throw new Error(result.message);
+      }
     } catch (error) {
       console.warn('Failed to auto record visit:', error);
     }
