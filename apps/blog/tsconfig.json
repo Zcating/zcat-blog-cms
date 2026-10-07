@@ -16,8 +16,6 @@
       "@blog/features/*": ["./app/features/*"],
       "@blog/routes": ["./app/routes"],
       "@blog/routes/*": ["./app/routes/*"],
-      "@blog/apis": ["./app/apis"],
-      "@blog/apis/*": ["./app/apis/*"],
       "@blog/server": ["./app/server"],
       "@blog/server/*": ["./app/server/*"],
       "@root": ["./app/*"]

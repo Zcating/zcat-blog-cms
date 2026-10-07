@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { loadWasm, md5 } = vi.hoisted(() => ({
   loadWasm: vi.fn(async () => undefined),
-  md5: vi.fn(() => 'signed-digest'),
+  md5: vi.fn((_value: string) => 'signed-digest'),
 }));
 
 vi.mock('@fingerprintjs/fingerprintjs', () => ({
@@ -54,27 +54,6 @@ describe('uploadVisitRecord', () => {
     );
   });
 
-  it('does not address the backend host directly from the browser', async () => {
-    vi.stubEnv('VITE_API_URL', 'http://backend.local:9090/api');
-
-    await StatisticsApi.uploadVisitRecord('/post-board', '文章列表');
-
-    expect(captured[0].url).not.toContain('backend.local:9090');
-  });
-
-  it('reaches the same target when VITE_API_URL points off-origin', async () => {
-    vi.stubEnv('VITE_API_URL', 'http://backend.local:9090/api');
-    vi.resetModules();
-    const { StatisticsApi: OffOrigin } = await import('./statistics-api');
-
-    await OffOrigin.uploadVisitRecord('/post-board', '文章列表');
-
-    expect(captured[0].url).not.toContain('backend.local:9090');
-    expect(new URL(captured[0].url, 'http://blog.invalid').pathname).toBe(
-      '/api/blog/visitor',
-    );
-  });
-
   it('signs the record with a Data-Hash header so the backend can verify it', async () => {
     await StatisticsApi.uploadVisitRecord('/post-board', '文章列表');
 
@@ -82,6 +61,28 @@ describe('uploadVisitRecord', () => {
 
     expect(headers['Data-Hash']).toBe('signed-digest');
     expect(md5).toHaveBeenCalled();
+  });
+
+  it('signs the same fields it sends, so the backend can rebuild the digest', async () => {
+    await StatisticsApi.uploadVisitRecord('/post-board', '文章列表');
+
+    const body = JSON.parse(String(captured[0].init.body)) as Record<
+      string,
+      string
+    >;
+    const signed = md5.mock.calls[0]?.[0] as string;
+    const signedKeys = signed.split('&').map((pair) => pair.split('=')[0]);
+
+    expect(signedKeys.slice().sort()).toEqual(Object.keys(body).sort());
+  });
+
+  it('signs fields in a stable order, since the backend hashes them the same way', async () => {
+    await StatisticsApi.uploadVisitRecord('/post-board', '文章列表');
+
+    const signed = md5.mock.calls[0]?.[0] as string;
+    const signedKeys = signed.split('&').map((pair) => pair.split('=')[0]);
+
+    expect(signedKeys).toEqual(signedKeys.slice().sort());
   });
 
   it('reports the page and the browser it was read from', async () => {

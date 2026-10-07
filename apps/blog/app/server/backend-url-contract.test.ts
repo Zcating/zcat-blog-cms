@@ -1,84 +1,97 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StatisticsApi } from '@blog/features/layouts/statistics-api';
 
 import { resolveBackendApiUrl } from './env';
+import { forwardVisitRequest } from './visitor';
 
-const BACKEND_MOUNT = '/api';
+vi.mock('@fingerprintjs/fingerprintjs', () => ({
+  default: {
+    load: async () => ({ get: async () => ({ visitorId: 'fp-1' }) }),
+  },
+}));
 
-const VISIT_PATH = '/api/blog/visitor';
+vi.mock('@originjs/crypto-js-wasm', () => ({
+  default: {
+    MD5: Object.assign(() => 'digest', {
+      loadWasm: async () => undefined,
+    }),
+  },
+}));
 
-const CLIENT_MOUNT = '/api';
+const BACKEND_BASE = 'http://backend.local:9090/api';
 
-const SERVER_BASE = 'http://backend.local:9090/api';
+const MOUNT = '/api';
 
-function mountOf(baseUrl: string): string {
-  const withoutOrigin = baseUrl.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]*/i, '');
-  const segments = withoutOrigin.split('/').filter((entry) => entry.length > 0);
-  return `/${segments[segments.length - 1] ?? ''}`;
+const BLOG_ORIGIN = 'http://blog.invalid';
+
+beforeEach(() => {
+  vi.stubEnv('BACKEND_API_URL', BACKEND_BASE);
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+function jsonOk(): Response {
+  return new Response(JSON.stringify({ code: '0000', message: 'success' }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
-function clientMountOf(pathname: string): string {
+async function pathClientPosts(): Promise<string> {
+  const posted: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    posted.push(String(input));
+    return jsonOk();
+  }) as typeof fetch;
+  try {
+    await StatisticsApi.uploadVisitRecord('/post-board', 'Post Board');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  return new URL(posted[0] ?? '', BLOG_ORIGIN).pathname;
+}
+
+async function pathServerForwardsTo(clientPath: string): Promise<string> {
+  const forwarded: string[] = [];
+  await forwardVisitRequest(
+    new Request(`${BLOG_ORIGIN}${clientPath}`, { method: 'POST' }),
+    {
+      env: { resolveBaseUrl: () => resolveBackendApiUrl() },
+      fetch: (async (input: RequestInfo | URL) => {
+        forwarded.push(String(input));
+        return new Response('{}');
+      }) as typeof fetch,
+    },
+  );
+  return new URL(forwarded[0] ?? '').pathname;
+}
+
+function mountOf(pathname: string): string {
   const segments = pathname.split('/').filter((entry) => entry.length > 0);
   return `/${segments[0] ?? ''}`;
 }
 
-async function clientRequestPath(): Promise<string> {
-  const originalFetch = globalThis.fetch;
-  const requested: string[] = [];
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
-    requested.push(String(input));
-    return {
-      ok: true,
-      status: 200,
-      json: async () => ({ code: '0000', message: 'success', data: null }),
-    } as Response;
-  }) as typeof fetch;
-  try {
-    await fetch(VISIT_PATH, { method: 'POST' });
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-  return new URL(requested[0] ?? '', 'http://blog.invalid').pathname;
-}
-
-function serverBaseFor(backendApiUrl: string): string {
-  vi.stubEnv('BACKEND_API_URL', backendApiUrl);
-  return resolveBackendApiUrl();
-}
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.resetModules();
-});
-
 describe('backend address: one concept, two representations', () => {
-  it('resolves the client and the server representation to the same mount', async () => {
-    const clientBase = new URL(
-      await clientRequestPath(),
-      'http://blog.invalid',
-    );
-    const serverBase = serverBaseFor(SERVER_BASE);
+  it('forwards to exactly the path the browser posted', async () => {
+    const clientPath = await pathClientPosts();
 
-    expect(clientMountOf(clientBase.pathname)).toBe(mountOf(serverBase));
+    expect(await pathServerForwardsTo(clientPath)).toBe(clientPath);
   });
 
-  it('addresses the /api mount, not the deleted /api/bff surface', async () => {
-    const clientBase = new URL(
-      await clientRequestPath(),
-      'http://blog.invalid',
-    );
+  it('mounts both representations on /api', async () => {
+    const clientPath = await pathClientPosts();
 
-    expect(clientMountOf(clientBase.pathname)).toBe(BACKEND_MOUNT);
+    expect(mountOf(clientPath)).toBe(MOUNT);
+    expect(new URL(resolveBackendApiUrl()).pathname).toBe(MOUNT);
   });
 
-  it('posts the visit record under the same mount the server-side reads use', async () => {
-    const clientBase = new URL(
-      await clientRequestPath(),
-      'http://blog.invalid',
-    );
-    const serverBase = serverBaseFor(SERVER_BASE);
+  it('addresses the mount rather than a backend origin the browser could resolve directly', async () => {
+    const clientPath = await pathClientPosts();
 
-    expect(
-      `${mountOf(serverBase)}${clientBase.pathname.slice(BACKEND_MOUNT.length)}`,
-    ).toBe(`${BACKEND_MOUNT}/blog/visitor`);
+    expect(clientPath.startsWith(MOUNT)).toBe(true);
+    expect(clientPath).not.toContain('backend.local');
   });
 });
