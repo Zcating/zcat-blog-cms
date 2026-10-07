@@ -15,7 +15,7 @@ import { Label } from '@zcat/ui/shadcn/ui/label';
 
 import type * as LabelPrimitive from '@radix-ui/react-label';
 
-const Form = FormProvider;
+const Form: typeof FormProvider = FormProvider;
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,

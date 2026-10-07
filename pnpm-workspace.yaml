@@ -5,6 +5,9 @@ packages:
 catalog:
   vite: ^8.2.2
 
+overrides:
+  '@types/react': ^19.2.17
+
 allowBuilds:
   '@prisma/engines': true
   '@swc/core': false
