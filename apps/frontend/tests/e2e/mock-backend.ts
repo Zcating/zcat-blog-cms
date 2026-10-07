@@ -19,6 +19,24 @@ function sendJson(response: ServerResponse, data: unknown, status = 200) {
 }
 
 /**
+ * A VOID success: the backend's `ResultData<T>` types `data?: T`, so
+ * `createResult` writes `data: params.data` and `JSON.stringify` drops
+ * the key when there is no payload. Sending `data: null` here instead
+ * is shape-wrong — the key is present, so a client that wrongly requires
+ * it still passes and every e2e around a void endpoint is a false green.
+ * Use this for every genuinely payload-less success.
+ */
+function sendVoid(response: ServerResponse, status = 200) {
+  response.writeHead(status, { 'Content-Type': 'application/json' });
+  response.end(
+    JSON.stringify({
+      code: '0000',
+      message: 'success',
+    }),
+  );
+}
+
+/**
  * Mirrors the backend's error envelopes: the auth middleware's literal
  * `c.json({ code, message }, 401)` and `createResult`, which always writes
  * `data: params.data` and therefore omits the key entirely when the value
@@ -115,6 +133,18 @@ function getDefaultPhotos() {
   ];
 }
 
+function getDefaultUserInfo() {
+  return {
+    name: 'Admin',
+    contact: '{"email":"admin@test.com","github":"admin"}',
+    occupation: 'Developer',
+    avatar: '',
+    signedAvatar: '',
+    aboutMe: 'About me',
+    abstract: 'Abstract',
+  };
+}
+
 function getDefaultAlbums() {
   return [
     {
@@ -141,6 +171,7 @@ function getDefaultAlbums() {
 }
 
 // In-memory store for E2E tests
+let currentUserInfo = getDefaultUserInfo();
 let albums = getDefaultAlbums();
 let photos = getDefaultPhotos();
 let authInvalid = false;
@@ -245,6 +276,7 @@ const server = createServer((request, response) => {
     photoCreateResponses = [];
     userInfoUpdates = [];
     userInfoUpdateResponses = [];
+    currentUserInfo = getDefaultUserInfo();
     seedObjects();
     sendJson(response, { ok: true });
     return;
@@ -390,15 +422,7 @@ const server = createServer((request, response) => {
   }
 
   if (url.pathname === '/api/cms/user-info' && request.method === 'GET') {
-    sendJson(response, {
-      name: 'Admin',
-      contact: '{"email":"admin@test.com","github":"admin"}',
-      occupation: 'Developer',
-      avatar: '',
-      signedAvatar: '',
-      aboutMe: 'About me',
-      abstract: 'Abstract',
-    });
+    sendJson(response, { ...currentUserInfo });
     return;
   }
 
@@ -429,6 +453,7 @@ const server = createServer((request, response) => {
         abstract: (parsed.abstract as string) || 'Abstract',
       };
       userInfoUpdateResponses.push(userInfo);
+      currentUserInfo = userInfo;
       sendJson(response, userInfo);
     });
     return;
@@ -504,7 +529,7 @@ const server = createServer((request, response) => {
       const parsed = JSON.parse(body) as { id: string };
       const idx = albums.findIndex((a) => a.id === Number(parsed.id));
       if (idx !== -1) albums.splice(idx, 1);
-      sendJson(response, null);
+      sendVoid(response);
     });
     return;
   }
@@ -523,7 +548,7 @@ const server = createServer((request, response) => {
       if (album) {
         album.coverId = parsed.photoId;
       }
-      sendJson(response, null);
+      sendVoid(response);
     });
     return;
   }
@@ -547,7 +572,7 @@ const server = createServer((request, response) => {
           photo.albumId = parsed.albumId;
         }
       }
-      sendJson(response, null);
+      sendVoid(response);
     });
     return;
   }
@@ -673,7 +698,7 @@ const server = createServer((request, response) => {
       const parsed = JSON.parse(body) as { id: number };
       const idx = photos.findIndex((p) => p.id === parsed.id);
       if (idx !== -1) photos.splice(idx, 1);
-      sendJson(response, null);
+      sendVoid(response);
     });
     return;
   }
@@ -762,7 +787,7 @@ const server = createServer((request, response) => {
       const parsed = JSON.parse(body) as { id: number };
       const idx = articles.findIndex((a) => a.id === parsed.id);
       if (idx !== -1) articles.splice(idx, 1);
-      sendJson(response, null);
+      sendVoid(response);
     });
     return;
   }
@@ -847,7 +872,7 @@ const server = createServer((request, response) => {
     const id = Number(url.pathname.split('/').pop());
     const idx = articleTags.findIndex((t) => t.id === id);
     if (idx !== -1) articleTags.splice(idx, 1);
-    sendJson(response, null);
+    sendVoid(response);
     return;
   }
 

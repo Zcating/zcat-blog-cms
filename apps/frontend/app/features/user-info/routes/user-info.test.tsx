@@ -21,7 +21,11 @@ import type { UserInfo as UserInfoType } from '@cms/server/users/users-helpers';
 
 const mockUpdateCurrentUser = vi.fn();
 const mockUploadAvatar = vi.fn();
-const stagedAvatar = vi.hoisted(() => ({ value: '' }));
+// `undefined` = the field still holds its seeded value; `''` = cleared;
+// a `blob:` URL = a freshly picked file.
+const avatarField = vi.hoisted(() => ({
+  value: undefined as string | undefined,
+}));
 
 vi.mock('@cms/server/users', async () => {
   const actual =
@@ -107,7 +111,6 @@ vi.mock('@zcat/ui', () => ({
       name: 'UpdatedAdmin',
       contact: { email: 'admin@test.com', github: 'admin' },
       occupation: 'Developer',
-      avatar: '',
       aboutMe: 'About me',
       abstract: 'Abstract',
     };
@@ -118,17 +121,25 @@ vi.mock('@zcat/ui', () => ({
       {
         useForm: ({
           onSubmit,
+          defaultValues,
         }: {
           onSubmit: (values: unknown) => void;
+          defaultValues?: { avatar?: string };
         }): MockFormApi => {
+          // A field the user never touched still carries its seeded
+          // value, so the submitted `avatar` is the stored key until
+          // `avatarField.value` says otherwise.
+          const seededAvatar = defaultValues?.avatar ?? '';
           return {
             instance: {
               reset: vi.fn(),
-              // `ZImageUpload` only ever reports a `blob:` URL, so the
-              // staged value is read from the shared holder.
-              watch: () => stagedAvatar.value,
+              // `ZImageUpload` only ever reports a `blob:` URL or `''`.
+              watch: () => avatarField.value ?? seededAvatar,
               handleSubmit: (fn: (values: unknown) => void) => () =>
-                fn({ ...STUB_VALUES, avatar: stagedAvatar.value }),
+                fn({
+                  ...STUB_VALUES,
+                  avatar: avatarField.value ?? seededAvatar,
+                }),
             },
             // Mirror real behaviour: `form.submit` IS the
             // caller-supplied `onSubmit` (see create-z-form.tsx).
@@ -198,7 +209,7 @@ function renderPage(overrides: Partial<UserInfoType> = {}) {
 describe('UserInfo page (Phase 3b)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    stagedAvatar.value = '';
+    avatarField.value = undefined;
   });
 
   it('reads user data from the userInfoQueryOptions cache', () => {
@@ -276,8 +287,8 @@ describe('UserInfo page (Phase 3b)', () => {
     await waitFor(() => {
       expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
     });
-    // The avatar field is never seeded from the backend, so an untouched
-    // field must post the stored object key — never the signed URL.
+    // The field is seeded from the backend, so an untouched field still
+    // posts the stored object key — never the signed URL.
     expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
       data: expect.objectContaining({ avatar: 'avatar/admin.jpg' }),
     });
@@ -290,7 +301,7 @@ describe('UserInfo page (Phase 3b)', () => {
   });
 
   it('uploads a picked avatar and posts its user/ object key, never the blob URL', async () => {
-    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+    avatarField.value = 'blob:http://localhost:3000/picked-avatar';
     mockUploadAvatar.mockResolvedValueOnce('user/1758711739085-1685914.png');
     mockUpdateCurrentUser.mockResolvedValueOnce({
       ...SEED_USER,
@@ -319,8 +330,32 @@ describe('UserInfo page (Phase 3b)', () => {
     expect(posted.data.avatar).not.toContain('http');
   });
 
+  it('clears the avatar when the staged image is removed', async () => {
+    avatarField.value = '';
+    mockUpdateCurrentUser.mockResolvedValueOnce({
+      ...SEED_USER,
+      avatar: '',
+      signedAvatar: '',
+    });
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => {
+      expect(mockUpdateCurrentUser).toHaveBeenCalledTimes(1);
+    });
+    // A cleared field must reach the backend as `''`, never as the
+    // stored key it was seeded from.
+    expect(mockUploadAvatar).not.toHaveBeenCalled();
+    expect(mockUpdateCurrentUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({ avatar: '' }),
+    });
+  });
+
   it('keeps the staged file visible in the read-only display while editing', () => {
-    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+    avatarField.value = 'blob:http://localhost:3000/picked-avatar';
 
     renderPage();
 
@@ -333,7 +368,7 @@ describe('UserInfo page (Phase 3b)', () => {
   });
 
   it('does not post the profile when the avatar upload fails', async () => {
-    stagedAvatar.value = 'blob:http://localhost:3000/picked-avatar';
+    avatarField.value = 'blob:http://localhost:3000/picked-avatar';
     mockUploadAvatar.mockRejectedValueOnce(new Error('上传失败'));
 
     renderPage();

@@ -31,12 +31,32 @@ export function usePhotosList(input: UsePhotosListInput) {
 
 interface PhotoMutationContext {
   restore: () => void;
+  optimisticId?: number;
 }
 
 export interface PhotoFormPayload {
   id?: number;
   name: string;
   image?: string;
+}
+
+/**
+ * 乐观行：id 为负数表示尚未落库，成功后由 onSuccess 换成服务端 id。
+ */
+function buildOptimisticPhoto(values: PhotoFormPayload, id: number): Photo {
+  const now = new Date().toISOString();
+  return {
+    id,
+    name: values.name,
+    url: values.image ?? '',
+    thumbnailUrl: values.image ?? '',
+    signedUrl: values.image ?? '',
+    signedThumbnailUrl: values.image ?? '',
+    albumId: null,
+    createdAt: now,
+    updatedAt: now,
+    loading: true,
+  } as Photo;
 }
 
 export function useCreatePhoto(input: UsePhotosListInput) {
@@ -55,16 +75,27 @@ export function useCreatePhoto(input: UsePhotosListInput) {
       }
       return photo as Photo;
     },
-    onMutate: (payload) =>
-      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
-    onError: (_error, _payload, context) => context?.restore(),
-    onSuccess: (photo) => {
-      queryClient.setQueryData<PaginatedPhotos | undefined>(
+    onMutate: async (payload) => {
+      const optimisticId = -Date.now();
+      const row = buildOptimisticPhoto(payload, optimisticId);
+      const restore = await optimistic.slot<PaginatedPhotos>(
         options.queryKey,
-        (current) => {
-          if (!current) return current;
-          return { ...current, data: [...current.data, photo] };
-        },
+        (current) =>
+          current ? { ...current, data: [...current.data, row] } : current,
+      );
+      return { restore, optimisticId };
+    },
+    onError: (_error, _payload, context) => context?.restore(),
+    onSuccess: (photo, _payload, context) => {
+      queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((row) =>
+                row.id === context?.optimisticId ? photo : row,
+              ),
+            }
+          : current,
       );
     },
   });
@@ -90,26 +121,39 @@ export function useUpdatePhoto(input: UsePhotosListInput) {
       }
       return photo as Photo;
     },
-    onMutate: (payload) =>
-      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
-    onError: (_error, _payload, context) => context?.restore(),
-    onSuccess: (photo) => {
-      queryClient.setQueryData<PaginatedPhotos | undefined>(
+    onMutate: async (payload) => {
+      const row = buildOptimisticPhoto(payload, payload.id ?? -Date.now());
+      const restore = await optimistic.slot<PaginatedPhotos>(
         options.queryKey,
         (current) => {
-          if (!current) return current;
+          if (!current || !payload.id) return current;
           return {
             ...current,
-            data: current.data.map((p) => (p.id === photo.id ? photo : p)),
+            data: current.data.map((existing) =>
+              existing.id === payload.id ? row : existing,
+            ),
           };
         },
+      );
+      return { restore, optimisticId: payload.id };
+    },
+    onError: (_error, _payload, context) => context?.restore(),
+    onSuccess: (photo) => {
+      queryClient.setQueryData<PaginatedPhotos>(options.queryKey, (current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((row) =>
+                row.id === photo.id ? photo : row,
+              ),
+            }
+          : current,
       );
     },
   });
 }
 
 export function useDeletePhoto(input: UsePhotosListInput) {
-  const queryClient = useQueryClient();
   const optimistic = useOptimisticCache();
   const options = photoListQueryOptions(input);
 
@@ -118,19 +162,13 @@ export function useDeletePhoto(input: UsePhotosListInput) {
       await OssAction.deletePhoto(id);
     },
     onMutate: (id) =>
-      optimistic.slot(options.queryKey).then((restore) => ({ restore })),
+      optimistic
+        .slot<PaginatedPhotos>(options.queryKey, (current) =>
+          current
+            ? { ...current, data: current.data.filter((row) => row.id !== id) }
+            : current,
+        )
+        .then((restore) => ({ restore })),
     onError: (_error, _id, context) => context?.restore(),
-    onSuccess: (_void, id) => {
-      queryClient.setQueryData<PaginatedPhotos | undefined>(
-        options.queryKey,
-        (current) => {
-          if (!current) return current;
-          return {
-            ...current,
-            data: current.data.filter((p) => p.id !== id),
-          };
-        },
-      );
-    },
   });
 }

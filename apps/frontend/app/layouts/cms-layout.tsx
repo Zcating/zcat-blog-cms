@@ -22,19 +22,24 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 
 import { logout } from '@cms/server/auth';
+import { userInfoQueryOptions } from '@cms/server/users';
 import { clearPrivateQueryCache } from '@cms/shared/query';
 import { CmsAvatar } from '@cms/shared/ui';
 
 import type { CmsShellUser } from '@cms/shared/auth/cms-access';
+import type { UserInfo } from '@cms/server/users/users-helpers';
 
 /**
- * Layout entry — receives the pre-loaded shell user from the
- * `_cms` route via prop drilling. We deliberately do NOT reach
- * into the router context here so the layout file can be tested
- * with a plain JSX render.
+ * Layout entry — the shell user still arrives from the `_cms` route via
+ * prop drilling (we deliberately do NOT reach into the router context
+ * here so the layout file can be tested with a plain JSX render), but it
+ * is only the FALLBACK: the sidebar reads the live `['users','current']`
+ * entry so a profile save repaints it without a navigation. `_cms`'s
+ * `beforeLoad` seeds that cache before the layout renders, so the first
+ * paint is identical either way.
  */
 export function CMSLayoutShell({
   cmsUser,
@@ -55,12 +60,38 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Reactive read of the canonical user entry.
+ *
+ * `useQuery(userInfoQueryOptions())` would also work, but it registers an
+ * observer: the moment `clearPrivateQueryCache` drops the entry during
+ * logout, the observer rebuilds the query and fires a `getCurrentUser()`
+ * request into a session that no longer exists. Reading the store
+ * directly keeps the sidebar in sync with the cache while leaving the
+ * cache's lifecycle entirely to whoever writes it.
+ */
+function readCachedUser(queryClient: QueryClient): UserInfo | undefined {
+  return queryClient
+    .getQueryCache()
+    .find<UserInfo>({ queryKey: userInfoQueryOptions().queryKey })?.state.data;
+}
+
+function useCachedUser(): UserInfo | undefined {
+  const queryClient = useQueryClient();
+  return React.useSyncExternalStore(
+    (onStoreChange) => queryClient.getQueryCache().subscribe(onStoreChange),
+    () => readCachedUser(queryClient),
+    () => readCachedUser(queryClient),
+  );
+}
+
 function Layout({ cmsUser, children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const name = cmsUser?.name ?? '';
-  const avatar = cmsUser?.signedAvatar ?? '';
+  const currentUser = useCachedUser();
+  const name = currentUser?.name ?? cmsUser?.name ?? '';
+  const avatar = currentUser?.signedAvatar ?? cmsUser?.signedAvatar ?? '';
 
   const handleLogout = async () => {
     const confirmed = await ZDialog.confirm({

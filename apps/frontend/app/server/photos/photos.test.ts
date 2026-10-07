@@ -683,4 +683,30 @@ describe('deletePhoto', () => {
     expect(capturedUrl).toBe('http://backend.local/api/cms/photos/delete');
     expect(capturedBody).toEqual({ id: 9 });
   });
+
+  it('resolves for the real void wire body, which omits the data key', async () => {
+    // The backend's `ResultData<T>` types `data?: T`, so a void result is
+    // serialised as a literal `{ code, message }` pair with no `data` key.
+    // Verified against the running backend: DELETE /api/cms/photos/delete
+    // answers 200 `{"code":"0000","message":"删除成功"}`. Round-tripped
+    // through JSON so this is the exact bytes the transport receives.
+    //
+    // Before `data` became optional in `successEnvelopeSchema`, this threw
+    // "Response envelope failed schema validation", which rejected the
+    // mutation and ran the optimistic rollback — putting the row the
+    // server had just deleted straight back into the cache. That is why
+    // the card never disappeared even though the DELETE had succeeded.
+    const fetchImpl = makeFetch(() =>
+      jsonResponse(
+        JSON.parse(JSON.stringify({ code: '0000', message: '删除成功' })),
+      ),
+    );
+
+    await expect(
+      deletePhotoHelper(
+        { id: 9 },
+        { fetch: fetchImpl, cookie: makeCookieIo(VALID_AUTHORIZATION_COOKIE) },
+      ),
+    ).resolves.toBeUndefined();
+  });
 });

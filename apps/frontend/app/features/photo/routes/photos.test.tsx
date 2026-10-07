@@ -29,9 +29,16 @@ import type {
 
 // --- mocks (boundaries only) ---
 
-const { getPhotosMock, photoListQueryOptionsSpy } = vi.hoisted(() => ({
+const {
+  getPhotosMock,
+  photoListQueryOptionsSpy,
+  notificationSuccessMock,
+  notificationErrorMock,
+} = vi.hoisted(() => ({
   getPhotosMock: vi.fn(),
   photoListQueryOptionsSpy: vi.fn(),
+  notificationSuccessMock: vi.fn().mockResolvedValue(undefined),
+  notificationErrorMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@cms/server/photos', async () => {
@@ -136,6 +143,10 @@ vi.mock('@zcat/ui', () => ({
     </button>
   ),
   ZDialog: { confirm: vi.fn().mockResolvedValue(true) },
+  ZNotification: {
+    success: notificationSuccessMock,
+    error: notificationErrorMock,
+  },
   ZGrid: <T,>({ items, renderItem, columnClassName }: ZGridProps<T>) => (
     <div data-testid="ZGrid" data-column-class={columnClassName}>
       {items.map((item, i) => (
@@ -271,6 +282,23 @@ function readAlbumSlot(queryClient: QueryClient): PaginatedPhotos | undefined {
   );
 }
 
+function readSlot(
+  queryClient: QueryClient,
+  input: Partial<GetPhotosInput> = { page: 1, pageSize: 20 },
+): PaginatedPhotos | undefined {
+  return queryClient.getQueryData<PaginatedPhotos>(
+    photoListQueryOptions(input).queryKey,
+  );
+}
+
+function rerenderPhotos(queryClient: QueryClient) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <Photos search={{}} />
+    </QueryClientProvider>,
+  );
+}
+
 function renderPhotosWithAlbumFilter(unfilteredSeed: PaginatedPhotos) {
   return renderPhotos({
     search: { albumId: 7 },
@@ -290,6 +318,8 @@ describe('Photos list page', () => {
     createPhotoActionMock.mockReset();
     updatePhotoActionMock.mockReset();
     deletePhotoActionMock.mockReset();
+    notificationSuccessMock.mockClear();
+    notificationErrorMock.mockClear();
   });
 
   it('renders the page title and pagination metadata from Query cache', () => {
@@ -549,6 +579,130 @@ describe('Photos list page', () => {
     expect(queryClient.getQueryData<PaginatedPhotos>(unfilteredKey())).toEqual(
       unfilteredSeed,
     );
+  });
+
+  it('keeps a deleted photo removed while the request is in flight, across a re-mount', async () => {
+    // The optimistic delete must live in the canonical cache slot, not in
+    // component-local state, so every reader of that slot — including a
+    // fresh mount — sees the row as gone.
+    let settleDelete!: () => void;
+    deletePhotoActionMock.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          settleDelete = resolve;
+        }),
+    );
+
+    const { queryClient, unmount } = renderPhotos({
+      pagination: buildPaginatedPhotos([
+        buildPhoto({ id: 1, name: '风景照' }),
+        buildPhoto({ id: 2, name: '人物照' }),
+      ]),
+    });
+
+    fireEvent.click(screen.getAllByTestId('delete-photo-btn')[0]);
+
+    await waitFor(() => {
+      expect(deletePhotoActionMock).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByText('风景照')).not.toBeInTheDocument();
+
+    // The optimistic delete must live in the canonical cache slot, not in
+    // a component-local mirror: every reader of the slot (including a
+    // fresh mount) has to see the row as gone.
+    expect(readSlot(queryClient)?.data.map((p) => p.id)).toEqual([2]);
+
+    unmount();
+    rerenderPhotos(queryClient);
+
+    expect(screen.queryByText('风景照')).not.toBeInTheDocument();
+    expect(screen.getByText('人物照')).toBeInTheDocument();
+
+    await act(async () => {
+      settleDelete();
+    });
+
+    expect(readSlot(queryClient)?.data.map((p) => p.id)).toEqual([2]);
+    expect(screen.queryByText('风景照')).not.toBeInTheDocument();
+  });
+
+  it('surfaces an error notification when the delete request fails', async () => {
+    deletePhotoActionMock.mockRejectedValueOnce(new Error('照片不存在'));
+
+    const { queryClient } = renderPhotos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('delete-photo-btn'));
+    });
+
+    await waitFor(() => {
+      expect(notificationErrorMock).toHaveBeenCalledWith('删除失败，请重试');
+    });
+    expect(notificationSuccessMock).not.toHaveBeenCalled();
+    // The rollback restores the row the server refused to delete.
+    expect(readSlot(queryClient)?.data.map((p) => p.id)).toEqual([1]);
+    expect(screen.getByText('风景照')).toBeInTheDocument();
+  });
+
+  it('surfaces a success notification after a delete lands', async () => {
+    deletePhotoActionMock.mockResolvedValueOnce(undefined);
+
+    renderPhotos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('delete-photo-btn'));
+    });
+
+    await waitFor(() => {
+      expect(notificationSuccessMock).toHaveBeenCalledWith('照片已删除');
+    });
+    expect(notificationErrorMock).not.toHaveBeenCalled();
+  });
+
+  it('surfaces an error notification when the upload fails', async () => {
+    createPhotoActionMock.mockRejectedValueOnce(new Error('cors'));
+
+    renderPhotos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    });
+
+    await waitFor(() => {
+      expect(notificationErrorMock).toHaveBeenCalledWith('上传失败，请重试');
+    });
+    expect(notificationSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a success notification after a create lands', async () => {
+    createPhotoActionMock.mockResolvedValueOnce(
+      buildPhoto({ id: 99, name: '新建照片' }),
+    );
+
+    renderPhotos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '新增' }));
+    });
+
+    await waitFor(() => {
+      expect(notificationSuccessMock).toHaveBeenCalledWith('照片已上传');
+    });
+  });
+
+  it('surfaces an error notification when the save fails', async () => {
+    updatePhotoActionMock.mockRejectedValueOnce(new Error('保存失败'));
+
+    renderPhotos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('edit-photo-btn'));
+    });
+
+    await waitFor(() => {
+      expect(notificationErrorMock).toHaveBeenCalledWith('保存失败，请重试');
+    });
+    expect(screen.getByText('风景照')).toBeInTheDocument();
   });
 
   it('rolls the albumId-scoped slot back to its snapshot when a mutation rejects', async () => {

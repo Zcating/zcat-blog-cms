@@ -94,15 +94,41 @@ describe('envelopeSchema', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('keeps data mandatory on a success envelope', () => {
-    // The strictness is what stops a non-success body from reaching a
-    // caller's data slot, so it must not be relaxed alongside
-    // `envelopeSchema`.
-    const parsed = successEnvelopeSchema.safeParse({
-      code: '0000',
-      message: 'ok',
+  it('rejects a non-0000 envelope with or without a data key', () => {
+    // This is the property that `data` being mandatory used to be
+    // credited with: a non-success body must never reach a caller's
+    // data slot. It is actually enforced by `code: z.literal('0000')`,
+    // so it has to be asserted against BOTH wire shapes — the backend
+    // omits `data` whenever the result is void and always includes it
+    // otherwise. Asserting only the data-present shape would still pass
+    // a schema that accepted an error envelope carrying a payload.
+    const withoutData = successEnvelopeSchema.safeParse({
+      code: 'ERR0007',
+      message: 'photo not found',
     });
-    expect(parsed.success).toBe(false);
+    const withData = successEnvelopeSchema.safeParse({
+      code: 'ERR0007',
+      message: 'photo not found',
+      data: { id: 42 },
+    });
+
+    expect(withoutData.success).toBe(false);
+    expect(withData.success).toBe(false);
+  });
+});
+
+describe('successEnvelopeSchema (void success bodies)', () => {
+  it('accepts the real wire body of a void success, which omits data', () => {
+    // apps/backend `ResultData<T>` types `data?: T`, so `JSON.stringify`
+    // drops the key entirely for every void endpoint (delete photo,
+    // delete album, set cover, assign photos). Round-tripped through JSON
+    // so this is the exact bytes the transport receives. Before `data`
+    // became optional this rejected every one of them, which is what
+    // made a successful delete roll its own row back into the cache.
+    const parsed = successEnvelopeSchema.safeParse(
+      JSON.parse(JSON.stringify({ code: '0000', message: '删除成功' })),
+    );
+    expect(parsed.success).toBe(true);
   });
 });
 
@@ -143,12 +169,26 @@ describe('parseEnvelope', () => {
     expect(Array.isArray(caught.issues)).toBe(true);
   });
 
-  it('throws a typed ResponseValidationError when data is missing', () => {
+  it('returns undefined for a void success body that omits data', () => {
+    // The counterpart of the void-success case: this is the exact body
+    // every void endpoint answers with, and it must NOT be treated as
+    // malformed. A void caller passes no `dataSchema`, so there is
+    // nothing left to validate and `undefined` is the honest result.
+    const result = parseEnvelope<unknown>(
+      JSON.parse(JSON.stringify({ code: '0000', message: '删除成功' })),
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it('still throws when a dataSchema rejects an omitted payload', () => {
+    // Making the KEY optional must not make a required payload
+    // acceptable: a caller that declares a `dataSchema` is asking for a
+    // payload, so a void body is a contract violation for them.
     const caught = catchThrown<ResponseValidationError>(() =>
-      parseEnvelope<unknown>({
-        code: '0000',
-        message: 'ok',
-      } as unknown as Envelope<unknown>),
+      parseEnvelope<{ id: number }>(
+        { code: '0000', message: 'ok' } as unknown as Envelope<unknown>,
+        idObjectSchema,
+      ),
     );
     expect(caught.name).toBe('ResponseValidationError');
   });

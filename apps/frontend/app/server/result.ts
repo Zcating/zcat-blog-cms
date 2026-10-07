@@ -11,15 +11,26 @@ import { z } from 'zod';
 export const successEnvelopeSchema = z.object({
   code: z.literal('0000'),
   message: z.string(),
-  data: z.unknown(),
+  /**
+   * `data` is OPTIONAL, and the backend really does omit the key:
+   * `ResultData<T>` declares `data?: T`, so a void result (every DELETE
+   * plus the "set cover" / "assign photos" endpoints) is serialised as a
+   * literal `{ code, message }` pair. Requiring the key made every such
+   * response parse as malformed, rejected the mutation, and rolled the
+   * row the server had already deleted straight back into the cache.
+   *
+   * The invariant that actually keeps a non-success body out of a
+   * caller's data slot is `code: z.literal('0000')` above, NOT key
+   * presence — a non-`0000` envelope is rejected either way.
+   */
+  data: z.unknown().optional(),
 });
 
 /**
- * `data` is OPTIONAL here, unlike in `successEnvelopeSchema`: the backend's
- * auth middleware answers a rejected token with a literal `{ code, message }`
- * pair, so a real error envelope has no `data` key at all. Requiring the key
- * made every such envelope parse as malformed and turned an expired session
- * into an `UnknownError`.
+ * `data` is optional for the same reason as in `successEnvelopeSchema`,
+ * and the backend's auth middleware additionally answers a rejected
+ * token with a literal `{ code, message }` pair, so a real error
+ * envelope has no `data` key at all.
  */
 export const envelopeSchema = z.object({
   code: z.string(),

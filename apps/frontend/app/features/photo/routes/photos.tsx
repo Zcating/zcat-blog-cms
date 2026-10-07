@@ -5,8 +5,7 @@
  * snapshot taken before the optimistic update — no automatic retries.
  */
 
-import { ZButton, ZDialog, ZGrid } from '@zcat/ui';
-import React from 'react';
+import { ZButton, ZDialog, ZGrid, ZNotification } from '@zcat/ui';
 import z from 'zod';
 
 import {
@@ -19,7 +18,7 @@ import {
 import type { GetPhotosInput, Photo } from '@cms/server/photos/schemas';
 import { coerceQueryInt } from '@cms/shared/hooks/use-pagination-action';
 
-import { PhotoCard, type PhotoCardData } from '../../album/components/album';
+import { PhotoCard } from '../../album/components/album';
 
 import {
   useCreatePhoto,
@@ -51,20 +50,6 @@ const useSchemeForm = createSchemaForm({
   }),
 });
 
-function buildOptimisticPhoto(data: PhotoFormData): PhotoCardData {
-  return {
-    id: data.id || -Date.now(),
-    name: data.name,
-    url: data.image,
-    thumbnailUrl: data.image,
-    signedUrl: data.image,
-    signedThumbnailUrl: data.image,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    loading: true,
-  };
-}
-
 export default function Photos({ search }: PhotosListProps) {
   const listInput = derivePhotosListQueryInput(search);
   const { data: pagination } = usePhotosList(listInput);
@@ -75,36 +60,19 @@ export default function Photos({ search }: PhotosListProps) {
 
   const deleteMutation = useDeletePhoto(listInput);
 
-  const [optimisticPhotos, setOptimisticPhotos] = React.useState<
-    PhotoCardData[]
-  >(() => pagination.data as PhotoCardData[]);
-
-  React.useEffect(() => {
-    setOptimisticPhotos(pagination.data as PhotoCardData[]);
-  }, [pagination.data]);
-
   const create = useSchemeForm({
     title: '新增照片',
     onSubmit: (data) => {
       const values = (data ?? {}) as PhotoFormData;
-      const normalized: PhotoFormData = {
-        id: 0,
-        name: values.name || '新照片',
-        image: values.image || '',
-      };
-      setOptimisticPhotos((prev) => {
-        const optimistic = buildOptimisticPhoto(normalized);
-        return [...prev, optimistic];
-      });
       void createMutation
         .mutateAsync({
-          name: normalized.name,
-          image: normalized.image,
+          name: values.name || '新照片',
+          image: values.image || '',
         })
-        .catch(() => {
-          // Rollback the optimistic insert on error.
-          setOptimisticPhotos(pagination.data as PhotoCardData[]);
-        });
+        .then(
+          () => ZNotification.success('照片已上传'),
+          () => ZNotification.error('上传失败，请重试'),
+        );
     },
   });
 
@@ -114,27 +82,16 @@ export default function Photos({ search }: PhotosListProps) {
     cancelText: '取消',
     onSubmit: (data) => {
       const values = (data ?? {}) as PhotoFormData;
-      const normalized: PhotoFormData = {
-        id: values.id ?? 0,
-        name: values.name || '',
-        image: values.image || '',
-      };
-      setOptimisticPhotos((prev) => {
-        const optimistic = buildOptimisticPhoto(normalized);
-        if (normalized.id) {
-          return prev.map((p) => (p.id === normalized.id ? optimistic : p));
-        }
-        return [...prev, optimistic];
-      });
       void updateMutation
         .mutateAsync({
-          id: normalized.id,
-          name: normalized.name,
-          image: normalized.image,
+          id: values.id ?? 0,
+          name: values.name || '',
+          image: values.image || '',
         })
-        .catch(() => {
-          setOptimisticPhotos(pagination.data as PhotoCardData[]);
-        });
+        .then(
+          () => ZNotification.success('照片已保存'),
+          () => ZNotification.error('保存失败，请重试'),
+        );
     },
   });
 
@@ -151,10 +108,13 @@ export default function Photos({ search }: PhotosListProps) {
     if (!confirm) {
       return;
     }
-    setOptimisticPhotos((prev) => prev.filter((p) => p.id !== data.id));
-    void deleteMutation.mutateAsync(data.id).catch(() => {
-      setOptimisticPhotos(pagination.data as PhotoCardData[]);
-    });
+
+    try {
+      await deleteMutation.mutateAsync(data.id);
+      await ZNotification.success('照片已删除');
+    } catch {
+      await ZNotification.error('删除失败，请重试');
+    }
   };
 
   return (
@@ -165,7 +125,7 @@ export default function Photos({ search }: PhotosListProps) {
       totalPages={pagination.totalPages}
       page={pagination.page}
     >
-      {optimisticPhotos.length === 0 ? (
+      {pagination.data.length === 0 ? (
         <ZGrid
           cols={5}
           items={[]}
@@ -175,7 +135,7 @@ export default function Photos({ search }: PhotosListProps) {
       ) : (
         <ZGrid
           cols={5}
-          items={optimisticPhotos}
+          items={pagination.data}
           columnClassName="px-0"
           renderItem={(item) => (
             <PhotoCard
@@ -192,7 +152,7 @@ export default function Photos({ search }: PhotosListProps) {
           )}
         />
       )}
-      {optimisticPhotos.length === 0 ? (
+      {pagination.data.length === 0 ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           暂无照片
         </div>

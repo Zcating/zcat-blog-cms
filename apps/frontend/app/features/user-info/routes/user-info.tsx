@@ -34,7 +34,7 @@ interface UserInfoValues extends ServerUserInfo {
   loading?: boolean;
 }
 
-/** 表单提交时 `avatar` 一定有值：要么是刚选中的 `blob:`，要么是库里的对象 key。 */
+/** 表单提交时 `avatar` 是三者之一：刚选中的 `blob:`、库里的对象 key，或 `''` 表示清除。 */
 interface UserInfoUpdateValues extends UpdateUserInfoBody {
   avatar: string;
 }
@@ -106,7 +106,7 @@ export default function UserInfo() {
         github: userInfo.contact.github,
       },
       occupation: userInfo.occupation,
-      avatar: '',
+      avatar: userInfo.avatar,
       aboutMe: userInfo.aboutMe,
       abstract: userInfo.abstract,
     },
@@ -119,14 +119,11 @@ export default function UserInfo() {
           github: values.contact.github,
         },
         occupation: values.occupation,
-        // The field is never seeded from the backend, so an untouched
-        // field must fall back to the stored key: the backend requires
-        // `avatar` in the body and stores it verbatim, and the key is
-        // what the response is signed from. A picked file is uploaded by
-        // the mutation; a signed URL must never reach this payload.
-        avatar: values.avatar.startsWith('blob:')
-          ? values.avatar
-          : userInfo.avatar,
+        // The field is seeded from the stored key, so its three states are
+        // already distinguishable: the bare key means untouched, a
+        // `blob:` URL is uploaded by the mutation, and `''` clears the
+        // avatar. A signed URL must never reach this payload.
+        avatar: values.avatar,
         aboutMe: values.aboutMe,
         abstract: values.abstract,
       });
@@ -145,15 +142,15 @@ export default function UserInfo() {
         github: userInfo.contact.github,
       },
       occupation: userInfo.occupation,
-      avatar: '',
+      avatar: userInfo.avatar,
       aboutMe: userInfo.aboutMe,
       abstract: userInfo.abstract,
     });
   });
 
-  // The avatar field only ever holds a locally chosen file. While one
-  // is staged it replaces the read-only display, so the old avatar does
-  // not linger next to the new selection.
+  // A staged `blob:` file replaces the stored avatar while editing; any
+  // other value (the stored key, or `''` once cleared) means the field
+  // itself decides, so the stored signed URL stays on screen.
   const stagedAvatar = form.instance.watch('avatar');
   const currentAvatar = stagedAvatar.startsWith('blob:')
     ? stagedAvatar
@@ -207,7 +204,9 @@ export default function UserInfo() {
             <UserInfoForm.Item
               name="avatar"
               label="头像"
-              description={pending ? '正在上传并保存…' : '留空则不修改'}
+              description={
+                pending ? '正在上传并保存…' : '重新选择可替换，清空可移除'
+              }
             >
               <ImageUpload />
             </UserInfoForm.Item>
