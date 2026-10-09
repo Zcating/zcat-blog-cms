@@ -25,7 +25,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: backend
-    image: ${DOCKER_REGISTRY}cms_backend:latest
+    image: cms_backend:latest
     container_name: cms_backend
     restart: unless-stopped
     stdin_open: true
@@ -54,7 +54,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       target: frontend
-    image: ${DOCKER_REGISTRY}cms_frontend:latest
+    image: cms_frontend:latest
     container_name: cms_frontend
     restart: unless-stopped
     stdin_open: true
@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: Dockerfile.blog
       target: blog
-    image: ${DOCKER_REGISTRY}cms_blog:latest
+    image: cms_blog:latest
     container_name: blog
     restart: unless-stopped
     stdin_open: true

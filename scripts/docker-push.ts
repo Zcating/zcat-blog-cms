@@ -23,6 +23,7 @@ import { StepResult, createStepError, createStepSuccess } from './step-result';
 
 interface CliOptions {
   envFile: string;
+  deployEnvFile: string;
   projectName: string;
   service: string;
   skipBuild?: boolean;
@@ -35,9 +36,13 @@ const packageJson = JSON.parse(
 ) as { version?: string };
 
 const ENV_FILE = './.env';
+const PROD_ENV_FILE = './.env.prod';
 const TEMPLATE_FILE = './.env.example';
 const COMPOSE_FILE = './docker-compose.yml';
+const PROD_COMPOSE_FILE = './docker-compose.prod.yml';
 const REMOTE_COMPOSE_FILE = 'docker-compose.yml';
+const REMOTE_PROD_COMPOSE_FILE = 'docker-compose.prod.yml';
+const REMOTE_ENV_FILE = '.env';
 
 const EXPECTED_PROJECT_NAME = 'cms';
 const DATA_VOLUME = 'cms_cms_pg';
@@ -96,6 +101,8 @@ const DeployConfigSchema = z.object({
   skipBuild: z.boolean(),
   envFile: z.string(),
   envFileName: z.string(),
+  deployEnvFile: z.string(),
+  deployEnvFileName: z.string(),
 });
 
 type DeployConfig = z.infer<typeof DeployConfigSchema>;
@@ -125,19 +132,24 @@ function loadEnvConfig(envFile: string): Record<string, string> {
 }
 
 function collectComposeEnvRefs(): StepResult<string[]> {
-  if (!fs.existsSync(COMPOSE_FILE)) {
-    return createStepError(`compose 文件 ${COMPOSE_FILE} 不存在`);
+  const composeFiles = [COMPOSE_FILE, PROD_COMPOSE_FILE];
+  for (const file of composeFiles) {
+    if (!fs.existsSync(file)) {
+      return createStepError(`compose 文件 ${file} 不存在`);
+    }
   }
-  const content = fs.readFileSync(COMPOSE_FILE, 'utf-8');
   const refs = new Set<string>();
-  for (const match of content.matchAll(
-    /\$\{([A-Za-z_][A-Za-z0-9_]*)(?::[-?][^}]*)?\}/g,
-  )) {
-    refs.add(match[1]);
+  for (const file of composeFiles) {
+    const content = fs.readFileSync(file, 'utf-8');
+    for (const match of content.matchAll(
+      /\$\{([A-Za-z_][A-Za-z0-9_]*)(?::[-?][^}]*)?\}/g,
+    )) {
+      refs.add(match[1]);
+    }
   }
   if (refs.size === 0) {
     return createStepError(
-      `${COMPOSE_FILE} 里没有解析出任何 \${变量} 形式的引用，契约校验无法进行，请确认文件是否被改坏`,
+      `${composeFiles.join(' 与 ')} 里没有解析出任何 \${变量} 形式的引用，契约校验无法进行，请确认文件是否被改坏`,
     );
   }
   return createStepSuccess([...refs].sort());
@@ -172,14 +184,6 @@ function findContractProblems(
     }
   }
 
-  if (requireNonEmpty) {
-    for (const key of SCRIPT_REQUIRED_VALUES) {
-      if ((values[key] ?? '').trim() === '') {
-        problems.push(`${label} 的 ${key} 为空，SSH 认证会失败`);
-      }
-    }
-  }
-
   const endpoint = (values.OSS_ENDPOINT ?? '').trim();
   if (endpoint !== '' && !endpoint.startsWith('https://')) {
     problems.push(
@@ -197,6 +201,21 @@ function findContractProblems(
   return problems;
 }
 
+function findDeployConfigProblems(
+  values: Record<string, string>,
+  label: string,
+): string[] {
+  const problems: string[] = [];
+
+  for (const key of SCRIPT_REQUIRED_VALUES) {
+    if ((values[key] ?? '').trim() === '') {
+      problems.push(`${label} 的 ${key} 为空，SSH 认证会失败`);
+    }
+  }
+
+  return problems;
+}
+
 function validateContract(
   config: DeployConfig,
   composeRefs: string[],
@@ -206,6 +225,12 @@ function validateContract(
     composeRefs,
     config.envFile,
     true,
+  );
+  problems.push(
+    ...findDeployConfigProblems(
+      loadEnvConfig(config.deployEnvFile),
+      config.deployEnvFile,
+    ),
   );
   if (fs.existsSync(TEMPLATE_FILE)) {
     problems.push(
@@ -238,24 +263,27 @@ function resolveProjectName(config: DeployConfig): StepResult<string> {
 }
 
 function generateConfig(options: CliOptions): StepResult<DeployConfig> {
-  const envFile = options.envFile || ENV_FILE;
-  const envConfig = loadEnvConfig(envFile);
+  const envFile = options.envFile || PROD_ENV_FILE;
+  const deployEnvFile = options.deployEnvFile || ENV_FILE;
+  const deployEnv = loadEnvConfig(deployEnvFile);
   const result = DeployConfigSchema.safeParse({
-    dockerRegistry: envConfig.DOCKER_REGISTRY ?? '',
+    dockerRegistry: deployEnv.DOCKER_REGISTRY ?? '',
     projectName: options.projectName,
     service: options.service ?? '',
     sshConfig: {
-      host: envConfig.SSH_HOST ?? '',
-      port: parseInt(envConfig.SSH_PORT || '22', 10),
-      user: envConfig.SSH_USER ?? '',
+      host: deployEnv.SSH_HOST ?? '',
+      port: parseInt(deployEnv.SSH_PORT || '22', 10),
+      user: deployEnv.SSH_USER ?? '',
     },
-    sshPassword: envConfig.SSH_PASSWORD ?? '',
-    remoteDir: envConfig.REMOTE_DIR ?? '',
-    dryRun: options.dryRun === true || envConfig.DRY_RUN === 'true',
+    sshPassword: deployEnv.SSH_PASSWORD ?? '',
+    remoteDir: deployEnv.REMOTE_DIR ?? '',
+    dryRun: options.dryRun === true || deployEnv.DRY_RUN === 'true',
     skipConfirm: options.yes === true,
-    skipBuild: options.skipBuild === true || envConfig.SKIP_BUILD === 'true',
+    skipBuild: options.skipBuild === true || deployEnv.SKIP_BUILD === 'true',
     envFile,
     envFileName: path.basename(envFile),
+    deployEnvFile,
+    deployEnvFileName: path.basename(deployEnvFile),
   });
   if (!result.success) {
     const errorMessages = result.error.issues
@@ -269,6 +297,14 @@ function generateConfig(options: CliOptions): StepResult<DeployConfig> {
     colorError(`配置验证失败: ${message}`);
     return createStepError(message);
   }
+  if (
+    result.data.deployEnvFileName === '' ||
+    result.data.deployEnvFileName === '.'
+  ) {
+    const message = `--deploy-env-file 的值 ${deployEnvFile} 不是一个文件路径`;
+    colorError(`配置验证失败: ${message}`);
+    return createStepError(message);
+  }
   return createStepSuccess(result.data);
 }
 
@@ -277,7 +313,10 @@ function serviceSuffix(config: DeployConfig): string {
 }
 
 function localComposeCommand(config: DeployConfig, action: string): string {
-  return `docker compose -p ${config.projectName} --env-file ${config.envFileName} ${action}${serviceSuffix(config)}`;
+  const composeFiles = [COMPOSE_FILE, PROD_COMPOSE_FILE]
+    .map((file) => path.basename(file))
+    .join(' -f ');
+  return `docker compose -f ${composeFiles} -p ${config.projectName} --env-file ${config.envFileName} ${action}${serviceSuffix(config)}`;
 }
 
 async function confirmDeploy(config: DeployConfig): Promise<boolean> {
@@ -291,7 +330,8 @@ async function confirmDeploy(config: DeployConfig): Promise<boolean> {
    服务范围: ${config.service || '全部服务'}
    SSH Host: ${config.sshConfig.user}@${config.sshConfig.host}:${config.sshConfig.port}
    Remote Directory: ${config.remoteDir}
-   上传文件: ${COMPOSE_FILE}、${config.envFileName}
+   上传文件: ${COMPOSE_FILE}、${PROD_COMPOSE_FILE}、${config.envFileName} → ${config.remoteDir}/${REMOTE_ENV_FILE}
+   部署凭据文件(仅本地，不上传): ${config.deployEnvFileName}
    Skip Build: ${config.skipBuild ? '是' : '否'}
    Dry Run Mode: ${config.dryRun ? '启用' : '禁用'}`);
 
@@ -358,7 +398,8 @@ async function executeRemoteTasks(
   config: DeployConfig,
 ): Promise<StepResult<void>> {
   const remoteComposeFile = `${config.remoteDir}/${REMOTE_COMPOSE_FILE}`;
-  const remoteEnvFile = `${config.remoteDir}/${config.envFileName}`;
+  const remoteProdComposeFile = `${config.remoteDir}/${REMOTE_PROD_COMPOSE_FILE}`;
+  const remoteEnvFile = `${config.remoteDir}/${REMOTE_ENV_FILE}`;
 
   colorInfo(`正在连接到 ${config.sshConfig.host}...`);
   const ssh = new NodeSSH();
@@ -394,6 +435,16 @@ async function executeRemoteTasks(
       return uploadCompose;
     }
 
+    const uploadProdCompose = await executeUploadFile(
+      ssh,
+      PROD_COMPOSE_FILE,
+      remoteProdComposeFile,
+      config.dryRun,
+    );
+    if (!uploadProdCompose.success) {
+      return uploadProdCompose;
+    }
+
     const uploadEnv = await executeUploadFile(
       ssh,
       config.envFile,
@@ -414,7 +465,7 @@ async function executeRemoteTasks(
       return chmodResult;
     }
 
-    const baseCmd = `cd ${config.remoteDir} && DOCKER_REGISTRY=${config.dockerRegistry} docker compose -p ${config.projectName} --env-file ${config.envFileName}`;
+    const baseCmd = `cd ${config.remoteDir} && DOCKER_REGISTRY=${config.dockerRegistry} docker compose -f ${REMOTE_COMPOSE_FILE} -f ${REMOTE_PROD_COMPOSE_FILE} -p ${config.projectName} --env-file ${REMOTE_ENV_FILE}`;
 
     const pullResult = await executeRemoteCommand(
       ssh,
@@ -479,16 +530,26 @@ async function main(): Promise<void> {
     )
     .option(
       '--env-file <file>',
-      '环境变量文件，容器契约与部署凭据同在一份，上传到远端 REMOTE_DIR',
+      '容器运行时环境文件，上传到远端 REMOTE_DIR/.env',
+      PROD_ENV_FILE,
+    )
+    .option(
+      '--deploy-env-file <file>',
+      '部署凭据文件，仅本地读取、不上传',
       ENV_FILE,
     )
     .option('--skip-build', '跳过本地构建与推送，直接推送已有镜像')
     .option('--dry-run', '预览模式 - 仅打印命令，不实际执行')
     .option('-y, --yes', '跳过确认直接执行')
     .action(async (options: CliOptions) => {
-      const envFile = options.envFile || ENV_FILE;
+      const envFile = options.envFile || PROD_ENV_FILE;
       if (!fs.existsSync(envFile)) {
         fail(`部署所需的环境文件 ${envFile} 不存在`);
+        return;
+      }
+      const deployEnvFile = options.deployEnvFile || ENV_FILE;
+      if (!fs.existsSync(deployEnvFile)) {
+        fail(`部署凭据文件 ${deployEnvFile} 不存在`);
         return;
       }
 

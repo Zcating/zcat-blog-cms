@@ -1,0 +1,7 @@
+services:
+  backend:
+    image: ${DOCKER_REGISTRY}cms_backend:latest
+  frontend:
+    image: ${DOCKER_REGISTRY}cms_frontend:latest
+  blog:
+    image: ${DOCKER_REGISTRY}cms_blog:latest
