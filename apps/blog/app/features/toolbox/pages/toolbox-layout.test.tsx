@@ -30,7 +30,7 @@ vi.mock('@tanstack/react-router', async () => {
 
 // --- import after mocks ---
 
-import { Route } from './toolbox';
+import { ToolboxLayoutRoute } from './toolbox-layout';
 
 const MENU_TITLES = ['首页', '文章', '相册', '工具箱', '关于'];
 const SIDEBAR_LABELS = [
@@ -52,8 +52,7 @@ describe('route component: /toolbox layout', () => {
   });
 
   it('renders the sidebar, the page outlet and the footer', () => {
-    const Layout = Route.options.component;
-    if (!Layout) throw new Error('layout route has no component');
+    const Layout = ToolboxLayoutRoute;
 
     render(<Layout />);
 
@@ -64,8 +63,7 @@ describe('route component: /toolbox layout', () => {
   });
 
   it('keeps every toolbox sidebar entry and points it at its own URL', () => {
-    const Layout = Route.options.component;
-    if (!Layout) throw new Error('layout route has no component');
+    const Layout = ToolboxLayoutRoute;
 
     render(<Layout />);
 
@@ -88,8 +86,7 @@ describe('route component: /toolbox layout', () => {
 
   it('keeps the main navigation above the sidebar and marks the active entry', () => {
     useRouterStateMock.mockReturnValue('/toolbox/hash');
-    const Layout = Route.options.component;
-    if (!Layout) throw new Error('layout route has no component');
+    const Layout = ToolboxLayoutRoute;
 
     render(<Layout />);
 

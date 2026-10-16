@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Route } from './ip-lookup';
+import { IpLookupPage } from './ip-lookup';
 
 const DETAILS = {
   ip: '203.0.113.7',
@@ -21,9 +21,7 @@ function skeletons() {
 }
 
 function renderPage() {
-  const Page = Route.options.component;
-  if (!Page) throw new Error('route has no component');
-  return render(<Page />);
+  return render(<IpLookupPage />);
 }
 
 describe('route component: /toolbox/ip-lookup', () => {

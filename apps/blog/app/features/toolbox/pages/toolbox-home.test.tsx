@@ -24,13 +24,10 @@ vi.mock('@tanstack/react-router', async () => {
 
 // --- import after mocks ---
 
-import { Route } from './index';
+import { ToolboxHomePage } from './toolbox-home';
 
 describe('ToolboxHomePage', () => {
   it('renders toolbox entries and links', () => {
-    const ToolboxHomePage = Route.options.component;
-    if (!ToolboxHomePage) throw new Error('route has no component');
-
     render(<ToolboxHomePage />);
 
     expect(screen.getByText('Markdown 转 HTML')).toBeInTheDocument();
@@ -39,9 +36,6 @@ describe('ToolboxHomePage', () => {
   });
 
   it('points every entry at its own toolbox URL', () => {
-    const ToolboxHomePage = Route.options.component;
-    if (!ToolboxHomePage) throw new Error('route has no component');
-
     render(<ToolboxHomePage />);
 
     expect(screen.getByText('Markdown 转 HTML').closest('a')).toHaveAttribute(

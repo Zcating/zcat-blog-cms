@@ -1,3 +1,4 @@
+export * from './pages';
 export * from './id-card-number';
 export * from './aes-crypto';
 export * from './markdown-processor';

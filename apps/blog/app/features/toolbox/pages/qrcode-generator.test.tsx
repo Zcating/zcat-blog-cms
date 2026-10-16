@@ -1,12 +1,10 @@
 import { fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Route } from './qrcode-generator';
+import { QrCodeGeneratorPage } from './qrcode-generator';
 
 function renderPage() {
-  const Page = Route.options.component;
-  if (!Page) throw new Error('route has no component');
-  return render(<Page />);
+  return render(<QrCodeGeneratorPage />);
 }
 
 function inputByPlaceholder(
