@@ -1,28 +1,24 @@
 import { Skeleton, ZGrid } from '@zcat/ui';
 import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
 
-import { safePositiveNumber } from '@blog/common';
+import { loadPaginatedList, pageParamSchema } from '@blog/common';
 import { GalleryPage } from '@blog/features';
 import { getGalleryList } from '@blog/server/gallery';
-
-const gallerySearchSchema = z.looseObject({
-  page: z.coerce.number().int().optional().catch(undefined),
-});
 
 interface GalleryLoaderArgs {
   search: { page?: string | number };
 }
 
 export async function loader({ search }: GalleryLoaderArgs) {
-  const requestedPage = safePositiveNumber(search.page, 1);
-  const pagination = await getGalleryList({ data: { page: requestedPage } });
-  const page = Math.min(requestedPage, Math.max(1, pagination.totalPages));
-  return { pagination, page };
+  return loadPaginatedList({
+    to: '/gallery',
+    search,
+    fetch: (page) => getGalleryList({ data: { page } }),
+  });
 }
 
 export const Route = createFileRoute('/_blog/gallery')({
-  validateSearch: gallerySearchSchema,
+  validateSearch: pageParamSchema,
   head: () => ({
     meta: [{ title: '相册' }, { name: 'description', content: '个人技术博客' }],
   }),

@@ -1,5 +1,7 @@
 import { StaggerReveal, ZPagination, ZView } from '@zcat/ui';
-import { Link, getRouteApi, useNavigate } from '@tanstack/react-router';
+import { Link, getRouteApi } from '@tanstack/react-router';
+
+import { usePageNavigation } from '@blog/common';
 
 import { PostExcerptCard } from '../components/post-excerpt-card';
 
@@ -7,11 +9,7 @@ const routeApi = getRouteApi('/_blog/post-board');
 
 export function PostBoardPage() {
   const { pagination, page } = routeApi.useLoaderData();
-  const navigate = useNavigate();
-
-  const goToPage = (nextPage: number) => {
-    navigate({ to: '/post-board', search: { page: String(nextPage) } });
-  };
+  const goToPage = usePageNavigation('/post-board');
 
   return (
     <ZView className="flex flex-col items-center overflow-x-hidden">

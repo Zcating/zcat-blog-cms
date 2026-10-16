@@ -1,32 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
 
-import { safePositiveNumber } from '@blog/common';
+import { loadPaginatedList, pageParamSchema } from '@blog/common';
 import { PostBoardPage } from '@blog/features';
 import { getArticleList } from '@blog/server/article';
 
 const SITE = 'https://blog.zcat.example';
-
-const postBoardSearchSchema = z.looseObject({
-  page: z.coerce.number().int().optional().catch(undefined),
-});
 
 interface PostBoardLoaderArgs {
   search: { page?: string | number };
 }
 
 export async function loader({ search }: PostBoardLoaderArgs) {
-  const page = safePositiveNumber(search.page, 1);
-
-  const pagination = await getArticleList({
-    data: { page, pageSize: 10, order: 'latest' },
+  return loadPaginatedList({
+    to: '/post-board',
+    search,
+    fetch: (page) =>
+      getArticleList({ data: { page, pageSize: 10, order: 'latest' } }),
   });
-
-  return { pagination, page };
 }
 
 export const Route = createFileRoute('/_blog/post-board')({
-  validateSearch: postBoardSearchSchema,
+  validateSearch: pageParamSchema,
   head: () => ({
     meta: [
       { title: '文章 - ZCAT' },

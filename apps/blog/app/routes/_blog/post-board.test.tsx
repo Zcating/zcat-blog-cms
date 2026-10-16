@@ -1,4 +1,7 @@
+import { isRedirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { pageParamSchema } from '@blog/common';
 
 const { getArticleListMock } = vi.hoisted(() => ({
   getArticleListMock: vi.fn(),
@@ -16,25 +19,7 @@ vi.mock('@blog/server/article', async () => {
 
 // --- import after mocks ---
 
-import { defaultParseSearch } from '@tanstack/react-router';
-
 import { Route, loader } from './post-board';
-
-interface PostBoardSearch {
-  page?: number;
-}
-
-function parseRealUrl(search: string): Record<string, string | number> {
-  return defaultParseSearch(search) as Record<string, string | number>;
-}
-
-function validateSearch(search: Record<string, unknown>): PostBoardSearch {
-  const schema = Route.options.validateSearch;
-  if (schema === undefined || !('parse' in schema)) {
-    throw new Error('/_blog/post-board must declare an object validateSearch');
-  }
-  return schema.parse(search) as PostBoardSearch;
-}
 
 const ARTICLE_LIST = {
   data: [
@@ -73,116 +58,47 @@ describe('route loader: /_blog/post-board', () => {
   });
 
   it('requests the latest ten articles for the requested page', async () => {
-    await loader({ search: { page: '5' } });
+    await loader({ search: { page: '3' } });
 
     expect(getArticleListMock).toHaveBeenCalledTimes(1);
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 5, pageSize: 10, order: 'latest' },
+      data: { page: 3, pageSize: 10, order: 'latest' },
     });
   });
 
-  it('falls back to the first page when the page search param is absent', async () => {
-    const result = await loader({ search: {} });
-
-    expect(result.page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
+  it('redirects an out-of-range request to the last available page', async () => {
+    getArticleListMock.mockResolvedValue({
+      ...ARTICLE_LIST,
+      total: 25,
+      totalPages: 4,
+      page: 9,
+      data: [],
     });
-  });
 
-  it('falls back to the first page when the page search param is not a positive number', async () => {
-    const search = parseRealUrl('?page=not-a-page');
-    expect(typeof search.page).toBe('string');
+    let error: unknown;
+    try {
+      await loader({ search: { page: '9' } });
+    } catch (caught) {
+      error = caught;
+    }
 
-    const result = await loader({ search: { page: search.page } });
-
-    expect(result.page).toBe(1);
+    expect(getArticleListMock).toHaveBeenCalledTimes(1);
     expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
+      data: { page: 9, pageSize: 10, order: 'latest' },
     });
-  });
+    expect(isRedirect(error)).toBe(true);
 
-  it('falls back to the first page when the page search param is zero or negative', async () => {
-    const zero = parseRealUrl('?page=0');
-    expect(zero.page).toBe(0);
-    const negative = parseRealUrl('?page=-3');
-    expect(negative.page).toBe(-3);
-
-    expect((await loader({ search: { page: zero.page } })).page).toBe(1);
-    expect((await loader({ search: { page: negative.page } })).page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
-    });
+    if (!isRedirect(error)) {
+      return;
+    }
+    expect(error.options.to).toBe('/post-board');
+    expect(error.options.search).toEqual({ page: '4' });
+    expect(error.options.replace).toBe(true);
   });
 });
 
 describe('route search validation: /_blog/post-board', () => {
-  beforeEach(() => {
-    getArticleListMock.mockReset();
-    getArticleListMock.mockResolvedValue({ ...ARTICLE_LIST, page: 2 });
-  });
-
-  it('serves page 2 for the numeric page TanStack Router parses out of a real ?page=2 URL', async () => {
-    const search = parseRealUrl('?page=2');
-    expect(typeof search.page).toBe('number');
-
-    const validated = validateSearch(search);
-    expect(validated.page).toBe(2);
-
-    const result = await loader({ search: { page: validated.page } });
-
-    expect(result.page).toBe(2);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 2, pageSize: 10, order: 'latest' },
-    });
-  });
-
-  it('serves page 2 for the string page the pagination control itself navigates with', async () => {
-    const navigated = String(2);
-    expect(typeof navigated).toBe('string');
-
-    const validated = validateSearch({ page: navigated });
-    expect(validated.page).toBe(2);
-
-    const result = await loader({ search: { page: validated.page } });
-
-    expect(result.page).toBe(2);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 2, pageSize: 10, order: 'latest' },
-    });
-  });
-
-  it('accepts a mistyped ?page= from a real URL and falls back to page 1 instead of throwing a search param error', async () => {
-    const search = parseRealUrl('?page=not-a-page');
-    expect(typeof search.page).toBe('string');
-
-    expect(() => validateSearch(search)).not.toThrow();
-    const validated = validateSearch(search);
-    expect(validated.page).toBeUndefined();
-
-    const result = await loader({ search: { page: validated.page } });
-
-    expect(result.page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
-    });
-  });
-
-  it('admits a zero or negative ?page= and lets the loader sanitiser clamp it to page 1', async () => {
-    const zero = parseRealUrl('?page=0');
-    const negative = parseRealUrl('?page=-3');
-    expect(zero.page).toBe(0);
-    expect(negative.page).toBe(-3);
-
-    expect(() => validateSearch(zero)).not.toThrow();
-    expect(() => validateSearch(negative)).not.toThrow();
-    expect(validateSearch(zero).page).toBe(0);
-    expect(validateSearch(negative).page).toBe(-3);
-
-    expect((await loader({ search: { page: 0 } })).page).toBe(1);
-    expect((await loader({ search: { page: -3 } })).page).toBe(1);
-    expect(getArticleListMock.mock.calls[0]?.[0]).toEqual({
-      data: { page: 1, pageSize: 10, order: 'latest' },
-    });
+  it('wires the shared page param schema as validateSearch', () => {
+    expect(Route.options.validateSearch).toBe(pageParamSchema);
   });
 });

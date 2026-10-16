@@ -8,6 +8,8 @@ import {
 } from '@zcat/ui';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
+import { usePageNavigation } from '@blog/common';
+
 import type { Gallery } from '@blog/server/gallery/schemas';
 
 const routeApi = getRouteApi('/_blog/gallery');
@@ -15,10 +17,7 @@ const routeApi = getRouteApi('/_blog/gallery');
 export function GalleryPage() {
   const navigate = useNavigate();
   const { pagination, page } = routeApi.useLoaderData();
-
-  const goToPage = (nextPage: number) => {
-    navigate({ to: '/gallery', search: { page: String(nextPage) } });
-  };
+  const goToPage = usePageNavigation('/gallery');
 
   const handleClick = (value: Gallery) => {
     navigate({ to: '/gallery/$id', params: { id: String(value.id) } });
@@ -69,7 +68,7 @@ function PhotoItem({ value, onClick }: PhotoItemProps) {
   return (
     <ZView className="flex-1 flex flex-col items-center gap-4">
       <Card
-        className="group pointer-cursor p-0! overflow-hidden w-full"
+        className="group relative cursor-pointer p-0! overflow-hidden w-full"
         onClick={click}
       >
         <ZImagePreload src={url} />
