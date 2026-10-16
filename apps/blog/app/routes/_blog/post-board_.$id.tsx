@@ -1,7 +1,7 @@
 import { ZButton, ZView } from '@zcat/ui';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
-import { PostContentView } from '@blog/features';
+import { PostBoardDetailPage } from '@blog/features';
 import { getArticleDetail } from '@blog/server/article';
 import {
   GetArticleDetailInputSchema,
@@ -79,19 +79,6 @@ export const Route = createFileRoute('/_blog/post-board_/$id')({
   notFoundComponent: () => <PostBoardDetailNotFound />,
   errorComponent: () => <PostBoardDetailNotFound />,
 });
-
-function PostBoardDetailPage() {
-  const { article, jsonLd } = Route.useLoaderData();
-  return (
-    <ZView>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <PostContentView value={article} />
-    </ZView>
-  );
-}
 
 function PostBoardDetailNotFound() {
   return (

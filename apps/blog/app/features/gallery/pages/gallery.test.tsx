@@ -1,20 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getGalleryListMock, useNavigateMock } = vi.hoisted(() => ({
-  getGalleryListMock: vi.fn(),
+const { useNavigateMock, useLoaderDataMock } = vi.hoisted(() => ({
   useNavigateMock: vi.fn(),
+  useLoaderDataMock: vi.fn(),
 }));
-
-vi.mock('@blog/server/gallery', async () => {
-  const actual = await vi.importActual<typeof import('@blog/server/gallery')>(
-    '@blog/server/gallery',
-  );
-  return {
-    ...actual,
-    getGalleryList: (...args: unknown[]) => getGalleryListMock(...args),
-  };
-});
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-router')>(
@@ -23,12 +13,13 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     ...actual,
     useNavigate: () => useNavigateMock,
+    getRouteApi: () => ({ useLoaderData: useLoaderDataMock }),
   };
 });
 
 // --- import after mocks ---
 
-import { Route } from './gallery';
+import { GalleryPage } from './gallery';
 
 const GALLERY_LIST = {
   data: [
@@ -76,31 +67,22 @@ function makeLargeGalleryPayload(count: number) {
 
 describe('route component: /_blog/gallery', () => {
   beforeEach(() => {
-    getGalleryListMock.mockReset();
+    useLoaderDataMock.mockReset();
     useNavigateMock.mockReset();
   });
 
   it('renders one card per gallery, using the gallery id from the payload', () => {
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
 
     render(<GalleryPage />);
 
     expect(screen.getByText('一些我拍的照片')).toBeInTheDocument();
     expect(screen.getByText('旅行')).toBeInTheDocument();
     expect(screen.getByText('日常')).toBeInTheDocument();
-    spy.mockRestore();
   });
 
   it('navigates to the gallery detail route with the numeric id as a string param', () => {
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: GALLERY_LIST, page: 1 });
 
     const { container } = render(<GalleryPage />);
     const cards = container.querySelectorAll('[data-slot="card"]');
@@ -114,22 +96,16 @@ describe('route component: /_blog/gallery', () => {
       to: '/gallery/$id',
       params: { id: '4' },
     });
-    spy.mockRestore();
   });
 
   it('renders the pagination control only when there is more than one page, with a fixture larger than a single page', () => {
     const payload = makeLargeGalleryPayload(8);
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: payload, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: payload, page: 1 });
 
     render(<GalleryPage />);
 
     expect(screen.getByLabelText('Go to next page')).toBeInTheDocument();
     expect(screen.getByLabelText('Go to previous page')).toBeInTheDocument();
-    spy.mockRestore();
   });
 
   it('does not render the pagination control when the album list fits on a single page', () => {
@@ -147,17 +123,12 @@ describe('route component: /_blog/gallery', () => {
       page: 1,
       pageSize: 8,
     };
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: singlePage, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: singlePage, page: 1 });
 
     render(<GalleryPage />);
 
     expect(screen.queryByLabelText('Go to next page')).toBeNull();
     expect(screen.queryByLabelText('Go to previous page')).toBeNull();
-    spy.mockRestore();
   });
 
   it('does not render the pagination control when no albums are available', () => {
@@ -168,26 +139,17 @@ describe('route component: /_blog/gallery', () => {
       page: 1,
       pageSize: 8,
     };
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: empty, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: empty, page: 1 });
 
     render(<GalleryPage />);
 
     expect(screen.queryByLabelText('Go to next page')).toBeNull();
     expect(screen.queryByLabelText('Go to previous page')).toBeNull();
-    spy.mockRestore();
   });
 
   it('navigates with the page search param wired through the same route', () => {
     const payload = makeLargeGalleryPayload(8);
-    const spy = vi
-      .spyOn(Route, 'useLoaderData')
-      .mockReturnValue({ pagination: payload, page: 1 });
-    const GalleryPage = Route.options.component;
-    if (!GalleryPage) throw new Error('gallery route has no component');
+    useLoaderDataMock.mockReturnValue({ pagination: payload, page: 1 });
 
     render(<GalleryPage />);
 
@@ -205,6 +167,5 @@ describe('route component: /_blog/gallery', () => {
       to: '/gallery',
       search: { page: '2' },
     });
-    spy.mockRestore();
   });
 });
