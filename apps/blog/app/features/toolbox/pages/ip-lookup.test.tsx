@@ -24,7 +24,7 @@ function renderPage() {
   return render(<IpLookupPage />);
 }
 
-describe('route component: /toolbox/ip-lookup', () => {
+describe('IpLookupPage', () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {

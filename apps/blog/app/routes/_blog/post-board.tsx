@@ -1,13 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { loadPaginatedList, pageParamSchema } from '@blog/common';
+import type { PageSearch } from '@blog/common';
 import { PostBoardPage } from '@blog/features';
 import { getArticleList } from '@blog/server/article';
 
 const SITE = 'https://blog.zcat.example';
 
 interface PostBoardLoaderArgs {
-  search: { page?: string | number };
+  search: PageSearch;
 }
 
 export async function loader({ search }: PostBoardLoaderArgs) {

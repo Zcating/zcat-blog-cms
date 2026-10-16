@@ -9,6 +9,7 @@ export const pageParamSchema = z.looseObject({
 
 export interface PageSearch {
   page?: string | number;
+  [key: string]: string | number | undefined;
 }
 
 export interface PaginatedResult {
@@ -36,7 +37,7 @@ export async function loadPaginatedList<TPagination extends PaginatedResult>(
   if (clamped !== requested) {
     throw redirect({
       to: options.to,
-      search: { page: String(clamped) },
+      search: { ...options.search, page: String(clamped) },
       replace: true,
     });
   }

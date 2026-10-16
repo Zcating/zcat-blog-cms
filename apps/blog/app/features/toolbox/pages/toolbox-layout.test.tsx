@@ -45,7 +45,7 @@ const SIDEBAR_LABELS = [
   '身份证生成',
 ];
 
-describe('route component: /toolbox layout', () => {
+describe('ToolboxLayoutRoute', () => {
   beforeEach(() => {
     useRouterStateMock.mockReset();
     useRouterStateMock.mockReturnValue('/toolbox');

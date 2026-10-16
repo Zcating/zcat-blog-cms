@@ -2,11 +2,12 @@ import { Skeleton, ZGrid } from '@zcat/ui';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { loadPaginatedList, pageParamSchema } from '@blog/common';
+import type { PageSearch } from '@blog/common';
 import { GalleryPage } from '@blog/features';
 import { getGalleryList } from '@blog/server/gallery';
 
 interface GalleryLoaderArgs {
-  search: { page?: string | number };
+  search: PageSearch;
 }
 
 export async function loader({ search }: GalleryLoaderArgs) {

@@ -65,7 +65,7 @@ function makeLargeGalleryPayload(count: number) {
   };
 }
 
-describe('route component: /_blog/gallery', () => {
+describe('GalleryPage', () => {
   beforeEach(() => {
     useLoaderDataMock.mockReset();
     useNavigateMock.mockReset();

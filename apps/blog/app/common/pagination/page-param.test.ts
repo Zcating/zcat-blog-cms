@@ -1,7 +1,7 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadPaginatedList } from './page-param';
+import { loadPaginatedList, pageParamSchema } from './page-param';
 
 function makePagination(totalPages: number) {
   return { data: [], total: totalPages, totalPages, page: 1, pageSize: 10 };
@@ -13,6 +13,33 @@ function createFetch(totalPages: number) {
     page,
   }));
 }
+
+describe('pageParamSchema', () => {
+  it.each([
+    ['missing page', {}, {}],
+    ['non-numeric page', { page: 'abc' }, {}],
+    ['zero page', { page: '0' }, { page: 0 }],
+    ['negative page', { page: '-5' }, { page: -5 }],
+    ['empty string page', { page: '' }, { page: 0 }],
+    ['numeric page', { page: '2' }, { page: 2 }],
+    ['fractional page', { page: '3.5' }, {}],
+  ])('normalizes %s without throwing', (_label, input, expected) => {
+    expect(() => pageParamSchema.parse(input)).not.toThrow();
+    expect(pageParamSchema.parse(input)).toEqual(expected);
+  });
+
+  it('preserves extra search params alongside the coerced page', () => {
+    expect(pageParamSchema.parse({ page: '2', category: 'ai' })).toEqual({
+      page: 2,
+      category: 'ai',
+    });
+  });
+
+  it('rejects a non-object search payload', () => {
+    expect(() => pageParamSchema.parse(undefined)).toThrow('invalid_type');
+    expect(() => pageParamSchema.parse('2')).toThrow('invalid_type');
+  });
+});
 
 describe('loadPaginatedList', () => {
   it.each([
@@ -69,6 +96,31 @@ describe('loadPaginatedList', () => {
     }
     expect(error.options.to).toBe('/gallery');
     expect(error.options.search).toEqual({ page: '3' });
+    expect(error.options.replace).toBe(true);
+  });
+
+  it('preserves other search params while replacing page when redirecting out of range', async () => {
+    const fetch = createFetch(4);
+
+    let error: unknown;
+    try {
+      await loadPaginatedList({
+        to: '/gallery',
+        search: { page: '999', category: 'ai' },
+        fetch,
+      });
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(isRedirect(error)).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(999);
+
+    if (!isRedirect(error)) {
+      return;
+    }
+    expect(error.options.search).toEqual({ category: 'ai', page: '4' });
     expect(error.options.replace).toBe(true);
   });
 
