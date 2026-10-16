@@ -12,7 +12,7 @@ import { PostExcerptCard } from '@blog/features/posts';
 import type { PhotoFeedItem } from '@blog/server/photo/schemas';
 
 import { Hero } from '../components';
-import type { HomeGridItem } from '../home-grid';
+import type { HomeGridItem } from '../lib';
 
 const routeApi = getRouteApi('/_blog/');
 
