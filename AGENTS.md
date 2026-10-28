@@ -107,3 +107,13 @@
 ## TIPS
 
 - 测试账户密码: zcat_admin/admin123
+
+## Agent skills
+
+### Issue tracker（Issue 追踪）
+
+本仓库的 Issue 与规格文档存放于 GitHub Issues，使用 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+
+### Domain docs（领域文档）
+
+多上下文布局：根目录 `GLOSSARY-MAP.md` 指向各上下文的 `GLOSSARY.md`，系统级 ADR 存放于 `docs/adr/`。详见 `docs/agents/domain.md`。
