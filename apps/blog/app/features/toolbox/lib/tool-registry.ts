@@ -18,7 +18,7 @@ export type ToolEntry = {
   Icon: LucideIcon;
 };
 
-export const TOOL_REGISTRY: readonly ToolEntry[] = [
+export const TOOL_REGISTRY = [
   {
     name: 'Markdown 转 HTML',
     description: '将 Markdown 转换为 HTML 源码，支持 GFM 和数学公式。',
@@ -73,4 +73,4 @@ export const TOOL_REGISTRY: readonly ToolEntry[] = [
     path: '/toolbox/id-card-generator',
     Icon: IdCard,
   },
-];
+] as const satisfies readonly ToolEntry[];

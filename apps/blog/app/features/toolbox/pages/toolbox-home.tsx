@@ -17,7 +17,7 @@ export function ToolboxHomePage() {
       {TOOL_REGISTRY.map((tool) => (
         <Link
           key={tool.path}
-          to={tool.path as never}
+          to={tool.path}
           className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Card className="h-full transition-shadow hover:shadow-md">

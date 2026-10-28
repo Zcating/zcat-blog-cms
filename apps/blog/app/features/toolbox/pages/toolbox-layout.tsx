@@ -29,7 +29,9 @@ export function ToolboxLayoutRoute() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={'/toolbox' as never}>工具箱</Link>
+                  <Link to="/toolbox" activeOptions={{ exact: true }}>
+                    工具箱
+                  </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

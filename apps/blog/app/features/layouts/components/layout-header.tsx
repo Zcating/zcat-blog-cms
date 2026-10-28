@@ -1,7 +1,6 @@
 import {
   ZNavigationMenu,
   ZStickyHeader,
-  Separator,
   ZView,
   type LinkOption,
 } from '@zcat/ui';
@@ -17,7 +16,6 @@ export interface LayoutNavRenderLinkProps {
 export interface LayoutNavProps {
   className?: string;
   options: LinkOption[];
-  prefix?: React.ReactNode;
   pathname: string;
   renderLink: (props: LayoutNavRenderLinkProps) => React.ReactNode;
 }
@@ -25,7 +23,6 @@ export interface LayoutNavProps {
 export function LayoutNav({
   className,
   options,
-  prefix,
   pathname,
   renderLink,
 }: LayoutNavProps) {
@@ -39,8 +36,6 @@ export function LayoutNav({
   return (
     <ZStickyHeader className={className}>
       <ZView className="flex h-full w-full items-center gap-2 px-4">
-        {prefix}
-        {prefix && <Separator orientation="vertical" className="mr-2 h-4" />}
         <ZNavigationMenu
           options={options}
           renderItem={(option) =>
@@ -61,7 +56,6 @@ export function LayoutNav({
 interface LayoutHeaderProps {
   className?: string;
   options: LinkOption[];
-  prefix?: React.ReactNode;
 }
 
 export function LayoutHeader(props: LayoutHeaderProps) {

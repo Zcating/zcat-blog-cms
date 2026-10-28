@@ -65,18 +65,6 @@ describe('ToolboxLayoutRoute', () => {
     }
   });
 
-  it('marks the current section in the main navigation', () => {
-    renderLayout(TOOL_REGISTRY[0].path);
-
-    const banner = screen.getByRole('banner');
-    const active = within(banner).getByRole('link', { name: '工具箱' });
-    const inactive = within(banner).getByRole('link', { name: '首页' });
-
-    expect(active.getAttribute('class')).not.toBe(
-      inactive.getAttribute('class'),
-    );
-  });
-
   it('renders no toolbox sidebar', () => {
     renderLayout('/toolbox');
 

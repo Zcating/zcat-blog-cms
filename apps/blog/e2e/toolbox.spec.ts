@@ -35,9 +35,9 @@ test('a tool page shows a two-level breadcrumb above the page heading', async ({
   const breadcrumb = page.getByRole('navigation', { name: 'breadcrumb' });
   await expect(breadcrumb).toBeVisible();
 
-  await expect(
-    breadcrumb.getByRole('link', { name: '工具箱' }),
-  ).toHaveAttribute('href', '/toolbox');
+  const overview = breadcrumb.getByRole('link', { name: '工具箱' });
+  await expect(overview).toHaveAttribute('href', '/toolbox');
+  await expect(overview).not.toHaveAttribute('aria-current', 'page');
 
   const current = breadcrumb.getByText('Hash 计算', { exact: true });
   await expect(current).toHaveAttribute('aria-current', 'page');
@@ -56,4 +56,21 @@ test('a tool page shows a two-level breadcrumb above the page heading', async ({
   });
 
   expect(breadcrumbComesFirst).toBe(true);
+});
+
+test('the main navigation marks the toolbox section as current', async ({
+  page,
+}) => {
+  await page.goto('/toolbox/hash');
+
+  const banner = page.getByRole('banner');
+
+  await expect(banner.getByRole('link', { name: '工具箱' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(banner.getByRole('link', { name: '首页' })).not.toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });
