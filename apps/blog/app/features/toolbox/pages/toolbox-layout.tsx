@@ -1,91 +1,49 @@
-import { Button, useSidebar, ZSidebar, type ZSidebarOption } from '@zcat/ui';
-import { SidebarIcon } from 'lucide-react';
-import { Link, Outlet } from '@tanstack/react-router';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  ZView,
+} from '@zcat/ui';
+import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 
 import { LayoutFooter, LayoutHeader } from '@blog/features/layouts/components';
 import { MENU_OPTIONS } from '@blog/features/layouts/stores';
-
-const items: ZSidebarOption[] = [
-  {
-    label: '导航',
-    value: '/toolbox',
-  },
-  {
-    label: '常用',
-    children: [
-      {
-        label: 'IP 查询',
-        value: '/toolbox/ip-lookup',
-      },
-      {
-        label: 'Hash 计算',
-        value: '/toolbox/hash',
-      },
-      {
-        label: 'RSA 加解密',
-        value: '/toolbox/rsa-crypto',
-      },
-      {
-        label: 'AES 加解密',
-        value: '/toolbox/aes-crypto',
-      },
-      {
-        label: '图片和 Base64 互转',
-        value: '/toolbox/base64-to-image',
-      },
-      {
-        label: '二维码生成',
-        value: '/toolbox/qrcode-generator',
-      },
-      {
-        label: '身份证生成',
-        value: '/toolbox/id-card-generator',
-      },
-    ],
-  },
-];
+import { TOOL_REGISTRY } from '@blog/features/toolbox/lib';
 
 export function ToolboxLayoutRoute() {
-  const renderItem = (item: ZSidebarOption) => {
-    if (item.value) {
-      return (
-        <Link to={item.value as never}>
-          <span>{item.label}</span>
-        </Link>
-      );
-    }
-    return <span>{item.label}</span>;
-  };
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
+  const tool = TOOL_REGISTRY.find((entry) => entry.path === pathname);
 
   return (
-    <ZSidebar
-      className="h-full w-full overflow-hidden"
-      options={items}
-      renderItem={renderItem}
-      header={ToolboxHeader}
-      sidebarFooter={LayoutFooter}
-    >
-      <Outlet />
-    </ZSidebar>
-  );
-}
-
-function ToolboxHeader() {
-  const sidebar = useSidebar();
-
-  return (
-    <LayoutHeader
-      options={MENU_OPTIONS}
-      prefix={
-        <Button
-          className="h-8 w-8"
-          variant="ghost"
-          size="icon"
-          onClick={sidebar.toggleSidebar}
-        >
-          <SidebarIcon />
-        </Button>
-      }
-    />
+    <ZView className="flex h-screen flex-col">
+      <LayoutHeader options={MENU_OPTIONS} />
+      {tool && (
+        <ZView className="px-4 pt-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={'/toolbox' as never}>工具箱</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{tool.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </ZView>
+      )}
+      <ZView className="min-h-0 flex-1 overflow-y-auto">
+        <Outlet />
+      </ZView>
+      <LayoutFooter />
+    </ZView>
   );
 }
