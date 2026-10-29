@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { useRouterStateMock } = vi.hoisted(() => ({
@@ -28,79 +28,100 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-// --- import after mocks ---
-
+import { TOOL_REGISTRY } from '../lib';
 import { ToolboxLayoutRoute } from './toolbox-layout';
 
-const MENU_TITLES = ['首页', '文章', '相册', '工具箱', '关于'];
-const SIDEBAR_LABELS = [
-  '导航',
-  '常用',
-  'IP 查询',
-  'Hash 计算',
-  'RSA 加解密',
-  'AES 加解密',
-  '图片和 Base64 互转',
-  '二维码生成',
-  '身份证生成',
+const MENU = [
+  { title: '首页', to: '/' },
+  { title: '文章', to: '/post-board' },
+  { title: '相册', to: '/gallery' },
+  { title: '工具箱', to: '/toolbox' },
+  { title: '关于', to: '/about' },
 ];
+
+const FOOTER_TEXT = '© 2025 Zcat. All rights reserved.';
+
+function renderLayout(pathname: string) {
+  useRouterStateMock.mockReturnValue(pathname);
+  return render(<ToolboxLayoutRoute />);
+}
 
 describe('ToolboxLayoutRoute', () => {
   beforeEach(() => {
     useRouterStateMock.mockReset();
-    useRouterStateMock.mockReturnValue('/toolbox');
   });
 
-  it('renders the sidebar, the page outlet and the footer', () => {
-    const Layout = ToolboxLayoutRoute;
-
-    render(<Layout />);
+  it('renders the main navigation, the page outlet and the footer', () => {
+    renderLayout('/toolbox');
 
     expect(screen.getByTestId('toolbox-layout-outlet')).toBeInTheDocument();
+    expect(screen.getByText(FOOTER_TEXT)).toBeInTheDocument();
+
+    const banner = screen.getByRole('banner');
+    for (const item of MENU) {
+      expect(
+        within(banner).getByRole('link', { name: item.title }),
+      ).toHaveAttribute('href', item.to);
+    }
+  });
+
+  it('renders no toolbox sidebar', () => {
+    renderLayout('/toolbox');
+
+    expect(screen.queryByText('导航')).toBeNull();
+    expect(screen.queryByText('常用')).toBeNull();
+  });
+
+  it('keeps the footer after the outlet and outside any sidebar', () => {
+    renderLayout('/toolbox');
+
+    const footer = screen.getByText(FOOTER_TEXT).closest('footer');
+    const outlet = screen.getByTestId('toolbox-layout-outlet');
+
+    expect(footer).not.toBeNull();
     expect(
-      screen.getByText('© 2025 Zcat. All rights reserved.'),
-    ).toBeInTheDocument();
+      footer!.compareDocumentPosition(outlet) &
+        Node.DOCUMENT_POSITION_PRECEDING,
+    ).toBeTruthy();
+    expect(footer!.closest('[data-slot="sidebar-wrapper"]')).toBeNull();
   });
 
-  it('keeps every toolbox sidebar entry and points it at its own URL', () => {
-    const Layout = ToolboxLayoutRoute;
+  it.each(TOOL_REGISTRY.map((tool) => [tool.name, tool.path]))(
+    'renders a two-level breadcrumb on %s',
+    (name, path) => {
+      renderLayout(path);
 
-    render(<Layout />);
+      const breadcrumb = screen.getByRole('navigation', { name: 'breadcrumb' });
 
-    for (const label of SIDEBAR_LABELS) {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    }
-    expect(screen.getByText('导航').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox',
-    );
-    expect(screen.getByText('Hash 计算').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/hash',
-    );
-    expect(screen.getByText('二维码生成').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/qrcode-generator',
-    );
-  });
+      expect(within(breadcrumb).getAllByRole('listitem')).toHaveLength(2);
+      expect(
+        within(breadcrumb).getByRole('link', { name: '工具箱' }),
+      ).toHaveAttribute('href', '/toolbox');
 
-  it('keeps the main navigation above the sidebar and marks the active entry', () => {
-    useRouterStateMock.mockReturnValue('/toolbox/hash');
-    const Layout = ToolboxLayoutRoute;
+      const current = within(breadcrumb).getByText(name);
+      expect(current).toHaveAttribute('aria-current', 'page');
+      expect(current.closest('a')).toBeNull();
+    },
+  );
 
-    render(<Layout />);
+  it.each(TOOL_REGISTRY.map((tool) => [tool.name, tool.path]))(
+    'renders the breadcrumb before the outlet on %s',
+    (_name, path) => {
+      renderLayout(path);
 
-    for (const title of MENU_TITLES) {
-      expect(screen.getByText(title)).toBeInTheDocument();
-    }
-    expect(screen.getByText('工具箱').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox',
-    );
-    expect(screen.getByText('工具箱')).toHaveClass('text-primary');
-    expect(screen.getByText('首页')).toHaveClass(
-      'text-muted-foreground',
-      'hover:text-primary',
-    );
+      const breadcrumb = screen.getByRole('navigation', { name: 'breadcrumb' });
+      const outlet = screen.getByTestId('toolbox-layout-outlet');
+
+      expect(
+        breadcrumb.compareDocumentPosition(outlet) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    },
+  );
+
+  it.each(['/toolbox', '/toolbox/'])('renders no breadcrumb on %s', (path) => {
+    renderLayout(path);
+
+    expect(screen.queryByRole('navigation', { name: 'breadcrumb' })).toBeNull();
   });
 });
