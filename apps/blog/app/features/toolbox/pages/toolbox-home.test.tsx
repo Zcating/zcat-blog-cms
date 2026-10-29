@@ -22,37 +22,36 @@ vi.mock('@tanstack/react-router', async () => {
   };
 });
 
-// --- import after mocks ---
-
+import { TOOL_REGISTRY } from '../lib';
 import { ToolboxHomePage } from './toolbox-home';
 
 describe('ToolboxHomePage', () => {
-  it('renders toolbox entries and links', () => {
+  it('renders one card per registered tool, in registry order', () => {
     render(<ToolboxHomePage />);
 
-    expect(screen.getByText('Markdown 转 HTML')).toBeInTheDocument();
-    expect(screen.getByText('JSON 查看器')).toBeInTheDocument();
-    expect(screen.getAllByText('立即使用')).toHaveLength(6);
+    const links = screen.getAllByRole('link');
+
+    expect(links).toHaveLength(TOOL_REGISTRY.length);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(
+      TOOL_REGISTRY.map((tool) => tool.path),
+    );
+    expect(screen.getAllByText('立即使用')).toHaveLength(TOOL_REGISTRY.length);
   });
 
-  it('points every entry at its own toolbox URL', () => {
+  it('links every card to its own toolbox path', () => {
     render(<ToolboxHomePage />);
 
-    expect(screen.getByText('Markdown 转 HTML').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/markdown-to-html',
-    );
-    expect(screen.getByText('JSON 查看器').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/json-viewer',
-    );
-    expect(screen.getByText('IP 查询').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/ip-lookup',
-    );
-    expect(screen.getByText('图片和 Base64 互转').closest('a')).toHaveAttribute(
-      'href',
-      '/toolbox/base64-to-image',
-    );
+    for (const tool of TOOL_REGISTRY) {
+      expect(screen.getByText(tool.name).closest('a')).toHaveAttribute(
+        'href',
+        tool.path,
+      );
+    }
+  });
+
+  it('renders no page heading', () => {
+    render(<ToolboxHomePage />);
+
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 });
